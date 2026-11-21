@@ -674,7 +674,7 @@ function killEnemy(enemy){if(!enemy.alive)return;enemy.alive=false;enemy.burrowi
 function updateSlidingBombs(dt){
  for(const b of bombs){if(!b.slide)continue;b.slideClock-=dt;if(b.slideClock>0)continue;b.slideClock=.105;const nx=b.x+b.slide.dx,ny=b.y+b.slide.dy,nextTile=tileAt(nx,ny),otherBomb=bombs.some(other=>other!==b&&Math.floor(other.x)===nx&&Math.floor(other.y)===ny);
   if(nextTile!==0||otherBomb){b.slide=null;b.t=Math.min(b.t,.12);continue}
-  const enemy=enemies.find(e=>e.alive&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);if(enemy){b.x=nx;b.y=ny;b.slide=null;b.t=Math.min(b.t,.12);continue}b.x=nx;b.y=ny;
+  const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);if(enemy){b.x=nx;b.y=ny;b.slide=null;b.t=Math.min(b.t,.12);continue}b.x=nx;b.y=ny;
  }
 }
 function explode(b){
