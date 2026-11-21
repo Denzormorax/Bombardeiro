@@ -503,6 +503,7 @@ function distance(x,y,a,b){return Math.hypot(x-a,y-b)}
 function bombAt(x,y){return bombs.find(b=>Math.floor(b.x)===x&&Math.floor(b.y)===y)}
 function isFixedPillar(x,y){return x===0||y===0||x===COLS-1||y===ROWS-1||(x%2===0&&y%2===0)}
 function makeMap(){
+ staticMapDirty=true;
  map=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:(Math.random()<.57?2:0)));
  for(let y=1;y<=2;y++)for(let x=1;x<=2;x++)map[y][x]=0;
  map[1][3]=0;map[3][1]=0;exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};map[exit.y][exit.x]=2;
@@ -771,20 +772,41 @@ function update(dt){
 }
 
 /* DESENHO DO CENÁRIO */
-function drawTile(x,y,type){
+function drawTile(x,y,type,target=ctx){
  const px=ox+x*TILE,py=oy+y*TILE,st=forestStyle(),motif=(level-1)%10,seed=(x*17+y*31+level*13)%9;
- if(type===1){ctx.fillStyle=st[3];ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle=st[2];ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle=st[3];ctx.fillRect(px+7,py+7,TILE-14,TILE-14);ctx.strokeStyle=st[6]+"66";ctx.beginPath();ctx.moveTo(px+8,py+9);ctx.lineTo(px+39,py+39);ctx.stroke()}
- else if(type===2){ctx.fillStyle=st[5];ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#d49a62";ctx.globalAlpha=.65;ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.globalAlpha=1;ctx.fillStyle="#70432d";ctx.fillRect(px+4,py+22,TILE-8,4);ctx.fillRect(px+21,py+4,4,18);ctx.fillRect(px+13,py+27,4,17);ctx.strokeStyle="#f0bd83";ctx.lineWidth=2;ctx.strokeRect(px+3,py+3,TILE-6,TILE-6)}
- else{ctx.fillStyle=st[1];ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle=st[2];ctx.globalAlpha=.35;ctx.fillRect(px+1,py+1,TILE-2,TILE-2);ctx.globalAlpha=.42;ctx.strokeStyle=st[6];ctx.fillStyle=st[6];ctx.lineWidth=2;
-  if(motif===0||motif===8){ctx.beginPath();ctx.arc(px+10+seed*3,py+12,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(px+7,py+40);ctx.quadraticCurveTo(px+18,py+24,px+27,py+38);ctx.stroke()}
-  else if(motif===1||motif===7){for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(px+8+k*13,py+42);ctx.quadraticCurveTo(px+2+k*13,py+22,px+13+k*10,py+10);ctx.stroke()}}
-  else if(motif===2||motif===6){ctx.beginPath();ctx.arc(px+14,py+34,5,Math.PI,0);ctx.arc(px+35,py+16,4,Math.PI,0);ctx.fill();ctx.fillRect(px+13,py+34,2,7)}
-  else if(motif===3){ctx.beginPath();ctx.moveTo(px+4,py+5);ctx.bezierCurveTo(px+18,py+14,px+8,py+32,px+43,py+44);ctx.stroke()}
-  else if(motif===4||motif===9){ctx.beginPath();ctx.arc(px+12,py+13,2,0,Math.PI*2);ctx.arc(px+35,py+34,2,0,Math.PI*2);ctx.fill()}
-  else{ctx.beginPath();ctx.moveTo(px+5,py+14);ctx.quadraticCurveTo(px+24,py+3,px+43,py+14);ctx.moveTo(px+4,py+36);ctx.quadraticCurveTo(px+24,py+25,px+44,py+36);ctx.stroke()}ctx.globalAlpha=1}
- ctx.strokeStyle="#ffffff12";ctx.strokeRect(px,py,TILE,TILE);
+ if(type===1){target.fillStyle=st[3];target.fillRect(px,py,TILE,TILE);target.fillStyle=st[2];target.fillRect(px+3,py+3,TILE-6,TILE-6);target.fillStyle=st[3];target.fillRect(px+7,py+7,TILE-14,TILE-14);target.strokeStyle=st[6]+"66";target.beginPath();target.moveTo(px+8,py+9);target.lineTo(px+39,py+39);target.stroke()}
+ else if(type===2){target.fillStyle=st[5];target.fillRect(px,py,TILE,TILE);target.fillStyle="#d49a62";target.globalAlpha=.65;target.fillRect(px+3,py+3,TILE-6,TILE-6);target.globalAlpha=1;target.fillStyle="#70432d";target.fillRect(px+4,py+22,TILE-8,4);target.fillRect(px+21,py+4,4,18);target.fillRect(px+13,py+27,4,17);target.strokeStyle="#f0bd83";target.lineWidth=2;target.strokeRect(px+3,py+3,TILE-6,TILE-6)}
+ else{target.globalAlpha=.58;target.fillStyle=st[1];target.fillRect(px,py,TILE,TILE);target.globalAlpha=1;target.fillStyle=st[2];target.globalAlpha=.35;target.fillRect(px+1,py+1,TILE-2,TILE-2);target.globalAlpha=.42;target.strokeStyle=st[6];target.fillStyle=st[6];target.lineWidth=2;
+  if(motif===0||motif===8){target.beginPath();target.arc(px+10+seed*3,py+12,2,0,Math.PI*2);target.fill();target.beginPath();target.moveTo(px+7,py+40);target.quadraticCurveTo(px+18,py+24,px+27,py+38);target.stroke()}
+  else if(motif===1||motif===7){for(let k=0;k<3;k++){target.beginPath();target.moveTo(px+8+k*13,py+42);target.quadraticCurveTo(px+2+k*13,py+22,px+13+k*10,py+10);target.stroke()}}
+  else if(motif===2||motif===6){target.beginPath();target.arc(px+14,py+34,5,Math.PI,0);target.arc(px+35,py+16,4,Math.PI,0);target.fill();target.fillRect(px+13,py+34,2,7)}
+  else if(motif===3){target.beginPath();target.moveTo(px+4,py+5);target.bezierCurveTo(px+18,py+14,px+8,py+32,px+43,py+44);target.stroke()}
+  else if(motif===4||motif===9){target.beginPath();target.arc(px+12,py+13,2,0,Math.PI*2);target.arc(px+35,py+34,2,0,Math.PI*2);target.fill()}
+  else{target.beginPath();target.moveTo(px+5,py+14);target.quadraticCurveTo(px+24,py+3,px+43,py+14);target.moveTo(px+4,py+36);target.quadraticCurveTo(px+24,py+25,px+44,py+36);target.stroke()}target.globalAlpha=1}
+ target.strokeStyle="#ffffff12";target.strokeRect(px,py,TILE,TILE);
 }
-function drawForestBackdrop(){const st=forestStyle(),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,st[0]===st[0]?st[1]:st[1]);g.addColorStop(1,st[3]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.2;for(let i=0;i<18;i++){const x=(i*71+level*29)%W,y=18+(i*43)%H,r=18+(i*7)%27;ctx.fillStyle=i%2?st[2]:st[6];ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}ctx.restore()}
+function drawForestBackdrop(){const st=forestStyle(),g=target.createLinearGradient(0,0,0,H);g.addColorStop(0,st[0]===st[0]?st[1]:st[1]);g.addColorStop(1,st[3]);target.fillStyle=g;target.fillRect(0,0,W,H);target.save();target.globalAlpha=.2;for(let i=0;i<18;i++){const x=(i*71+level*29)%W,y=18+(i*43)%H,r=18+(i*7)%27;target.fillStyle=i%2?st[2]:st[6];target.beginPath();target.arc(x,y,r,0,Math.PI*2);target.fill()}target.restore()}
+function drawForestBackdrop(target=ctx){
+ const st=forestStyle();
+ target.fillStyle=st[1];target.fillRect(0,0,W,H);
+ if(forestAtlas.complete&&forestAtlas.naturalWidth){
+  const index=(Math.max(1,Math.min(TOTAL_LEVELS,level))-1),sx=(index%2)*192,sy=Math.floor(index/2)*51.2;
+  target.save();target.globalAlpha=.78;target.drawImage(forestAtlas,sx,sy,192,51.2,0,0,W,H);target.restore();
+ }
+ const shade=target.createLinearGradient(0,0,0,H);shade.addColorStop(0,"#07130b55");shade.addColorStop(1,"#07130bd9");target.fillStyle=shade;target.fillRect(0,0,W,H);
+}
+const forestAtlas=new Image();
+forestAtlas.src="forest_atlas.jpg";
+let staticMapLayer=null,staticMapDirty=true;
+forestAtlas.onload=()=>{staticMapDirty=true};
+function rebuildStaticMapLayer(){
+ if(!staticMapLayer)staticMapLayer=document.createElement("canvas");
+ staticMapLayer.width=W;staticMapLayer.height=H;
+ const layerCtx=staticMapLayer.getContext("2d");
+ drawForestBackdrop(layerCtx);
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y]&&map[y][x]===0)drawTile(x,y,0,layerCtx);
+ staticMapDirty=false;
+}
 function drawBurningBlock(block){const px=ox+block.x*TILE,py=oy+block.y*TILE,p=Math.min(1,block.t/.38),fade=1-p*.92;ctx.save();ctx.globalAlpha=fade;ctx.fillStyle=p<.48?"#b65c25":"#211b19";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle=p<.48?"#e98a32":"#49352b";ctx.globalAlpha=fade*(1-p*.55);ctx.fillRect(px+7,py+7,TILE-14,TILE-14);ctx.strokeStyle="#171412";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px+8,py+12);ctx.lineTo(px+37,py+34);ctx.moveTo(px+34,py+8);ctx.lineTo(px+15,py+39);ctx.stroke();if(p<.82){ctx.globalAlpha=fade*.8;ctx.shadowColor="#ff5b16";ctx.shadowBlur=12;for(let i=0;i<4;i++){const fx=px+8+((i*13+block.seed*7)%32),fy=py+TILE-8-p*25-Math.abs(Math.sin(gameClock*35+block.seed+i))*9;ctx.fillStyle=i%2?"#ffb52e":"#ff4b16";ctx.beginPath();ctx.moveTo(fx-5,py+TILE-5);ctx.quadraticCurveTo(fx-7,fy+5,fx,fy-5);ctx.quadraticCurveTo(fx+7,fy+5,fx+5,py+TILE-5);ctx.fill()}}ctx.restore()}
 function drawCharacter(x,y,color,helmet,scale=1){
  const px=ox+x*TILE,py=oy+y*TILE;ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,14,15,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();ctx.fillStyle=helmet;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.fillStyle="#18242a";ctx.fillRect(-5,7,10,3);ctx.restore();
@@ -836,8 +858,9 @@ function drawFlame(f){
  const px=ox+f.x*TILE,py=oy+f.y*TILE;ctx.globalAlpha=Math.min(1,f.t*2.8);ctx.fillStyle="#ff4b19";ctx.fillRect(px+5,py+5,TILE-10,TILE-10);ctx.fillStyle="#ffda4a";ctx.fillRect(px+15,py+15,TILE-30,TILE-30);ctx.globalAlpha=1;
 }
 function draw(){
- ctx.clearRect(0,0,W,H);drawForestBackdrop();
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawTile(x,y,0);for(const block of charredBlocks)drawBurningBlock(block);
+ ctx.clearRect(0,0,W,H);
+ if(staticMapDirty||!staticMapLayer)rebuildStaticMapLayer();
+ ctx.drawImage(staticMapLayer,0,0);for(const block of charredBlocks)drawBurningBlock(block);
  for(let y=0;y<ROWS;y++){
   for(let x=0;x<COLS;x++){const type=map[y][x];if(type!==0)drawTile(x,y,type)}
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
