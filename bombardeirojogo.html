@@ -678,9 +678,32 @@ function choosePatrolPath(enemy){
  const selected=reachable.find(p=>p.dist>=2&&!(enemy.patrolTarget&&p.x===enemy.patrolTarget.x&&p.y===enemy.patrolTarget.y))||reachable[0];
  enemy.path=selected.path.slice();enemy.patrolTarget={x:selected.x,y:selected.y};enemy.patrolWait=.05+Math.random()*.25;
 }
+function getBombDangerCells(bomb){
+ const danger=new Set([cellKey(bomb.x,bomb.y)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ for(const [dx,dy] of dirs)for(let n=1;n<=bomb.range;n++){const x=bomb.x+dx*n,y=bomb.y+dy*n,tile=tileAt(x,y);if(tile===1)break;danger.add(cellKey(x,y));if(tile===2)break}
+ return danger;
+}
+function findBombEscapePath(enemy,bomb){
+ const danger=getBombDangerCells(bomb),sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),safe=[];let head=0;
+ while(head<queue.length){const p=queue[head++],key=cellKey(p.x,p.y);if(p.path.length>0&&!danger.has(key)){const distanceFromBomb=distance(p.x+.5,p.y+.5,bomb.x+.5,bomb.y+.5);safe.push({path:p.path,score:p.path.length+Math.max(0,5-distanceFromBomb)*2})}
+  if(p.path.length>=10)continue;
+  for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){const x=p.x+dx,y=p.y+dy,k=cellKey(x,y);if(visited.has(k)||tileAt(x,y)!==0||bombAt(x,y))continue;visited.add(k);queue.push({x,y,path:p.path.concat([{x,y}])})}
+ }
+ safe.sort((a,b)=>a.score-b.score);return safe.length?safe[0].path:[];
+}
+function findHunterRoute(enemy,targetX,targetY){
+ const tx=Math.floor(targetX),ty=Math.floor(targetY),goals=[];
+ for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+  const x=tx+dx,y=ty+dy;if(tileAt(x,y)!==0||bombAt(x,y))continue;
+  const path=findEnemyPath(enemy,x+.5,y+.5);if(path.length)goals.push({path,dist:distance(x+.5,y+.5,targetX,targetY)});
+ }
+ goals.sort((a,b)=>a.dist-b.dist||a.path.length-b.path.length);return goals.length?goals[0].path:[];
+}
 function reactToNewBomb(bomb){
  for(const enemy of enemies){if(!enemy.alive)continue;
-  if(enemy.path&&enemy.path.some(p=>p.x===bomb.x&&p.y===bomb.y)){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=0}
+  const escape=findBombEscapePath(enemy,bomb);if(!escape.length)continue;
+  enemy.path=escape;enemy.mode=enemy.isHunter?"evade-hunt":"evade";enemy.evadeTimer=Math.max(enemy.evadeTimer||0,bomb.t+.15);enemy.evadeBomb=bomb;
+  enemy.repath=0;
  }
 }
 function followEnemyPath(enemy,dt){
@@ -695,10 +718,32 @@ function updateEnemies(dt){
  for(const enemy of enemies){
   if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);continue}
   enemy.hitFlash=Math.max(0,enemy.hitFlash-dt);enemy.hurtTimer=Math.max(0,(enemy.hurtTimer||0)-dt);
-  // Todos os inimigos patrulham; nenhum cria rota automática em direção ao jogador.
-  enemy.mode="patrol";enemy.speed=enemy.isHunter?enemy.baseSpeed*1.08:enemy.baseSpeed;
-  if(enemy.path&&enemy.path.length){if(!followEnemyPath(enemy,dt)){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.25}}
-  else{enemy.patrolWait-=dt;if(enemy.patrolWait<=0)choosePatrolPath(enemy)}
+  enemy.evadeTimer=Math.max(0,(enemy.evadeTimer||0)-dt);
+  // A fuga da explosão tem prioridade para os dois tipos de inimigo.
+  if(enemy.mode==="evade"||enemy.mode==="evade-hunt"){
+   enemy.speed=enemy.isHunter?enemy.huntSpeed*1.12:enemy.baseSpeed*1.18;
+   if(enemy.path.length){followEnemyPath(enemy,dt);continue}
+   if(enemy.evadeTimer>0)continue;
+   enemy.mode=enemy.isHunter?"chase":"patrol";enemy.path=[];enemy.repath=0;
+  }
+  if(enemy.isHunter){
+   const seesPlayer=canSeePlayer(enemy);
+   if(seesPlayer){enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=3.2}
+   else if(enemy.mode==="chase")enemy.alert=Math.max(0,(enemy.alert||0)-dt);
+   if(enemy.mode==="chase"&&enemy.alert>0){
+    enemy.speed=enemy.huntSpeed*1.22;enemy.repath=(enemy.repath||0)-dt;
+    if(enemy.repath<=0||!enemy.path.length){
+     const target=enemy.lastSeen||{x:player.x,y:player.y};enemy.path=findHunterRoute(enemy,target.x,target.y);enemy.repath=.12;
+    }
+    if(enemy.path.length){followEnemyPath(enemy,dt);continue}
+    if(!seesPlayer&&enemy.alert<=0){enemy.mode="patrol";enemy.lastSeen=null}
+   }else{enemy.mode="patrol";enemy.speed=enemy.baseSpeed;if(enemy.path.length){if(!followEnemyPath(enemy,dt)){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.2}}else{enemy.patrolWait-=dt;if(enemy.patrolWait<=0)choosePatrolPath(enemy)}}
+  }else{
+   // Inimigo comum não caça o jogador: apenas patrulha e foge de bombas.
+   enemy.mode="patrol";enemy.speed=enemy.baseSpeed;
+   if(enemy.path.length){if(!followEnemyPath(enemy,dt)){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.25}}
+   else{enemy.patrolWait-=dt;if(enemy.patrolWait<=0)choosePatrolPath(enemy)}
+  }
  }
 }
 
@@ -729,7 +774,7 @@ function explode(b){
  for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.62,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&isInsideFlameDamage(enemy,c)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
- enemies.forEach(e=>{if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null}});updateHUD();
+ for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
  if(player.inv>0)return;lives--;resetPowerUps();updateHUD();player.hurtTimer=.48;if(lives<=0){gameOver(false);return}player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;
