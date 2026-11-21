@@ -1,11 +1,10 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#101820">
-<title>Bomber Quest Aventuras</title>
+<title>Bombardeiro</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#101820;color:white;font-family:Arial,sans-serif;touch-action:none;user-select:none}
@@ -354,7 +353,7 @@ const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const $=id=>document.getElementById(id);
 const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,ENEMY_DEATH_TIME=.48,TOTAL_LEVELS=10;
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
-let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
+let map=[],bombs=[],flames=[],charredBlocks=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
 let player={x:1.5,y:1.5,speed:4.3,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let basePlayerSpeed=4.3,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
@@ -362,6 +361,10 @@ let gameClock=0,lastTime=0,exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found
 let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,shopReturnPaused=false,menuReturn="main";
 let selectedMapLevel=1,mapMoveTimer=null;
 const controlSettings={moveType:"stick",moveSize:145,bombSize:82,pauseSize:48,positions:{}};
+const FOREST_STAGES=[
+["Bosque Esmeralda","#102b24","#244d39","#39734b","#173b2b","#a8663b","#a9d86a"],["Trilha das Samambaias","#102d2d","#24564b","#367665","#163d36","#96613c","#b1e2a0"],["Clareira dos Cogumelos","#30213b","#4b3c50","#665064","#302b40","#a65d48","#e5a4d0"],["Raízes Ancestrais","#30251b","#51402b","#705538","#35291d","#94603a","#d6b46b"],["Bosque dos Vagalumes","#102b35","#244a4b","#32666a","#18343b","#9d6540","#a8f1cf"],["Floresta Nebulosa","#202b3b","#3b4b50","#53666b","#26383e","#936b55","#b5d8d4"],["Vale das Flores","#34283a","#4d4a3b","#6a6548","#353d31","#a96c45","#f2a9c9"],["Bosque de Bambu","#18352c","#31543b","#4c7650","#1c3b2b","#9b7440","#d4e98a"],["Floresta Dourada","#3a2d1d","#66502d","#80643a","#44351f","#aa7040","#f4d477"],["Bosque da Lua","#171d38","#303c55","#465678","#202c43","#82604d","#b9c9ff"]
+];
+function forestStyle(){return FOREST_STAGES[(Math.max(1,Math.min(TOTAL_LEVELS,level))-1)%10]}
 const controlEls={stick:$("stick"),dpad:$("dpad"),bombBtn:$("bombBtn"),shopBtn:$("shopBtn"),pauseBtn:$("pauseBtn")};
 let selectedSize="move";
 
@@ -549,7 +552,7 @@ function createEnemySpawnPositions(count){
 }
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
- makeMap();prepareCoinDrops();bombs=[];flames=[];coinsOnMap=[];enemies=[];
+ makeMap();prepareCoinDrops();bombs=[];flames=[];charredBlocks=[];coinsOnMap=[];enemies=[];
  basePlayerSpeed=4.3+Math.min(level*.08,1);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
  else resetPowerUps();
@@ -656,7 +659,7 @@ function updateSlidingBombs(dt){
 }
 function explode(b){
  activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
+ for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;charredBlocks.push({x,y,t:0,seed:Math.random()*6.28});const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.55});if(player.inv<=0&&Math.floor(player.x)===c.x&&Math.floor(player.y)===c.y)hurtPlayer();for(const enemy of enemies)if(enemy.alive&&Math.floor(enemy.x)===c.x&&Math.floor(enemy.y)===c.y&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  enemies.forEach(e=>{if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null}});updateHUD();
@@ -762,19 +765,27 @@ function updatePlayer(dt){
 function update(dt){
  if(!running||paused)return;gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);updateSlidingBombs(dt);
  for(const b of bombs){b.t-=dt;b.animTime+=dt}const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
- for(const f of flames)f.t-=dt;flames=flames.filter(f=>f.t>0);
+ for(const f of flames)f.t-=dt;flames=flames.filter(f=>f.t>0);for(const block of charredBlocks)block.t+=dt;charredBlocks=charredBlocks.filter(block=>block.t<.38);
  for(const f of flames)if(player.inv<=0&&Math.floor(player.x)===f.x&&Math.floor(player.y)===f.y){hurtPlayer();break}
  for(const c of coinsOnMap)c.life+=dt;updateHUD();
 }
 
 /* DESENHO DO CENÁRIO */
 function drawTile(x,y,type){
- const px=ox+x*TILE,py=oy+y*TILE;
- if(type===1){ctx.fillStyle="#253b48";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#3b5967";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle="#172a35";ctx.fillRect(px+7,py+7,TILE-14,TILE-14)}
- else if(type===2){ctx.fillStyle="#9a5530";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#c57b47";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle="#814126";ctx.fillRect(px+4,py+22,TILE-8,4);ctx.fillRect(px+21,py+4,4,18);ctx.fillRect(px+13,py+27,4,17);ctx.strokeStyle="#e2a36a";ctx.lineWidth=2;ctx.strokeRect(px+3,py+3,TILE-6,TILE-6)}
- else{ctx.fillStyle="#244d39";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#2d6044";ctx.fillRect(px+1,py+1,TILE-2,TILE-2)}
- ctx.strokeStyle="#ffffff0d";ctx.strokeRect(px,py,TILE,TILE);
+ const px=ox+x*TILE,py=oy+y*TILE,st=forestStyle(),motif=(level-1)%10,seed=(x*17+y*31+level*13)%9;
+ if(type===1){ctx.fillStyle=st[3];ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle=st[2];ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle=st[3];ctx.fillRect(px+7,py+7,TILE-14,TILE-14);ctx.strokeStyle=st[6]+"66";ctx.beginPath();ctx.moveTo(px+8,py+9);ctx.lineTo(px+39,py+39);ctx.stroke()}
+ else if(type===2){ctx.fillStyle=st[5];ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#d49a62";ctx.globalAlpha=.65;ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.globalAlpha=1;ctx.fillStyle="#70432d";ctx.fillRect(px+4,py+22,TILE-8,4);ctx.fillRect(px+21,py+4,4,18);ctx.fillRect(px+13,py+27,4,17);ctx.strokeStyle="#f0bd83";ctx.lineWidth=2;ctx.strokeRect(px+3,py+3,TILE-6,TILE-6)}
+ else{ctx.fillStyle=st[1];ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle=st[2];ctx.globalAlpha=.35;ctx.fillRect(px+1,py+1,TILE-2,TILE-2);ctx.globalAlpha=.42;ctx.strokeStyle=st[6];ctx.fillStyle=st[6];ctx.lineWidth=2;
+  if(motif===0||motif===8){ctx.beginPath();ctx.arc(px+10+seed*3,py+12,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(px+7,py+40);ctx.quadraticCurveTo(px+18,py+24,px+27,py+38);ctx.stroke()}
+  else if(motif===1||motif===7){for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(px+8+k*13,py+42);ctx.quadraticCurveTo(px+2+k*13,py+22,px+13+k*10,py+10);ctx.stroke()}}
+  else if(motif===2||motif===6){ctx.beginPath();ctx.arc(px+14,py+34,5,Math.PI,0);ctx.arc(px+35,py+16,4,Math.PI,0);ctx.fill();ctx.fillRect(px+13,py+34,2,7)}
+  else if(motif===3){ctx.beginPath();ctx.moveTo(px+4,py+5);ctx.bezierCurveTo(px+18,py+14,px+8,py+32,px+43,py+44);ctx.stroke()}
+  else if(motif===4||motif===9){ctx.beginPath();ctx.arc(px+12,py+13,2,0,Math.PI*2);ctx.arc(px+35,py+34,2,0,Math.PI*2);ctx.fill()}
+  else{ctx.beginPath();ctx.moveTo(px+5,py+14);ctx.quadraticCurveTo(px+24,py+3,px+43,py+14);ctx.moveTo(px+4,py+36);ctx.quadraticCurveTo(px+24,py+25,px+44,py+36);ctx.stroke()}ctx.globalAlpha=1}
+ ctx.strokeStyle="#ffffff12";ctx.strokeRect(px,py,TILE,TILE);
 }
+function drawForestBackdrop(){const st=forestStyle(),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,st[0]===st[0]?st[1]:st[1]);g.addColorStop(1,st[3]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.2;for(let i=0;i<18;i++){const x=(i*71+level*29)%W,y=18+(i*43)%H,r=18+(i*7)%27;ctx.fillStyle=i%2?st[2]:st[6];ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}ctx.restore()}
+function drawBurningBlock(block){const px=ox+block.x*TILE,py=oy+block.y*TILE,p=Math.min(1,block.t/.38),fade=1-p*.92;ctx.save();ctx.globalAlpha=fade;ctx.fillStyle=p<.48?"#b65c25":"#211b19";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle=p<.48?"#e98a32":"#49352b";ctx.globalAlpha=fade*(1-p*.55);ctx.fillRect(px+7,py+7,TILE-14,TILE-14);ctx.strokeStyle="#171412";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px+8,py+12);ctx.lineTo(px+37,py+34);ctx.moveTo(px+34,py+8);ctx.lineTo(px+15,py+39);ctx.stroke();if(p<.82){ctx.globalAlpha=fade*.8;ctx.shadowColor="#ff5b16";ctx.shadowBlur=12;for(let i=0;i<4;i++){const fx=px+8+((i*13+block.seed*7)%32),fy=py+TILE-8-p*25-Math.abs(Math.sin(gameClock*35+block.seed+i))*9;ctx.fillStyle=i%2?"#ffb52e":"#ff4b16";ctx.beginPath();ctx.moveTo(fx-5,py+TILE-5);ctx.quadraticCurveTo(fx-7,fy+5,fx,fy-5);ctx.quadraticCurveTo(fx+7,fy+5,fx+5,py+TILE-5);ctx.fill()}}ctx.restore()}
 function drawCharacter(x,y,color,helmet,scale=1){
  const px=ox+x*TILE,py=oy+y*TILE;ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,14,15,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();ctx.fillStyle=helmet;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.fillStyle="#18242a";ctx.fillRect(-5,7,10,3);ctx.restore();
 }
@@ -825,15 +836,15 @@ function drawFlame(f){
  const px=ox+f.x*TILE,py=oy+f.y*TILE;ctx.globalAlpha=Math.min(1,f.t*2.8);ctx.fillStyle="#ff4b19";ctx.fillRect(px+5,py+5,TILE-10,TILE-10);ctx.fillStyle="#ffda4a";ctx.fillRect(px+15,py+15,TILE-30,TILE-30);ctx.globalAlpha=1;
 }
 function draw(){
- ctx.clearRect(0,0,W,H);ctx.fillStyle="#102a20";ctx.fillRect(0,0,W,H);
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawTile(x,y,0);
+ ctx.clearRect(0,0,W,H);drawForestBackdrop();
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawTile(x,y,0);for(const block of charredBlocks)drawBurningBlock(block);
  for(let y=0;y<ROWS;y++){
   for(let x=0;x<COLS;x++){const type=map[y][x];if(type!==0)drawTile(x,y,type)}
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
  }
- ctx.fillStyle="#ffffffaa";ctx.font="12px Arial";ctx.textAlign="center";ctx.fillText("BOMBER QUEST",W/2,H-5);
+ ctx.fillStyle="#ffffffaa";ctx.font="12px Arial";ctx.textAlign="center";ctx.fillStyle=forestStyle()[6];ctx.fillText(forestStyle()[0].toUpperCase()+"  •  FASE "+level,W/2,H-5);
 }
 
 /* INICIALIZAÇÃO */
