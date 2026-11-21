@@ -660,7 +660,7 @@ function updateSlidingBombs(dt){
 }
 function explode(b){
  activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;charredBlocks.push({x,y,t:0,seed:Math.random()*6.28});const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
+ for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;staticMapDirty=true;charredBlocks.push({x,y,t:0,seed:Math.random()*6.28});const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.55});if(player.inv<=0&&Math.floor(player.x)===c.x&&Math.floor(player.y)===c.y)hurtPlayer();for(const enemy of enemies)if(enemy.alive&&Math.floor(enemy.x)===c.x&&Math.floor(enemy.y)===c.y&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  enemies.forEach(e=>{if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null}});updateHUD();
@@ -804,7 +804,7 @@ function rebuildStaticMapLayer(){
  staticMapLayer.width=W;staticMapLayer.height=H;
  const layerCtx=staticMapLayer.getContext("2d");
  drawForestBackdrop(layerCtx);
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y]&&map[y][x]===0)drawTile(x,y,0,layerCtx);
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y])drawTile(x,y,map[y][x],layerCtx);
  staticMapDirty=false;
 }
 function drawBurningBlock(block){const px=ox+block.x*TILE,py=oy+block.y*TILE,p=Math.min(1,block.t/.38),fade=1-p*.92;ctx.save();ctx.globalAlpha=fade;ctx.fillStyle=p<.48?"#b65c25":"#211b19";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle=p<.48?"#e98a32":"#49352b";ctx.globalAlpha=fade*(1-p*.55);ctx.fillRect(px+7,py+7,TILE-14,TILE-14);ctx.strokeStyle="#171412";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px+8,py+12);ctx.lineTo(px+37,py+34);ctx.moveTo(px+34,py+8);ctx.lineTo(px+15,py+39);ctx.stroke();if(p<.82){ctx.globalAlpha=fade*.8;ctx.shadowColor="#ff5b16";ctx.shadowBlur=12;for(let i=0;i<4;i++){const fx=px+8+((i*13+block.seed*7)%32),fy=py+TILE-8-p*25-Math.abs(Math.sin(gameClock*35+block.seed+i))*9;ctx.fillStyle=i%2?"#ffb52e":"#ff4b16";ctx.beginPath();ctx.moveTo(fx-5,py+TILE-5);ctx.quadraticCurveTo(fx-7,fy+5,fx,fy-5);ctx.quadraticCurveTo(fx+7,fy+5,fx+5,py+TILE-5);ctx.fill()}}ctx.restore()}
@@ -862,7 +862,6 @@ function draw(){
  if(staticMapDirty||!staticMapLayer)rebuildStaticMapLayer();
  ctx.drawImage(staticMapLayer,0,0);for(const block of charredBlocks)drawBurningBlock(block);
  for(let y=0;y<ROWS;y++){
-  for(let x=0;x<COLS;x++){const type=map[y][x];if(type!==0)drawTile(x,y,type)}
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
