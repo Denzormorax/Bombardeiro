@@ -850,8 +850,8 @@ const forestThemes=[
  {name:"Bosque da Lua",sky:["#8998bd","#394c78","#111b39"],floor:"rgba(25,39,73,.79)",floor2:"rgba(72,87,130,.4)",wall:["#3e3b5d","#77719a","#252b48"],far:"#293b67",near:"#111b39",glow:"#c4d6ff",accent:"#a8c6ff",style:"moon"}
 ];
 function currentForestTheme(){return forestThemes[Math.max(0,Math.min(forestThemes.length-1,level-1))]}
-function drawForestBackground(target=c){
- const c=target;
+function drawForestBackground(target){
+ const c=target||ctx;
  const theme=currentForestTheme(),g=c.createLinearGradient(0,0,0,H);
  const gameElement=$("game");
  if(gameElement.dataset.theme!==theme.name){gameElement.style.background="linear-gradient(180deg,"+theme.sky[0]+","+theme.sky[1]+" 48%,"+theme.sky[2]+")";gameElement.dataset.theme=theme.name;}
