@@ -681,7 +681,7 @@ function explode(b){
  activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
  for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;charredBlocks.push({x,y,t:0,seed:Math.random()*6.28});const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.55});if(player.inv<=0&&Math.floor(player.x)===c.x&&Math.floor(player.y)===c.y)hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&Math.floor(enemy.x)===c.x&&Math.floor(enemy.y)===c.y&&!hitEnemies.has(enemy){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.55});if(player.inv<=0&&Math.floor(player.x)===c.x&&Math.floor(player.y)===c.y)hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&Math.floor(enemy.x)===c.x&&Math.floor(enemy.y)===c.y&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  enemies.forEach(e=>{if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null}});updateHUD();
 }
 function hurtPlayer(){
@@ -780,7 +780,7 @@ function updatePlayer(dt){
  if(Math.abs(dx)>.08||Math.abs(dy)>.08){if(Math.abs(dx)>=Math.abs(dy)){player.facingX=Math.sign(dx);player.facingY=0}else{player.facingX=0;player.facingY=Math.sign(dy)}}
  if(pushBombOwned&&tryPushBomb(dx,dy)){collectCoins();checkWin();return}
  moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");collectCoins();
- for(const e of enemies)if(e.alive&&!e.burrowing&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0{hurtPlayer();break}checkWin();
+ for(const e of enemies)if(e.alive&&!e.burrowing&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
 }
 function update(dt){
  if(!running||paused)return;gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);updateSlidingBombs(dt);
