@@ -798,7 +798,6 @@ function drawTile(x,y,type){
   else{ctx.beginPath();ctx.moveTo(px+5,py+14);ctx.quadraticCurveTo(px+24,py+3,px+43,py+14);ctx.moveTo(px+4,py+36);ctx.quadraticCurveTo(px+24,py+25,px+44,py+36);ctx.stroke()}ctx.globalAlpha=1}
  ctx.strokeStyle="#ffffff12";ctx.strokeRect(px,py,TILE,TILE);
 }
-function drawForestBackdrop(){const st=forestStyle(),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,st[0]===st[0]?st[1]:st[1]);g.addColorStop(1,st[3]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.2;for(let i=0;i<18;i++){const x=(i*71+level*29)%W,y=18+(i*43)%H,r=18+(i*7)%27;ctx.fillStyle=i%2?st[2]:st[6];ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}ctx.restore()}
 function drawBurningBlock(block){const px=ox+block.x*TILE,py=oy+block.y*TILE,p=Math.min(1,block.t/.38),fade=1-p*.92;ctx.save();ctx.globalAlpha=fade;ctx.fillStyle=p<.48?"#b65c25":"#211b19";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle=p<.48?"#e98a32":"#49352b";ctx.globalAlpha=fade*(1-p*.55);ctx.fillRect(px+7,py+7,TILE-14,TILE-14);ctx.strokeStyle="#171412";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px+8,py+12);ctx.lineTo(px+37,py+34);ctx.moveTo(px+34,py+8);ctx.lineTo(px+15,py+39);ctx.stroke();if(p<.82){ctx.globalAlpha=fade*.8;ctx.shadowColor="#ff5b16";ctx.shadowBlur=12;for(let i=0;i<4;i++){const fx=px+8+((i*13+block.seed*7)%32),fy=py+TILE-8-p*25-Math.abs(Math.sin(gameClock*35+block.seed+i))*9;ctx.fillStyle=i%2?"#ffb52e":"#ff4b16";ctx.beginPath();ctx.moveTo(fx-5,py+TILE-5);ctx.quadraticCurveTo(fx-7,fy+5,fx,fy-5);ctx.quadraticCurveTo(fx+7,fy+5,fx+5,py+TILE-5);ctx.fill()}}ctx.restore()}
 function drawCharacter(x,y,color,helmet,scale=1){
  const px=ox+x*TILE,py=oy+y*TILE;ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,14,15,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();ctx.fillStyle=helmet;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.fillStyle="#18242a";ctx.fillRect(-5,7,10,3);ctx.restore();
@@ -859,7 +858,7 @@ function draw(){
  }
  canvas.style.visibility="visible";
  ctx.clearRect(0,0,W,H);
- drawForestBackdrop();
+ 
  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawTile(x,y,0);for(const block of charredBlocks)drawBurningBlock(block);
  for(let y=0;y<ROWS;y++){
   for(let x=0;x<COLS;x++){const type=map[y][x];if(type!==0)drawTile(x,y,type)}
