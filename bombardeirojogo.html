@@ -658,7 +658,7 @@ function explode(b){
  activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
  for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.55});if(player.inv<=0&&Math.floor(player.x)===c.x&&Math.floor(player.y)===c.y)hurtPlayer();for(const enemy of enemies)if(enemy.alive&&Math.floor(enemy.x)===c.x&&Math.floor(enemy.y)===c.y&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.62,age:0,phase:Math.random()*Math.PI*2});if(player.inv<=0&&Math.floor(player.x)===c.x&&Math.floor(player.y)===c.y)hurtPlayer();for(const enemy of enemies)if(enemy.alive&&Math.floor(enemy.x)===c.x&&Math.floor(enemy.y)===c.y&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  enemies.forEach(e=>{if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null}});updateHUD();
 }
 function hurtPlayer(){
@@ -762,7 +762,7 @@ function updatePlayer(dt){
 function update(dt){
  if(!running||paused)return;gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);updateSlidingBombs(dt);
  for(const b of bombs){b.t-=dt;b.animTime+=dt}const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
- for(const f of flames)f.t-=dt;flames=flames.filter(f=>f.t>0);
+ for(const f of flames){f.t-=dt;f.age=(f.age||0)+dt}flames=flames.filter(f=>f.t>0);
  for(const f of flames)if(player.inv<=0&&Math.floor(player.x)===f.x&&Math.floor(player.y)===f.y){hurtPlayer();break}
  for(const c of coinsOnMap)c.life+=dt;updateHUD();
 }
@@ -770,7 +770,23 @@ function update(dt){
 /* DESENHO DO CENÁRIO */
 function drawTile(x,y,type){
  const px=ox+x*TILE,py=oy+y*TILE;
- if(type===1){ctx.fillStyle="#253b48";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#3b5967";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle="#172a35";ctx.fillRect(px+7,py+7,TILE-14,TILE-14)}
+ if(type===1){
+  const pulse=.82+.18*Math.sin(gameClock*2.2+x*.55+y*.42);
+  const base=ctx.createLinearGradient(px,py,px+TILE,py+TILE);
+  base.addColorStop(0,"#b9f5ff");base.addColorStop(.18,"#398ba7");base.addColorStop(.48,"#17445f");base.addColorStop(.78,"#286b86");base.addColorStop(1,"#102b45");
+  ctx.fillStyle=base;ctx.fillRect(px,py,TILE,TILE);
+  ctx.save();ctx.beginPath();ctx.rect(px+2,py+2,TILE-4,TILE-4);ctx.clip();
+  ctx.fillStyle="#b9f6ff22";ctx.beginPath();ctx.moveTo(px+3,py+3);ctx.lineTo(px+TILE-4,py+3);ctx.lineTo(px+TILE*.58,py+TILE*.48);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#061b3155";ctx.beginPath();ctx.moveTo(px+3,py+TILE-3);ctx.lineTo(px+TILE-3,py+TILE-3);ctx.lineTo(px+TILE*.58,py+TILE*.48);ctx.closePath();ctx.fill();
+  ctx.translate(px+TILE/2,py+TILE/2);ctx.rotate(-Math.PI/4);
+  const sweep=((gameClock*43+x*19+y*13)%(TILE*2+36))-TILE-18;
+  const shine=ctx.createLinearGradient(sweep-12,0,sweep+15,0);
+  shine.addColorStop(0,"#ffffff00");shine.addColorStop(.42,"#ffffff00");shine.addColorStop(.5,"#ffffff"+Math.round(42+35*pulse).toString(16).padStart(2,"0"));shine.addColorStop(.58,"#d9fbff55");shine.addColorStop(1,"#ffffff00");
+  ctx.fillStyle=shine;ctx.fillRect(sweep-12,-TILE*1.5,30,TILE*3);
+  ctx.restore();
+  ctx.strokeStyle="#c9f8ffbb";ctx.lineWidth=1.5;ctx.strokeRect(px+2.5,py+2.5,TILE-5,TILE-5);
+  ctx.strokeStyle="#ffffff66";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px+6,py+6);ctx.lineTo(px+TILE-7,py+6);ctx.moveTo(px+6,py+6);ctx.lineTo(px+6,py+TILE-7);ctx.stroke();
+ }
  else if(type===2){ctx.fillStyle="#9a5530";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#c57b47";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle="#814126";ctx.fillRect(px+4,py+22,TILE-8,4);ctx.fillRect(px+21,py+4,4,18);ctx.fillRect(px+13,py+27,4,17);ctx.strokeStyle="#e2a36a";ctx.lineWidth=2;ctx.strokeRect(px+3,py+3,TILE-6,TILE-6)}
  else{ctx.fillStyle="#244d39";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#2d6044";ctx.fillRect(px+1,py+1,TILE-2,TILE-2)}
  ctx.strokeStyle="#ffffff0d";ctx.strokeRect(px,py,TILE,TILE);
@@ -822,7 +838,33 @@ function drawBomb(b){
  if(b.slide){ctx.fillStyle="#ffe36b";ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText("➜",px,py-29)}
 }
 function drawFlame(f){
- const px=ox+f.x*TILE,py=oy+f.y*TILE;ctx.globalAlpha=Math.min(1,f.t*2.8);ctx.fillStyle="#ff4b19";ctx.fillRect(px+5,py+5,TILE-10,TILE-10);ctx.fillStyle="#ffda4a";ctx.fillRect(px+15,py+15,TILE-30,TILE-30);ctx.globalAlpha=1;
+ const px=ox+f.x*TILE,py=oy+f.y*TILE,age=f.age||0,phase=f.phase||0;
+ const fade=Math.min(1,f.t*2.4),flicker=Math.sin(age*25+phase),flicker2=Math.cos(age*19+phase*1.7);
+ const cx=px+TILE/2,baseY=py+TILE-3;
+ ctx.save();
+ ctx.globalAlpha=fade;
+ // Halo suave: bloom local em volta da chama, sem filtros pesados.
+ const glow=ctx.createRadialGradient(cx,py+TILE*.56,3,cx,py+TILE*.56,TILE*.78);
+ glow.addColorStop(0,"#fff5a0aa");glow.addColorStop(.28,"#ff9a27a0");glow.addColorStop(.68,"#ff4b1b45");glow.addColorStop(1,"#ff351000");
+ ctx.fillStyle=glow;ctx.fillRect(px-TILE*.18,py-TILE*.12,TILE*1.36,TILE*1.24);
+ // Camada externa laranja, com pontas irregulares e movimento.
+ ctx.shadowColor="#ff5a16";ctx.shadowBlur=18;
+ ctx.fillStyle="#e93612";ctx.beginPath();
+ ctx.moveTo(px+7,baseY);ctx.bezierCurveTo(px+2,py+TILE*.67,px+13+flicker*2,py+TILE*.43,px+TILE*.27,py+TILE*.22);
+ ctx.bezierCurveTo(px+TILE*.22,py+TILE*.47,px+TILE*.43,py+TILE*.43,px+TILE*.48,py+TILE*.08+flicker*2);
+ ctx.bezierCurveTo(px+TILE*.59,py+TILE*.37,px+TILE*.78,py+TILE*.43,px+TILE*.76,py+TILE*.2+flicker2*2);
+ ctx.bezierCurveTo(px+TILE*.99,py+TILE*.53,px+TILE-2,py+TILE*.76,px+TILE-7,baseY);
+ ctx.closePath();ctx.fill();
+ // Línguas secundárias de fogo nas laterais.
+ ctx.shadowBlur=12;ctx.fillStyle="#ff8a1e";
+ ctx.beginPath();ctx.moveTo(px+10,baseY);ctx.quadraticCurveTo(px+TILE*.12,py+TILE*.58,px+TILE*.3,py+TILE*.42+flicker*2);ctx.quadraticCurveTo(px+TILE*.38,py+TILE*.73,px+TILE*.42,baseY);ctx.closePath();ctx.fill();
+ ctx.beginPath();ctx.moveTo(px+TILE*.57,baseY);ctx.quadraticCurveTo(px+TILE*.7,py+TILE*.62,px+TILE*.78,py+TILE*.39+flicker2*2);ctx.quadraticCurveTo(px+TILE*.9,py+TILE*.72,px+TILE-10,baseY);ctx.closePath();ctx.fill();
+ // Núcleo amarelo e branco, mais quente no centro.
+ ctx.shadowColor="#ffd84a";ctx.shadowBlur=13;ctx.fillStyle="#ffd044";
+ ctx.beginPath();ctx.moveTo(px+TILE*.22,baseY);ctx.bezierCurveTo(px+TILE*.25,py+TILE*.66,px+TILE*.38,py+TILE*.48,px+TILE*.49,py+TILE*.31+flicker*1.5);ctx.bezierCurveTo(px+TILE*.55,py+TILE*.52,px+TILE*.76,py+TILE*.65,px+TILE*.78,baseY);ctx.closePath();ctx.fill();
+ ctx.shadowBlur=7;ctx.fillStyle="#fff4a0";
+ ctx.beginPath();ctx.moveTo(px+TILE*.39,baseY);ctx.quadraticCurveTo(px+TILE*.4,py+TILE*.62,cx+flicker2*2,py+TILE*.48);ctx.quadraticCurveTo(px+TILE*.62,py+TILE*.68,px+TILE*.61,baseY);ctx.closePath();ctx.fill();
+ ctx.restore();
 }
 function draw(){
  ctx.clearRect(0,0,W,H);ctx.fillStyle="#102a20";ctx.fillRect(0,0,W,H);
