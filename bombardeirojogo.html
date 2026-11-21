@@ -499,10 +499,46 @@ function cellKey(x,y){return x+","+y}
 function distance(x,y,a,b){return Math.hypot(x-a,y-b)}
 function bombAt(x,y){return bombs.find(b=>Math.floor(b.x)===x&&Math.floor(b.y)===y)}
 function isFixedPillar(x,y){return x===0||y===0||x===COLS-1||y===ROWS-1||(x%2===0&&y%2===0)}
+/* DEZ MAPAS EXCLUSIVOS DA FLORESTA */
+const forestLayouts=[
+ {main:[[1,1],[1,5],[5,5],[5,9],[9,9],[9,6]],branches:[[[1,5],[1,9]],[[5,5],[9,5],[13,5]],[[5,9],[13,9],[13,5]],[[9,5],[9,1],[15,1]]],rooms:[[3,5,1,1],[9,5,1,1],[13,9,1,1]]},
+ {main:[[1,1],[5,1],[5,5],[9,5],[9,9],[15,9],[15,5],[17,5]],branches:[[[5,5],[3,9]],[[9,5],[13,1]],[[9,9],[9,11]],[[15,9],[17,11]]],rooms:[[5,5,2,1],[9,5,1,1],[15,9,1,1]]},
+ {main:[[1,1],[1,5],[5,5],[5,1],[9,1],[9,5],[13,5],[13,9],[17,9],[17,5]],branches:[[[5,5],[5,9],[9,9]],[[9,5],[9,11]],[[13,5],[17,1]]],rooms:[[3,5,1,1],[7,5,1,1],[11,5,1,1],[15,9,1,1],[9,9,1,1]]},
+ {main:[[1,1],[5,1],[5,5],[9,5],[9,9],[13,9],[13,5],[17,5]],branches:[[[5,5],[3,9]],[[9,5],[9,1],[15,1]],[[9,9],[7,11]],[[13,9],[17,11]],[[13,5],[11,1]]],rooms:[[5,5,1,1],[9,5,1,1],[13,9,1,1]]},
+ {main:[[1,1],[1,5],[5,5],[5,1],[9,1],[9,5],[13,5],[13,1],[17,1]],branches:[[[5,5],[5,9],[9,9]],[[9,5],[9,11]],[[13,5],[13,9],[17,9]],[[9,9],[15,11]]],rooms:[[3,5,1,1],[7,1,1,1],[11,5,1,1],[15,9,1,1],[9,9,1,1]]},
+ {main:[[1,1],[3,1],[3,9],[7,9],[7,3],[11,3],[11,11],[15,11],[15,5],[17,5]],branches:[[[3,5],[1,5]],[[7,3],[7,1]],[[11,3],[17,3]],[[11,11],[9,11]],[[15,5],[15,1]]],rooms:[[3,9,1,1],[7,3,1,1],[11,11,1,1],[15,5,1,1]]},
+ {main:[[1,1],[1,5],[5,5],[5,9],[9,9],[9,5],[13,5],[13,9],[17,9]],branches:[[[1,5],[1,9]],[[5,5],[5,1],[9,1]],[[9,9],[13,11]],[[13,5],[17,1]],[[9,5],[9,1]]],rooms:[[3,5,2,1],[7,9,2,1],[11,5,2,1],[15,9,1,1]]},
+ {main:[[1,1],[3,1],[3,11],[7,11],[7,1],[11,1],[11,11],[15,11],[15,1],[17,1]],branches:[[[3,5],[1,5]],[[7,5],[5,5]],[[11,5],[9,5]],[[15,5],[17,5]],[[7,11],[7,9]],[[11,1],[13,1]]],rooms:[[3,3,0,1],[7,7,0,1],[11,3,0,1],[15,7,0,1]]},
+ {main:[[1,1],[5,1],[5,5],[9,5],[13,5],[13,1],[17,1],[17,9],[13,9],[9,9],[5,9],[1,9],[1,5]],branches:[[[5,5],[5,3]],[[9,5],[9,1]],[[13,5],[13,7]],[[9,9],[9,11]],[[5,9],[5,11]]],rooms:[[5,5,1,1],[13,5,1,1],[9,9,1,1],[5,9,1,1]]},
+ {main:[[1,1],[1,9],[5,9],[5,3],[13,3],[13,9],[17,9],[17,5],[9,5],[9,1],[5,1]],branches:[[[5,3],[3,3]],[[13,3],[17,1]],[[13,9],[13,11]],[[9,5],[9,11]],[[5,9],[1,11]],[[9,1],[15,1]]],rooms:[[3,9,1,1],[5,3,1,1],[13,9,1,1],[9,5,1,1],[15,5,1,1]]}
+];
+function carveMapCell(x,y){
+ if(x>0&&y>0&&x<COLS-1&&y<ROWS-1&&!isFixedPillar(x,y))map[y][x]=0;
+}
+function carveMapPath(points){
+ for(let p=1;p<points.length;p++){
+  let x=points[p-1][0],y=points[p-1][1],tx=points[p][0],ty=points[p][1];
+  const sx=Math.sign(tx-x),sy=Math.sign(ty-y);
+  while(x!==tx){carveMapCell(x,y);x+=sx}
+  while(y!==ty){carveMapCell(x,y);y+=sy}
+  carveMapCell(tx,ty);
+ }
+}
+function carveMapRoom(cx,cy,rx,ry){
+ for(let y=Math.max(1,cy-ry);y<=Math.min(ROWS-2,cy+ry);y++)
+  for(let x=Math.max(1,cx-rx);x<=Math.min(COLS-2,cx+rx);x++)
+   if(((x-cx)*(x-cx))/(Math.max(1,rx*rx))+((y-cy)*(y-cy))/(Math.max(1,ry*ry))<=1.35)carveMapCell(x,y);
+}
 function makeMap(){
- map=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:(Math.random()<.57?2:0)));
+ map=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:2));
+ const design=forestLayouts[(Math.max(1,Math.min(TOTAL_LEVELS,level))-1)%forestLayouts.length];
+ carveMapPath(design.main);
+ for(const branch of design.branches)carveMapPath(branch);
+ for(const room of design.rooms)carveMapRoom(room[0],room[1],room[2],room[3]);
+ // Área inicial sempre segura e conectada ao primeiro caminho.
  for(let y=1;y<=2;y++)for(let x=1;x<=2;x++)map[y][x]=0;
- map[1][3]=0;map[3][1]=0;exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};map[exit.y][exit.x]=2;
+ map[1][3]=0;map[3][1]=0;
+ exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};map[exit.y][exit.x]=2;
 }
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
@@ -768,6 +804,60 @@ function update(dt){
 }
 
 /* DESENHO DO CENÁRIO */
+const forestThemes=[
+ {name:"Bosque Esmeralda",sky:["#9bcf91","#386b48","#132f2b"],floor:"rgba(24,67,43,.78)",floor2:"rgba(72,119,65,.42)",wall:["#74452d","#a66b3f","#4a2c25"],far:"#174b35",near:"#0c3027",glow:"#d8ff9a",accent:"#8bd66b",style:"rays"},
+ {name:"Trilha das Samambaias",sky:["#8ec8a2","#28634e","#102d2a"],floor:"rgba(19,65,49,.76)",floor2:"rgba(66,126,86,.42)",wall:["#594331","#8b7049","#334b32"],far:"#174b3d",near:"#0b2d27",glow:"#a5f3bd",accent:"#72c98a",style:"ferns"},
+ {name:"Clareira dos Cogumelos",sky:["#b6a2a0","#76566b","#2b253b"],floor:"rgba(55,43,61,.77)",floor2:"rgba(125,83,106,.38)",wall:["#704034","#b66b52","#482b3b"],far:"#4b3150",near:"#241d37",glow:"#f3b7d1",accent:"#e58ba7",style:"mushrooms"},
+ {name:"Raízes Ancestrais",sky:["#9a956d","#4c5638","#1c2b22"],floor:"rgba(44,57,35,.79)",floor2:"rgba(109,100,56,.38)",wall:["#563b27","#8a6136","#38291e"],far:"#39472b",near:"#17281e",glow:"#d9c27b",accent:"#b1a05a",style:"roots"},
+ {name:"Bosque dos Vagalumes",sky:["#6caa88","#244d54","#101d32"],floor:"rgba(20,49,50,.78)",floor2:"rgba(53,105,83,.4)",wall:["#4b3c32","#876044","#263d37"],far:"#183e42",near:"#0c202c",glow:"#c8ff72",accent:"#b6ed69",style:"fireflies"},
+ {name:"Floresta Nebulosa",sky:["#a3b5bd","#667f8c","#263d4b"],floor:"rgba(39,63,73,.78)",floor2:"rgba(107,132,143,.4)",wall:["#4a4b43","#7c7d6b","#303b42"],far:"#3b5962",near:"#1b303a",glow:"#d7e7e5",accent:"#9bc2bf",style:"mist"},
+ {name:"Vale das Flores",sky:["#b9d9a0","#689b69","#244d3b"],floor:"rgba(45,82,48,.76)",floor2:"rgba(129,158,75,.42)",wall:["#79503a","#bd8750","#4a3928"],far:"#376c42",near:"#1a3e2b",glow:"#fff1a8",accent:"#f4c86c",style:"flowers"},
+ {name:"Bosque de Bambu",sky:["#a7c78a","#4d8060","#1d3d32"],floor:"rgba(33,76,50,.77)",floor2:"rgba(103,145,75,.4)",wall:["#80603a","#c2a05a","#3d5c39"],far:"#2c6748",near:"#123b2c",glow:"#d7ef9c",accent:"#a9d56c",style:"bamboo"},
+ {name:"Floresta Dourada",sky:["#e4c47e","#a0783f","#3e3a27"],floor:"rgba(74,62,34,.78)",floor2:"rgba(153,119,54,.4)",wall:["#69452b","#b27b3b","#49301f"],far:"#72562e",near:"#332d20",glow:"#ffe79a",accent:"#f4c65b",style:"gold"},
+ {name:"Bosque da Lua",sky:["#8998bd","#394c78","#111b39"],floor:"rgba(25,39,73,.79)",floor2:"rgba(72,87,130,.4)",wall:["#3e3b5d","#77719a","#252b48"],far:"#293b67",near:"#111b39",glow:"#c4d6ff",accent:"#a8c6ff",style:"moon"}
+];
+function currentForestTheme(){return forestThemes[Math.max(0,Math.min(forestThemes.length-1,level-1))]}
+function drawForestBackground(){
+ const theme=currentForestTheme(),g=ctx.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,theme.sky[0]);g.addColorStop(.48,theme.sky[1]);g.addColorStop(1,theme.sky[2]);
+ ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ const halo=ctx.createRadialGradient(W*.5,H*.28,8,W*.5,H*.28,Math.max(W,H)*.72);
+ halo.addColorStop(0,theme.glow+"44");halo.addColorStop(1,"#00000000");ctx.fillStyle=halo;ctx.fillRect(0,0,W,H);
+ // Silhuetas de árvores ao fundo, com distribuição fixa para não gerar tremulação.
+ for(let i=0;i<11;i++){
+  const x=i*103-28,base=H*(.42+(i%3)*.045),h=125+(i%4)*27,w=38+(i%3)*13;
+  ctx.fillStyle=theme.far;ctx.fillRect(x+w*.42,base-h*.12,w*.16,h*.62);
+  ctx.beginPath();ctx.moveTo(x,base-h*.12);ctx.lineTo(x+w*.5,base-h);ctx.lineTo(x+w,base-h*.12);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(x-7,base-h*.38);ctx.lineTo(x+w*.5,base-h*.9);ctx.lineTo(x+w+7,base-h*.38);ctx.closePath();ctx.fill();
+ }
+ ctx.fillStyle=theme.near;ctx.fillRect(0,H*.72,W,H*.28);
+ // Elemento visual exclusivo de cada clareira da floresta.
+ ctx.save();ctx.globalAlpha=.62;ctx.strokeStyle=theme.accent;ctx.fillStyle=theme.accent;ctx.lineWidth=3;
+ const style=theme.style;
+ if(style==="rays"){
+  for(let i=0;i<6;i++){ctx.globalAlpha=.13;ctx.beginPath();ctx.moveTo(100+i*145,0);ctx.lineTo(30+i*150,H*.68);ctx.lineTo(75+i*150,H*.68);ctx.closePath();ctx.fill()}
+ }else if(style==="ferns"){
+  for(let i=0;i<7;i++){const x=35+i*145,y=H*.7;ctx.globalAlpha=.38;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+25,y-65,x+55,y-110);ctx.stroke();for(let j=0;j<5;j++){const yy=y-20-j*17;ctx.beginPath();ctx.ellipse(x+15+j*7,yy,17,5,-.55,0,Math.PI*2);ctx.ellipse(x+35+j*5,yy-7,16,5,.55,0,Math.PI*2);ctx.fill()}}
+ }else if(style==="mushrooms"){
+  for(let i=0;i<9;i++){const x=35+i*112,y=H*.73+(i%3)*17;ctx.globalAlpha=.5;ctx.fillRect(x+12,y-25,7,25);ctx.beginPath();ctx.ellipse(x+15,y-25,20,10,0,Math.PI,Math.PI*2);ctx.fill();ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(x+8,y-29,2,0,Math.PI*2);ctx.arc(x+20,y-32,2,0,Math.PI*2);ctx.fill()}
+ }else if(style==="roots"){
+  for(let i=0;i<8;i++){const x=i*135;ctx.globalAlpha=.42;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,H);ctx.bezierCurveTo(x+35,H*.82,x+65,H*.88,x+100,H*.66);ctx.stroke()}
+ }else if(style==="fireflies"){
+  for(let i=0;i<28;i++){const x=(i*137+37)%W,y=80+(i*71)%430;ctx.globalAlpha=.25+.25*(i%3);ctx.beginPath();ctx.arc(x,y,2+(i%3),0,Math.PI*2);ctx.fill()}
+ }else if(style==="mist"){
+  for(let i=0;i<5;i++){ctx.globalAlpha=.12;ctx.beginPath();ctx.ellipse(100+i*190,H*.35+(i%2)*90,170,22,0,0,Math.PI*2);ctx.fill()}
+ }else if(style==="flowers"){
+  for(let i=0;i<25;i++){const x=(i*83+19)%W,y=H*.7+(i*31)%170;ctx.globalAlpha=.65;for(let j=0;j<5;j++){const a=j*Math.PI*2/5;ctx.beginPath();ctx.arc(x+Math.cos(a)*5,y+Math.sin(a)*5,3,0,Math.PI*2);ctx.fill()}ctx.fillStyle="#ffe78b";ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fill();ctx.fillStyle=theme.accent}
+ }else if(style==="bamboo"){
+  for(let i=0;i<13;i++){const x=i*83+18;ctx.globalAlpha=.5;ctx.fillRect(x,H*.12,7,H*.72);ctx.fillRect(x-5,H*.28,17,3);ctx.fillRect(x-5,H*.52,17,3);ctx.beginPath();ctx.ellipse(x-12,H*.3,22,6,-.5,0,Math.PI*2);ctx.ellipse(x+18,H*.56,24,6,.5,0,Math.PI*2);ctx.fill()}
+ }else if(style==="gold"){
+  for(let i=0;i<32;i++){const x=(i*97+23)%W,y=(i*59+41)%H;ctx.globalAlpha=.35;ctx.save();ctx.translate(x,y);ctx.rotate(i*.7);ctx.beginPath();ctx.ellipse(0,0,5,11,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+ }else if(style==="moon"){
+  ctx.globalAlpha=.65;ctx.beginPath();ctx.arc(W*.82,H*.18,42,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation="destination-out";ctx.beginPath();ctx.arc(W*.84,H*.15,39,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation="source-over";
+  for(let i=0;i<32;i++){const x=(i*113+31)%W,y=(i*67+17)%(H*.55);ctx.globalAlpha=.55;ctx.fillRect(x,y,2,2)}
+ }
+ ctx.restore();ctx.globalAlpha=1;
+}
 function drawTile(x,y,type){
  const px=ox+x*TILE,py=oy+y*TILE;
  if(type===1){
@@ -787,8 +877,13 @@ function drawTile(x,y,type){
   ctx.strokeStyle="#c9f8ffbb";ctx.lineWidth=1.5;ctx.strokeRect(px+2.5,py+2.5,TILE-5,TILE-5);
   ctx.strokeStyle="#ffffff66";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px+6,py+6);ctx.lineTo(px+TILE-7,py+6);ctx.moveTo(px+6,py+6);ctx.lineTo(px+6,py+TILE-7);ctx.stroke();
  }
- else if(type===2){ctx.fillStyle="#9a5530";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#c57b47";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);ctx.fillStyle="#814126";ctx.fillRect(px+4,py+22,TILE-8,4);ctx.fillRect(px+21,py+4,4,18);ctx.fillRect(px+13,py+27,4,17);ctx.strokeStyle="#e2a36a";ctx.lineWidth=2;ctx.strokeRect(px+3,py+3,TILE-6,TILE-6)}
- else{ctx.fillStyle="#244d39";ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#2d6044";ctx.fillRect(px+1,py+1,TILE-2,TILE-2)}
+ else if(type===2){const wood=currentForestTheme().wall;const bark=ctx.createLinearGradient(px,py,px+TILE,py+TILE);bark.addColorStop(0,wood[1]);bark.addColorStop(.55,wood[0]);bark.addColorStop(1,wood[2]);ctx.fillStyle=bark;ctx.fillRect(px,py,TILE,TILE);ctx.fillStyle="#ffffff18";ctx.fillRect(px+4,py+4,TILE-8,5);ctx.fillStyle="#160f0b55";ctx.fillRect(px+5,py+21,TILE-10,4);ctx.fillRect(px+22,py+5,4,17);ctx.fillRect(px+13,py+28,4,14);ctx.strokeStyle=wood[1];ctx.lineWidth=2;ctx.strokeRect(px+3,py+3,TILE-6,TILE-6)}
+ else{
+  const theme=currentForestTheme();
+  ctx.fillStyle=theme.floor;ctx.fillRect(px,py,TILE,TILE);
+  ctx.fillStyle=theme.floor2;ctx.fillRect(px+1,py+1,TILE-2,TILE-2);
+  if((x*7+y*11+level)%6===0){ctx.strokeStyle=theme.accent+"66";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(px+9,py+31);ctx.quadraticCurveTo(px+19,py+19,px+31,py+25);ctx.stroke();ctx.beginPath();ctx.ellipse(px+31,py+24,5,2,-.5,0,Math.PI*2);ctx.stroke()}
+ }
  ctx.strokeStyle="#ffffff0d";ctx.strokeRect(px,py,TILE,TILE);
 }
 function drawCharacter(x,y,color,helmet,scale=1){
@@ -867,7 +962,7 @@ function drawFlame(f){
  ctx.restore();
 }
 function draw(){
- ctx.clearRect(0,0,W,H);ctx.fillStyle="#102a20";ctx.fillRect(0,0,W,H);
+ ctx.clearRect(0,0,W,H);drawForestBackground();
  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawTile(x,y,0);
  for(let y=0;y<ROWS;y++){
   for(let x=0;x<COLS;x++){const type=map[y][x];if(type!==0)drawTile(x,y,type)}
