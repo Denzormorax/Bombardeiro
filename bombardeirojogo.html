@@ -589,7 +589,10 @@ function makeMap(){
   if(map[y][x]!==0||isStartSafeCell(x,y)||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<1.35)continue;
   candidates.push({x,y});
  }
- shuffleArray(candidates);
+ // Divide os candidatos em duas metades para impedir concentração de blocos à direita.
+ // A seleção continua aleatória dentro de cada lado e mantém a rota até a saída.
+ const leftCandidates=shuffleArray(candidates.filter(p=>p.x<Math.floor(COLS/2)));
+ const rightCandidates=shuffleArray(candidates.filter(p=>p.x>=Math.floor(COLS/2)));
  const targetBlocks=Math.round(candidates.length*(.20+Math.random()*.07));
  const hasStartToExitRoute=()=>{
   const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
@@ -608,12 +611,24 @@ function makeMap(){
   return false;
  };
  let placed=0;
- for(const p of candidates){
-  if(placed>=targetBlocks)break;
-  map[p.y][p.x]=2;
-  if(!hasStartToExitRoute()){map[p.y][p.x]=0;continue}
-  placed++;
- }
+ const used=new Set();
+ const placeFrom=(list,limit)=>{
+  let added=0;
+  for(const p of list){
+   if(placed>=targetBlocks||added>=limit)break;
+   const key=cellKey(p.x,p.y);
+   if(used.has(key))continue;
+   map[p.y][p.x]=2;
+   if(!hasStartToExitRoute()){map[p.y][p.x]=0;continue}
+   used.add(key);placed++;added++;
+  }
+ };
+ const halfTarget=Math.floor(targetBlocks/2);
+ placeFrom(leftCandidates,halfTarget);
+ placeFrom(rightCandidates,targetBlocks-halfTarget);
+ // Se um dos lados tiver poucos espaços elegíveis, completa com o outro sem repetir células.
+ placeFrom(leftCandidates,targetBlocks-placed);
+ placeFrom(rightCandidates,targetBlocks-placed);
 }
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
@@ -652,7 +667,8 @@ function updateShopButtons(){
 }
 function resetPowerUps(){bombPowerUps=0;firePowerUps=0;speedPowerUps=0;pushBombOwned=false;maxBombs=1;firePower=1;if(player)player.speed=basePlayerSpeed;updateHUD()}
 function createEnemySpawnPositions(count){
- // Calcula as células alcançáveis desde o nascimento do jogador.
+ // Os inimigos nascem em corredores alcançáveis, mas sem ficarem agrupados
+ // nem todos concentrados no mesmo lado do mapa.
  const reachable=new Set(),queue=[{x:1,y:1}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
  reachable.add(cellKey(1,1));
  let head=0;
@@ -667,7 +683,7 @@ function createEnemySpawnPositions(count){
  const candidates=[];
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
   if(map[y][x]!==0||!reachable.has(cellKey(x,y))||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
-  if(distance(x+.5,y+.5,player.x,player.y)<6.2||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<2.5)continue;
+  if(distance(x+.5,y+.5,player.x,player.y)<4.2||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<2.5)continue;
   let openNeighbors=0;
   for(const [dx,dy] of dirs)if(tileAt(x+dx,y+dy)===0)openNeighbors++;
   if(openNeighbors>=2)candidates.push({x,y});
@@ -682,8 +698,16 @@ function createEnemySpawnPositions(count){
    selected.push(p);
   }
  };
- choose(3.8);
- if(selected.length<count)choose(2.6);
+ choose(2.8);
+ if(selected.length<count)choose(1.8);
+ // Último recurso: aproveita qualquer corredor alcançável que ainda esteja livre.
+ if(selected.length<count){
+  for(const p of candidates){
+   if(selected.length>=count)break;
+   if(selected.some(q=>q.x===p.x&&q.y===p.y)||tileAt(p.x,p.y)!==0)continue;
+   selected.push(p);
+  }
+ }
  return selected;
 }
 function newLevel(preservePowerUps=false){
@@ -693,7 +717,7 @@ function newLevel(preservePowerUps=false){
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
- const enemyOptions=[4,5,7],baseCount=enemyOptions[Math.floor(Math.random()*enemyOptions.length)]+2,mushroomCount=level>=4&&level<=8?2+Math.floor(Math.random()*2):0,hornedCount=level>=6&&level<=10?2+Math.floor(Math.random()*2):0,count=baseCount+mushroomCount+hornedCount,spawnPositions=createEnemySpawnPositions(count);prepareCoinDrops();const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
+ const count=4+Math.floor(Math.random()*3),mushroomCount=level>=4&&level<=8?Math.min(2,Math.floor(Math.random()*3),count):0,hornedCount=level>=6&&level<=10?Math.min(2,Math.floor(Math.random()*3),count-mushroomCount):0,spawnPositions=createEnemySpawnPositions(count);prepareCoinDrops();const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
  spawnPositions.forEach((p,index)=>{const isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isMushroom&&!isHorned&&hunterSlots.has(index),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isHorned?1.72:isHunter?1.55:1.28),isHunter,isHorned,isMushroom,isEnraged:false,hp:isHunter||isHorned?2:1,maxHp:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0})});
  updateHUD();
 }
