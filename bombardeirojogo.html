@@ -412,9 +412,11 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 .worldCard .forestArt{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,#8bcf66 0 15%,transparent 16%),radial-gradient(circle at 15% 55%,#1c663b 0 17%,transparent 18%),radial-gradient(circle at 82% 52%,#236d3b 0 20%,transparent 21%),linear-gradient(160deg,transparent 40%,#175331 41% 100%)}
 .worldCard .forestArt:before{content:"🌲 🌳 🌲";position:absolute;left:0;right:0;top:37px;font-size:43px;text-shadow:0 4px 4px #123}
 .worldCard .forestArt:after{content:"🌿  🌼  🌿";position:absolute;bottom:38px;left:0;right:0;font-size:25px}
-.worldName{position:absolute;bottom:0;left:0;right:0;padding:11px;background:#09271fe8;font-size:18px;font-weight:900;letter-spacing:2px}
+.worldName{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 10px 12px;background:linear-gradient(180deg,rgba(8,39,29,.78),rgba(5,29,21,.96));border-top:1px solid #d8ffad99;color:#efffdc;font-family:Georgia,"Times New Roman",serif;font-size:clamp(19px,4vw,23px);font-weight:900;letter-spacing:3px;text-shadow:0 2px 0 #174526,0 0 9px #b8ff83aa;-webkit-text-stroke:.35px #315b2d;box-shadow:0 -4px 14px #071b1266}
 #worldsPanel{position:fixed;inset:0;z-index:10;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;padding:18px;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;background:url("./game-assets/images/forest-selection-background.jpg") center center/cover no-repeat}
 #worldsPanel>*{position:relative;z-index:1}
+#worldsBackArrowBtn{position:absolute;top:12px;left:12px;z-index:15;width:43px;height:43px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid #b5ef89;border-radius:12px;background:linear-gradient(145deg,#244d36,#102c20);color:#e5ffbd;font-size:29px;font-weight:bold;line-height:1;box-shadow:0 4px 12px #0007,0 0 10px #8fce6b55;cursor:pointer}
+#worldsBackArrowBtn:active{transform:scale(.94);filter:brightness(1.3)}
 .worldGrid{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:16px;width:100%;max-width:100%;flex:0 0 auto;overflow-x:auto;overflow-y:hidden;padding:10px 6px 16px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
 .worldCard{flex:0 0 auto;width:min(220px,65vw);height:170px;scroll-snap-align:center}
 .worldCard:first-child{margin-left:auto}
@@ -581,9 +583,9 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  <div class="panel hidden" id="noticePanel"><h2>EM BREVE!</h2><p>Novas aventuras e modos de jogo estão sendo preparados.</p><button class="mainbtn" id="noticeBackBtn">VOLTAR</button></div>
 </div>
 <div id="worldsPanel" class="hidden">
+ <button id="worldsBackArrowBtn" type="button" aria-label="Voltar ao menu principal">←</button>
  <div class="menuTitle">MUNDOS</div>
  <div class="worldGrid"><button class="worldCard" id="forestBtn"><span class="forestArt"></span><span class="worldName">🌲 FLORESTA</span></button></div>
- <button class="menuBack" id="worldsBackBtn">VOLTAR</button>
 </div>
 <div id="forestPanel" class="hidden">
  <button id="forestBackArrowBtn" type="button" aria-label="Voltar aos mundos">←</button>
@@ -1439,7 +1441,7 @@ $("historyBtn").onclick=()=>showMenuScreen("worlds");
 $("comingBtn").onclick=()=>showPanel("noticePanel");
 $("noticeBackBtn").onclick=()=>showMenuScreen("main");
 $("forestBtn").onclick=()=>showMenuScreen("forest");
-$("worldsBackBtn").onclick=()=>showMenuScreen("main");
+$("worldsBackArrowBtn").onclick=()=>showMenuScreen("main");
 $("forestBackArrowBtn").onclick=()=>showMenuScreen("worlds");
 $("againBtn").onclick=()=>startGame(level);
 $("endMenuBtn").onclick=()=>{running=false;paused=true;$("shopBtn").classList.add("hidden");showMenuScreen("main")};
