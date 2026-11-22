@@ -139,46 +139,128 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  border-radius:50%;background:transparent;border:0;
  box-shadow:none;animation:mascotFloat 2.4s ease-in-out 2.8s infinite;
 }
-/* Voo contínuo: trajetória com vários quadros intermediários, sem saltos de posição. */
-.mascotFlight.entering{animation:mascotFlyIn 2.8s cubic-bezier(.2,.72,.25,1) both}
+/* Voo longo e contínuo: 101 posições intermediárias, interpoladas linearmente. */
+.mascot{animation:mascotFloat 2.4s ease-in-out 4.8s infinite}
+.mascotFlight.entering{animation:mascotFlyIn 4.8s linear both}
 @keyframes mascotFlyIn{
- 0%{transform:translate(-108vw,52vh) rotate(-34deg) scale(.72);opacity:0}
- 6%{transform:translate(-101vw,49vh) rotate(-32deg) scale(.74);opacity:1}
- 12%{transform:translate(-92vw,45vh) rotate(-30deg) scale(.76);opacity:1}
- 18%{transform:translate(-82vw,40vh) rotate(-27deg) scale(.79);opacity:1}
- 24%{transform:translate(-72vw,35vh) rotate(-24deg) scale(.82);opacity:1}
- 30%{transform:translate(-62vw,30vh) rotate(-21deg) scale(.86);opacity:1}
- 36%{transform:translate(-52vw,25vh) rotate(-17deg) scale(.9);opacity:1}
- 42%{transform:translate(-43vw,20vh) rotate(-12deg) scale(.94);opacity:1}
- 48%{transform:translate(-35vw,15vh) rotate(-7deg) scale(.97);opacity:1}
- 54%{transform:translate(-27vw,11vh) rotate(-2deg) scale(1);opacity:1}
- 60%{transform:translate(-20vw,7vh) rotate(4deg) scale(1.02);opacity:1}
- 66%{transform:translate(-14vw,4vh) rotate(7deg) scale(1.03);opacity:1}
- 72%{transform:translate(-9vw,2vh) rotate(6deg) scale(1.035);opacity:1}
- 78%{transform:translate(-5vw,0) rotate(3deg) scale(1.025);opacity:1}
- 84%{transform:translate(-2vw,-.5vh) rotate(-2deg) scale(1.015);opacity:1}
- 90%{transform:translate(0,0) rotate(1deg) scale(1.008);opacity:1}
- 96%{transform:translate(0,0) rotate(-.5deg) scale(1.002);opacity:1}
- 100%{transform:translate(0,0) rotate(0) scale(1);opacity:1}
+ 0%{transform:translate(-112.000vw,48.000vh) rotate(-27.000deg) scale(0.7200);opacity:0}
+ 1%{transform:translate(-111.967vw,47.982vh) rotate(-26.990deg) scale(0.7201);opacity:1}
+ 2%{transform:translate(-111.867vw,47.929vh) rotate(-26.960deg) scale(0.7203);opacity:1}
+ 3%{transform:translate(-111.704vw,47.841vh) rotate(-26.910deg) scale(0.7207);opacity:1}
+ 4%{transform:translate(-111.477vw,47.720vh) rotate(-26.842deg) scale(0.7213);opacity:1}
+ 5%{transform:translate(-111.188vw,47.565vh) rotate(-26.754deg) scale(0.7220);opacity:1}
+ 6%{transform:translate(-110.839vw,47.379vh) rotate(-26.648deg) scale(0.7229);opacity:1}
+ 7%{transform:translate(-110.430vw,47.160vh) rotate(-26.525deg) scale(0.7239);opacity:1}
+ 8%{transform:translate(-109.964vw,46.911vh) rotate(-26.384deg) scale(0.7251);opacity:1}
+ 9%{transform:translate(-109.442vw,46.631vh) rotate(-26.226deg) scale(0.7264);opacity:1}
+ 10%{transform:translate(-108.864vw,46.322vh) rotate(-26.051deg) scale(0.7278);opacity:1}
+ 11%{transform:translate(-108.233vw,45.985vh) rotate(-25.860deg) scale(0.7294);opacity:1}
+ 12%{transform:translate(-107.549vw,45.619vh) rotate(-25.653deg) scale(0.7311);opacity:1}
+ 13%{transform:translate(-106.814vw,45.226vh) rotate(-25.431deg) scale(0.7330);opacity:1}
+ 14%{transform:translate(-106.029vw,44.808vh) rotate(-25.194deg) scale(0.7349);opacity:1}
+ 15%{transform:translate(-105.196vw,44.363vh) rotate(-24.942deg) scale(0.7370);opacity:1}
+ 16%{transform:translate(-104.316vw,43.894vh) rotate(-24.677deg) scale(0.7392);opacity:1}
+ 17%{transform:translate(-103.390vw,43.401vh) rotate(-24.398deg) scale(0.7415);opacity:1}
+ 18%{transform:translate(-102.420vw,42.885vh) rotate(-24.106deg) scale(0.7440);opacity:1}
+ 19%{transform:translate(-101.407vw,42.347vh) rotate(-23.802deg) scale(0.7465);opacity:1}
+ 20%{transform:translate(-100.352vw,41.788vh) rotate(-23.486deg) scale(0.7491);opacity:1}
+ 21%{transform:translate(-99.257vw,41.209vh) rotate(-23.158deg) scale(0.7519);opacity:1}
+ 22%{transform:translate(-98.123vw,40.611vh) rotate(-22.820deg) scale(0.7547);opacity:1}
+ 23%{transform:translate(-96.951vw,39.994vh) rotate(-22.471deg) scale(0.7576);opacity:1}
+ 24%{transform:translate(-95.743vw,39.359vh) rotate(-22.112deg) scale(0.7606);opacity:1}
+ 25%{transform:translate(-94.500vw,38.709vh) rotate(-21.744deg) scale(0.7637);opacity:1}
+ 26%{transform:translate(-93.223vw,38.043vh) rotate(-21.368deg) scale(0.7669);opacity:1}
+ 27%{transform:translate(-91.915vw,37.363vh) rotate(-20.983deg) scale(0.7702);opacity:1}
+ 28%{transform:translate(-90.575vw,36.669vh) rotate(-20.591deg) scale(0.7736);opacity:1}
+ 29%{transform:translate(-89.206vw,35.963vh) rotate(-20.192deg) scale(0.7770);opacity:1}
+ 30%{transform:translate(-87.808vw,35.247vh) rotate(-19.787deg) scale(0.7805);opacity:1}
+ 31%{transform:translate(-86.384vw,34.520vh) rotate(-19.376deg) scale(0.7840);opacity:1}
+ 32%{transform:translate(-84.934vw,33.784vh) rotate(-18.961deg) scale(0.7877);opacity:1}
+ 33%{transform:translate(-83.459vw,33.041vh) rotate(-18.541deg) scale(0.7914);opacity:1}
+ 34%{transform:translate(-81.962vw,32.291vh) rotate(-18.117deg) scale(0.7951);opacity:1}
+ 35%{transform:translate(-80.444vw,31.535vh) rotate(-17.690deg) scale(0.7989);opacity:1}
+ 36%{transform:translate(-78.905vw,30.774vh) rotate(-17.260deg) scale(0.8027);opacity:1}
+ 37%{transform:translate(-77.348vw,30.010vh) rotate(-16.829deg) scale(0.8066);opacity:1}
+ 38%{transform:translate(-75.773vw,29.244vh) rotate(-16.396deg) scale(0.8106);opacity:1}
+ 39%{transform:translate(-74.182vw,28.476vh) rotate(-15.963deg) scale(0.8145);opacity:1}
+ 40%{transform:translate(-72.576vw,27.707vh) rotate(-15.530deg) scale(0.8186);opacity:1}
+ 41%{transform:translate(-70.957vw,26.940vh) rotate(-15.096deg) scale(0.8226);opacity:1}
+ 42%{transform:translate(-69.325vw,26.173vh) rotate(-14.664deg) scale(0.8267);opacity:1}
+ 43%{transform:translate(-67.683vw,25.409vh) rotate(-14.234deg) scale(0.8308);opacity:1}
+ 44%{transform:translate(-66.032vw,24.649vh) rotate(-13.805deg) scale(0.8349);opacity:1}
+ 45%{transform:translate(-64.372vw,23.892vh) rotate(-13.379deg) scale(0.8391);opacity:1}
+ 46%{transform:translate(-62.706vw,23.141vh) rotate(-12.955deg) scale(0.8432);opacity:1}
+ 47%{transform:translate(-61.034vw,22.395vh) rotate(-12.535deg) scale(0.8474);opacity:1}
+ 48%{transform:translate(-59.358vw,21.656vh) rotate(-12.119deg) scale(0.8516);opacity:1}
+ 49%{transform:translate(-57.680vw,20.924vh) rotate(-11.707deg) scale(0.8558);opacity:1}
+ 50%{transform:translate(-56.000vw,20.200vh) rotate(-11.300deg) scale(0.8600);opacity:1}
+ 51%{transform:translate(-54.320vw,19.484vh) rotate(-10.897deg) scale(0.8642);opacity:1}
+ 52%{transform:translate(-52.642vw,18.778vh) rotate(-10.500deg) scale(0.8684);opacity:1}
+ 53%{transform:translate(-50.966vw,18.080vh) rotate(-10.108deg) scale(0.8726);opacity:1}
+ 54%{transform:translate(-49.294vw,17.393vh) rotate(-9.722deg) scale(0.8768);opacity:1}
+ 55%{transform:translate(-47.628vw,16.716vh) rotate(-9.342deg) scale(0.8809);opacity:1}
+ 56%{transform:translate(-45.968vw,16.050vh) rotate(-8.968deg) scale(0.8851);opacity:1}
+ 57%{transform:translate(-44.317vw,15.395vh) rotate(-8.601deg) scale(0.8892);opacity:1}
+ 58%{transform:translate(-42.675vw,14.752vh) rotate(-8.240deg) scale(0.8933);opacity:1}
+ 59%{transform:translate(-41.043vw,14.120vh) rotate(-7.885deg) scale(0.8974);opacity:1}
+ 60%{transform:translate(-39.424vw,13.499vh) rotate(-7.538deg) scale(0.9014);opacity:1}
+ 61%{transform:translate(-37.818vw,12.891vh) rotate(-7.197deg) scale(0.9055);opacity:1}
+ 62%{transform:translate(-36.227vw,12.296vh) rotate(-6.863deg) scale(0.9094);opacity:1}
+ 63%{transform:translate(-34.652vw,11.712vh) rotate(-6.536deg) scale(0.9134);opacity:1}
+ 64%{transform:translate(-33.095vw,11.141vh) rotate(-6.217deg) scale(0.9173);opacity:1}
+ 65%{transform:translate(-31.556vw,10.583vh) rotate(-5.904deg) scale(0.9211);opacity:1}
+ 66%{transform:translate(-30.038vw,10.037vh) rotate(-5.599deg) scale(0.9249);opacity:1}
+ 67%{transform:translate(-28.541vw,9.504vh) rotate(-5.301deg) scale(0.9286);opacity:1}
+ 68%{transform:translate(-27.066vw,8.984vh) rotate(-5.011deg) scale(0.9323);opacity:1}
+ 69%{transform:translate(-25.616vw,8.477vh) rotate(-4.727deg) scale(0.9360);opacity:1}
+ 70%{transform:translate(-24.192vw,7.983vh) rotate(-4.451deg) scale(0.9395);opacity:1}
+ 71%{transform:translate(-22.794vw,7.502vh) rotate(-4.182deg) scale(0.9430);opacity:1}
+ 72%{transform:translate(-21.425vw,7.034vh) rotate(-3.921deg) scale(0.9464);opacity:1}
+ 73%{transform:translate(-20.085vw,6.579vh) rotate(-3.667deg) scale(0.9498);opacity:1}
+ 74%{transform:translate(-18.777vw,6.137vh) rotate(-3.421deg) scale(0.9531);opacity:1}
+ 75%{transform:translate(-17.500vw,5.709vh) rotate(-3.182deg) scale(0.9563);opacity:1}
+ 76%{transform:translate(-16.257vw,5.294vh) rotate(-2.950deg) scale(0.9594);opacity:1}
+ 77%{transform:translate(-15.049vw,4.893vh) rotate(-2.727deg) scale(0.9624);opacity:1}
+ 78%{transform:translate(-13.877vw,4.505vh) rotate(-2.511deg) scale(0.9653);opacity:1}
+ 79%{transform:translate(-12.743vw,4.132vh) rotate(-2.302deg) scale(0.9681);opacity:1}
+ 80%{transform:translate(-11.648vw,3.772vh) rotate(-2.102deg) scale(0.9709);opacity:1}
+ 81%{transform:translate(-10.593vw,3.427vh) rotate(-1.910deg) scale(0.9735);opacity:1}
+ 82%{transform:translate(-9.580vw,3.097vh) rotate(-1.725deg) scale(0.9760);opacity:1}
+ 83%{transform:translate(-8.610vw,2.781vh) rotate(-1.549deg) scale(0.9785);opacity:1}
+ 84%{transform:translate(-7.684vw,2.480vh) rotate(-1.382deg) scale(0.9808);opacity:1}
+ 85%{transform:translate(-6.804vw,2.195vh) rotate(-1.223deg) scale(0.9830);opacity:1}
+ 86%{transform:translate(-5.971vw,1.926vh) rotate(-1.073deg) scale(0.9851);opacity:1}
+ 87%{transform:translate(-5.186vw,1.672vh) rotate(-0.931deg) scale(0.9870);opacity:1}
+ 88%{transform:translate(-4.451vw,1.434vh) rotate(-0.799deg) scale(0.9889);opacity:1}
+ 89%{transform:translate(-3.767vw,1.214vh) rotate(-0.676deg) scale(0.9906);opacity:1}
+ 90%{transform:translate(-3.136vw,1.010vh) rotate(-0.563deg) scale(0.9922);opacity:1}
+ 91%{transform:translate(-2.558vw,0.824vh) rotate(-0.459deg) scale(0.9936);opacity:1}
+ 92%{transform:translate(-2.036vw,0.656vh) rotate(-0.365deg) scale(0.9949);opacity:1}
+ 93%{transform:translate(-1.570vw,0.505vh) rotate(-0.282deg) scale(0.9961);opacity:1}
+ 94%{transform:translate(-1.161vw,0.374vh) rotate(-0.208deg) scale(0.9971);opacity:1}
+ 95%{transform:translate(-0.812vw,0.261vh) rotate(-0.146deg) scale(0.9980);opacity:1}
+ 96%{transform:translate(-0.523vw,0.168vh) rotate(-0.094deg) scale(0.9987);opacity:1}
+ 97%{transform:translate(-0.296vw,0.095vh) rotate(-0.053deg) scale(0.9993);opacity:1}
+ 98%{transform:translate(-0.133vw,0.043vh) rotate(-0.024deg) scale(0.9997);opacity:1}
+ 99%{transform:translate(-0.033vw,0.011vh) rotate(-0.006deg) scale(0.9999);opacity:1}
+ 100%{transform:translate(0.000vw,-0.000vh) rotate(0.000deg) scale(1.0000);opacity:1}
 }
-/* Pequenos movimentos dos braços durante o voo dão vida à trajetória. */
-.mascotFlight.entering .rearArm.left{animation:mascotFlightArm 2.8s ease-in-out both}
-.mascotFlight.entering .rearGlove.left{animation:mascotFlightGlove 2.8s ease-in-out both}
+/* O braço de voo acompanha o deslocamento sem interferir no braço do tchau. */
+.mascotFlight.entering .rearArm.left{animation:mascotFlightArm 4.8s ease-in-out both}
+.mascotFlight.entering .rearGlove.left{animation:mascotFlightGlove 4.8s ease-in-out both}
 @keyframes mascotFlightArm{
  0%{transform:rotate(-38deg)}
- 18%{transform:rotate(-29deg)}
- 36%{transform:rotate(-38deg)}
- 54%{transform:rotate(-26deg)}
- 72%{transform:rotate(-36deg)}
- 88%{transform:rotate(8deg)}
+ 20%{transform:rotate(-27deg)}
+ 42%{transform:rotate(-39deg)}
+ 64%{transform:rotate(-25deg)}
+ 82%{transform:rotate(-8deg)}
  100%{transform:rotate(18deg)}
 }
 @keyframes mascotFlightGlove{
  0%{transform:rotate(-8deg)}
- 20%{transform:rotate(-2deg)}
- 40%{transform:rotate(-9deg)}
- 60%{transform:rotate(0deg)}
- 80%{transform:rotate(7deg)}
+ 25%{transform:rotate(-2deg)}
+ 50%{transform:rotate(-9deg)}
+ 75%{transform:rotate(3deg)}
  100%{transform:rotate(12deg)}
 }
 .mascot .rearBack{
@@ -222,7 +304,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 .mascot .rearGlove.right{right:8%;transform:rotate(-12deg)}
 /* Braço direito articulado: levanta e acena depois do pouso. */
 .mascot .rearWaveArm{
- position:absolute;z-index:3;right:8%;top:49%;width:25%;height:45%;
+ position:absolute;z-index:7;right:8%;top:49%;width:25%;height:45%;
  transform-origin:50% 15%;
 }
 .mascot .rearWaveArm .rearArm{
@@ -233,7 +315,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  left:0;right:auto;top:53%;width:100%;height:45%;
  transform:none;border-radius:48%;
 }
-.mascotFlight.entering .rearWaveArm{animation:mascotWave 2.65s ease-in-out 2.8s both}
+.mascotFlight.entering .rearWaveArm{animation:mascotWave 2.65s ease-in-out 4.8s both}
 @keyframes mascotWave{
  0%,8%{transform:rotate(0deg)}
  18%{transform:rotate(122deg)}
