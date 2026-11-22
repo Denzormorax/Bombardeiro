@@ -1626,9 +1626,9 @@ robotSpriteImage.onload=()=>{
    return c;
   }));
   robotSpriteReady=true;
- }catch(e){robotSpriteReady=false;robotSpriteFrames=null}
+ }catch(e){console.error("[Bombardeiro] Falha ao preparar os quadros do robozinho:",e);robotSpriteReady=false;robotSpriteFrames=null}
 };
-robotSpriteImage.onerror=()=>{robotSpriteReady=false;robotSpriteFrames=null};
+robotSpriteImage.onerror=()=>{console.error("[Bombardeiro] Não foi possível carregar o sprite:",robotSpriteImage.src);robotSpriteReady=false;robotSpriteFrames=null};
 robotSpriteImage.src="game-assets/sprites/robot-walk.jpg";
 function drawPlayer(){
  const px=ox+player.x*TILE,groundY=oy+player.y*TILE;
