@@ -15576,13 +15576,12 @@ const burningCrateCanvases=Array.from({length:10},()=>{const c=document.createEl
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
 const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=96;portalAuraCanvas.height=96;const portalAuraCtx=portalAuraCanvas.getContext("2d");
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
-// Reflexo em diamante de quatro pontas, pré-renderizado uma única vez para todos os mundos.
-const pillarShimmerCanvas=document.createElement("canvas");pillarShimmerCanvas.width=48;pillarShimmerCanvas.height=36;
+// Reflexo branco em faixa vertical, com bloom suave pré-renderizado (sem shadow pesado).
+const pillarShimmerCanvas=document.createElement("canvas");pillarShimmerCanvas.width=40;pillarShimmerCanvas.height=56;
 (()=>{const c=pillarShimmerCanvas.getContext("2d");
- const glow=c.createRadialGradient(24,18,0,24,18,17);glow.addColorStop(0,"rgba(255,255,255,.62)");glow.addColorStop(.32,"rgba(210,244,255,.32)");glow.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=glow;c.fillRect(0,0,48,36);
- const streak=c.createLinearGradient(3,18,45,18);streak.addColorStop(0,"rgba(255,255,255,0)");streak.addColorStop(.5,"rgba(255,255,255,.48)");streak.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=streak;c.fillRect(3,16,42,4);
- c.save();c.translate(24,18);c.shadowColor="#ffffff";c.shadowBlur=9;c.beginPath();c.moveTo(0,-15);c.quadraticCurveTo(2,-3,14,0);c.quadraticCurveTo(2,3,0,15);c.quadraticCurveTo(-2,3,-14,0);c.quadraticCurveTo(-2,-3,0,-15);c.closePath();
- const crystal=c.createLinearGradient(-10,-10,10,10);crystal.addColorStop(0,"#ffffff");crystal.addColorStop(.45,"#e8faff");crystal.addColorStop(1,"#ffffff");c.fillStyle=crystal;c.fill();c.lineWidth=1;c.strokeStyle="rgba(255,255,255,.95)";c.stroke();c.restore();
+ const bloom=c.createLinearGradient(0,0,40,0);bloom.addColorStop(0,"rgba(255,255,255,0)");bloom.addColorStop(.38,"rgba(255,255,255,.10)");bloom.addColorStop(.5,"rgba(255,255,255,.34)");bloom.addColorStop(.62,"rgba(255,255,255,.10)");bloom.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=bloom;c.fillRect(0,0,40,56);
+ const core=c.createLinearGradient(0,0,40,0);core.addColorStop(0,"rgba(255,255,255,0)");core.addColorStop(.43,"rgba(255,255,255,.72)");core.addColorStop(.5,"rgba(255,255,255,.98)");core.addColorStop(.57,"rgba(255,255,255,.72)");core.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=core;c.fillRect(0,0,40,56);
+ const cloud=c.createRadialGradient(20,28,1,20,28,20);cloud.addColorStop(0,"rgba(255,255,255,.30)");cloud.addColorStop(.45,"rgba(255,255,255,.12)");cloud.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=cloud;c.fillRect(0,8,40,40);
 })();
 const $=id=>document.getElementById(id);
 const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpriteSheets();buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_themes.svg";
@@ -17007,15 +17006,15 @@ function drawDirtParticles(){
 }
 function drawIndestructibleShimmer(){
  if(!indestructibleTilePositions.length)return;
- // Brilho percorre cada bloco lentamente; o recorte impede que invada os blocos vizinhos.
- const phaseBase=gameClock*.14;ctx.save();
+ // Faixa branca vertical atravessa cada bloco da esquerda para a direita, com brilho rápido e leve.
+ const phaseBase=gameClock*.32;ctx.save();
  for(const tile of indestructibleTilePositions){
-  const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1,fade=Math.sin(phase*Math.PI);
-  if(fade<.018)continue;
-  const px=ox+tile.x*TILE,py=oy+tile.y*TILE,travel=phase*(TILE+32)-16;
+  const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
+  const pulse=.58+.42*Math.sin(phase*Math.PI*2);
+  const px=ox+tile.x*TILE,py=oy+tile.y*TILE,travel=phase*(TILE+40)-20;
   ctx.save();ctx.beginPath();ctx.rect(px+1,py+1,TILE-2,TILE-2);ctx.clip();
-  ctx.globalAlpha=.88*fade;
-  ctx.drawImage(pillarShimmerCanvas,px+travel-16,py+TILE*.5-18+Math.sin(phase*Math.PI*2+tile.x)*2,32,36);
+  ctx.globalAlpha=pulse;
+  ctx.drawImage(pillarShimmerCanvas,px+travel-20,py+TILE*.5-28,40,56);
   ctx.restore();
  }
  ctx.restore();
