@@ -305,7 +305,10 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 <div id="dragToolbar" class="hidden"><span>POSICIONE OS BOTÕES</span><button id="finishDrag">FINALIZAR</button></div>
 <div id="message"></div>
 <div id="overlay">
- <div class="panel hidden" id="settingsMenu"><h2>CONFIGURAÇÕES</h2><button class="mainbtn" id="editControlsBtn">EDITAR CONTROLES</button><button class="mainbtn secondary" id="closeSettingsMenu">VOLTAR</button></div>
+ <div class="panel hidden" id="settingsMenu"><h2>CONFIGURAÇÕES</h2>
+   <div class="setting"><label for="musicVolume">VOLUME DA MÚSICA <span id="musicVolumeValue">65%</span></label><input id="musicVolume" type="range" min="0" max="100" value="65"><p>A trilha musical será adicionada na próxima etapa; este volume já fica salvo.</p></div>
+   <div class="setting"><label for="sfxVolume">VOLUME DOS EFEITOS SONOROS <span id="sfxVolumeValue">80%</span></label><input id="sfxVolume" type="range" min="0" max="100" value="80"></div>
+   <button class="mainbtn" id="editControlsBtn">EDITAR CONTROLES</button><button class="mainbtn secondary" id="closeSettingsMenu">VOLTAR</button></div>
  <div class="panel hidden" id="settingsPanel">
   <h2>EDITAR CONTROLES</h2>
   <div class="setting"><label>CONTROLE DE MOVIMENTO</label><select id="moveType"><option value="stick">Alavanca analógica</option><option value="dpad">Cruz direcional (D-pad)</option></select></div>
@@ -353,6 +356,19 @@ const canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
 const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W;backgroundCanvas.height=H;const backgroundCtx=backgroundCanvas.getContext("2d");let backgroundTheme=null;
 const $=id=>document.getElementById(id);
+
+/* ÁUDIO FUTURISTA: SONS SINTETIZADOS LOCALMENTE, SEM ARQUIVOS EXTERNOS */
+const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
+function loadAudioSettings(){try{const v=JSON.parse(localStorage.getItem("bombard-audio")||"null");if(v){if(Number.isFinite(+v.musicVolume))audioSettings.musicVolume=Math.max(0,Math.min(1,+v.musicVolume));if(Number.isFinite(+v.sfxVolume))audioSettings.sfxVolume=Math.max(0,Math.min(1,+v.sfxVolume))}}catch(e){}$("musicVolume").value=Math.round(audioSettings.musicVolume*100);$("sfxVolume").value=Math.round(audioSettings.sfxVolume*100);updateAudioLabels()}
+function saveAudioSettings(){try{localStorage.setItem("bombard-audio",JSON.stringify(audioSettings))}catch(e){}}
+function updateAudioLabels(){$("musicVolumeValue").textContent=Math.round(audioSettings.musicVolume*100)+"%";$("sfxVolumeValue").textContent=Math.round(audioSettings.sfxVolume*100)+"%"}
+function ensureAudio(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;try{if(!audioContext){audioContext=new C();sfxBus=audioContext.createGain();musicBus=audioContext.createGain();sfxBus.gain.value=audioSettings.sfxVolume;musicBus.gain.value=audioSettings.musicVolume;sfxBus.connect(audioContext.destination);musicBus.connect(audioContext.destination)}if(audioContext.state==="suspended")audioContext.resume();return true}catch(e){return false}}
+function unlockGameAudio(){ensureAudio()}window.addEventListener("pointerdown",unlockGameAudio,{once:true,passive:true});window.addEventListener("keydown",unlockGameAudio,{once:true});
+function setAudioVolume(which,value){audioSettings[which]=Math.max(0,Math.min(1,value));if(which==="sfxVolume"&&sfxBus)sfxBus.gain.setTargetAtTime(audioSettings.sfxVolume,audioContext.currentTime,.025);if(which==="musicVolume"&&musicBus)musicBus.gain.setTargetAtTime(audioSettings.musicVolume,audioContext.currentTime,.025);updateAudioLabels();saveAudioSettings()}
+$("musicVolume").addEventListener("input",e=>setAudioVolume("musicVolume",Number(e.target.value)/100));$("sfxVolume").addEventListener("input",e=>setAudioVolume("sfxVolume",Number(e.target.value)/100));loadAudioSettings();
+function audioTone(a,b,d,w="sine",v=.2,delay=0){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;try{const t=audioContext.currentTime+delay,o=audioContext.createOscillator(),g=audioContext.createGain();o.type=w;o.frequency.setValueAtTime(Math.max(25,a),t);o.frequency.exponentialRampToValueAtTime(Math.max(25,b),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+d+.025)}catch(e){}}
+function audioNoise(d,v=.2,hz=1500,delay=0){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;try{const t=audioContext.currentTime+delay,n=Math.max(1,Math.floor(audioContext.sampleRate*d)),buf=audioContext.createBuffer(1,n,audioContext.sampleRate),data=buf.getChannelData(0);for(let i=0;i<n;i++)data[i]=Math.random()*2-1;const src=audioContext.createBufferSource(),filter=audioContext.createBiquadFilter(),g=audioContext.createGain();src.buffer=buf;filter.type="lowpass";filter.frequency.setValueAtTime(hz,t);filter.frequency.exponentialRampToValueAtTime(Math.max(100,hz*.28),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(filter);filter.connect(g);g.connect(sfxBus);src.start(t);src.stop(t+d+.02)}catch(e){}}
+function playSfx(name){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;switch(name){case "bomb":audioTone(520,190,.18,"sine",.2);audioTone(980,430,.12,"triangle",.11,.035);break;case "explosion":audioNoise(.42,.34,1050);audioTone(105,38,.48,"sine",.34);audioTone(690,95,.24,"sawtooth",.09,.015);break;case "block":audioNoise(.16,.19,2600);audioTone(310,95,.2,"triangle",.13,.025);audioTone(1250,480,.09,"sine",.07,.04);break;case "enemyHit":audioTone(250,105,.16,"sawtooth",.18);audioTone(760,280,.11,"square",.07,.015);break;case "enemyDown":audioTone(460,720,.13,"triangle",.16);audioTone(720,1120,.2,"sine",.13,.075);break;case "hurt":audioTone(190,48,.34,"sawtooth",.22);audioNoise(.13,.1,650,.02);break;case "coin":audioTone(740,1120,.11,"sine",.12);audioTone(1120,1480,.14,"triangle",.1,.075);break;case "exit":audioTone(280,560,.28,"sine",.16);audioTone(560,980,.38,"triangle",.13,.16);break;case "powerup":audioTone(390,780,.16,"triangle",.13);audioTone(780,1170,.2,"sine",.14,.12);audioTone(1170,1560,.22,"sine",.1,.25);break;case "victory":[523,659,784,1046].forEach((n,i)=>audioTone(n,n*1.18,.34,"sine",.14,i*.13));break;case "defeat":audioTone(330,220,.25,"triangle",.16);audioTone(220,110,.42,"sawtooth",.13,.2);break}}
 const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,ENEMY_DEATH_TIME=.48,TOTAL_LEVELS=10;
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
@@ -969,11 +985,11 @@ function updateEnemies(dt){
 /* BOMBAS E COMBATE *//* BOMBAS E COMBATE */
 function placeBomb(){
  if(!running||paused||customizing||bombCooldown>0||activeBombs>=maxBombs)return;const x=Math.floor(player.x),y=Math.floor(player.y);if(bombAt(x,y))return;
- const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);
+ const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;enemy.alive=false;enemy.burrowing=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned?"red":"green")}
-function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isHunter||enemy.isHorned){enemy.hp--;if(enemy.isHorned&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
+function killEnemy(enemy){if(!enemy.alive)return;playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned?"red":"green")}
+function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isHunter||enemy.isHorned){enemy.hp--;if(enemy.isHorned&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
  for(const b of bombs){if(b.ownerPass||b.slide)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
@@ -991,17 +1007,17 @@ function isInsideFlameDamage(entity,cell){
  return circleRectCollision(entity.x,entity.y,radius,cell.x,cell.y,1,1);
 }
 function explode(b){
- activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y)exit.found=true;break}}
+ playSfx("explosion");let brokeBlock=false;activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y&&!exit.found){exit.found=true;playSfx("exit")}break}}if(brokeBlock)playSfx("block");
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.62,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&isInsideFlameDamage(enemy,c)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
- if(player.inv>0)return;lives--;resetPowerUps();updateHUD();player.hurtTimer=.48;if(lives<=0){gameOver(false);return}player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;
+ if(player.inv>0)return;playSfx("hurt");lives--;resetPowerUps();updateHUD();player.hurtTimer=.48;if(lives<=0){gameOver(false);return}player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;
 }
 function collectCoins(){
- coinsOnMap=coinsOnMap.filter(c=>{if(distance(player.x,player.y,c.x,c.y)>.58)return true;const value=coinValue(c.type);coins+=value;message("+"+value+" MOEDAS!");updateHUD();return false});
+ coinsOnMap=coinsOnMap.filter(c=>{if(distance(player.x,player.y,c.x,c.y)>.58)return true;const value=coinValue(c.type);coins+=value;playSfx("coin");message("+"+value+" MOEDAS!");updateHUD();return false});
 }
 
 /* LOJINHA */
@@ -1020,7 +1036,7 @@ function buyPowerUp(type){
  if(type==="fire"){firePowerUps++;firePower=1+firePowerUps;message("FOGUINHO COMPRADO!")}
  if(type==="speed"){speedPowerUps++;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35);message("BOTINHA COMPRADA!")}
  if(type==="heart"){lives=Math.min(3,lives+1);heartPurchases++;message("❤️ VIDA RESTAURADA!")}
- if(type==="push"){pushBombOwned=true;message("💣 BOMBA EMPURRÁVEL ATIVADA!")}updateHUD();
+ if(type==="push"){pushBombOwned=true;message("💣 BOMBA EMPURRÁVEL ATIVADA!")}playSfx("powerup");updateHUD();
 }
 document.querySelectorAll(".buyBtn").forEach(btn=>btn.addEventListener("click",()=>buyPowerUp(btn.dataset.buy)));
 
@@ -1038,7 +1054,7 @@ function checkWin(){
  }
 }
 function gameOver(win){
- running=false;paused=true;finishPositioning();$("shopBtn").classList.add("hidden");
+ playSfx(win?"victory":"defeat");running=false;paused=true;finishPositioning();$("shopBtn").classList.add("hidden");
  $("endTitle").textContent=win?"CAMPANHA CONCLUÍDA!":"FIM DE JOGO";
  $("endText").textContent=win?"Parabéns! Você completou as 10 fases da Floresta! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+level+" -- Moedas: "+coins;
  showPanel("endPanel");
