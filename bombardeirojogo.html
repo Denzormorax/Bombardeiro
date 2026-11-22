@@ -1199,12 +1199,18 @@ function reactToNewBomb(){
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentThreatened=danger.has(currentKey);
   const routeThreatened=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
-  const blueBombThreat=enemy.isHorned&&enemy.mode==="chase"&&bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<5.2);
+  const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
+  const nearbyBomb=bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<(enemy.isMushroom?4.8:enemy.isHorned?5.2:3.8));
   enemy.repath=0;
-  if(currentThreatened||routeThreatened||blueBombThreat){
-   // O azul reage antecipadamente: não espera a bomba bloquear seu caminho.
+  if(currentThreatened||routeThreatened){
+   // Todos os inimigos, inclusive o cogumelo, priorizam sair da área da explosão.
    enemy.bombEscapePending=true;
-   enemy.bombReactionTimer=enemy.isHorned?.04:enemy.isHunter?.07:.25+Math.random()*.08;
+   enemy.bombReactionTimer=enemy.isMushroom?.02:enemy.isHorned?.04:enemy.isHunter?.07:.08;
+  }else if(routeBlockedByBomb||nearbyBomb){
+   // Se a bomba apenas bloqueia a perseguição, recalcula o caminho para contorná-la.
+   enemy.path=[];
+   enemy.patrolTarget=null;
+   enemy.repath=0;
   }
  }
 }
@@ -1264,7 +1270,7 @@ function updateEnemies(dt){
   if(enemy.bombEscapePending){
    enemy.bombReactionTimer=Math.max(0,(enemy.bombReactionTimer||0)-dt);
    if(enemy.bombReactionTimer>0){enemy.speed=0;continue}
-   const escape=findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter));
+   const escape=findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter||enemy.isMushroom));
    enemy.bombEscapePending=false;
    if(escape.length){
     enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;enemy.evadeTimer=0;
