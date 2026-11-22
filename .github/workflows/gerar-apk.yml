@@ -91,7 +91,7 @@ jobs:
           cp "tela floresta.jpg" "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
           test -s "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
           cd "$GAME_ASSETS"
-          find . -type f ! -name "assets-manifest.sha256" -print0 | sort -z | xargs -0 -r sha256sum > assets-manifest.sha256
+          find . -type f ! -name "assets-manifest.sha256" -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "${file#./}"; done > assets-manifest.sha256
           test -s bombardeirojogo.html
           test -s game-assets/audio/explosion.wav
           test -s game-assets/audio/coin_pickup.wav
