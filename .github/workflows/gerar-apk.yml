@@ -88,16 +88,36 @@ jobs:
           cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
           # Ajusta a largura útil do logotipo para que o brilho e a inclinação não sejam cortados nas laterais.
           python3 - <<'PY'
+          import re
           from pathlib import Path
+
           p = Path("android/app/src/main/assets/game/bombardeirojogo.html")
           s = p.read_text(encoding="utf-8")
-          old = " width:min(96vw,760px);"
-          new = " width:min(88vw,700px);"
-          if old not in s:
-              raise SystemExit("Não foi possível localizar a regra original de largura do logotipo; compilação interrompida com segurança.")
-          s = s.replace(old, new, 1)
+
+          # Localiza exclusivamente a regra .gameLogo, sem depender de espaços ou quebras de linha.
+          selector = re.search(r"\.gameLogo\\s*\\{", s)
+          if not selector:
+              raise SystemExit("Seletor .gameLogo não encontrado no HTML empacotado.")
+
+          start = selector.end()
+          end = s.find("}", start)
+          if end < 0:
+              raise SystemExit("Bloco CSS .gameLogo está incompleto; pacote não será alterado.")
+
+          block = s[start:end]
+          width_rule = re.compile(r"(\\bwidth\\s*:\\s*)[^;]+;", re.IGNORECASE)
+          if width_rule.search(block):
+              block, count = width_rule.subn(r"\\1min(88vw,700px);", block, count=1)
+          else:
+              block += "\\n width:min(88vw,700px);\\n"
+              count = 1
+
+          if count != 1 or "min(88vw,700px)" not in block:
+              raise SystemExit("Não foi possível ajustar a largura dentro de .gameLogo.")
+
+          s = s[:start] + block + s[end:]
           p.write_text(s, encoding="utf-8")
-          print("Logotipo ajustado: 88vw/700px; imagem original e bombinha preservadas.")
+          print("Logotipo ajustado dentro de .gameLogo: 88vw/700px; imagem, bombinha, brilho e animação preservados.")
           PY
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
