@@ -254,16 +254,19 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 }
 @media(orientation:portrait){#game:after{content:"GIRE O CELULAR PARA O MODO PAISAGEM";position:fixed;inset:0;background:#101820;z-index:100;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:23px;font-weight:bold;color:#7eeaff}}
 
-/* ABERTURA: CRIADO POR NAILSON */
-#introSplash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#fff;opacity:0;visibility:visible;transition:opacity 2s ease;pointer-events:none}
+/* ABERTURA: LOGOTIPO CRIADO POR NAILSON */
+#introSplash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#fff;opacity:0;visibility:visible;transition:opacity 4s ease;pointer-events:none}
 #introSplash.visible{opacity:1}
-#introCredit{padding:20px;text-align:center;font-family:Arial,sans-serif;font-size:clamp(25px,6vw,46px);font-weight:900;letter-spacing:1.5px;color:#fafdff;white-space:nowrap;text-shadow:0 0 2px #087dff,0 0 6px #087dff,0 0 12px #168cff,0 0 24px #168cff,0 0 42px #36a5ff;opacity:0;transform:scale(.94);filter:blur(7px);transition:opacity 2s ease,transform 2s ease,filter 2s ease}
-#introCredit.visible{opacity:1;transform:scale(1);filter:blur(0)}
-#introCredit.leaving{opacity:0;transform:scale(1.04);filter:blur(10px);transition:opacity 1.2s ease,transform 1.2s ease,filter 1.2s ease}
+#introLogo{width:min(220px,64vw);height:min(118px,34vw);min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:12px 20px;border:3px solid #087dff;border-radius:50%;background:#fff;box-shadow:0 0 4px #087dff,0 0 10px #168cff,0 0 22px #168cff88,inset 0 0 9px #168cff22;opacity:0;transform:scale(.88);filter:blur(6px);transition:opacity 4s ease,transform 4s ease,filter 4s ease}
+#introLogo.visible{opacity:1;transform:scale(1);filter:blur(0)}
+#introCreditTop,#introCreditName{font-family:Arial,sans-serif;color:#087dff;text-align:center;white-space:nowrap;text-shadow:0 0 2px #087dff,0 0 6px #168cff,0 0 12px #36a5ff}
+#introCreditTop{font-size:clamp(12px,3.2vw,16px);font-weight:700;letter-spacing:1px;line-height:1.1}
+#introCreditName{font-size:clamp(19px,5vw,26px);font-weight:900;letter-spacing:1.5px;line-height:1.05}
+#introLogo.leaving{opacity:0;transform:scale(1.06);filter:blur(8px);transition:opacity 2s ease,transform 2s ease,filter 2s ease}
 </style>
 </head>
 <body>
-<div id="introSplash" aria-label="Criado por Nailson"><div id="introCredit">Criado por Nailson</div></div>
+<div id="introSplash" aria-label="Criado por Nailson"><div id="introLogo"><span id="introCreditTop">Criado por</span><span id="introCreditName">Nailson</span></div></div>
 <div id="menuBackdrop" class="hidden">
  <div class="menuHorizonGlow"></div>
  <div class="iceRangeBack"></div>
@@ -1437,11 +1440,11 @@ function draw(){
 }
 
 function startIntroSplash(){
- const splash=$("introSplash"),credit=$("introCredit");
- if(!splash||!credit){showMenuScreen("main");return}
- requestAnimationFrame(()=>{splash.classList.add("visible");credit.classList.add("visible")});
- setTimeout(()=>credit.classList.add("leaving"),5000);
- setTimeout(()=>{splash.remove();showMenuScreen("main")},6200);
+ const splash=$("introSplash"),logo=$("introLogo");
+ if(!splash||!logo){showMenuScreen("main");return}
+ requestAnimationFrame(()=>{splash.classList.add("visible");logo.classList.add("visible")});
+ setTimeout(()=>logo.classList.add("leaving"),7000);
+ setTimeout(()=>{splash.remove();showMenuScreen("main")},9000);
 }
 
 /* INICIALIZAÇÃO */
