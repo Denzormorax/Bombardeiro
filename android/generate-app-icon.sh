@@ -17,9 +17,9 @@ command -v magick >/dev/null 2>&1 || {
 read -r WIDTH HEIGHT < <(magick identify -auto-orient -format '%w %h' "$SOURCE")
 # A arte é centralizada numa página branca. Este recorte quadrado pega o
 # emblema azul completo e elimina as margens externas da página.
-SIZE=$(( WIDTH * 390 / 1000 ))
-MAX_HEIGHT=$(( HEIGHT * 694 / 1000 ))
-if (( SIZE > MAX_HEIGHT )); then SIZE=$MAX_HEIGHT; fi
+SIZE=$(( HEIGHT * 675 / 1000 ))
+MAX_WIDTH=$(( WIDTH * 390 / 1000 ))
+if (( SIZE > MAX_WIDTH )); then SIZE=$MAX_WIDTH; fi
 X=$(( (WIDTH - SIZE) / 2 ))
 Y=$(( HEIGHT * 149 / 1000 ))
 
