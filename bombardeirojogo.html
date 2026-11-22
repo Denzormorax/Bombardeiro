@@ -165,36 +165,30 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 
 #menuBackdrop:before,#menuBackdrop:after,#menuBackdrop > :not(.menuEffects){display:none!important}
 .gameLogo{
- text-align:center;
- font-family:Arial,sans-serif;
- font-weight:1000;
- line-height:1;
- letter-spacing:clamp(2px,1vw,6px);
- font-size:clamp(30px,7vw,58px);
- color:#fff;
- -webkit-text-stroke:1.7px #168cff;
- paint-order:stroke fill;
- transform-origin:center center;
- animation:logoConePulse 3.6s cubic-bezier(.42,0,.58,1) infinite;
- text-shadow:
-  0 1px 0 #c8f2ff,
-  0 3px 0 #1768b5,
-  0 5px 0 #104b91,
-  0 7px 0 #082f65,
-  0 0 5px #b9efff,
-  0 0 11px #55c8ff,
-  0 0 20px #168bff,
-  0 0 30px #0875ff,
-  0 9px 16px #000e;
- filter:drop-shadow(0 0 7px #168bffbb);
+ width:min(94vw,720px);
+ aspect-ratio:4.88/1;
+ height:auto;
+ margin:0 auto 10px;
+ overflow:hidden;
+ position:relative;
+ transform-origin:50% 50%;
+ animation:logoSeesaw 4.8s ease-in-out infinite;
+ filter:drop-shadow(0 7px 12px rgba(0,0,0,.52)) drop-shadow(0 0 12px rgba(117,218,255,.32));
 }
-@keyframes logoConePulse{
- 0%,100%{transform:perspective(420px) rotateX(13deg) scale(.78,.84)}
- 22%{transform:perspective(420px) rotateX(13deg) scale(1.02,1.04)}
- 48%{transform:perspective(420px) rotateX(13deg) scale(.76,.82)}
- 74%{transform:perspective(420px) rotateX(13deg) scale(1.04,1.06)}
+.gameLogo img{
+ display:block;
+ width:100%;
+ height:auto;
+ max-width:none;
+ user-select:none;
+ -webkit-user-drag:none;
+ pointer-events:none;
 }
-@media(prefers-reduced-motion:reduce){.gameLogo{animation:none;transform:perspective(420px) rotateX(13deg) scale(.92)}}
+@keyframes logoSeesaw{
+ 0%,100%{transform:rotate(-1.15deg)}
+ 50%{transform:rotate(1.15deg)}
+}
+@media(prefers-reduced-motion:reduce){.gameLogo{animation:none;transform:none}}
 /* MASCOTE DO MENU: VISTO DE COSTAS */
 .mascotFlight{
  position:relative;width:112px;height:112px;margin:12px auto 12px;
@@ -519,7 +513,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  <div id="menuScore">⭐ PONTOS: <span id="menuScoreValue">0</span></div>
 </div>
 <div id="menuContent" class="hidden">
- <div class="gameLogo">BOMBARDEIRO</div>
+ <div class="gameLogo" aria-label="Bombardeiro"><img src="./nome%20do%20jogo.jpg" alt="Bombardeiro" draggable="false"></div>
  <div class="mascotFlight">
   <div class="mascot">
    <div class="rearArm left"></div>
