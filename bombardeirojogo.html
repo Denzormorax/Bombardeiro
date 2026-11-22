@@ -17006,15 +17006,15 @@ function drawDirtParticles(){
 }
 function drawIndestructibleShimmer(){
  if(!indestructibleTilePositions.length)return;
- // Faixa branca vertical atravessa cada bloco da esquerda para a direita, com brilho rápido e leve.
+ // Faixa branca vertical desliza de cima para baixo em cada bloco, com brilho rápido e leve.
  const phaseBase=gameClock*.32;ctx.save();
  for(const tile of indestructibleTilePositions){
   const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
   const pulse=.58+.42*Math.sin(phase*Math.PI*2);
-  const px=ox+tile.x*TILE,py=oy+tile.y*TILE,travel=phase*(TILE+40)-20;
+  const px=ox+tile.x*TILE,py=oy+tile.y*TILE,travel=phase*(TILE+56)-28;
   ctx.save();ctx.beginPath();ctx.rect(px+1,py+1,TILE-2,TILE-2);ctx.clip();
   ctx.globalAlpha=pulse;
-  ctx.drawImage(pillarShimmerCanvas,px+travel-20,py+TILE*.5-28,40,56);
+  ctx.drawImage(pillarShimmerCanvas,px+TILE*.5-20,py+travel-28,40,56);
   ctx.restore();
  }
  ctx.restore();
