@@ -96,7 +96,7 @@ jobs:
           s = p.read_text(encoding="utf-8")
 
           # Substitui somente o primeiro bloco estrutural .gameLogo.
-          selector = re.search(r"\\.gameLogo\\s*\\{", s)
+          selector = re.search(r"\.gameLogo\s*\{", s)
           if not selector:
               raise SystemExit("Seletor estrutural .gameLogo não encontrado.")
 
@@ -143,7 +143,7 @@ jobs:
 
           # Desativa o script antigo que cortava a imagem em 57,5% e apagava pixels azuis.
           crop_script = re.compile(
-              r"<script>\\s*/\\* Recorta o logotipo original.*?</script>",
+              r"<script>\s*/\* Recorta o logotipo original.*?</script>",
               re.DOTALL
           )
           s, removed = crop_script.subn(
