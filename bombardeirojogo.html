@@ -556,160 +556,65 @@ function hasClearSpawnLane(x,y){
  return true;
 }
 function makeMap(){
- map=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:2));
- const design=forestLayouts[(Math.max(1,Math.min(TOTAL_LEVELS,level))-1)%forestLayouts.length];
- carveMapPath(design.main);
- for(const branch of design.branches)carveMapPath(branch);
- for(const room of design.rooms)carveMapRoom(room[0],room[1],room[2],room[3]);
- // Área inicial protegida; o restante do mapa ganha variações a cada geração.
+ // Mapa novo: começa realmente aberto. Os pilares fixos continuam nos
+ // mesmos lugares, mas os blocos destrutíveis são sorteados célula por célula.
+ map=Array.from({length:ROWS},(_,y)=>
+  Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:0)
+ );
+ exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};
+
+ // Só a pequena área de nascimento fica livre. O restante, inclusive
+ // a região próxima do jogador, participa do sorteio de blocos.
  for(let y=1;y<=2;y++)for(let x=1;x<=2;x++)map[y][x]=0;
  map[1][3]=0;map[3][1]=0;
- exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};map[exit.y][exit.x]=2;
 
- // Expande aleatoriamente os corredores para dentro das paredes destrutíveis.
- // Isso quebra o desenho repetido dos mapas-base e cria áreas novas em ambos lados.
- // Expande os caminhos em seis setores do mapa, evitando que as aberturas
- // aleatórias se acumulem apenas perto de um lado ou formem corredores longos.
- const sectorBounds=[];
- for(let sy=0;sy<2;sy++)for(let sx=0;sx<3;sx++){
-  sectorBounds.push({x0:1+Math.floor(sx*(COLS-2)/3),x1:1+Math.floor((sx+1)*(COLS-2)/3),y0:1+Math.floor(sy*(ROWS-2)/2),y1:1+Math.floor((sy+1)*(ROWS-2)/2)});
+ const candidates=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(map[y][x]===0&&!isStartSafeCell(x,y)&&!(x===exit.x&&y===exit.y))candidates.push({x,y});
  }
- for(const sector of shuffleArray(sectorBounds.slice())){
-  const openings=2+Math.floor(Math.random()*3);
-  for(let n=0;n<openings;n++){
-   const frontier=[];
-   for(let y=sector.y0;y<sector.y1;y++)for(let x=sector.x0;x<sector.x1;x++){
-    if(map[y][x]!==2||isStartSafeCell(x,y)||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<1.6)continue;
-    let neighbors=0;
-    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])if(map[y+dy][x+dx]===0)neighbors++;
-    if(neighbors>0&&neighbors<=2)frontier.push({x,y});
-   }
-   if(!frontier.length)break;
-   const p=frontier[Math.floor(Math.random()*frontier.length)];
-   map[p.y][p.x]=0;
-  }
+ shuffleArray(candidates);
+
+ // Densidade equilibrada: blocos espalhados por toda a área jogável,
+ // sem depender de corredores ou salas desenhados previamente.
+ const blockRatio=.43+Math.random()*.06;
+ const blockCount=Math.round(candidates.length*blockRatio);
+ for(let i=0;i<blockCount;i++){
+  const p=candidates[i];
+  map[p.y][p.x]=2;
  }
 
- // Garante uma ligação real entre o nascimento e a saída antes de distribuir blocos.
- // Os blocos destrutíveis podem ser atravessados durante a busca e viram corredor;
- // pilares fixos continuam proibidos. Isso evita mapas sem rota válida, nos quais
- // a verificação posterior rejeitaria praticamente todos os blocos novos.
- const connectStartToExit=()=>{
-  const startKey=cellKey(1,1),exitKey=cellKey(exit.x,exit.y);
-  const queue=[{x:1,y:1}],previous=new Map([[startKey,null]]);
-  let head=0,found=false;
-  while(head<queue.length){
-   const p=queue[head++],key=cellKey(p.x,p.y);
-   if(key===exitKey){found=true;break}
-   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-    const x=p.x+dx,y=p.y+dy,nextKey=cellKey(x,y);
-    if(x<1||y<1||x>=COLS-1||y>=ROWS-1||previous.has(nextKey)||map[y][x]===1)continue;
-    previous.set(nextKey,key);queue.push({x,y});
-   }
+ // Encontra uma rota mínima até a saída atravessando blocos destrutíveis,
+ // mas nunca pilares fixos. A ordem dos vizinhos também é aleatória para
+ // que o caminho não fique sempre no mesmo lado do mapa.
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ const routeDirs=shuffleArray(dirs.slice());
+ const startKey=cellKey(1,1),exitKey=cellKey(exit.x,exit.y);
+ const queue=[{x:1,y:1}],previous=new Map([[startKey,null]]);
+ let head=0,found=false;
+ while(head<queue.length){
+  const p=queue[head++],key=cellKey(p.x,p.y);
+  if(key===exitKey){found=true;break}
+  const order=shuffleArray(routeDirs.slice());
+  for(const [dx,dy] of order){
+   const x=p.x+dx,y=p.y+dy,nextKey=cellKey(x,y);
+   if(x<1||y<1||x>=COLS-1||y>=ROWS-1||previous.has(nextKey)||map[y][x]===1)continue;
+   previous.set(nextKey,key);queue.push({x,y});
   }
-  if(!found)return false;
+ }
+ if(found){
   let key=exitKey;
   while(key!==null){
    const [x,y]=key.split(",").map(Number);
    if(x!==exit.x||y!==exit.y)map[y][x]=0;
    key=previous.get(key);
   }
-  return true;
- };
- connectStartToExit();
- // NOVA DISTRIBUIÇÃO: blocos aleatórios em todos os setores,
- // com presença garantida na região do jogador e rota inicial preservada.
- const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- const startRing=[];
- for(let y=2;y<=7;y++)for(let x=1;x<=7;x++){
-  const d=distance(x+.5,y+.5,1.5,1.5);
-  if(d<2.0||d>6.8||isStartSafeCell(x,y)||map[y][x]!==2)continue;
-  let adjacent=0;
-  for(const [dx,dy] of dirs)if(map[y+dy]?.[x+dx]===0)adjacent++;
-  if(adjacent>0)startRing.push({x,y});
  }
- shuffleArray(startRing);
- const openedNear=startRing.slice(0,Math.min(startRing.length,9+Math.floor(Math.random()*4)));
- for(const p of openedNear)map[p.y][p.x]=0;
+ // A saída permanece escondida em um bloco destrutível até o momento
+ // em que todas as criaturas forem derrotadas.
+ map[exit.y][exit.x]=2;
 
- const candidates=[];
- for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  if(map[y][x]===0&&!isStartSafeCell(x,y)&&distance(x+.5,y+.5,exit.x+.5,exit.y+.5)>=1.35)candidates.push({x,y});
- }
- const targetBlocks=Math.min(candidates.length,Math.round(candidates.length*(.34+Math.random()*.05)));
- const hasStartToExitRoute=()=>{
-  const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]);
-  let head=0;
-  while(head<queue.length){
-   const p=queue[head++];
-   if(p.x===exit.x&&p.y===exit.y)return true;
-   for(const [dx,dy] of dirs){
-    const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
-    if(x<1||y<1||x>=COLS-1||y>=ROWS-1||visited.has(key)||map[y][x]!==0)continue;
-    visited.add(key);queue.push({x,y});
-   }
-  }
-  return false;
- };
- const sectorIndexOf=p=>{
-  const sx=Math.min(2,Math.floor((p.x-1)/((COLS-2)/3)));
-  const sy=Math.min(1,Math.floor((p.y-1)/((ROWS-2)/2)));
-  return sy*3+sx;
- };
- const sectors=[];
- for(let sy=0;sy<2;sy++)for(let sx=0;sx<3;sx++){
-  const index=sy*3+sx;
-  const x0=1+Math.floor(sx*(COLS-2)/3),x1=1+Math.floor((sx+1)*(COLS-2)/3);
-  const y0=1+Math.floor(sy*(ROWS-2)/2),y1=1+Math.floor((sy+1)*(ROWS-2)/2);
-  sectors.push({index,cells:candidates.filter(p=>p.x>=x0&&p.x<x1&&p.y>=y0&&p.y<y1)});
- }
- const placedBySector=Array(6).fill(0),placedKeys=new Set();
- let placed=0;
- const tryPlace=p=>{
-  const key=cellKey(p.x,p.y);
-  if(placed>=targetBlocks||map[p.y][p.x]!==0||placedKeys.has(key))return false;
-  map[p.y][p.x]=2;
-  if(!hasStartToExitRoute()){map[p.y][p.x]=0;return false}
-  placed++;placedKeys.add(key);placedBySector[sectorIndexOf(p)]++;
-  return true;
- };
- const placeFrom=(list,limit)=>{
-  let added=0;
-  for(const p of shuffleArray(list.slice())){
-   if(placed>=targetBlocks||added>=limit)break;
-   if(tryPlace(p))added++;
-  }
-  return added;
- };
-
- // Reserva uma cota REAL de blocos em volta do personagem.
- const nearCandidates=candidates.filter(p=>{
-  const d=distance(p.x+.5,p.y+.5,1.5,1.5);
-  return d>=2.0&&d<=6.8&&p.x<=7&&p.y<=7;
- });
- const nearQuota=Math.min(nearCandidates.length,Math.max(5,Math.round(targetBlocks*.26)));
- placeFrom(nearCandidates,nearQuota);
-
- // O restante é distribuído proporcionalmente à capacidade de cada setor,
- // sem preferência fixa por esquerda, centro ou direita.
- const totalCapacity=sectors.reduce((sum,sector)=>sum+sector.cells.length,0);
- const sectorTargets=sectors.map(sector=>totalCapacity?Math.round(targetBlocks*sector.cells.length/totalCapacity):0);
- const sectorOrder=shuffleArray(sectors.map((sector,i)=>({sector,target:sectorTargets[i]})));
- for(const item of sectorOrder){
-  const remaining=Math.max(0,item.target-placedBySector[item.sector.index]);
-  if(remaining)placeFrom(item.sector.cells,remaining);
- }
- // Corrige diferenças causadas pela proteção da rota: completa primeiro
- // os setores com menor densidade efetiva, até atingir a quantidade-alvo.
- let safety=0;
- while(placed<targetBlocks&&safety++<candidates.length*2){
-  const available=sectors.filter(sector=>sector.cells.some(p=>map[p.y][p.x]===0));
-  if(!available.length)break;
-  available.sort((a,b)=>(placedBySector[a.index]/Math.max(1,a.cells.length))-(placedBySector[b.index]/Math.max(1,b.cells.length)));
-  const chosen=available[0],before=placed;
-  placeFrom(chosen.cells,1);
-  if(placed===before)chosen.cells=chosen.cells.filter(p=>map[p.y][p.x]===0).slice(1);
- }
+ // Segurança extra: nunca deixar o jogador nascer encostado em bloco.
+ for(const p of [{x:1,y:1},{x:2,y:1},{x:1,y:2},{x:2,y:2},{x:3,y:1},{x:1,y:3}])map[p.y][p.x]=0;
 }
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
@@ -748,8 +653,8 @@ function updateShopButtons(){
 }
 function resetPowerUps(){bombPowerUps=0;firePowerUps=0;speedPowerUps=0;pushBombOwned=false;maxBombs=1;firePower=1;if(player)player.speed=basePlayerSpeed;updateHUD()}
 function createEnemySpawnPositions(count){
- // Nascimento aleatório pelos seis setores, sem preferência pelo meio ou
- // pela parte superior. Mantém distância segura do jogador e evita visão direta.
+ // Inimigos distribuídos pelo mapa inteiro, depois de a geração dos blocos
+ // terminar. Bolsões pequenos são permitidos, mas não surgem colados ao jogador.
  const dirs=[[1,0],[-1,0],[0,1],[0,-1]],sectors=[];
  for(let sy=0;sy<2;sy++)for(let sx=0;sx<3;sx++){
   const x0=1+Math.floor(sx*(COLS-2)/3),x1=1+Math.floor((sx+1)*(COLS-2)/3);
@@ -757,8 +662,8 @@ function createEnemySpawnPositions(count){
   const cells=[];
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
    if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
-   const px=x+.5,py=y+.5;
-   if(distance(px,py,player.x,player.y)<5.0||distance(px,py,exit.x+.5,exit.y+.5)<1.8||hasClearSpawnLane(x,y))continue;
+   const px=x+.5,py=y+.5,dist=distance(px,py,player.x,player.y);
+   if(dist<4.5||distance(px,py,exit.x+.5,exit.y+.5)<1.5||hasClearSpawnLane(x,y))continue;
    let openNeighbors=0;
    for(const [dx,dy] of dirs)if(tileAt(x+dx,y+dy)===0)openNeighbors++;
    if(openNeighbors>=1)cells.push({x,y,openNeighbors});
@@ -766,38 +671,48 @@ function createEnemySpawnPositions(count){
   sectors.push(shuffleArray(cells));
  }
  const selected=[],sectorCounts=Array(6).fill(0);
- const addCandidate=(p,index,minSpacing,maxPerSector)=>{
-  if(sectorCounts[index]>=maxPerSector)return false;
-  if(selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<minSpacing))return false;
+ const tryAdd=(p,index,minDistance,maxPerSector)=>{
+  if(selected.length>=count||sectorCounts[index]>=maxPerSector)return false;
+  if(selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<minDistance))return false;
   selected.push({x:p.x,y:p.y});sectorCounts[index]++;return true;
  };
- // Primeira rodada: tenta um inimigo em cada setor, em ordem aleatória.
- const order=shuffleArray([0,1,2,3,4,5]);
- for(const index of order){
+ // Primeiro, tenta ocupar setores diferentes para evitar concentração.
+ const sectorOrder=shuffleArray([0,1,2,3,4,5]);
+ for(const index of sectorOrder){
   if(selected.length>=count)break;
-  const pool=shuffleArray(sectors[index].slice());
-  const chosen=pool.find(p=>!selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<3.5));
-  if(chosen)addCandidate(chosen,index,3.5,1);
+  const p=sectors[index].find(q=>!selected.some(r=>distance(q.x+.5,q.y+.5,r.x+.5,r.y+.5)<3));
+  if(p)tryAdd(p,index,3,1);
  }
- // Segunda rodada: no máximo dois por setor, sem aglomerar inimigos.
- if(selected.length<count){
-  for(const index of shuffleArray(order.slice())){
-   if(selected.length>=count)break;
-   if(sectorCounts[index]>=2)continue;
-   const pool=shuffleArray(sectors[index].slice());
-   const chosen=pool.find(p=>!selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<3.3));
-   if(chosen)addCandidate(chosen,index,3.3,2);
-  }
+ // Segunda rodada: completa os setores com posições alternativas.
+ for(const index of shuffleArray(sectorOrder.slice())){
+  if(selected.length>=count)break;
+  if(sectorCounts[index]>=2)continue;
+  const p=sectors[index].find(q=>!selected.some(r=>distance(q.x+.5,q.y+.5,r.x+.5,r.y+.5)<2.5));
+  if(p)tryAdd(p,index,2.5,2);
  }
- // Último recurso: mantém o espalhamento e a distância mínima, usando
- // qualquer setor que ainda tenha posições válidas.
+ // Relaxa a distância gradualmente apenas se a geração tiver poucos espaços.
  if(selected.length<count){
   const fallback=[];
   for(let index=0;index<sectors.length;index++)for(const p of sectors[index])fallback.push({x:p.x,y:p.y,index});
   shuffleArray(fallback);
   for(const p of fallback){
    if(selected.length>=count)break;
-   addCandidate(p,p.index,3.0,2);
+   tryAdd(p,p.index,2,2);
+  }
+ }
+ // Último recurso para mapas excepcionalmente fechados: usa qualquer piso
+ // válido, mantendo distância do nascimento e sem sobrepor inimigos.
+ if(selected.length<count){
+  const fallback=[];
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+   if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
+   if(distance(x+.5,y+.5,player.x,player.y)<3.5)continue;
+   fallback.push({x,y,index:Math.min(5,Math.floor((y-1)/((ROWS-2)/2))*3+Math.floor((x-1)/((COLS-2)/3)))});
+  }
+  shuffleArray(fallback);
+  for(const p of fallback){
+   if(selected.length>=count)break;
+   tryAdd(p,p.index,1.8,3);
   }
  }
  return selected;
