@@ -706,21 +706,21 @@ function createEnemySpawnPositions(count){
   }
   sectors.push(shuffleArray(cells));
  }
- const selected=[],used=new Set();
+ const selected=[],used=new Set(),sectorCounts=sectors.map(()=>0);
  // Primeiro, tenta um inimigo por setor, para garantir cobertura espacial.
  const order=shuffleArray(sectors.map((_,i)=>i));
  for(const index of order){
   if(selected.length>=count)break;
   const p=sectors[index].find(q=>!used.has(cellKey(q.x,q.y))&&!selected.some(r=>distance(q.x+.5,q.y+.5,r.x+.5,r.y+.5)<2.8));
-  if(p){selected.push(p);used.add(cellKey(p.x,p.y))}
+  if(p){selected.push(p);used.add(cellKey(p.x,p.y));sectorCounts[index]++}
  }
- // Depois completa com outros pontos dos setores menos ocupados.
+ // Depois completa nos setores menos ocupados, sem formar um grupo único.
  while(selected.length<count){
   let added=false;
-  const balanced=order.slice().sort((a,b)=>selected.filter(p=>p.x>=1+Math.floor(a*(COLS-2)/3)&&p.x<1+Math.floor((a+1)*(COLS-2)/3)).length-selected.filter(p=>p.x>=1+Math.floor(b*(COLS-2)/3)&&p.x<1+Math.floor((b+1)*(COLS-2)/3)).length);
+  const balanced=order.slice().sort((a,b)=>sectorCounts[a]-sectorCounts[b]);
   for(const index of balanced){
    const p=sectors[index].find(q=>!used.has(cellKey(q.x,q.y))&&!selected.some(r=>distance(q.x+.5,q.y+.5,r.x+.5,r.y+.5)<1.5));
-   if(p){selected.push(p);used.add(cellKey(p.x,p.y));added=true;break}
+   if(p){selected.push(p);used.add(cellKey(p.x,p.y));sectorCounts[index]++;added=true;break}
   }
   if(!added)break;
  }
