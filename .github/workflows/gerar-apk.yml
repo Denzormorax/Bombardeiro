@@ -44,7 +44,7 @@ jobs:
           cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
           cp -R game-assets/. "$GAME_ASSETS/"
           cd "$GAME_ASSETS"
-          find . -type f ! -name "assets-manifest.sha256" -printf '%P\\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
+          find . -type f ! -name "assets-manifest.sha256" -printf '%P\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
           test -s bombardeirojogo.html
           test -s game-assets/audio/explosion.wav
           test -s game-assets/audio/coin_pickup.wav
