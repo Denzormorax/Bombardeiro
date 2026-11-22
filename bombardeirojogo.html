@@ -405,13 +405,18 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 .gameLogo{text-align:center;font-weight:1000;line-height:1.05;letter-spacing:1px;font-size:clamp(28px,6vw,55px);color:#fff3a6;text-shadow:0 4px 0 #9a541d,0 7px 0 #57331c,0 10px 18px #000b;-webkit-text-stroke:1px #743e19}
 .gameLogo small{display:block;font-size:.48em;color:#8ef0ff;letter-spacing:4px;margin-top:8px;-webkit-text-stroke:0;text-shadow:0 3px 0 #07516a,0 5px 10px #000}
 .menuFooter{font-size:11px;color:#d4f4ef;margin-top:12px;text-shadow:0 2px 4px #000}
-#worldsPanel,#forestPanel{position:relative;z-index:5;width:min(560px,94vw);max-height:82vh;padding:18px;background:linear-gradient(145deg,#173d45f5,#0d202af5);border:2px solid #79d5df;border-radius:20px;box-shadow:0 0 30px #39d5e455;text-align:center;overflow:auto}
+#worldsPanel,#forestPanel,#desertPanel{position:relative;z-index:5;width:min(560px,94vw);max-height:82vh;padding:18px;background:linear-gradient(145deg,#173d45f5,#0d202af5);border:2px solid #79d5df;border-radius:20px;box-shadow:0 0 30px #39d5e455;text-align:center;overflow:auto}
 .menuTitle{font-size:clamp(25px,5vw,36px);color:#a4f1ff;text-shadow:0 3px 0 #07516a;margin-bottom:18px;letter-spacing:2px}
 .worldGrid{display:flex;justify-content:center}
 .worldCard{width:min(245px,72vw);height:190px;border:3px solid #b5e8a1;border-radius:17px;overflow:hidden;position:relative;background:linear-gradient(#79d5ec 0%,#c4efb4 42%,#357e49 43%,#17432e 100%);box-shadow:0 7px 0 #173c2a,0 12px 18px #0008;color:white}
 .worldCard .forestArt{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,#8bcf66 0 15%,transparent 16%),radial-gradient(circle at 15% 55%,#1c663b 0 17%,transparent 18%),radial-gradient(circle at 82% 52%,#236d3b 0 20%,transparent 21%),linear-gradient(160deg,transparent 40%,#175331 41% 100%)}
 .worldCard .forestArt:before{content:"🌲 🌳 🌲";position:absolute;left:0;right:0;top:37px;font-size:43px;text-shadow:0 4px 4px #123}
 .worldCard .forestArt:after{content:"🌿  🌼  🌿";position:absolute;bottom:38px;left:0;right:0;font-size:25px}
+.worldCard.desertCard{border-color:#f5d18b;background:linear-gradient(#f7c978 0%,#f3dc9b 42%,#bd843d 43%,#6f3c20 100%);box-shadow:0 7px 0 #633b20,0 12px 18px #0008}
+.worldCard .desertArt{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#f6c77b 0%,#e8a85a 48%,#b96d36 100%)}
+.worldCard .desertArt:before{content:"";position:absolute;left:-12%;right:-12%;bottom:23px;height:105px;background:#d89a4d;clip-path:polygon(0 62%,18% 30%,36% 57%,58% 8%,78% 48%,100% 20%,100% 100%,0 100%)}
+.worldCard .desertArt:after{content:"☀️   🏜️   🌵";position:absolute;left:0;right:0;top:24px;font-size:36px;text-shadow:0 4px 4px #743d20}
+.worldCard.desertCard .worldName{background:linear-gradient(180deg,rgba(93,47,20,.78),rgba(53,27,15,.96));border-top-color:#ffe0a0;color:#fff1ce;text-shadow:0 2px 0 #693719,0 0 9px #ffc66b}
 .worldName{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 10px 12px;background:linear-gradient(180deg,rgba(8,39,29,.78),rgba(5,29,21,.96));border-top:1px solid #d8ffad99;color:#efffdc;font-family:Georgia,"Times New Roman",serif;font-size:clamp(19px,4vw,23px);font-weight:900;letter-spacing:3px;text-shadow:0 2px 0 #174526,0 0 9px #b8ff83aa;-webkit-text-stroke:.35px #315b2d;box-shadow:0 -4px 14px #071b1266}
 #worldsPanel{position:fixed;inset:0;z-index:10;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;padding:18px;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;background:url("./game-assets/images/forest-selection-background.jpg") center center/cover no-repeat}
 #worldsPanel>*{position:relative;z-index:1}
@@ -435,6 +440,22 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 #forestPanel .menuTitle{position:relative;align-self:center;margin:3px 0 8px;font-size:clamp(24px,4vw,36px);color:#d9ffb0;text-shadow:0 3px 0 #174526,0 0 15px #a4ff70}
 #forestBackArrowBtn{position:absolute;top:12px;left:12px;z-index:10;width:43px;height:43px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid #b5ef89;border-radius:12px;background:linear-gradient(145deg,#244d36,#102c20);color:#e5ffbd;font-size:29px;font-weight:bold;line-height:1;box-shadow:0 4px 12px #0007,0 0 10px #8fce6b55;cursor:pointer}
 #forestBackArrowBtn:active{transform:scale(.94);filter:brightness(1.3)}
+#desertPanel{position:fixed;inset:0;z-index:12;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;padding:clamp(12px,2vh,18px) clamp(12px,3vw,35px);border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;background:linear-gradient(180deg,rgba(75,39,12,.12),rgba(91,49,17,.22)),url("./Mapa%20deserto.jpg") center center/cover no-repeat}
+#desertPanel:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,224,165,.08),rgba(92,47,17,.20))}
+#desertPanel>*{position:relative;z-index:1}
+#desertPanel .menuTitle{position:relative;align-self:center;margin:3px 0 8px;font-size:clamp(24px,4vw,36px);color:#ffe1a1;text-shadow:0 3px 0 #713d1c,0 0 15px #ffc76b}
+#desertBackArrowBtn{position:absolute;top:12px;left:12px;z-index:10;width:43px;height:43px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid #f6d39a;border-radius:12px;background:linear-gradient(145deg,#88552d,#4b2d1c);color:#fff0ca;font-size:29px;font-weight:bold;line-height:1;box-shadow:0 4px 12px #0007;cursor:pointer}
+#desertBackArrowBtn:active{transform:scale(.94);filter:brightness(1.3)}
+#desertMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;margin:0;overflow:hidden}
+#desertPath{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#desertPath .pathShadow{fill:none;stroke:#603719;stroke-width:24;stroke-linecap:round;stroke-linejoin:round;opacity:.72}
+#desertPath .pathBase{fill:none;stroke:#d49a55;stroke-width:15;stroke-linecap:round;stroke-linejoin:round}
+#desertPath .pathCenter{fill:none;stroke:#ffe0a0;stroke-width:3;stroke-dasharray:5 10;stroke-linecap:round;opacity:.9}
+#desertLevelNodes{position:absolute;inset:0}
+#desertMapMascot{position:absolute;width:clamp(43px,7vw,65px);height:clamp(43px,7vw,65px);left:0;top:0;transform:translate(-50%,-112%);z-index:8;pointer-events:none;transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1);filter:drop-shadow(0 5px 3px #542d16)}
+#desertMapMascot .miniBody{border-color:#d58a43;box-shadow:0 4px 0 #79451f}
+#desertMapMascot .miniHelmet{background:linear-gradient(#ffe0a0,#b96b31);border-bottom-color:#80441f}
+#desertProgressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);margin:0;text-align:center;font-size:12px;color:#ffe6b7;text-shadow:0 2px 5px #542d16}
 #forestMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;margin:0;overflow:hidden}
 #forestPath{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 #forestPath .pathShadow{fill:none;stroke:#09291d;stroke-width:24;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
@@ -459,16 +480,16 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 #progressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);margin:0;text-align:center;font-size:12px;color:#d9ffb0}
 .menuBack{width:min(260px,80%);margin:12px auto 0;padding:11px;border:1px solid #9deaff;border-radius:9px;background:#304b5a;color:white;font-weight:bold}
 @media(max-width:600px){
- #forestPanel{padding:10px 8px}
- #forestMap{width:100%;height:min(48vh,250px);min-height:160px}
+ #forestPanel,#desertPanel{padding:10px 8px}
+ #forestMap,#desertMap{width:100%;height:min(48vh,250px);min-height:160px}
  .mapNode{width:clamp(34px,7vw,49px);height:clamp(34px,7vw,49px);border-width:2px}
  #mapMascot{width:48px;height:48px}
- #forestPanel .menuTitle{font-size:24px;margin-top:5px}
- #forestBackArrowBtn{top:9px;left:9px;width:39px;height:39px;font-size:27px}
+ #forestPanel .menuTitle,#desertPanel .menuTitle{font-size:24px;margin-top:5px}
+ #forestBackArrowBtn,#desertBackArrowBtn{top:9px;left:9px;width:39px;height:39px;font-size:27px}
 }
 @media(max-height:420px){
- #forestPanel{padding:5px 12px}
- #forestPanel .menuTitle{font-size:22px;margin-top:0;margin-bottom:3px}
+ #forestPanel,#desertPanel{padding:5px 12px}
+ #forestPanel .menuTitle,#desertPanel .menuTitle{font-size:22px;margin-top:0;margin-bottom:3px}
  #forestMap{height:48vh;min-height:135px}
  #progressText{bottom:10px;margin:0;font-size:10px}
 }
@@ -15506,7 +15527,7 @@ h/uVzzRXSyjbIQuAM9ABRRdsv2sj/9k=
 <div id="worldsPanel" class="hidden">
  <button id="worldsBackArrowBtn" type="button" aria-label="Voltar ao menu principal">←</button>
  <div class="menuTitle">MUNDOS</div>
- <div class="worldGrid"><button class="worldCard" id="forestBtn"><span class="forestArt"></span><span class="worldName">🌲 FLORESTA</span></button></div>
+ <div class="worldGrid"><button class="worldCard" id="forestBtn"><span class="forestArt"></span><span class="worldName">🌲 FLORESTA</span></button><button class="worldCard desertCard" id="desertBtn"><span class="desertArt"></span><span class="worldName">🏜️ DESERTO</span></button></div>
 </div>
 <div id="forestPanel" class="hidden">
  <button id="forestBackArrowBtn" type="button" aria-label="Voltar aos mundos">←</button>
@@ -15521,6 +15542,16 @@ h/uVzzRXSyjbIQuAM9ABRRdsv2sj/9k=
   <div id="mapMascot"><div class="miniBody"></div><div class="miniHelmet"></div><div class="miniEyes"><i></i><i></i></div><div class="miniMouth"></div></div>
  </div>
  <div class="menuFooter" id="progressText">FASES CONCLUÍDAS: 0/10</div>
+</div>
+<div id="desertPanel" class="hidden">
+ <button id="desertBackArrowBtn" type="button" aria-label="Voltar aos mundos">←</button>
+ <div class="menuTitle">🏜️ DESERTO</div>
+ <div id="desertMap"><svg id="desertPath" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">
+  <path class="pathShadow" d="M65 135 C115 135 125 65 165 65 S225 195 265 195 S325 65 365 65 S425 195 465 195 S525 65 565 65 S625 195 665 195 S725 65 765 65 S825 195 865 195 S925 125 935 125"/>
+  <path class="pathBase" d="M65 135 C115 135 125 65 165 65 S225 195 265 195 S325 65 365 65 S425 195 465 195 S525 65 565 65 S625 195 665 195 S725 65 765 65 S825 195 865 195 S925 125 935 125"/>
+  <path class="pathCenter" d="M65 135 C115 135 125 65 165 65 S225 195 265 195 S325 65 365 65 S425 195 465 195 S525 65 565 65 S625 195 665 195 S725 65 765 65 S825 195 865 195 S925 125 935 125"/>
+ </svg><div id="desertLevelNodes"></div><div id="desertMapMascot"><div class="miniBody"></div><div class="miniHelmet"></div><div class="miniEyes"><i></i><i></i></div><div class="miniMouth"></div></div></div>
+ <div class="menuFooter" id="desertProgressText">FASES CONCLUÍDAS: 0/10</div>
 </div>
 
 <script>
@@ -16989,6 +17020,100 @@ function startIntroSplash(){
 loadControls();loadProgress();buildPortalVisualCache();selectedMapLevel=1;newLevel();
 running=false;paused=true;$("hud").style.display="none";$("controls").style.display="none";startIntroSplash();
 requestAnimationFrame(function loop(t){const dt=Math.min(.035,(t-lastTime)/1000||0);lastTime=t;update(dt);draw();requestAnimationFrame(loop)});
+
+/* MUNDO 2 — DESERTO: mantém as mesmas regras e IA da Floresta. */
+let currentWorld="forest",desertDetails=[];
+const desertThemes=[
+{name:"Dunas do Alvorecer",sky:["#f8d69a","#d99a5d","#8e5737"],floor:"rgba(190,139,73,.80)",floor2:"rgba(244,204,133,.42)",wall:["#9b6237","#d39a58","#633d27"],far:"#b87945",near:"#75452e",glow:"#ffe3a4",accent:"#e6b56c",style:"dunes"},
+{name:"Cânion de Arenito",sky:["#f2c28c","#c9784e","#743d31"],floor:"rgba(165,105,64,.82)",floor2:"rgba(226,157,95,.42)",wall:["#8b4e32","#c27b4d","#573326"],far:"#8b4b36",near:"#59352b",glow:"#ffd39a",accent:"#d99459",style:"canyon"},
+{name:"Ruínas Soterradas",sky:["#f4d49b","#c99a62","#77513a"],floor:"rgba(179,137,83,.80)",floor2:"rgba(238,199,133,.42)",wall:["#8b6542","#d0a36c","#60452f"],far:"#a77a4b",near:"#6e5035",glow:"#ffe2a5",accent:"#d9ad70",style:"ruins"},
+{name:"Oásis Esquecido",sky:["#f5dba0","#d5a56a","#8a6744"],floor:"rgba(190,153,92,.80)",floor2:"rgba(237,211,153,.42)",wall:["#92704a","#d2aa70","#5e4934"],far:"#a88956",near:"#6f6540",glow:"#fff0b2",accent:"#9eb36b",style:"oasis"},
+{name:"Mar de Areia",sky:["#f7d59b","#d89d5b","#9b633b"],floor:"rgba(202,151,79,.82)",floor2:"rgba(244,207,132,.44)",wall:["#9b6538","#dba15d","#684329"],far:"#b98247",near:"#80502e",glow:"#ffe7ae",accent:"#edc16f",style:"wind"},
+{name:"Templo das Dunas",sky:["#eecb98","#bd8355","#654332"],floor:"rgba(165,120,74,.82)",floor2:"rgba(223,178,117,.42)",wall:["#785238","#bb8956","#4c3528"],far:"#80583c",near:"#503829",glow:"#f8d49a",accent:"#d8aa70",style:"temple"},
+{name:"Desfiladeiro Rubro",sky:["#efb78b","#b95f49","#62352f"],floor:"rgba(156,91,62,.82)",floor2:"rgba(218,133,91,.42)",wall:["#7e4435","#b96d4d","#4d3029"],far:"#874638",near:"#542f2b",glow:"#ffc18d",accent:"#dc8c62",style:"redrock"},
+{name:"Planície dos Cactos",sky:["#f7d59a","#d39a5e","#80513a"],floor:"rgba(190,143,79,.80)",floor2:"rgba(239,201,125,.42)",wall:["#91603a","#c9955d","#5e402b"],far:"#a97548",near:"#70452e",glow:"#ffe1a1",accent:"#9a9b52",style:"cactus"},
+{name:"Dunas Douradas",sky:["#f6c783","#dc854a","#713d32"],floor:"rgba(187,123,62,.82)",floor2:"rgba(242,177,91,.42)",wall:["#92542f","#d18a48","#603925"],far:"#a75e39",near:"#69392e",glow:"#ffe29a",accent:"#f2bd68",style:"sunset"},
+{name:"Deserto da Lua",sky:["#8e8b9a","#57566b","#252b3b"],floor:"rgba(91,84,82,.84)",floor2:"rgba(153,130,111,.42)",wall:["#514a4c","#8b7770","#302d36"],far:"#56505b",near:"#2c2e3a",glow:"#c9b9a0",accent:"#d1b98e",style:"moon"}
+];
+const forestThemeOriginal=currentForestTheme,drawBgOriginal=drawForestBackground,drawTileOriginal=drawTileTo;
+const loadProgressOriginal=loadProgress,saveProgressOriginal=saveProgress,showMenuOriginal=showMenuScreen;
+const buildMapOriginal=buildForestMap,selectLevelOriginal=selectMapLevel,updateHudOriginal=updateHUD;
+const startGameOriginal=startGame,gameOverOriginal=gameOver,buildCrateOriginal=buildBurningCrateSprite;
+const createPuddlesOriginal=createForestPuddles,rebuildCacheOriginal=rebuildStaticMapCache;
+function worldLevelNumber(){return currentWorld==="desert"?level+10:level}
+function desertProgressLoad(){try{const n=Number(localStorage.getItem("bomberquest-desert-unlocked")||1);unlockedLevel=Math.max(1,Math.min(TOTAL_LEVELS,n||1))}catch(e){unlockedLevel=1}}
+loadProgress=function(){if(currentWorld==="desert")desertProgressLoad();else loadProgressOriginal()};
+saveProgress=function(){if(currentWorld==="desert"){try{localStorage.setItem("bomberquest-desert-unlocked",String(unlockedLevel))}catch(e){}}else saveProgressOriginal()};
+currentForestTheme=function(){return currentWorld==="desert"?desertThemes[Math.max(0,Math.min(9,level-1))]:forestThemeOriginal()};
+function desertMapPoint(i){return mapPoint(i)}
+function placeDesertMascot(i,animate=true){const p=desertMapPoint(i),m=$("desertMapMascot");if(!m)return;if(!animate)m.style.transition="none";m.style.left=p.x+"%";m.style.top=p.y+"%";if(!animate)requestAnimationFrame(()=>m.style.transition="left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1)")}
+function buildDesertMap(){
+ const nodes=$("desertLevelNodes");nodes.innerHTML="";
+ for(let i=1;i<=TOTAL_LEVELS;i++){const p=desertMapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.textContent=i;
+  if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
+  n.addEventListener("click",()=>selectMapLevel(i));nodes.appendChild(n)}
+ const chosen=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);placeDesertMascot(chosen,false);$("desertProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
+}
+buildForestMap=function(){if(currentWorld==="desert")buildDesertMap();else buildMapOriginal()};
+selectMapLevel=function(i){if(currentWorld!=="desert")return selectLevelOriginal(i);if(i>unlockedLevel||i<1)return;if(mapMoveTimer)clearTimeout(mapMoveTimer);selectedMapLevel=i;$("desertLevelNodes").querySelectorAll(".mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));placeDesertMascot(i,true);mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;startGame(i)},430)};
+showMenuScreen=function(which){
+ if(which==="desert"){
+  $("overlay").style.display="none";$("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");$("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
+  currentWorld="desert";loadProgress();buildBurningCrateSprite();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildDesertMap();$("desertPanel").classList.remove("hidden");menuReturn="desert";return;
+ }
+ $("desertPanel").classList.add("hidden");
+ if(which==="forest"){currentWorld="forest";loadProgress();buildBurningCrateSprite()}
+ return showMenuOriginal(which);
+};
+$("desertBtn").onclick=()=>showMenuScreen("desert");
+$("desertBackArrowBtn").onclick=()=>showMenuScreen("worlds");
+startGame=function(n=1){$("desertPanel").classList.add("hidden");return startGameOriginal(n)};
+updateHUD=function(){updateHudOriginal();$("level").textContent=worldLevelNumber();$("forestThemeName").textContent=currentForestTheme().name};
+gameOver=function(win){gameOverOriginal(win);$("endText").textContent=win?"Parabéns! Você completou as 10 fases do "+(currentWorld==="desert"?"Deserto":"Floresta")+"! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins};
+const desertSpriteSheet=new Image(),desertThemedSpriteSheets=Array(10).fill(null);
+desertSpriteSheet.onload=()=>{for(let i=0;i<10;i++){const c=document.createElement("canvas");c.width=384;c.height=96;const q=c.getContext("2d");q.imageSmoothingEnabled=false;q.drawImage(desertSpriteSheet,0,i*96,384,96,0,0,384,96);desertThemedSpriteSheets[i]=c}if(currentWorld==="desert"){buildBurningCrateSprite();rebuildStaticMapCache()}};
+desertSpriteSheet.src="game-assets/sprites/desert_themes.svg";
+drawForestBackground=function(target){
+ if(currentWorld!=="desert")return drawBgOriginal(target);
+ const c=target||ctx,t=currentForestTheme(),g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,t.sky[0]);g.addColorStop(.48,t.sky[1]);g.addColorStop(1,t.sky[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
+ const sun=c.createRadialGradient(W*.76,H*.18,4,W*.76,H*.18,110);sun.addColorStop(0,t.glow+"bb");sun.addColorStop(1,t.glow+"00");c.fillStyle=sun;c.fillRect(0,0,W,H);
+ if(t.style!=="moon"){c.fillStyle=t.glow;c.beginPath();c.arc(W*.76,H*.18,27,0,Math.PI*2);c.fill()}
+ c.fillStyle=t.far;c.beginPath();c.moveTo(0,H*.62);for(let i=0;i<=8;i++){const x=i*W/8;c.quadraticCurveTo(x+W/16,H*(.48+(i%2)*.1),x+W/8,H*(.62+((i+1)%3)*.035))}c.lineTo(W,H);c.lineTo(0,H);c.fill();
+ c.fillStyle=t.near;c.beginPath();c.moveTo(0,H*.76);for(let i=0;i<=6;i++){const x=i*W/6;c.quadraticCurveTo(x+W/12,H*(.65+(i%2)*.07),x+W/6,H*(.76+((i+1)%2)*.035))}c.lineTo(W,H);c.lineTo(0,H);c.fill();
+ c.save();c.globalAlpha=.8;c.fillStyle=t.accent;
+ if(["canyon","redrock","ruins","temple"].includes(t.style)){for(let i=0;i<7;i++){const x=25+i*145,b=H*.74,h=85+(i%3)*42;c.fillRect(x,b-h*.35,26,h*.35);c.beginPath();c.moveTo(x-20,b-h*.35);c.lineTo(x+13,b-h);c.lineTo(x+45,b-h*.35);c.fill()}}
+ if(t.style==="ruins"||t.style==="temple"){for(let i=0;i<3;i++){const x=230+i*240,y=H*.58;c.fillRect(x,y,13,75);c.fillRect(x+48,y,13,75);c.fillRect(x-5,y-8,71,12)}}
+ if(t.style==="oasis"){c.globalAlpha=.5;c.fillStyle="#648d58";c.beginPath();c.ellipse(W*.5,H*.76,95,19,0,0,Math.PI*2);c.fill();for(let i=0;i<4;i++){const x=360+i*52,y=H*.66;c.strokeStyle="#604a2d";c.lineWidth=7;c.beginPath();c.moveTo(x,y+38);c.lineTo(x+3,y-22);c.stroke();for(let j=0;j<5;j++){c.beginPath();c.ellipse(x+Math.cos(j*1.25)*24,y-24+Math.sin(j*1.25)*8,24,6,j*1.25,0,Math.PI*2);c.fillStyle="#667b3e";c.fill()}}}
+ if(t.style==="cactus"){for(let i=0;i<6;i++){const x=55+i*165,y=H*.75;c.fillStyle="#547344";c.fillRect(x,y-55,12,55);c.fillRect(x-12,y-39,12,9);c.fillRect(x-12,y-39,7,22);c.fillRect(x+12,y-27,12,8);c.fillRect(x+17,y-27,7,18)}}
+ if(t.style==="dunes"||t.style==="wind"||t.style==="sunset"){for(let i=0;i<24;i++){const x=(i*97+31)%W,y=H*.58+(i*31)%145;c.globalAlpha=.25;c.fillRect(x,y,3,2);c.fillRect(x+5,y-3,2,2)}}
+ if(t.style==="moon"){c.globalAlpha=.7;c.fillStyle="#eee0c4";c.beginPath();c.arc(W*.78,H*.19,30,0,Math.PI*2);c.fill();for(let i=0;i<38;i++){c.globalAlpha=.35+(i%3)*.12;c.fillStyle="#f6e8c8";c.fillRect((i*113+31)%W,(i*67+17)%(H*.55),2,2)}}
+ c.restore();c.globalAlpha=1;
+};
+drawTileTo=function(target,x,y,type,offsetY=0){
+ if(currentWorld!=="desert")return drawTileOriginal(target,x,y,type,offsetY);
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY,sheet=desertSpriteSheet,tiles=desertThemedSpriteSheets,theme=currentForestTheme();
+ if(sheet.complete&&sheet.naturalWidth){const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1),tile=tiles[Math.max(0,Math.min(9,level-1))]||sheet;target.imageSmoothingEnabled=false;target.drawImage(tile,col*96,0,96,96,px,py,TILE,TILE);return}
+ if(type===1){target.fillStyle=theme.wall[2];target.fillRect(px,py,TILE,TILE);target.fillStyle=theme.wall[1];target.fillRect(px+3,py+3,TILE-6,TILE-6);target.fillStyle=theme.wall[0];target.fillRect(px+5,py+5,TILE-10,7)}
+ else if(type===2){target.fillStyle="#80502f";target.fillRect(px,py,TILE,TILE);target.fillStyle="#d5a06a";target.fillRect(px+4,py+4,TILE-8,TILE-8);target.strokeStyle="#633d27";target.lineWidth=4;target.strokeRect(px+5,py+5,TILE-10,TILE-10);target.beginPath();target.moveTo(px+8,py+8);target.lineTo(px+TILE-8,py+TILE-8);target.moveTo(px+TILE-8,py+8);target.lineTo(px+8,py+TILE-8);target.stroke()}
+ else{target.fillStyle=theme.floor;target.fillRect(px,py,TILE,TILE);target.fillStyle=theme.floor2;target.fillRect(px+1,py+1,TILE-2,TILE-2);target.fillStyle=theme.accent;target.fillRect(px+12,py+18,3,3);target.fillRect(px+30,py+34,2,2)}
+ target.strokeStyle="#ffffff16";target.strokeRect(px,py,TILE,TILE);
+};
+createForestPuddles=function(){
+ if(currentWorld!=="desert")return createPuddlesOriginal();
+ waterPuddles=[];waterPuddleCells.clear();desertDetails=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(map[y][x]===0&&!isStartSafeCell(x,y)&&Math.random()<.22)desertDetails.push({x,y,seed:Math.random(),stone:Math.random()<.35});
+};
+rebuildStaticMapCache=function(){rebuildCacheOriginal();if(currentWorld==="desert"){for(const p of desertDetails){const x=ox+p.x*TILE,y=oy+p.y*TILE;if(p.stone){staticFloorCtx.fillStyle="#8d6242";staticFloorCtx.fillRect(x+8+(p.seed*11|0),y+12,7,4);staticFloorCtx.fillStyle="#d7a66c";staticFloorCtx.fillRect(x+10+(p.seed*11|0),y+11,4,2)}else{staticFloorCtx.fillStyle="#e4bd7e";staticFloorCtx.fillRect(x+9,y+13,3,2);staticFloorCtx.fillRect(x+29,y+31,4,2);staticFloorCtx.fillStyle="#9b6a3f";staticFloorCtx.fillRect(x+19,y+21,2,2)}}}};
+buildBurningCrateSprite=function(){
+ if(currentWorld!=="desert")return buildCrateOriginal();
+ if(!desertSpriteSheet.complete||!desertSpriteSheet.naturalWidth)return;
+ for(let i=0;i<10;i++){const c=burningCrateCanvases[i].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(desertThemedSpriteSheets[i]||desertSpriteSheet,288,0,96,96,4,5,56,56);c.save();c.globalCompositeOperation="lighter";const g=c.createRadialGradient(32,39,3,32,39,29);g.addColorStop(0,"#ffe3a0cc");g.addColorStop(.5,"#e77a2766");g.addColorStop(1,"#b94b1200");c.fillStyle=g;c.fillRect(2,8,60,56);c.shadowColor="#ff9a38";c.shadowBlur=7;c.fillStyle="#e77a20";c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();c.restore()}
+ burningCrateReady=true;
+};
+const handleBackOriginal=window.handleAndroidBack;
+window.handleAndroidBack=function(){if(!$("desertPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return handleBackOriginal()};
+updateHUD();
+
 })();
 </script>
 
