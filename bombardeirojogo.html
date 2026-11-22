@@ -1076,7 +1076,7 @@ function createForestPuddles(){
   candidates.push({x,y});
  }
  shuffleArray(candidates);
- const amount=5+Math.floor(Math.random()*6);
+ const amount=10+Math.floor(Math.random()*6);
  for(const p of candidates.slice(0,amount)){
   const key=cellKey(p.x,p.y);
   waterPuddleCells.add(key);
@@ -1797,22 +1797,28 @@ function drawTileTo(target,x,y,type,offsetY=0){
 function drawTile(x,y,type){drawTileTo(ctx,x,y,type)}
 function buildWaterPuddleFrames(){
  if(waterPuddleFramesReady)return;
+ // Sprite quadrado de 48x48: ocupa o bloco inteiro, com cantos pixelados suavemente arredondados.
  const pattern=[
-  "0011111100",
-  "0111111110",
-  "1111111111",
-  "1111111111",
-  "1111111111",
-  "0111111110",
-  "0011111100"
+  "001111111100",
+  "011111111110",
+  "111111111111",
+  "111111111111",
+  "111111111111",
+  "111111111111",
+  "111111111111",
+  "111111111111",
+  "111111111111",
+  "111111111111",
+  "011111111110",
+  "001111111100"
  ];
  for(let frame=0;frame<4;frame++){
-  const c=document.createElement("canvas");c.width=40;c.height=32;
+  const c=document.createElement("canvas");c.width=48;c.height=48;
   const q=c.getContext("2d");q.imageSmoothingEnabled=false;
   const colors={0:null,1:"#073d69",2:"#0876a2",3:"#19a7c9",4:"#72e6ed",5:"#c4fbf4"};
   for(let y=0;y<pattern.length;y++)for(let x=0;x<pattern[y].length;x++){
    if(pattern[y][x]==="0")continue;
-   const edge=y===0||y===6||x===0||x===9||pattern[y][x-1]==="0"||pattern[y][x+1]==="0";
+   const edge=y===0||y===11||x===0||x===11||pattern[y][x-1]==="0"||pattern[y][x+1]==="0";
    let tone=edge?1:2;
    if(!edge){
     const wave=(x*3+y*5+frame*2)%11;
@@ -1820,10 +1826,10 @@ function buildWaterPuddleFrames(){
    }
    q.fillStyle=colors[tone];q.fillRect(x*4,y*4,4,4);
   }
-  // Reflexos pixelados que mudam de posição para dar movimento à superfície.
-  const glints=[[[8,8],[24,16],[32,24]],[[12,12],[28,8],[20,24]],[[20,8],[8,20],[28,20]],[[28,12],[16,20],[8,8]]][frame];
-  for(const [x,y] of glints){q.fillStyle="#bafbf4";q.fillRect(x,y,4,2);q.fillStyle="#55d9e7";q.fillRect(x+4,y+2,3,2)}
-  q.fillStyle="#e0fff7";q.fillRect(7+frame*2,12,3,2);
+  // Reflexos pixelados animados, preservando o desenho quadrado da poça.
+  const glints=[[[8,8],[28,16],[36,32]],[[12,12],[32,8],[20,32]],[[24,8],[8,28],[36,24]],[[32,12],[16,32],[8,8]]][frame];
+  for(const [x,y] of glints){q.fillStyle="#bafbf4";q.fillRect(x,y,5,2);q.fillStyle="#55d9e7";q.fillRect(x+4,y+2,3,2)}
+  q.fillStyle="#e0fff7";q.fillRect(7+frame*2,16,3,2);
   waterPuddleFrames.push(c);
  }
  waterPuddleFramesReady=true;
@@ -1831,8 +1837,8 @@ function buildWaterPuddleFrames(){
 function drawWaterPuddle(p){
  if(!waterPuddleFramesReady)buildWaterPuddleFrames();
  const frame=Math.floor(gameClock*5.5+p.phase)%waterPuddleFrames.length;
- const px=ox+p.x*TILE+4,py=oy+p.y*TILE+8;
- ctx.save();ctx.globalAlpha=.94;ctx.drawImage(waterPuddleFrames[frame],px,py,40,32);ctx.restore();
+ const px=ox+p.x*TILE,py=oy+p.y*TILE;
+ ctx.save();ctx.globalAlpha=.94;ctx.drawImage(waterPuddleFrames[frame],px,py,TILE,TILE);ctx.restore();
 }
 function buildThemedSpriteSheets(){
  // Cada faixa da folha contém arte própria de uma fase; pré-renderização feita uma única vez.
