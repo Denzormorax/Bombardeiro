@@ -141,7 +141,8 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 /* FUNDO PANORÂMICO DO MENU PRINCIPAL — arte enviada pelo usuário. */
 #menuBackdrop{
  background-color:#081323;
- background-image:url("./game-assets/images/menu-background.jpg");
+ /* Clareia somente o background do menu principal. */
+ background-image:linear-gradient(rgba(255,255,255,.16),rgba(255,255,255,.16)),url("./game-assets/images/menu-background.jpg");
  background-position:center center;
  background-size:cover;
  background-repeat:no-repeat;
