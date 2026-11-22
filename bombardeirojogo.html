@@ -355,8 +355,10 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 const canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
 const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W;backgroundCanvas.height=H;const backgroundCtx=backgroundCanvas.getContext("2d");let backgroundTheme=null;
+const staticFloorCanvas=document.createElement("canvas");staticFloorCanvas.width=W;staticFloorCanvas.height=H;const staticFloorCtx=staticFloorCanvas.getContext("2d");
+const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=H;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));
 const $=id=>document.getElementById(id);
-const forestSpriteSheet=new Image();forestSpriteSheet.src="game-assets/sprites/forest_tiles.svg";
+const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_tiles.svg";
 
 /* ÁUDIO HÍBRIDO: EFEITOS OGG LOCAIS + CAMADAS WEB AUDIO. FUNCIONA OFFLINE. */
 const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
@@ -754,7 +756,7 @@ function createEnemySpawnPositions(count){
 }
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
- makeMap();bombs=[];flames=[];coinsOnMap=[];enemies=[];
+ makeMap();rebuildStaticMapCache();bombs=[];flames=[];coinsOnMap=[];enemies=[];
  basePlayerSpeed=4.3+Math.min(level*.08,1);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
  else resetPowerUps();
@@ -1071,7 +1073,7 @@ function isInsideFlameDamage(entity,cell){
 }
 function explode(b){
  playSfx("explosion");let brokeBlock=false;activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y&&!exit.found){exit.found=true;playSfx("exit")}break}}if(brokeBlock)playSfx("block");
+ for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y&&!exit.found){exit.found=true;playSfx("exit")}break}}if(brokeBlock){rebuildStaticMapCache();playSfx("block");}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.62,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&isInsideFlameDamage(enemy,c)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
@@ -1183,7 +1185,7 @@ function update(dt){
   if(player.inv<=0&&isInsideFlameDamage(player,flameCell)){hurtPlayer();break}
   for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&isInsideFlameDamage(enemy,flameCell)&&!f.hitEnemies.has(enemy)){f.hitEnemies.add(enemy);damageEnemy(enemy)}
  }
- for(const c of coinsOnMap)c.life+=dt;updateHUD();
+ for(const c of coinsOnMap)c.life+=dt;
 }
 
 /* DESENHO DO CENÁRIO */
@@ -1244,40 +1246,28 @@ function drawForestBackground(target){
  }
  c.restore();c.globalAlpha=1;
 }
-function drawTile(x,y,type){
+function drawTileTo(target,x,y,type){
  const px=ox+x*TILE,py=oy+y*TILE,theme=currentForestTheme();
- // Sprites separados: chão de terra/grama, pedra indestrutível e caixa de madeira destrutível.
  if(forestSpriteSheet.complete&&forestSpriteSheet.naturalWidth){
   const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);
-  ctx.save();ctx.imageSmoothingEnabled=false;
-  ctx.drawImage(forestSpriteSheet,col*48,0,48,48,px,py,TILE,TILE);
-  ctx.restore();
-  // Pequenos detalhes coloridos mudam com a clareira, sem alterar colisão ou tipo do bloco.
+  target.drawImage(forestSpriteSheet,col*48,0,48,48,px,py,TILE,TILE);
   if(type===0&&((x*13+y*7+level)%9===0)){
-   ctx.save();ctx.fillStyle=theme.accent;ctx.globalAlpha=.9;
-   const fx=px+9+((x*5+y*3)%25),fy=py+12+((x*7+y*2)%24);
-   ctx.fillRect(fx,fy,3,3);ctx.fillRect(fx+3,fy-3,3,3);ctx.fillRect(fx-3,fy+3,3,3);
-   ctx.restore();
-  }
-  return;
+   target.fillStyle=theme.accent;const fx=px+9+((x*5+y*3)%25),fy=py+12+((x*7+y*2)%24);
+   target.fillRect(fx,fy,3,3);target.fillRect(fx+3,fy-3,3,3);target.fillRect(fx-3,fy+3,3,3);
+  }return;
  }
- // Fallback caso o sprite externo ainda esteja carregando.
- if(type===1){
-  ctx.fillStyle="#596b4b";ctx.fillRect(px,py,TILE,TILE);
-  ctx.fillStyle="#778b60";ctx.fillRect(px+3,py+3,TILE-6,TILE-6);
-  ctx.fillStyle="#344832";ctx.fillRect(px+5,py+5,TILE-10,7);
-  ctx.fillStyle="#8ea66a";ctx.fillRect(px+8,py+8,13,5);
- }else if(type===2){
-  ctx.fillStyle="#79502f";ctx.fillRect(px,py,TILE,TILE);
-  ctx.fillStyle="#b77c42";ctx.fillRect(px+4,py+4,TILE-8,TILE-8);
-  ctx.strokeStyle="#57351f";ctx.lineWidth=4;ctx.strokeRect(px+5,py+5,TILE-10,TILE-10);
-  ctx.beginPath();ctx.moveTo(px+8,py+8);ctx.lineTo(px+TILE-8,py+TILE-8);ctx.moveTo(px+TILE-8,py+8);ctx.lineTo(px+8,py+TILE-8);ctx.stroke();
- }else{
-  ctx.fillStyle=theme.floor;ctx.fillRect(px,py,TILE,TILE);
-  ctx.fillStyle=theme.floor2;ctx.fillRect(px+1,py+1,TILE-2,TILE-2);
-  if((x*7+y*11+level)%6===0){ctx.fillStyle=theme.accent;ctx.fillRect(px+12,py+18,4,4);ctx.fillRect(px+16,py+14,4,4);ctx.fillRect(px+20,py+18,4,4)}
+ if(type===1){target.fillStyle="#596b4b";target.fillRect(px,py,TILE,TILE);target.fillStyle="#778b60";target.fillRect(px+3,py+3,TILE-6,TILE-6);target.fillStyle="#344832";target.fillRect(px+5,py+5,TILE-10,7);target.fillStyle="#8ea66a";target.fillRect(px+8,py+8,13,5)}
+ else if(type===2){target.fillStyle="#79502f";target.fillRect(px,py,TILE,TILE);target.fillStyle="#b77c42";target.fillRect(px+4,py+4,TILE-8,TILE-8);target.strokeStyle="#57351f";target.lineWidth=4;target.strokeRect(px+5,py+5,TILE-10,TILE-10);target.beginPath();target.moveTo(px+8,py+8);target.lineTo(px+TILE-8,py+TILE-8);target.moveTo(px+TILE-8,py+8);target.lineTo(px+8,py+TILE-8);target.stroke()}
+ else{target.fillStyle=theme.floor;target.fillRect(px,py,TILE,TILE);target.fillStyle=theme.floor2;target.fillRect(px+1,py+1,TILE-2,TILE-2);if((x*7+y*11+level)%6===0){target.fillStyle=theme.accent;target.fillRect(px+12,py+18,4,4);target.fillRect(px+16,py+14,4,4);target.fillRect(px+20,py+18,4,4)}}
+ target.strokeStyle="#ffffff16";target.strokeRect(px,py,TILE,TILE);
+}
+function drawTile(x,y,type){drawTileTo(ctx,x,y,type)}
+function rebuildStaticMapCache(){
+ staticFloorCtx.clearRect(0,0,W,H);
+ for(let y=0;y<ROWS;y++){
+  const rowCtx=staticRowCtx[y];rowCtx.clearRect(0,0,W,H);
+  for(let x=0;x<COLS;x++){drawTileTo(staticFloorCtx,x,y,0);const type=map[y][x];if(type!==0)drawTileTo(rowCtx,x,y,type)}
  }
- ctx.strokeStyle="#ffffff16";ctx.strokeRect(px,py,TILE,TILE);
 }
 function drawCharacter(x,y,color,helmet,scale=1){
  const px=ox+x*TILE,py=oy+y*TILE;ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,14,15,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();ctx.fillStyle=helmet;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.fillStyle="#18242a";ctx.fillRect(-5,7,10,3);ctx.restore();
@@ -1365,9 +1355,9 @@ function draw(){
  ctx.clearRect(0,0,W,H);
  if(backgroundTheme!==currentForestTheme()){drawForestBackground(backgroundCtx);backgroundTheme=currentForestTheme()}
  ctx.drawImage(backgroundCanvas,0,0);
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawTile(x,y,0);
+ ctx.drawImage(staticFloorCanvas,0,0);
  for(let y=0;y<ROWS;y++){
-  for(let x=0;x<COLS;x++){const type=map[y][x];if(type!==0)drawTile(x,y,type)}
+  ctx.drawImage(staticRowCanvases[y],0,0);
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
