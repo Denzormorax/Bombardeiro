@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -32,6 +33,12 @@ public class MainActivity extends Activity {
             webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
             webView.setWebViewClient(new WebViewClient());
             webView.setWebChromeClient(new WebChromeClient());
+            webView.addJavascriptInterface(new Object() {
+                @JavascriptInterface
+                public void exitGame() {
+                    runOnUiThread(() -> finish());
+                }
+            }, "BombardeiroAndroid");
             WebSettings settings = webView.getSettings();
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
@@ -53,6 +60,20 @@ public class MainActivity extends Activity {
             message.setBackgroundColor(0xFF101820);
             setContentView(message);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView == null) {
+            moveTaskToBack(true);
+            return;
+        }
+        webView.evaluateJavascript(
+            "window.handleAndroidBack ? window.handleAndroidBack() : false",
+            result -> {
+                if (!"true".equals(result)) moveTaskToBack(true);
+            }
+        );
     }
 
     private void syncGameAssets(File destination) throws Exception {
