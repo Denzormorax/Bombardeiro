@@ -14,7 +14,16 @@ command -v magick >/dev/null 2>&1 || {
   exit 1
 }
 
-read -r WIDTH HEIGHT < <(magick identify -auto-orient -format '%w %h' "$SOURCE")
+# Lê as dimensões já considerando a orientação EXIF. O formato info:
+# evita incompatibilidades entre as versões do subcomando identify.
+DIMENSIONS="$(magick "$SOURCE" -auto-orient -format '%w %h' info:)"
+read -r WIDTH HEIGHT <<< "$DIMENSIONS"
+
+if [[ ! "$WIDTH" =~ ^[0-9]+$ || ! "$HEIGHT" =~ ^[0-9]+$ ]]; then
+  echo "ERRO: não foi possível ler as dimensões da imagem: '$DIMENSIONS'" >&2
+  exit 1
+fi
+
 # A arte é centralizada numa página branca. Este recorte quadrado pega o
 # emblema azul completo e elimina as margens externas da página.
 SIZE=$(( HEIGHT * 675 / 1000 ))
@@ -45,7 +54,7 @@ for folder in "${!DENSITIES[@]}"; do
   magick "$SOURCE" -auto-orient -crop "$CROP" +repage \
     -filter Lanczos -resize "${pixels}x${pixels}" -strip "PNG32:$RES/$folder/ic_launcher.png"
   cp "$RES/$folder/ic_launcher.png" "$RES/$folder/ic_launcher_round.png"
-  identify "$RES/$folder/ic_launcher.png"
+  magick identify "$RES/$folder/ic_launcher.png"
 done
 
 echo "Ícones do Bombardeiro gerados em todas as densidades Android."
