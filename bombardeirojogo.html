@@ -617,18 +617,31 @@ function makeMap(){
   return true;
  };
  connectStartToExit();
- // PRIORIDADE REAL AO ENTORNO DO PERSONAGEM:
- // a seleção começa pelas células livres próximas do nascimento, e só depois
- // completa a quantidade no restante do lado esquerdo e no lado direito.
+ // DISTRIBUIÇÃO EQUILIBRADA:
+ // primeiro garante oportunidades de blocos no entorno do nascimento,
+ // depois divide o restante entre os seis setores do mapa.
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ const nearSpawn=[];
+ // Abre algumas células destrutíveis próximas ao jogador para que o canto
+ // superior esquerdo também tenha blocos, sem tocar na área inicial segura.
+ for(let y=1;y<=6;y++)for(let x=1;x<=7;x++){
+  const d=distance(x+.5,y+.5,1.5,1.5);
+  if(d<2.0||d>5.8||isStartSafeCell(x,y)||map[y][x]!==2)continue;
+  let adjacentFloor=0;
+  for(const [dx,dy] of dirs)if(map[y+dy]?.[x+dx]===0)adjacentFloor++;
+  if(adjacentFloor>0)nearSpawn.push({x,y});
+ }
+ shuffleArray(nearSpawn);
+ // Aberturas locais limitadas: cria bolsões jogáveis no lado do nascimento.
+ for(const p of nearSpawn.slice(0,Math.min(8,3+Math.floor(Math.random()*4))))map[p.y][p.x]=0;
  const candidates=[];
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
   if(map[y][x]!==0||isStartSafeCell(x,y)||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<1.35)continue;
   candidates.push({x,y});
  }
- const shuffledCandidates=shuffleArray(candidates.slice());
  const targetBlocks=Math.round(candidates.length*(.27+Math.random()*.06));
  const hasStartToExitRoute=()=>{
-  const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]);
   let head=0;
   while(head<queue.length){
    const p=queue[head++];
@@ -643,16 +656,43 @@ function makeMap(){
   }
   return false;
  };
- // Blocos em ordem totalmente embaralhada: sem preferência fixa por lado,
- // distância do jogador ou desenho de corredor. Cada mapa ganha outro padrão.
  let placed=0;
- for(const p of shuffledCandidates){
-  if(placed>=targetBlocks)break;
-  if(map[p.y][p.x]!==0)continue;
-  map[p.y][p.x]=2;
-  if(!hasStartToExitRoute()){map[p.y][p.x]=0;continue}
-  placed++;
+ const placeRandom=(list,limit)=>{
+  let added=0;
+  for(const p of shuffleArray(list.slice())){
+   if(placed>=targetBlocks||added>=limit)break;
+   if(map[p.y][p.x]!==0)continue;
+   map[p.y][p.x]=2;
+   if(!hasStartToExitRoute()){map[p.y][p.x]=0;continue}
+   placed++;added++;
+  }
+ };
+ // Reserva aproximadamente um quarto dos blocos para o entorno do jogador.
+ const nearCandidates=candidates.filter(p=>{
+  const d=distance(p.x+.5,p.y+.5,1.5,1.5);
+  return d>=2.0&&d<=5.8&&p.x<=7&&p.y<=6;
+ });
+ const nearQuota=Math.min(nearCandidates.length,Math.max(5,Math.round(targetBlocks*.25)));
+ placeRandom(nearCandidates,nearQuota);
+ // Divide o restante por seis setores. Cada setor recebe uma cota proporcional
+ // ao espaço livre que possui, evitando que um lado concentre quase todos blocos.
+ const sectors=[];
+ for(let sy=0;sy<2;sy++)for(let sx=0;sx<3;sx++){
+  const x0=1+Math.floor(sx*(COLS-2)/3),x1=1+Math.floor((sx+1)*(COLS-2)/3);
+  const y0=1+Math.floor(sy*(ROWS-2)/2),y1=1+Math.floor((sy+1)*(ROWS-2)/2);
+  const cells=candidates.filter(p=>p.x>=x0&&p.x<x1&&p.y>=y0&&p.y<y1);
+  sectors.push({cells,quota:Math.round(targetBlocks*(cells.length/Math.max(1,candidates.length)))});
  }
+ const sectorOrder=shuffleArray(sectors.slice());
+ for(const sector of sectorOrder){
+  if(placed>=targetBlocks)break;
+  const alreadyNear=sector.cells.filter(p=>distance(p.x+.5,p.y+.5,1.5,1.5)>=2.0&&distance(p.x+.5,p.y+.5,1.5,1.5)<=5.8&&p.x<=7&&p.y<=6).length;
+  const quota=Math.max(0,sector.quota-(sector===sectors[0]?alreadyNear:0));
+  placeRandom(sector.cells,quota);
+ }
+ // Completa eventuais cotas recusadas pela proteção do caminho, sem favorecer
+ // direita ou esquerda: todas as células restantes voltam ao sorteio geral.
+ if(placed<targetBlocks)placeRandom(candidates,targetBlocks-placed);
 }
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
