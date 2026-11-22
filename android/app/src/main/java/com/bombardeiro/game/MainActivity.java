@@ -44,9 +44,6 @@ public class MainActivity extends Activity {
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
             settings.setAllowFileAccess(true);
-            // O sprite local é processado no canvas; o WebView precisa permitir leitura entre arquivos locais.
-            // Mantemos o acesso universal desativado e não carregamos conteúdo remoto no jogo.
-            settings.setAllowFileAccessFromFileURLs(true);
             settings.setAllowContentAccess(false);
             settings.setSupportZoom(false);
             settings.setBuiltInZoomControls(false);
