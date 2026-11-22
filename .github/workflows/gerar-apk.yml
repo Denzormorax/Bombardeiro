@@ -95,7 +95,7 @@ jobs:
           s = p.read_text(encoding="utf-8")
 
           # Localiza exclusivamente a regra .gameLogo, sem depender de espaços ou quebras de linha.
-          selector = re.search(r"\.gameLogo\\s*\\{", s)
+          selector = re.search(r"\.gameLogo\s*\{", s)
           if not selector:
               raise SystemExit("Seletor .gameLogo não encontrado no HTML empacotado.")
 
@@ -105,11 +105,11 @@ jobs:
               raise SystemExit("Bloco CSS .gameLogo está incompleto; pacote não será alterado.")
 
           block = s[start:end]
-          width_rule = re.compile(r"(\\bwidth\\s*:\\s*)[^;]+;", re.IGNORECASE)
+          width_rule = re.compile(r"(\bwidth\s*:\s*)[^;]+;", re.IGNORECASE)
           if width_rule.search(block):
-              block, count = width_rule.subn(r"\\1min(88vw,700px);", block, count=1)
+              block, count = width_rule.subn(r"\1min(88vw,700px);", block, count=1)
           else:
-              block += "\\n width:min(88vw,700px);\\n"
+              block += "\n width:min(88vw,700px);\n"
               count = 1
 
           if count != 1 or "min(88vw,700px)" not in block:
