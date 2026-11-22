@@ -86,6 +86,19 @@ jobs:
           GAME_ASSETS="android/app/src/main/assets/game"
           mkdir -p "$GAME_ASSETS"
           cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
+          # Ajusta a largura útil do logotipo para que o brilho e a inclinação não sejam cortados nas laterais.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("$GAME_ASSETS/bombardeirojogo.html")
+          s = p.read_text(encoding="utf-8")
+          old = " width:min(96vw,760px);"
+          new = " width:min(88vw,700px);"
+          if old not in s:
+              raise SystemExit("Não foi possível localizar a regra original de largura do logotipo; compilação interrompida com segurança.")
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding="utf-8")
+          print("Logotipo ajustado: 88vw/700px; imagem original e bombinha preservadas.")
+          PY
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
           cp "tela floresta.jpg" "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
