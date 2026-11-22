@@ -10,6 +10,7 @@ on:
       - "bombericon.jpg"
       - "game-assets/**"
       - "bomba explosão.mp3"
+      - "moeda.mp3"
       - "tela floresta.jpg"
       - "android/**"
       - ".github/workflows/gerar-apk.yml"
@@ -40,7 +41,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick ffmpeg
-      - name: Converter e suavizar o áudio da explosão
+      - name: Converter e suavizar os áudios da explosão e da moeda
         run: |
           mkdir -p game-assets/audio
           ffmpeg -hide_banner -loglevel error -y \
@@ -48,17 +49,23 @@ jobs:
             -af "volume=0.85,alimiter=limit=0.95" \
             -ar 44100 -ac 2 -c:a pcm_s16le \
             game-assets/audio/explosion.wav
+          ffmpeg -hide_banner -loglevel error -y \
+            -i "moeda.mp3" \
+            -af "volume=0.85,alimiter=limit=0.95" \
+            -ar 44100 -ac 2 -c:a pcm_s16le \
+            game-assets/audio/coin_pickup.wav
           test -s game-assets/audio/explosion.wav
-          echo "Áudio convertido para WAV PCM 16-bit, 44.1 kHz, estéreo."
-      - name: Salvar WAV convertido no repositório
+          test -s game-assets/audio/coin_pickup.wav
+          echo "Áudios convertidos para WAV PCM 16-bit, 44.1 kHz, estéreo."
+      - name: Salvar WAVs convertidos no repositório
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add game-assets/audio/explosion.wav
+          git add game-assets/audio/explosion.wav game-assets/audio/coin_pickup.wav
           if git diff --cached --quiet; then
-            echo "O WAV já está atualizado; nenhum commit adicional necessário."
+            echo "Os WAVs já estão atualizados; nenhum commit adicional necessário."
           else
-            git commit -m "Atualiza áudio de explosão para WAV suavizado"
+            git commit -m "Atualiza áudios de explosão e moeda para WAV suavizados"
             git push origin HEAD:main
           fi
       - name: Gerar ícones oficiais do aplicativo
@@ -77,7 +84,7 @@ jobs:
           cp "tela floresta.jpg" "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
           test -s "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
           cd "$GAME_ASSETS"
-          find . -type f ! -name "assets-manifest.sha256" -printf '%P\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
+          find . -type f ! -name "assets-manifest.sha256" -printf '%P\\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
           test -s bombardeirojogo.html
           test -s game-assets/audio/explosion.wav
           test -s game-assets/audio/coin_pickup.wav
