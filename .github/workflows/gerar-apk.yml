@@ -9,6 +9,7 @@ on:
       - "bombardeirojogo.html"
       - "bombericon.jpg"
       - "game-assets/**"
+      - "tela floresta.jpg"
       - "android/**"
       - ".github/workflows/gerar-apk.yml"
 
@@ -51,6 +52,8 @@ jobs:
           cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
+          cp "tela floresta.jpg" "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
+          test -s "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
           cd "$GAME_ASSETS"
           find . -type f ! -name "assets-manifest.sha256" -printf '%P\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
           test -s bombardeirojogo.html
