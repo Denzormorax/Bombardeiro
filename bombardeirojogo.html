@@ -68,6 +68,15 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 #sizeValue{color:#ffe36b;font-weight:bold;white-space:nowrap}
 #selectedSize{width:100%;accent-color:#39c4e3;margin-top:5px}
 #customHint{position:fixed;bottom:5px;left:50%;transform:translateX(-50%);background:#07131ddd;padding:7px 12px;border-radius:8px;font-size:12px;z-index:50;pointer-events:none;white-space:nowrap}
+/* Confirmação de saída: camada discreta sobre o menu principal. */
+#exitConfirm{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.42);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px)}
+#exitConfirm.visible{display:flex}
+#exitDialog{width:min(285px,82vw);padding:19px 17px 15px;border:1px solid #69d9ee;border-radius:14px;background:linear-gradient(145deg,#1b3442,#101b25);box-shadow:0 8px 28px #0009,0 0 18px #22b7d455;text-align:center}
+#exitDialog h2{margin:0 0 17px;font-size:clamp(17px,4.5vw,21px);color:#8eeaff;text-shadow:0 2px 4px #000}
+#exitDialog .exitActions{display:flex;justify-content:center;gap:12px}
+#exitDialog button{min-width:82px;padding:9px 17px;border:1px solid #b5f4ff;border-radius:8px;background:linear-gradient(145deg,#13b8d8,#075d91);color:white;font-size:13px;font-weight:900;box-shadow:0 3px 0 #06415f}
+#exitDialog button:active{transform:translateY(2px);box-shadow:0 1px 0 #06415f}
+#exitDialog #exitNo{background:linear-gradient(145deg,#526b7a,#304653);border-color:#b8cbd5;box-shadow:0 3px 0 #1c2e39}
 #message{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));top:auto;transform:translateX(-50%);background:#07131eee;padding:11px 19px;border-radius:12px;border:1px solid #7eeaff;font-weight:bold;font-size:13px;z-index:70;display:none;text-align:center;width:max-content;max-width:85vw;box-shadow:0 4px 16px #0009;pointer-events:none}
 .shopItem{display:flex;align-items:center;gap:10px;background:#0c1b25;border:1px solid #426273;border-radius:10px;padding:10px;margin:8px 0;text-align:left}
 .shopIcon{font-size:32px;width:43px;text-align:center}
@@ -472,6 +481,16 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 <div id="customHint" class="hidden">ARRASTE OS CONTROLES DESTACADOS PARA POSICIONAR</div>
 <div id="dragToolbar" class="hidden"><span>POSICIONE OS BOTÕES</span><button id="finishDrag">FINALIZAR</button></div>
 <div id="message"></div>
+<div id="exitConfirm" role="dialog" aria-modal="true" aria-labelledby="exitQuestion">
+ <div id="exitDialog">
+  <h2 id="exitQuestion">QUER SAIR DO JOGO?</h2>
+  <div class="exitActions">
+   <button type="button" id="exitYes">SIM</button>
+   <button type="button" id="exitNo">NÃO</button>
+  </div>
+ </div>
+</div>
+
 <div id="overlay">
  <div class="panel hidden" id="settingsMenu"><h2>CONFIGURAÇÕES</h2>
    <div class="setting"><label for="musicVolume">VOLUME DA MÚSICA <span id="musicVolumeValue">65%</span></label><input id="musicVolume" type="range" min="0" max="100" value="65"><p>A trilha musical será adicionada na próxima etapa; este volume já fica salvo.</p></div>
@@ -644,6 +663,32 @@ function showPanel(id){
  $("overlay").style.display="flex";$(id).classList.remove("hidden");
 }
 function hidePanels(){$("overlay").style.display="none"}
+function openExitConfirm(){$("exitConfirm").classList.add("visible")}
+function closeExitConfirm(){$("exitConfirm").classList.remove("visible")}
+function exitApplication(){
+ closeExitConfirm();
+ if(window.BombardeiroAndroid&&typeof window.BombardeiroAndroid.exitGame==="function")window.BombardeiroAndroid.exitGame();
+ else{try{window.close()}catch(e){}}
+}
+$("exitYes").addEventListener("click",exitApplication);
+$("exitNo").addEventListener("click",closeExitConfirm);
+window.handleAndroidBack=function(){
+ if($("exitConfirm").classList.contains("visible")){closeExitConfirm();return true}
+ if($("overlay").style.display==="flex"){
+  if(!$("settingsPanel").classList.contains("hidden")){showPanel("settingsMenu");return true}
+  if(!$("settingsMenu").classList.contains("hidden")){closeSettingsMenu();return true}
+  if(!$("shopPanel").classList.contains("hidden")){closeShop();return true}
+  if(!$("pausePanel").classList.contains("hidden")){paused=false;hidePanels();return true}
+  if(!$("endPanel").classList.contains("hidden")){running=false;paused=true;showMenuScreen("main");return true}
+  hidePanels();if(running)paused=false;return true
+ }
+ if(running){paused=true;showPanel("pausePanel");return true}
+ if(!$("forestPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}
+ if(!$("worldsPanel").classList.contains("hidden")){showMenuScreen("main");return true}
+ if(!$("menuContent").classList.contains("hidden")){openExitConfirm();return true}
+ if($("introSplash"))return true;
+ openExitConfirm();return true
+};
 function message(txt){
  $("message").textContent=txt;$("message").style.display="block";
  clearTimeout(message.timer);message.timer=setTimeout(()=>$("message").style.display="none",1500);
@@ -1349,7 +1394,7 @@ function updateStick(e){
 }
 function resetStick(){pointerMove=null;move={x:0,y:0};$("stickKnob").style.transform="translate(0,0)"}
 $("stick").addEventListener("pointerup",resetStick);$("stick").addEventListener("pointercancel",resetStick);
-window.addEventListener("keydown",e=>{keys[e.key]=true;if(e.code==="Space"){e.preventDefault();placeBomb()}if(e.key==="Escape"&&running){paused=!paused;if(paused)showPanel("pausePanel");else hidePanels()}});
+window.addEventListener("keydown",e=>{keys[e.key]=true;if(e.code==="Space"){e.preventDefault();placeBomb()}if(e.key==="Escape"){e.preventDefault();window.handleAndroidBack()}});
 window.addEventListener("keyup",e=>{keys[e.key]=false});
 
 /* ATUALIZAÇÃO */
