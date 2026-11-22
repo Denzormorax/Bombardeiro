@@ -613,13 +613,6 @@ const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createEle
 // Sprite de caixa em chamas pré-renderizado uma única vez.
 const burningCrateCanvases=Array.from({length:10},()=>{const c=document.createElement("canvas");c.width=64;c.height=64;return c});let burningCrateReady=false;const burningCrates=[];const themedSpriteSheets=Array(10).fill(null);let cachedTileThemeIndex=-1;
 const $=id=>document.getElementById(id);
-// Foto original usada nas telas de seleção de mundos e fases.
-// É carregada uma única vez e desenhada no canvas de fundo, atrás da arena.
-const forestArenaPhoto=new Image();
-let forestArenaPhotoLoaded=false;
-forestArenaPhoto.onload=()=>{forestArenaPhotoLoaded=true;backgroundTheme=null;if(map&&map.length)rebuildStaticMapCache()};
-forestArenaPhoto.onerror=()=>{forestArenaPhotoLoaded=false};
-forestArenaPhoto.src="./game-assets/images/forest-selection-background.jpg";
 const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpriteSheets();buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_themes.svg";
 
 /* ÁUDIO HÍBRIDO: EFEITOS OGG LOCAIS + CAMADAS WEB AUDIO. FUNCIONA OFFLINE. */
@@ -1528,15 +1521,6 @@ const forestThemes=[
 function currentForestTheme(){return forestThemes[Math.max(0,Math.min(forestThemes.length-1,level-1))]}
 function drawForestBackground(target){
  const c=target||ctx;
- // Nas dez fases do Mundo Floresta, usa a mesma fotografia da seleção.
- // O recorte é calculado uma vez por fase e fica em cache no backgroundCanvas.
- if(level>=1&&level<=10&&forestArenaPhotoLoaded){
-  const scale=Math.max(W/forestArenaPhoto.naturalWidth,H/forestArenaPhoto.naturalHeight);
-  const photoW=forestArenaPhoto.naturalWidth*scale,photoH=forestArenaPhoto.naturalHeight*scale;
-  c.clearRect(0,0,W,H);
-  c.drawImage(forestArenaPhoto,(W-photoW)/2,(H-photoH)/2,photoW,photoH);
-  return;
- }
  const theme=currentForestTheme(),g=c.createLinearGradient(0,0,0,H);
  const gameElement=$("game");
  if(gameElement.dataset.theme!==theme.name){gameElement.style.background="linear-gradient(180deg,"+theme.sky[0]+","+theme.sky[1]+" 48%,"+theme.sky[2]+")";gameElement.dataset.theme=theme.name;}
@@ -1581,13 +1565,6 @@ function drawForestBackground(target){
 }
 function drawTileTo(target,x,y,type,offsetY=0){
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,theme=currentForestTheme();
- // Nas dez fases da Floresta, deixa a fotografia aparecer por toda a arena.
- // O piso recebe apenas uma película translúcida, pré-renderizada no cache estático.
- if(type===0&&level>=1&&level<=10&&forestArenaPhotoLoaded){
-  target.fillStyle="rgba(13,42,28,.30)";target.fillRect(px,py,TILE,TILE);
-  target.strokeStyle="#d9f5d022";target.lineWidth=1;target.strokeRect(px+.5,py+.5,TILE-1,TILE-1);
-  return;
- }
  if(forestSpriteSheet.complete&&forestSpriteSheet.naturalWidth){
   const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);
   const themed=themedSpriteSheets[Math.max(0,Math.min(9,level-1))]||forestSpriteSheet;
