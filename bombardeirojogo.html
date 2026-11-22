@@ -166,20 +166,27 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 #menuBackdrop:before,#menuBackdrop:after,#menuBackdrop > :not(.menuEffects){display:none!important}
 .gameLogo{
  width:min(94vw,720px);
- aspect-ratio:4.88/1;
+ aspect-ratio:4.8/1;
  height:auto;
  margin:0 auto 10px;
  overflow:hidden;
  position:relative;
+ isolation:isolate;
+ background:transparent;
  transform-origin:50% 50%;
  animation:logoSeesaw 4.8s ease-in-out infinite;
  filter:drop-shadow(0 7px 12px rgba(0,0,0,.52)) drop-shadow(0 0 12px rgba(117,218,255,.32));
 }
 .gameLogo img{
  display:block;
+ position:absolute;
+ left:0;
+ top:50%;
  width:100%;
  height:auto;
  max-width:none;
+ transform:translateY(-50%);
+ filter:url(#logoBlueKey);
  user-select:none;
  -webkit-user-drag:none;
  pointer-events:none;
@@ -513,7 +520,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  <div id="menuScore">⭐ PONTOS: <span id="menuScoreValue">0</span></div>
 </div>
 <div id="menuContent" class="hidden">
- <div class="gameLogo" aria-label="Bombardeiro"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgIC
+ <svg aria-hidden="true" width="0" height="0" style="position:absolute"><filter id="logoBlueKey" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.2 0 -1.6 0 1.1"/></filter></svg><div class="gameLogo" aria-label="Bombardeiro"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgIC
 AgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/
 2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoK
 CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAPcC+QDASIAAhEBAxEB/8QA
