@@ -7,7 +7,7 @@ on:
       - main
     paths:
       - "bombardeirojogo.html"
-      - "audio/**"
+      - "game-assets/**"
       - "android/**"
       - ".github/workflows/gerar-apk.yml"
 
@@ -19,43 +19,40 @@ jobs:
     name: Compilar aplicativo Android
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
       - name: Baixar o repositório
         uses: actions/checkout@v6
-
       - name: Preparar Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Preparar Android SDK
         uses: android-actions/setup-android@v4
-
       - name: Instalar plataforma Android
         run: |
           yes | sdkmanager --licenses
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
-
       - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "8.9"
-
-      - name: Colocar o HTML completo dentro do aplicativo
+      - name: Montar pacote externo do jogo
         run: |
-          mkdir -p android/app/src/main/assets
-          cp bombardeirojogo.html android/app/src/main/assets/bombardeirojogo.html
-          test -s android/app/src/main/assets/bombardeirojogo.html
-          mkdir -p android/app/src/main/assets/audio
-          cp -R audio/. android/app/src/main/assets/audio/
-          test -s android/app/src/main/assets/audio/explosion.wav
-          test -s android/app/src/main/assets/audio/coin_pickup.wav
-
+          GAME_ASSETS="android/app/src/main/assets/game"
+          mkdir -p "$GAME_ASSETS"
+          cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
+          cp -R game-assets/. "$GAME_ASSETS/"
+          cd "$GAME_ASSETS"
+          find . -type f ! -name "assets-manifest.sha256" -print0 | sort -z | xargs -0 sha256sum > assets-manifest.sha256
+          test -s bombardeirojogo.html
+          test -s game-assets/audio/explosion.wav
+          test -s game-assets/audio/coin_pickup.wav
+          test -s assets-manifest.sha256
+          echo "Arquivos no pacote: $(wc -l < assets-manifest.sha256)"
+          du -sh .
       - name: Gerar APK
         run: gradle -p android :app:assembleDebug --no-daemon --stacktrace
-
       - name: Disponibilizar APK para download
         uses: actions/upload-artifact@v4
         with:
@@ -64,4 +61,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Rebuild after refreshing the retro arcade explosion and coin sounds.
+# Game resources are packaged separately and synchronized into app-private storage on first launch.
