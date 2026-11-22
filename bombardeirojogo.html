@@ -744,7 +744,6 @@ $("pauseEditControls").onclick=()=>{if(!running)return;paused=true;finishPositio
 function closeSettingsMenu(){finishPositioning();if(running){paused=false;hidePanels()}else showMenuScreen("main")}
 $("closeSettingsMenu").onclick=closeSettingsMenu;
 $("backToSettings").onclick=()=>{finishPositioning();showPanel(menuReturn==="game"?"pausePanel":"settingsMenu")};
-$("pauseSettings").onclick=openSettings;
 $("moveType").onchange=e=>{controlSettings.moveType=e.target.value;move={x:0,y:0};resetStick();applyControls()};
 $("resetControls").onclick=resetControls;
 $("saveSettings").onclick=()=>{finishPositioning();saveControls();showPanel(menuReturn==="game"?"pausePanel":"settingsMenu")};
