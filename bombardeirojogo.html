@@ -357,8 +357,10 @@ const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W;backgroundCanvas.height=H;const backgroundCtx=backgroundCanvas.getContext("2d");let backgroundTheme=null;
 const staticFloorCanvas=document.createElement("canvas");staticFloorCanvas.width=W;staticFloorCanvas.height=H;const staticFloorCtx=staticFloorCanvas.getContext("2d");
 const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));
+// Sprite de caixa em chamas pré-renderizado uma única vez.
+const burningCrateCanvas=document.createElement("canvas");burningCrateCanvas.width=64;burningCrateCanvas.height=64;const burningCrateCtx=burningCrateCanvas.getContext("2d");let burningCrateReady=false;const burningCrates=[];
 const $=id=>document.getElementById(id);
-const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_tiles.svg";
+const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_tiles.svg";
 
 /* ÁUDIO HÍBRIDO: EFEITOS OGG LOCAIS + CAMADAS WEB AUDIO. FUNCIONA OFFLINE. */
 const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
@@ -756,7 +758,7 @@ function createEnemySpawnPositions(count){
 }
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
- makeMap();rebuildStaticMapCache();bombs=[];flames=[];coinsOnMap=[];enemies=[];
+ makeMap();rebuildStaticMapCache();bombs=[];flames=[];burningCrates.length=0;coinsOnMap=[];enemies=[];
  basePlayerSpeed=4.3+Math.min(level*.08,1);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
  else resetPowerUps();
@@ -1073,7 +1075,7 @@ function isInsideFlameDamage(entity,cell){
 }
 function explode(b){
  playSfx("explosion");let brokeBlock=false;activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y&&!exit.found){exit.found=true;playSfx("exit")}break}}if(brokeBlock){rebuildStaticMapCache();playSfx("block");}
+ for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y&&!exit.found){exit.found=true;playSfx("exit")}break}}if(brokeBlock){rebuildStaticMapCache();playSfx("block");}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.62,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&isInsideFlameDamage(enemy,c)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
@@ -1180,6 +1182,7 @@ function update(dt){
  if(!running||paused)return;gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);updateSlidingBombs(dt);
  for(const b of bombs){b.t-=dt;b.animTime+=dt}const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
  for(const f of flames){f.t-=dt;f.age=(f.age||0)+dt}flames=flames.filter(f=>f.t>0);
+  for(const c of burningCrates)c.t-=dt;for(let i=burningCrates.length-1;i>=0;i--)if(burningCrates[i].t<=0)burningCrates.splice(i,1);
  for(const f of flames){
   const flameCell={x:f.x,y:f.y};
   if(player.inv<=0&&isInsideFlameDamage(player,flameCell)){hurtPlayer();break}
@@ -1262,6 +1265,24 @@ function drawTileTo(target,x,y,type,offsetY=0){
  target.strokeStyle="#ffffff16";target.strokeRect(px,py,TILE,TILE);
 }
 function drawTile(x,y,type){drawTileTo(ctx,x,y,type)}
+function buildBurningCrateSprite(){
+ const c=burningCrateCtx;c.clearRect(0,0,64,64);
+ c.drawImage(forestSpriteSheet,144,0,48,48,8,13,48,48);
+ c.save();c.globalCompositeOperation="lighter";
+ const glow=c.createRadialGradient(32,39,3,32,39,29);glow.addColorStop(0,"#72f7ffbb");glow.addColorStop(.5,"#168eff66");glow.addColorStop(1,"#087bff00");c.fillStyle=glow;c.fillRect(2,8,60,56);
+ c.shadowColor="#31cfff";c.shadowBlur=7;c.fillStyle="#087dff";
+ c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();
+ c.shadowBlur=0;c.fillStyle="#69efff";c.beginPath();c.moveTo(20,52);c.quadraticCurveTo(17,39,27,30);c.quadraticCurveTo(28,42,33,39);c.quadraticCurveTo(35,27,40,23);c.quadraticCurveTo(43,41,47,52);c.closePath();c.fill();
+ c.fillStyle="#e0ffff";c.globalAlpha=.8;c.beginPath();c.ellipse(33,48,9,5,0,0,Math.PI*2);c.fill();c.restore();burningCrateReady=true;
+}
+function drawBurningCrate(crate){
+ const progress=1-crate.t/crate.total,fade=crate.t/crate.total,px=ox+crate.x*TILE,py=oy+crate.y*TILE;
+ if(!burningCrateReady){drawTileTo(ctx,crate.x,crate.y,2);return}
+ const flicker=1+Math.sin(crate.phase+gameClock*29)*.045;
+ ctx.save();ctx.globalAlpha=Math.max(0,fade);ctx.translate(px+TILE/2,py+TILE/2);ctx.scale(flicker*(.94+progress*.08),flicker);ctx.drawImage(burningCrateCanvas,-32,-32,64,64);
+ ctx.globalAlpha=Math.max(0,fade*(.28+progress*.45));ctx.fillStyle="#48cfff";ctx.fillRect(-TILE/2+5,-TILE/2+8,TILE-10,TILE-16);ctx.restore();
+}
+
 function rebuildStaticMapCache(){
  staticFloorCtx.clearRect(0,0,W,H);
  for(let y=0;y<ROWS;y++){
@@ -1358,6 +1379,7 @@ function draw(){
  ctx.drawImage(staticFloorCanvas,0,0);
  for(let y=0;y<ROWS;y++){
   ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
+  for(const crate of burningCrates)if(crate.y===y)drawBurningCrate(crate);
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
