@@ -622,7 +622,7 @@ const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpr
 const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
 const audioSamples={
  bomb:"game-assets/audio/bomb_place.ogg",explosion:"game-assets/audio/explosion.wav",
- block:"game-assets/audio/block_break.ogg",enemyHit:"game-assets/audio/enemy_hit.ogg",enemyDown:"game-assets/audio/enemy_poof.ogg",
+ block:"game-assets/audio/block_break.ogg",uiClick:"game-assets/audio/ui_click.wav",enemyHit:"game-assets/audio/enemy_hit.ogg",enemyDown:"game-assets/audio/enemy_poof.ogg",
  hurt:"game-assets/audio/player_hit.ogg",coin:"game-assets/audio/coin_pickup.wav",exit:"game-assets/audio/exit_reveal.ogg"
 };
 const audioSampleCache={};
@@ -650,6 +650,17 @@ case "powerup":audioTone(390,780,.16,"triangle",.13);audioTone(780,1170,.2,"sine
 case "victory":[523,659,784,1046].forEach((n,i)=>audioTone(n,n*1.18,.34,"sine",.14,i*.13));break;
 case "defeat":audioTone(330,220,.25,"triangle",.16);audioTone(220,110,.42,"sawtooth",.13,.2);break;
 }}
+
+// Som global da interface: ignora apenas os controles diretos do personagem.
+function playUiClick(){playSample("uiClick",.58)}
+function isUiButtonTarget(target){
+ const el=target&&target.closest?target.closest("button,[role='button'],a,input[type='button'],input[type='submit'],[onclick]"):null;
+ if(!el||el.closest(".dir,#stick,#bombBtn"))return false;
+ return true;
+}
+document.addEventListener("pointerdown",e=>{if(isUiButtonTarget(e.target))playUiClick()},true);
+// Também atende cliques de teclado/acessibilidade sem duplicar toques físicos.
+document.addEventListener("click",e=>{if(e.detail===0&&isUiButtonTarget(e.target))playUiClick()},true);
 const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,ENEMY_DEATH_TIME=.48,TOTAL_LEVELS=10;
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
