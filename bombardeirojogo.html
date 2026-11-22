@@ -396,8 +396,8 @@ case "defeat":audioTone(330,220,.25,"triangle",.16);audioTone(220,110,.42,"sawto
 const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,ENEMY_DEATH_TIME=.48,TOTAL_LEVELS=10;
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
-let player={x:1.5,y:1.5,speed:4.3,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
-let basePlayerSpeed=4.3,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
+let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
+let basePlayerSpeed=4.0,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
 let gameClock=0,lastTime=0,exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};
 let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,shopReturnPaused=false,menuReturn="main";
@@ -1068,16 +1068,16 @@ function updateSlidingBombs(dt){
  }
 }
 function isInsideFlameDamage(entity,cell){
- // Considera a hitbox circular do personagem contra o quadrado inteiro da chama.
- // Inimigos encostados na bomba ou na borda da explosão também recebem dano.
- const radius=entity===player?PLAYER_RADIUS:ENEMY_RADIUS;
- return circleRectCollision(entity.x,entity.y,radius,cell.x,cell.y,1,1);
+ // A chama só causa dano quando o centro do personagem entra na área interna do bloco.
+ // Isso evita mortes por um pequeno pedaço da hitbox encostar na quina da explosão.
+ const margin=entity===player?0.18:0.16;
+ return entity.x>=cell.x+margin&&entity.x<=cell.x+1-margin&&entity.y>=cell.y+margin&&entity.y<=cell.y+1-margin;
 }
 function explode(b){
  playSfx("explosion");let brokeBlock=false;activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
  for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y&&!exit.found){exit.found=true;playSfx("exit")}break}}if(brokeBlock){rebuildStaticMapCache();playSfx("block");}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.62,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&isInsideFlameDamage(enemy,c)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&isInsideFlameDamage(enemy,c)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
