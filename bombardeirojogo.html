@@ -360,9 +360,9 @@ const $=id=>document.getElementById(id);
 /* ÁUDIO HÍBRIDO: EFEITOS OGG LOCAIS + CAMADAS WEB AUDIO. FUNCIONA OFFLINE. */
 const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
 const audioSamples={
- bomb:"audio/bomb_place.ogg",explosion:"audio/explosion.ogg",
+ bomb:"audio/bomb_place.ogg",explosion:"audio/explosion.wav",
  block:"audio/block_break.ogg",enemyHit:"audio/enemy_hit.ogg",enemyDown:"audio/enemy_poof.ogg",
- hurt:"audio/player_hit.ogg",coin:"audio/coin_pickup.ogg",exit:"audio/exit_reveal.ogg"
+ hurt:"audio/player_hit.ogg",coin:"audio/coin_pickup.wav",exit:"audio/exit_reveal.ogg"
 };
 const audioSampleCache={};
 function playSample(name,level=1){try{const src=audioSamples[name];if(!src||audioSettings.sfxVolume<=0)return;let base=audioSampleCache[name];if(!base){base=new Audio(src);base.preload="auto";audioSampleCache[name]=base}const clip=base.cloneNode();clip.volume=Math.max(0,Math.min(1,audioSettings.sfxVolume*level));clip.currentTime=0;const p=clip.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}

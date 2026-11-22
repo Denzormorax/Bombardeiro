@@ -50,8 +50,8 @@ jobs:
           test -s android/app/src/main/assets/bombardeirojogo.html
           mkdir -p android/app/src/main/assets/audio
           cp -R audio/. android/app/src/main/assets/audio/
-          test -s android/app/src/main/assets/audio/explosion.ogg
-          test -s android/app/src/main/assets/audio/coin_pickup.ogg
+          test -s android/app/src/main/assets/audio/explosion.wav
+          test -s android/app/src/main/assets/audio/coin_pickup.wav
 
       - name: Gerar APK
         run: gradle -p android :app:assembleDebug --no-daemon --stacktrace
