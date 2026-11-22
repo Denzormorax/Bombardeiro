@@ -565,13 +565,16 @@ function makeMap(){
  for(let y=1;y<=2;y++)for(let x=1;x<=2;x++)map[y][x]=0;
  map[1][3]=0;map[3][1]=0;
  exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};map[exit.y][exit.x]=2;
- // Distribuição aleatória original dos blocos destrutíveis.
- // Mantém a área inicial e a saída livres; os inimigos são posicionados
- // depois desta etapa, portanto nunca nascem sobre um bloco.
+ // Distribuição variável dos blocos: cada mapa recebe uma densidade
+ // sorteada e cada posição elegível também é decidida individualmente.
+ // A área inicial e a saída ficam protegidas. Os inimigos só são criados
+ // depois, usando exclusivamente células que continuarem livres.
  const scatter=[];
+ const blockDensity=.24+Math.random()*.20; // 24% a 44% por mapa
  for(let y=2;y<ROWS-2;y++)for(let x=2;x<COLS-2;x++){
   if(map[y][x]!==0||isStartSafeCell(x,y)||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<2.2)continue;
-  if(Math.random()<.19)scatter.push({x,y});
+  const localChance=Math.max(.16,Math.min(.52,blockDensity+(Math.random()-.5)*.16));
+  if(Math.random()<localChance)scatter.push({x,y});
  }
  shuffleArray(scatter);
  for(const p of scatter)map[p.y][p.x]=2;
@@ -615,23 +618,35 @@ function resetPowerUps(){bombPowerUps=0;firePowerUps=0;speedPowerUps=0;pushBombO
 function createEnemySpawnPositions(count){
  const candidates=[];
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  // Só considera células realmente vazias: nunca nasce sobre bloco,
+  // pilar, saída ou área inicial do jogador.
   if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
   if(distance(x+.5,y+.5,player.x,player.y)<5||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<2.5)continue;
+  // Exige pelo menos dois vizinhos livres para evitar pontos apertados
+  // ou inimigos que já nasçam encurralados por blocos.
   const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-  let breakable=0;
-  for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy;if(nx>0&&ny>0&&nx<COLS-1&&ny<ROWS-1&&!isStartSafeCell(nx,ny)&&!(nx===exit.x&&ny===exit.y))breakable++}
-  if(breakable>=2)candidates.push({x,y,cover:breakable+Math.random()*.2,openLane:hasClearSpawnLane(x,y)});
+  let openNeighbors=0;
+  for(const [dx,dy] of dirs)if(tileAt(x+dx,y+dy)===0)openNeighbors++;
+  if(openNeighbors>=2)candidates.push({x,y,openNeighbors});
  }
- shuffleArray(candidates);candidates.sort((a,b)=>(Number(a.openLane)-Number(b.openLane))||b.cover-a.cover);
+ // A ordem é totalmente sorteada a cada criação de fase/reinício.
+ shuffleArray(candidates);
  const selected=[];
- for(const candidate of candidates){
-  if(selected.length>=count)break;
-  if(selected.some(p=>distance(candidate.x+.5,candidate.y+.5,p.x+.5,p.y+.5)<3.2))continue;
-  const {x,y}=candidate;
-  if(map[y][x]!==0)continue;
-  // Mantém o corredor original do mapa: não cria paredes ao redor do inimigo.
-  selected.push({x,y});
- }
+ const trySelect=(minimumSpacing)=>{
+  for(const candidate of candidates){
+   if(selected.length>=count)break;
+   if(selected.some(p=>distance(candidate.x+.5,candidate.y+.5,p.x+.5,p.y+.5)<minimumSpacing))continue;
+   // Revalida o terreno no instante da escolha para impedir qualquer
+   // nascimento sobre bloco, mesmo após futuras mudanças nesta rotina.
+   if(tileAt(candidate.x,candidate.y)!==0)continue;
+   selected.push({x:candidate.x,y:candidate.y});
+  }
+ };
+ trySelect(2.8);
+ // Em mapas mais carregados, reduz um pouco a distância entre inimigos
+ // para completar a quantidade sem permitir que ocupem a mesma posição.
+ if(selected.length<count)trySelect(2.0);
+ if(selected.length<count)trySelect(1.5);
  return selected;
 }
 function newLevel(preservePowerUps=false){
