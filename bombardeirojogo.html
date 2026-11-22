@@ -32,6 +32,8 @@ canvas{display:block;width:100vw;height:100vh;object-fit:contain}
 #bombBtn{width:82px;height:82px;border-radius:50%;right:5%;bottom:8%;background:radial-gradient(#ffad43,#b83b18);border:4px solid #ffd18a;box-shadow:0 0 18px #ff681c99;font-size:32px}
 #shopBtn{width:49px;height:49px;border-radius:13px;right:6%;bottom:calc(8% + 94px);background:linear-gradient(145deg,#ffe36b,#a96b12);border:2px solid #fff0a3;font-size:25px;box-shadow:0 0 13px #ffcf3988}
 #pauseBtn{width:48px;height:48px;border-radius:50%;right:5%;top:65px;background:#1b3545dd;border:2px solid #a5c5d3;font-size:20px}
+#editControlsGameBtn{position:absolute;right:5%;top:121px;width:43px;height:43px;border-radius:13px;border:2px solid #8ed8e9;background:linear-gradient(145deg,#244d60,#102633);color:white;font-size:22px;pointer-events:auto;z-index:6;box-shadow:0 3px 10px #0008}
+#controls.editing #editControlsGameBtn{display:none!important}
 #controls.editing{z-index:30}
 #controls.editing .control{outline:3px dashed #ffe36b;outline-offset:4px;filter:brightness(1.3);box-shadow:0 0 18px #ffe36b99;cursor:grab;touch-action:none}
 #controls.editing .control:active{outline:4px solid #fff;filter:brightness(1.6);cursor:grabbing}
@@ -477,6 +479,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  <button id="shopBtn" class="control hidden" aria-label="Loja de power-ups">🛒</button>
  <button id="bombBtn" class="control">💣</button>
  <button id="pauseBtn" class="control">Ⅱ</button>
+ <button id="editControlsGameBtn" type="button" aria-label="Editar controles">⚙</button>
 </div>
 <div id="customHint" class="hidden">ARRASTE OS CONTROLES DESTACADOS PARA POSICIONAR</div>
 <div id="dragToolbar" class="hidden"><span>POSICIONE OS BOTÕES</span><button id="finishDrag">FINALIZAR</button></div>
@@ -493,9 +496,11 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 
 <div id="overlay">
  <div class="panel hidden" id="settingsMenu"><h2>CONFIGURAÇÕES</h2>
-   <div class="setting"><label for="musicVolume">VOLUME DA MÚSICA <span id="musicVolumeValue">65%</span></label><input id="musicVolume" type="range" min="0" max="100" value="65"><p>A trilha musical será adicionada na próxima etapa; este volume já fica salvo.</p></div>
+   <button class="mainbtn" id="openSoundPanel">SOM</button><button class="mainbtn secondary" id="closeSettingsMenu">VOLTAR</button></div>
+ <div class="panel hidden" id="soundPanel"><h2>SOM</h2>
+   <div class="setting"><label for="musicVolume">VOLUME DAS MÚSICAS <span id="musicVolumeValue">65%</span></label><input id="musicVolume" type="range" min="0" max="100" value="65"></div>
    <div class="setting"><label for="sfxVolume">VOLUME DOS EFEITOS SONOROS <span id="sfxVolumeValue">80%</span></label><input id="sfxVolume" type="range" min="0" max="100" value="80"></div>
-   <button class="mainbtn" id="editControlsBtn">EDITAR CONTROLES</button><button class="mainbtn secondary" id="closeSettingsMenu">VOLTAR</button></div>
+   <button class="mainbtn secondary" id="backFromSound">VOLTAR</button></div>
  <div class="panel hidden" id="settingsPanel">
   <h2>EDITAR CONTROLES</h2>
   <div class="setting"><label>CONTROLE DE MOVIMENTO</label><select id="moveType"><option value="stick">Alavanca analógica</option><option value="dpad">Cruz direcional (D-pad)</option></select></div>
@@ -659,7 +664,7 @@ function showMenuScreen(which){
  }
 }
 function showPanel(id){
- ["settingsMenu","settingsPanel","shopPanel","pausePanel","endPanel","noticePanel"].forEach(p=>$(p).classList.add("hidden"));
+ ["settingsMenu","soundPanel","settingsPanel","shopPanel","pausePanel","endPanel","noticePanel"].forEach(p=>$(p).classList.add("hidden"));
  $("overlay").style.display="flex";$(id).classList.remove("hidden");
 }
 function hidePanels(){$("overlay").style.display="none"}
@@ -676,6 +681,7 @@ window.handleAndroidBack=function(){
  if($("exitConfirm").classList.contains("visible")){closeExitConfirm();return true}
  if($("overlay").style.display==="flex"){
   if(!$("settingsPanel").classList.contains("hidden")){showPanel("settingsMenu");return true}
+  if(!$("soundPanel").classList.contains("hidden")){showPanel("settingsMenu");return true}
   if(!$("settingsMenu").classList.contains("hidden")){closeSettingsMenu();return true}
   if(!$("shopPanel").classList.contains("hidden")){closeShop();return true}
   if(!$("pausePanel").classList.contains("hidden")){paused=false;hidePanels();return true}
@@ -734,12 +740,16 @@ function openPositioning(){
 $("finishDrag").onclick=finishPositioning;
 function openSettings(){if(running)paused=true;finishPositioning();menuReturn=running?"pause":"main";showPanel("settingsMenu")}
 $("gearBtn").onclick=()=>openSettings();
-$("editControlsBtn").onclick=()=>{finishPositioning();selectSizeControl("move");showPanel("settingsPanel")};
+$("openSoundPanel").onclick=()=>showPanel("soundPanel");
+$("backFromSound").onclick=()=>showPanel("settingsMenu");
+$("editControlsGameBtn").onclick=()=>{if(!running)return;paused=true;finishPositioning();menuReturn="game";selectSizeControl("move");showPanel("settingsPanel")};
 function closeSettingsMenu(){finishPositioning();if(running){paused=false;hidePanels()}else showMenuScreen("main")}
-$("closeSettingsMenu").onclick=closeSettingsMenu;$("backToSettings").onclick=()=>{finishPositioning();showPanel("settingsMenu")};$("pauseSettings").onclick=openSettings;
+$("closeSettingsMenu").onclick=closeSettingsMenu;
+$("backToSettings").onclick=()=>{finishPositioning();showPanel(menuReturn==="game"?"pausePanel":"settingsMenu")};
+$("pauseSettings").onclick=openSettings;
 $("moveType").onchange=e=>{controlSettings.moveType=e.target.value;move={x:0,y:0};resetStick();applyControls()};
 $("resetControls").onclick=resetControls;
-$("saveSettings").onclick=()=>{finishPositioning();saveControls();showPanel("settingsMenu")};
+$("saveSettings").onclick=()=>{finishPositioning();saveControls();showPanel(menuReturn==="game"?"pausePanel":"settingsMenu")};
 $("dragMode").onclick=()=>customizing?finishPositioning():openPositioning();
 function enableDragging(el,id){
  let start=null;
