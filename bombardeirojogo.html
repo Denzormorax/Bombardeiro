@@ -15576,9 +15576,14 @@ const burningCrateCanvases=Array.from({length:10},()=>{const c=document.createEl
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
 const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=96;portalAuraCanvas.height=96;const portalAuraCtx=portalAuraCanvas.getContext("2d");
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
-// Reflexo branco difuso em forma de pequena nuvem, pré-renderizado uma única vez.
-const pillarShimmerCanvas=document.createElement("canvas");pillarShimmerCanvas.width=72;pillarShimmerCanvas.height=44;
-(()=>{const c=pillarShimmerCanvas.getContext("2d");const blobs=[[25,22,21,13,.24],[38,18,19,12,.31],[50,23,17,12,.23],[37,27,22,10,.13]];for(const [x,y,rx,ry,a] of blobs){const g=c.createRadialGradient(x,y,1,x,y,rx);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.42,`rgba(255,255,255,${a*.62})`);g.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=g;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill()}})();
+// Reflexo em diamante de quatro pontas, pré-renderizado uma única vez para todos os mundos.
+const pillarShimmerCanvas=document.createElement("canvas");pillarShimmerCanvas.width=48;pillarShimmerCanvas.height=36;
+(()=>{const c=pillarShimmerCanvas.getContext("2d");
+ const glow=c.createRadialGradient(24,18,0,24,18,17);glow.addColorStop(0,"rgba(255,255,255,.62)");glow.addColorStop(.32,"rgba(210,244,255,.32)");glow.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=glow;c.fillRect(0,0,48,36);
+ const streak=c.createLinearGradient(3,18,45,18);streak.addColorStop(0,"rgba(255,255,255,0)");streak.addColorStop(.5,"rgba(255,255,255,.48)");streak.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=streak;c.fillRect(3,16,42,4);
+ c.save();c.translate(24,18);c.shadowColor="#ffffff";c.shadowBlur=9;c.beginPath();c.moveTo(0,-15);c.quadraticCurveTo(2,-3,14,0);c.quadraticCurveTo(2,3,0,15);c.quadraticCurveTo(-2,3,-14,0);c.quadraticCurveTo(-2,-3,0,-15);c.closePath();
+ const crystal=c.createLinearGradient(-10,-10,10,10);crystal.addColorStop(0,"#ffffff");crystal.addColorStop(.45,"#e8faff");crystal.addColorStop(1,"#ffffff");c.fillStyle=crystal;c.fill();c.lineWidth=1;c.strokeStyle="rgba(255,255,255,.95)";c.stroke();c.restore();
+})();
 const $=id=>document.getElementById(id);
 const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpriteSheets();buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_themes.svg";
 
@@ -17001,15 +17006,19 @@ function drawDirtParticles(){
  ctx.restore();
 }
 function drawIndestructibleShimmer(){
-  if(!indestructibleTilePositions.length)return;
-  const phaseBase=gameClock*.18;ctx.save();
-  for(const tile of indestructibleTilePositions){
-   const phase=(phaseBase+((tile.x*7+tile.y*13)%19)/19)%1,fade=Math.sin(phase*Math.PI);
-   if(fade<.025)continue;
-   const px=ox+tile.x*TILE,py=oy+tile.y*TILE,travel=phase*(TILE+44)-22;
-   ctx.globalAlpha=.46*fade;ctx.drawImage(pillarShimmerCanvas,px+travel-21,py+TILE*.5-12+Math.sin(phase*Math.PI*2+tile.x)*3,42,24);
-  }
+ if(!indestructibleTilePositions.length)return;
+ // Brilho percorre cada bloco lentamente; o recorte impede que invada os blocos vizinhos.
+ const phaseBase=gameClock*.14;ctx.save();
+ for(const tile of indestructibleTilePositions){
+  const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1,fade=Math.sin(phase*Math.PI);
+  if(fade<.018)continue;
+  const px=ox+tile.x*TILE,py=oy+tile.y*TILE,travel=phase*(TILE+32)-16;
+  ctx.save();ctx.beginPath();ctx.rect(px+1,py+1,TILE-2,TILE-2);ctx.clip();
+  ctx.globalAlpha=.88*fade;
+  ctx.drawImage(pillarShimmerCanvas,px+travel-16,py+TILE*.5-18+Math.sin(phase*Math.PI*2+tile.x)*2,32,36);
   ctx.restore();
+ }
+ ctx.restore();
 }
 function draw(){
  if(cachedTileThemeIndex!==Math.max(0,Math.min(9,level-1))&&map&&map.length)rebuildStaticMapCache();
