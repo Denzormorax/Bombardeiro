@@ -794,7 +794,8 @@ document.addEventListener("click",e=>{if(e.detail===0&&isUiButtonTarget(e.target
 const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,ENEMY_DEATH_TIME=.48,TOTAL_LEVELS=10;
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
-let dirtParticles=[];
+let dirtParticles=[],waterPuddles=[],waterParticles=[];
+const waterPuddleCells=new Set(),waterPuddleFrames=[];let waterPuddleFramesReady=false;
 let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
 let basePlayerSpeed=4.0,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
@@ -1066,6 +1067,22 @@ function makeMap(){
   }
  }
  }
+function createForestPuddles(){
+ waterPuddles=[];waterPuddleCells.clear();
+ const candidates=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(map[y][x]!==0||isStartSafeCell(x,y))continue;
+  if(x<=3&&y<=3)continue;
+  candidates.push({x,y});
+ }
+ shuffleArray(candidates);
+ const amount=5+Math.floor(Math.random()*6);
+ for(const p of candidates.slice(0,amount)){
+  const key=cellKey(p.x,p.y);
+  waterPuddleCells.add(key);
+  waterPuddles.push({x:p.x,y:p.y,phase:Math.random()*4});
+ }
+}
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
  coinDrops={};const candidates=[];
@@ -1169,7 +1186,7 @@ function createEnemySpawnPositions(count){
 }
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
- makeMap();rebuildStaticMapCache();bombs=[];flames=[];burningCrates.length=0;coinsOnMap=[];enemies=[];dirtParticles=[];
+ makeMap();createForestPuddles();rebuildStaticMapCache();bombs=[];flames=[];burningCrates.length=0;coinsOnMap=[];enemies=[];dirtParticles=[];waterParticles=[];
  basePlayerSpeed=4.3+Math.min(level*.08,1);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
  else resetPowerUps();
@@ -1657,8 +1674,39 @@ function updatePlayer(dt){
  moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");collectCoins();
  for(const e of enemies)if(e.alive&&!e.burrowing&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
 }
+function updateWaterWalkers(dt,previousPositions){
+ const walkers=[{entity:player,previous:previousPositions.player,active:true},...enemies.map((entity,index)=>({entity,previous:previousPositions.enemies[index],active:entity.alive&&!entity.burrowing}))];
+ for(const walker of walkers){
+  const entity=walker.entity,previous=walker.previous;
+  if(!walker.active||!previous){entity.waterCell=null;entity.waterSplashCooldown=0;continue}
+  entity.waterSplashCooldown=Math.max(0,(entity.waterSplashCooldown||0)-dt);
+  const moved=Math.hypot(entity.x-previous.x,entity.y-previous.y);
+  const key=cellKey(Math.floor(entity.x),Math.floor(entity.y));
+  if(moved>.001&&moved<.28&&waterPuddleCells.has(key)){
+   if(entity.waterCell!==key||entity.waterSplashCooldown<=0){
+    spawnWaterSplash(entity.x,entity.y);
+    entity.waterSplashCooldown=.16;
+   }
+   entity.waterCell=key;
+  }else if(!waterPuddleCells.has(key))entity.waterCell=null;
+ }
+}
+function updateWaterParticles(dt){
+ for(let i=waterParticles.length-1;i>=0;i--){
+  const p=waterParticles[i];p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=3.4*dt;p.vx*=Math.max(0,1-2.2*dt);
+  if(p.t<=0)waterParticles.splice(i,1);
+ }
+}
+function spawnWaterSplash(x,y){
+ for(let i=0;i<6;i++){
+  const angle=(Math.PI*2*i/6)+(Math.random()-.5)*.55,speed=.42+Math.random()*.72;
+  waterParticles.push({x:x+(Math.random()-.5)*.18,y:y+(Math.random()-.5)*.14,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-.3,t:.22+Math.random()*.16,life:.38,size:2+Math.random()*1.5});
+ }
+}
 function update(dt){
- if(!running||paused)return;gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);updateSlidingBombs(dt);
+ if(!running||paused)return;
+ const previousPositions={player:{x:player.x,y:player.y},enemies:enemies.map(e=>({x:e.x,y:e.y}))};
+ gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);updateWaterWalkers(dt,previousPositions);updateSlidingBombs(dt);
  for(const b of bombs){b.t-=dt;b.animTime+=dt}const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
  for(const f of flames){f.t-=dt;f.age=(f.age||0)+dt}flames=flames.filter(f=>f.t>0);
   for(const c of burningCrates)c.t-=dt;for(let i=burningCrates.length-1;i>=0;i--)if(burningCrates[i].t<=0)burningCrates.splice(i,1);
@@ -1668,7 +1716,7 @@ function update(dt){
   for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,flameCell.x,flameCell.y,1,1)&&!f.hitEnemies.has(enemy)){f.hitEnemies.add(enemy);damageEnemy(enemy)}
  }
  for(const c of coinsOnMap)c.life+=dt;
-  updateDirtParticles(dt);
+  updateDirtParticles(dt);updateWaterParticles(dt);
   spawnExitPortal();
 }
 
@@ -1747,6 +1795,45 @@ function drawTileTo(target,x,y,type,offsetY=0){
  target.strokeStyle="#ffffff16";target.strokeRect(px,py,TILE,TILE);
 }
 function drawTile(x,y,type){drawTileTo(ctx,x,y,type)}
+function buildWaterPuddleFrames(){
+ if(waterPuddleFramesReady)return;
+ const pattern=[
+  "0011111100",
+  "0111111110",
+  "1111111111",
+  "1111111111",
+  "1111111111",
+  "0111111110",
+  "0011111100"
+ ];
+ for(let frame=0;frame<4;frame++){
+  const c=document.createElement("canvas");c.width=40;c.height=32;
+  const q=c.getContext("2d");q.imageSmoothingEnabled=false;
+  const colors={0:null,1:"#073d69",2:"#0876a2",3:"#19a7c9",4:"#72e6ed",5:"#c4fbf4"};
+  for(let y=0;y<pattern.length;y++)for(let x=0;x<pattern[y].length;x++){
+   if(pattern[y][x]==="0")continue;
+   const edge=y===0||y===6||x===0||x===9||pattern[y][x-1]==="0"||pattern[y][x+1]==="0";
+   let tone=edge?1:2;
+   if(!edge){
+    const wave=(x*3+y*5+frame*2)%11;
+    tone=wave<3?3:wave<6?2:wave===6?4:3;
+   }
+   q.fillStyle=colors[tone];q.fillRect(x*4,y*4,4,4);
+  }
+  // Reflexos pixelados que mudam de posição para dar movimento à superfície.
+  const glints=[[[8,8],[24,16],[32,24]],[[12,12],[28,8],[20,24]],[[20,8],[8,20],[28,20]],[[28,12],[16,20],[8,8]]][frame];
+  for(const [x,y] of glints){q.fillStyle="#bafbf4";q.fillRect(x,y,4,2);q.fillStyle="#55d9e7";q.fillRect(x+4,y+2,3,2)}
+  q.fillStyle="#e0fff7";q.fillRect(7+frame*2,12,3,2);
+  waterPuddleFrames.push(c);
+ }
+ waterPuddleFramesReady=true;
+}
+function drawWaterPuddle(p){
+ if(!waterPuddleFramesReady)buildWaterPuddleFrames();
+ const frame=Math.floor(gameClock*5.5+p.phase)%waterPuddleFrames.length;
+ const px=ox+p.x*TILE+4,py=oy+p.y*TILE+8;
+ ctx.save();ctx.globalAlpha=.94;ctx.drawImage(waterPuddleFrames[frame],px,py,40,32);ctx.restore();
+}
 function buildThemedSpriteSheets(){
  // Cada faixa da folha contém arte própria de uma fase; pré-renderização feita uma única vez.
  for(let i=0;i<10;i++){
@@ -1928,6 +2015,16 @@ function drawFlame(f){
  ctx.beginPath();ctx.moveTo(px+TILE*.39,baseY);ctx.quadraticCurveTo(px+TILE*.4,py+TILE*.62,cx+flicker2*2,py+TILE*.48);ctx.quadraticCurveTo(px+TILE*.62,py+TILE*.68,px+TILE*.61,baseY);ctx.closePath();ctx.fill();
  ctx.restore();
 }
+function drawWaterParticles(){
+ if(!waterParticles.length)return;ctx.save();
+ for(const p of waterParticles){
+  ctx.globalAlpha=Math.max(0,p.t/p.life);ctx.fillStyle="#58d9ef";
+  const x=ox+p.x*TILE,y=oy+p.y*TILE;
+  ctx.fillRect(Math.round(x),Math.round(y),p.size+1,p.size);
+  ctx.fillStyle="#c8fff8";ctx.fillRect(Math.round(x+1),Math.round(y-1),Math.max(1,p.size-1),2);
+ }
+ ctx.restore();
+}
 function drawDirtParticles(){
  if(!dirtParticles.length)return;ctx.save();
  for(const p of dirtParticles){ctx.globalAlpha=Math.min(1,p.t/p.life);ctx.fillStyle="#9a6738";ctx.beginPath();ctx.arc(ox+p.x*TILE,oy+p.y*TILE,p.size,0,Math.PI*2);ctx.fill();ctx.fillStyle="#c18a50";ctx.fillRect(ox+p.x*TILE-1,oy+p.y*TILE-1,2,2)}
@@ -1941,12 +2038,13 @@ function draw(){
  ctx.drawImage(staticFloorCanvas,0,0);
  for(let y=0;y<ROWS;y++){
   ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
+  for(const puddle of waterPuddles)if(puddle.y===y)drawWaterPuddle(puddle);
   for(const crate of burningCrates)if(crate.y===y)drawBurningCrate(crate);
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
  }
- drawDirtParticles();
+ drawDirtParticles();drawWaterParticles();
  ctx.fillStyle="#ffffffaa";ctx.font="12px Arial";ctx.textAlign="center";ctx.fillText("BOMBER QUEST",W/2,H-5);
 }
 
