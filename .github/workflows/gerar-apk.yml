@@ -43,10 +43,10 @@ jobs:
       - name: Converter e suavizar o áudio da explosão
         run: |
           mkdir -p game-assets/audio
-          ffmpeg -hide_banner -loglevel error -y \\
-            -i "bomba explosão.mp3" \\
-            -af "volume=0.85,alimiter=limit=0.95" \\
-            -ar 44100 -ac 2 -c:a pcm_s16le \\
+          ffmpeg -hide_banner -loglevel error -y \
+            -i "bomba explosão.mp3" \
+            -af "volume=0.85,alimiter=limit=0.95" \
+            -ar 44100 -ac 2 -c:a pcm_s16le \
             game-assets/audio/explosion.wav
           test -s game-assets/audio/explosion.wav
           echo "Áudio convertido para WAV PCM 16-bit, 44.1 kHz, estéreo."
