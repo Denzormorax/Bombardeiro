@@ -627,7 +627,19 @@ const audioSamples={
  hurt:"game-assets/audio/player_hit.ogg",coin:"game-assets/audio/coin_pickup.wav",exit:"game-assets/audio/exit_reveal.ogg"
 };
 const audioBufferCache=Object.create(null),audioLoadPromises=Object.create(null);
-const audioFallbackCache=Object.create(null);
+// Pool de segurança já preparado: evita criar/clonar elementos de mídia no instante do efeito.
+const audioFallbackPools=Object.create(null),audioFallbackIndexes=Object.create(null);
+const AUDIO_FALLBACK_POOL_SIZE=2;
+function preloadFallbackAudio(){
+ Object.keys(audioSamples).forEach(name=>{
+  if(audioFallbackPools[name])return;
+  const pool=[];
+  for(let i=0;i<AUDIO_FALLBACK_POOL_SIZE;i++){
+   try{const media=new Audio();media.preload="auto";media.src=audioSamples[name];media.load();pool.push(media)}catch(e){}
+  }
+  audioFallbackPools[name]=pool;audioFallbackIndexes[name]=0;
+ });
+}
 function ensureAudio(){
  const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;
  try{
@@ -661,11 +673,7 @@ async function loadAudioBuffer(name){
    const decoded=await audioContext.decodeAudioData(bytes.slice(0));
    audioBufferCache[name]=decoded;return decoded;
   }catch(error){
-   // Fallback para WebViews que não permitem fetch de arquivos locais.
-   try{
-    let media=audioFallbackCache[name];
-    if(!media){media=new Audio(src);media.preload="auto";media.load();audioFallbackCache[name]=media}
-   }catch(e){}
+   // O pool HTMLAudio já foi pré-carregado em paralelo como rota de segurança.
    return null;
   }finally{delete audioLoadPromises[name]}
  })();
@@ -680,35 +688,37 @@ function playDecodedBuffer(buffer,level=1){
  const source=audioContext.createBufferSource(),gain=audioContext.createGain();
  source.buffer=buffer;gain.gain.value=Math.max(0,Math.min(1,level));
  source.connect(gain);gain.connect(sfxBus);
- try{source.start(audioContext.currentTime+.003)}catch(e){}
+ try{source.start(audioContext.currentTime+.001)}catch(e){}
 }
 function playFallbackSample(name,level=1){
+ const pool=audioFallbackPools[name];if(!pool||!pool.length)return;
  try{
-  let base=audioFallbackCache[name];
-  if(!base){base=new Audio(audioSamples[name]);base.preload="auto";audioFallbackCache[name]=base}
-  const clip=base.cloneNode();clip.volume=Math.max(0,Math.min(1,audioSettings.sfxVolume*level));
+  let clip=null;
+  for(let i=0;i<pool.length;i++){
+   const index=(audioFallbackIndexes[name]+i)%pool.length,candidate=pool[index];
+   if(candidate.paused||candidate.ended){clip=candidate;audioFallbackIndexes[name]=(index+1)%pool.length;break}
+  }
+  if(!clip){clip=pool[audioFallbackIndexes[name]];audioFallbackIndexes[name]=(audioFallbackIndexes[name]+1)%pool.length}
+  clip.volume=Math.max(0,Math.min(1,audioSettings.sfxVolume*level));
+  try{clip.currentTime=0}catch(e){}
   const result=clip.play();if(result&&result.catch)result.catch(()=>{});
  }catch(e){}
 }
 function playSample(name,level=1){
  if(!audioSamples[name]||audioSettings.sfxVolume<=0)return;
- if(audioBufferCache[name]){
-  if(audioContext&&audioContext.state==="running")playDecodedBuffer(audioBufferCache[name],level);
-  else resumeGameAudio().then(ok=>{if(ok)playDecodedBuffer(audioBufferCache[name],level)});
-  return;
- }
- // A decodificação ocorre antecipadamente; este caminho cobre também o primeiro carregamento.
- loadAudioBuffer(name).then(buffer=>{
-  if(buffer)resumeGameAudio().then(ok=>{if(ok)playDecodedBuffer(buffer,level)});
-  else playFallbackSample(name,level);
- });
+ // Nunca espera fetch, decodeAudioData ou resume() para responder à ação atual.
+ if(audioBufferCache[name]){playDecodedBuffer(audioBufferCache[name],level);return}
+ // Enquanto o buffer principal termina de carregar, toca imediatamente a cópia já preparada.
+ playFallbackSample(name,level);
+ if(!audioLoadPromises[name]&&!audioBufferCache[name])loadAudioBuffer(name);
 }
 function unlockGameAudio(){
  resumeGameAudio();
  preloadGameAudio();
 }
-window.addEventListener("pointerdown",unlockGameAudio,{once:true,passive:true});
-window.addEventListener("keydown",unlockGameAudio,{once:true});
+// Captura antes dos listeners da interface para iniciar resume() dentro do gesto do usuário.
+window.addEventListener("pointerdown",unlockGameAudio,{once:true,passive:true,capture:true});
+window.addEventListener("keydown",unlockGameAudio,{once:true,capture:true});
 function loadAudioSettings(){
  try{const v=JSON.parse(localStorage.getItem("bombard-audio")||"null");if(v){
   if(Number.isFinite(+v.musicVolume))audioSettings.musicVolume=Math.max(0,Math.min(1,+v.musicVolume));
@@ -731,7 +741,8 @@ function setAudioVolume(which,value){
 $("musicVolume").addEventListener("input",e=>setAudioVolume("musicVolume",Number(e.target.value)/100));
 $("sfxVolume").addEventListener("input",e=>setAudioVolume("sfxVolume",Number(e.target.value)/100));
 loadAudioSettings();
-// Inicia o pré-carregamento assim que o documento abre; a reprodução aguarda o desbloqueio do usuário.
+// Prepara as duas rotas de áudio durante a tela inicial, nunca no instante da ação.
+preloadFallbackAudio();
 preloadGameAudio();
 function audioTone(a,b,d,w="sine",v=.2,delay=0){
  if(!ensureAudio()||audioSettings.sfxVolume<=0)return;
