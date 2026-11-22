@@ -41,6 +41,10 @@ public class MainActivity extends Activity {
             }, "BombardeiroAndroid");
             WebSettings settings = webView.getSettings();
             settings.setJavaScriptEnabled(true);
+            // Permite que o HTML local leia os próprios arquivos locais via fetch(),
+            // necessário para decodificar os efeitos em AudioBuffer no Web Audio.
+            settings.setAllowFileAccessFromFileURLs(true);
+            settings.setAllowUniversalAccessFromFileURLs(false);
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
             settings.setAllowFileAccess(true);
