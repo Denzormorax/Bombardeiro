@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - "bombardeirojogo.html"
+      - "bombericon.jpg"
       - "game-assets/**"
       - "android/**"
       - ".github/workflows/gerar-apk.yml"
@@ -33,6 +34,12 @@ jobs:
         run: |
           yes | sdkmanager --licenses
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Preparar ferramenta de recorte do ícone
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+      - name: Gerar ícones oficiais do aplicativo
+        run: bash android/generate-app-icon.sh
       - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -45,7 +52,7 @@ jobs:
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
           cd "$GAME_ASSETS"
-          find . -type f ! -name "assets-manifest.sha256" -printf '%P\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
+          find . -type f ! -name "assets-manifest.sha256" -printf '%P\\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
           test -s bombardeirojogo.html
           test -s game-assets/audio/explosion.wav
           test -s game-assets/audio/coin_pickup.wav
