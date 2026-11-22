@@ -146,7 +146,23 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  background-size:cover;
  background-repeat:no-repeat;
 }
-#menuBackdrop:before,#menuBackdrop:after,#menuBackdrop > *{display:none!important}
+/* EFEITOS LEVES DO CENÁRIO: estrelas no céu e vagalumes na floresta. */
+.menuEffects{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
+.menuStars{position:absolute;inset:0 0 auto;height:61%;}
+.menuStars i,.menuFireflies i{position:absolute;display:block;font-style:normal;}
+.menuStars i{width:2px;height:2px;border-radius:50%;background:#fff;box-shadow:0 0 3px 1px #d9f4ff,0 0 7px 2px #8bcfff;animation:menuStarTwinkle var(--twinkle,2.8s) ease-in-out var(--delay,0s) infinite alternate;}
+.menuStars i:nth-child(3n){width:3px;height:3px;box-shadow:0 0 4px 1px #fff,0 0 9px 3px #9edcff}
+.menuStars i:nth-child(4n){width:1.5px;height:1.5px;}
+.menuStars i:nth-child(1){left:5%;top:13%;--twinkle:2.1s;--delay:-.8s}.menuStars i:nth-child(2){left:12%;top:27%;--twinkle:3.4s;--delay:-2s}.menuStars i:nth-child(3){left:19%;top:8%;--twinkle:2.6s;--delay:-1.2s}.menuStars i:nth-child(4){left:25%;top:39%;--twinkle:3.1s;--delay:-.4s}.menuStars i:nth-child(5){left:31%;top:19%;--twinkle:2.3s;--delay:-1.7s}.menuStars i:nth-child(6){left:38%;top:7%;--twinkle:3.7s;--delay:-2.6s}.menuStars i:nth-child(7){left:44%;top:31%;--twinkle:2.5s;--delay:-.9s}.menuStars i:nth-child(8){left:51%;top:14%;--twinkle:3.2s;--delay:-2.1s}.menuStars i:nth-child(9){left:57%;top:42%;--twinkle:2.2s;--delay:-1.4s}.menuStars i:nth-child(10){left:63%;top:9%;--twinkle:3.5s;--delay:-.6s}.menuStars i:nth-child(11){left:69%;top:25%;--twinkle:2.7s;--delay:-2.4s}.menuStars i:nth-child(12){left:75%;top:12%;--twinkle:3.3s;--delay:-1.1s}.menuStars i:nth-child(13){left:81%;top:37%;--twinkle:2.4s;--delay:-1.9s}.menuStars i:nth-child(14){left:87%;top:17%;--twinkle:3.8s;--delay:-.3s}.menuStars i:nth-child(15){left:94%;top:8%;--twinkle:2.9s;--delay:-2.2s}.menuStars i:nth-child(16){left:9%;top:48%;--twinkle:3.6s;--delay:-1.5s}.menuStars i:nth-child(17){left:35%;top:49%;--twinkle:2.8s;--delay:-2.7s}.menuStars i:nth-child(18){left:72%;top:51%;--twinkle:2.2s;--delay:-.7s}.menuStars i:nth-child(19){left:91%;top:46%;--twinkle:3.1s;--delay:-1.8s}.menuStars i:nth-child(20){left:47%;top:4%;--twinkle:2.6s;--delay:-1.3s}
+@keyframes menuStarTwinkle{0%{opacity:.18;transform:scale(.65)}45%{opacity:.95}100%{opacity:.38;transform:scale(1.35)}}
+.menuFireflies{position:absolute;inset:55% 0 0;}
+.menuFireflies i{left:var(--x);top:var(--y);width:4px;height:4px;border-radius:50%;background:#baff72;box-shadow:0 0 4px 2px #8dff42,0 0 10px 4px #55e82c88;opacity:.15;animation:menuFireflyFloat var(--duration,7s) ease-in-out var(--delay,0s) infinite;}
+.menuFireflies i:nth-child(3n){width:3px;height:3px;background:#d7ff91;box-shadow:0 0 5px 2px #a5ff50,0 0 12px 4px #65ed3688}
+.menuFireflies i:nth-child(1){--x:8%;--y:55%;--duration:8.5s;--delay:-2s}.menuFireflies i:nth-child(2){--x:16%;--y:76%;--duration:7.2s;--delay:-5s}.menuFireflies i:nth-child(3){--x:24%;--y:43%;--duration:9.1s;--delay:-3s}.menuFireflies i:nth-child(4){--x:33%;--y:68%;--duration:7.8s;--delay:-6s}.menuFireflies i:nth-child(5){--x:41%;--y:34%;--duration:8.8s;--delay:-1s}.menuFireflies i:nth-child(6){--x:49%;--y:79%;--duration:7.4s;--delay:-4s}.menuFireflies i:nth-child(7){--x:57%;--y:51%;--duration:9.4s;--delay:-7s}.menuFireflies i:nth-child(8){--x:65%;--y:70%;--duration:8.1s;--delay:-2.5s}.menuFireflies i:nth-child(9){--x:73%;--y:39%;--duration:7.6s;--delay:-5.5s}.menuFireflies i:nth-child(10){--x:81%;--y:65%;--duration:9s;--delay:-3.5s}.menuFireflies i:nth-child(11){--x:89%;--y:47%;--duration:7.9s;--delay:-6.5s}.menuFireflies i:nth-child(12){--x:95%;--y:77%;--duration:8.7s;--delay:-1.5s}
+@keyframes menuFireflyFloat{0%{opacity:.08;transform:translate(0,12px) scale(.65)}18%{opacity:.95}38%{opacity:.3;transform:translate(18px,-12px) scale(1)}58%{opacity:1}78%{opacity:.18;transform:translate(-15px,-25px) scale(.7)}100%{opacity:.85;transform:translate(8px,-8px) scale(1.1)}}
+@media(prefers-reduced-motion:reduce){.menuStars i,.menuFireflies i{animation:none;opacity:.75}}
+
+#menuBackdrop:before,#menuBackdrop:after,#menuBackdrop > :not(.menuEffects){display:none!important}
 .gameLogo{
  text-align:center;
  font-family:Arial,sans-serif;
@@ -475,6 +491,10 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  </div>
  <div class="rock rock1"></div><div class="rock rock2"></div>
  <div class="menuCloud cloud1"></div><div class="menuCloud cloud2"></div><div class="menuCloud cloud3"></div>
+ <div class="menuEffects" aria-hidden="true">
+  <div class="menuStars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="menuFireflies"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+ </div>
 </div>
 <div id="game"><canvas id="canvas" width="960" height="640"></canvas></div>
 <div id="menuHud" class="hidden">
