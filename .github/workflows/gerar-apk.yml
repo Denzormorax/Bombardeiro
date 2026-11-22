@@ -86,7 +86,8 @@ jobs:
           GAME_ASSETS="android/app/src/main/assets/game"
           mkdir -p "$GAME_ASSETS"
           cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
-          # Ajusta a largura útil do logotipo para que o brilho e a inclinação não sejam cortados nas laterais.
+          # Corrige a exibição do logotipo usando a proporção real da imagem original.
+          # A imagem JPEG inteira é preservada; nenhum pixel é recortado nem removido.
           python3 - <<'PY'
           import re
           from pathlib import Path
@@ -94,30 +95,74 @@ jobs:
           p = Path("android/app/src/main/assets/game/bombardeirojogo.html")
           s = p.read_text(encoding="utf-8")
 
-          # Localiza exclusivamente a regra .gameLogo, sem depender de espaços ou quebras de linha.
-          selector = re.search(r"\.gameLogo\s*\{", s)
+          # Substitui somente o primeiro bloco estrutural .gameLogo.
+          selector = re.search(r"\\.gameLogo\\s*\\{", s)
           if not selector:
-              raise SystemExit("Seletor .gameLogo não encontrado no HTML empacotado.")
+              raise SystemExit("Seletor estrutural .gameLogo não encontrado.")
 
-          start = selector.end()
-          end = s.find("}", start)
-          if end < 0:
-              raise SystemExit("Bloco CSS .gameLogo está incompleto; pacote não será alterado.")
+          start = selector.start()
+          open_brace = selector.end() - 1
+          depth = 1
+          pos = open_brace + 1
+          while pos < len(s) and depth:
+              if s[pos] == "{":
+                  depth += 1
+              elif s[pos] == "}":
+                  depth -= 1
+              pos += 1
+          if depth:
+              raise SystemExit("Bloco CSS .gameLogo incompleto.")
 
-          block = s[start:end]
-          width_rule = re.compile(r"(\bwidth\s*:\s*)[^;]+;", re.IGNORECASE)
-          if width_rule.search(block):
-              block, count = width_rule.subn(r"\1min(88vw,700px);", block, count=1)
-          else:
-              block += "\n width:min(88vw,700px);\n"
-              count = 1
+          logo_css = """.gameLogo{
+           width:min(88vw,700px);
+           aspect-ratio:3044/988;
+           height:auto;
+           margin:0 auto 10px;
+           overflow:visible;
+           position:relative;
+           isolation:isolate;
+           background:transparent;
+           transform-origin:50% 50%;
+           animation:logoSeesaw 4.8s ease-in-out infinite;
+          }
+          .gameLogo img{
+           display:block;
+           position:absolute;
+           inset:0;
+           width:100%;
+           height:100%;
+           max-width:none;
+           object-fit:contain;
+           transform:none;
+           filter:drop-shadow(0 0 3px rgba(55,195,255,.98)) drop-shadow(0 0 7px rgba(245,92,220,.86)) drop-shadow(0 0 13px rgba(139,75,255,.72));
+           user-select:none;
+           -webkit-user-drag:none;
+           pointer-events:none;
+          }"""
+          s = s[:start] + logo_css + s[pos:]
 
-          if count != 1 or "min(88vw,700px)" not in block:
-              raise SystemExit("Não foi possível ajustar a largura dentro de .gameLogo.")
+          # Desativa o script antigo que cortava a imagem em 57,5% e apagava pixels azuis.
+          crop_script = re.compile(
+              r"<script>\\s*/\\* Recorta o logotipo original.*?</script>",
+              re.DOTALL
+          )
+          s, removed = crop_script.subn(
+              "<script>/* Logotipo integral: sem recorte nem remoção automática de fundo. */</script>",
+              s,
+              count=1
+          )
+          if removed != 1:
+              raise SystemExit("Script antigo de recorte não localizado; pacote não será alterado.")
 
-          s = s[:start] + block + s[end:]
+          if "aspect-ratio:3044/988" not in s or "object-fit:contain" not in s:
+              raise SystemExit("Validação de proporção/exibição integral falhou.")
+          if "Recorta o logotipo original" in s:
+              raise SystemExit("O script antigo de recorte ainda está presente.")
+          if 'id="bombardeiroLogoImage" src="data:image/jpeg;base64,' not in s:
+              raise SystemExit("Imagem original incorporada não foi encontrada.")
+
           p.write_text(s, encoding="utf-8")
-          print("Logotipo ajustado dentro de .gameLogo: 88vw/700px; imagem, bombinha, brilho e animação preservados.")
+          print("Logo integral: proporção real 3044:988, object-fit:contain, overflow visível; script de recorte removido.")
           PY
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
