@@ -2042,9 +2042,11 @@ function draw(){
  if(backgroundTheme!==currentForestTheme()){drawForestBackground(backgroundCtx);backgroundTheme=currentForestTheme()}
  ctx.drawImage(backgroundCanvas,0,0);
  ctx.drawImage(staticFloorCanvas,0,0);
+ // A água é desenhada como camada de chão, antes dos personagens e objetos.
+ // Assim, a textura nunca cobre o rosto ou o corpo quando o jogador passa ao lado/por cima dela.
+ for(const puddle of waterPuddles)drawWaterPuddle(puddle);
  for(let y=0;y<ROWS;y++){
   ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
-  for(const puddle of waterPuddles)if(puddle.y===y)drawWaterPuddle(puddle);
   for(const crate of burningCrates)if(crate.y===y)drawBurningCrate(crate);
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
