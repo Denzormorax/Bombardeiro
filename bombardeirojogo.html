@@ -682,6 +682,14 @@ function playDecodedBuffer(buffer,level=1){
  source.connect(gain);gain.connect(sfxBus);
  try{source.start(audioContext.currentTime+.003)}catch(e){}
 }
+function playFallbackSample(name,level=1){
+ try{
+  let base=audioFallbackCache[name];
+  if(!base){base=new Audio(audioSamples[name]);base.preload="auto";audioFallbackCache[name]=base}
+  const clip=base.cloneNode();clip.volume=Math.max(0,Math.min(1,audioSettings.sfxVolume*level));
+  const result=clip.play();if(result&&result.catch)result.catch(()=>{});
+ }catch(e){}
+}
 function playSample(name,level=1){
  if(!audioSamples[name]||audioSettings.sfxVolume<=0)return;
  if(audioBufferCache[name]){
@@ -689,10 +697,10 @@ function playSample(name,level=1){
   else resumeGameAudio().then(ok=>{if(ok)playDecodedBuffer(audioBufferCache[name],level)});
   return;
  }
- // A decodificação ocorre antecipadamente; este caminho também cobre o primeiro carregamento.
+ // A decodificação ocorre antecipadamente; este caminho cobre também o primeiro carregamento.
  loadAudioBuffer(name).then(buffer=>{
-  if(!buffer)return;
-  resumeGameAudio().then(ok=>{if(ok)playDecodedBuffer(buffer,level)});
+  if(buffer)resumeGameAudio().then(ok=>{if(ok)playDecodedBuffer(buffer,level)});
+  else playFallbackSample(name,level);
  });
 }
 function unlockGameAudio(){
