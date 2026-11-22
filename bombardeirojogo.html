@@ -930,11 +930,12 @@ function reactToNewBomb(){
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentThreatened=danger.has(currentKey);
   const routeThreatened=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
+  const blueBombThreat=enemy.isHorned&&enemy.mode==="chase"&&bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<5.2);
   enemy.repath=0;
-  if(currentThreatened||routeThreatened){
-   // Caçadores reagem quase imediatamente; os cautelosos avaliam por um instante.
+  if(currentThreatened||routeThreatened||blueBombThreat){
+   // O azul reage antecipadamente: não espera a bomba bloquear seu caminho.
    enemy.bombEscapePending=true;
-   enemy.bombReactionTimer=enemy.isHunter?.07:enemy.isHorned?.15:.25+Math.random()*.08;
+   enemy.bombReactionTimer=enemy.isHorned?.04:enemy.isHunter?.07:.25+Math.random()*.08;
   }
  }
 }
@@ -991,7 +992,7 @@ function updateEnemies(dt){
   const routeInDanger=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
 
   // Reação à bomba recém-colocada: pequena pausa para avaliar e então uma rota segura.
-  if(enemy.bombEscapePending&&(currentInDanger||routeInDanger)){
+  if(enemy.bombEscapePending){
    enemy.bombReactionTimer=Math.max(0,(enemy.bombReactionTimer||0)-dt);
    if(enemy.bombReactionTimer>0){enemy.speed=0;continue}
    const escape=findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter));
@@ -999,7 +1000,7 @@ function updateEnemies(dt){
    if(escape.length){
     enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;enemy.evadeTimer=0;
     if(currentInDanger)for(const bomb of bombs)if(getBombDangerCells(bomb).has(currentKey))enemy.evadeTimer=Math.max(enemy.evadeTimer,bomb.t+.18);
-    enemy.speed=enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
+    enemy.speed=enemy.isHorned&&!enemy.isEnraged?enemy.baseSpeed:enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
     followEnemyPath(enemy,dt);continue;
    }
    if(routeInDanger){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
@@ -1012,7 +1013,7 @@ function updateEnemies(dt){
     enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;enemy.evadeTimer=0;
     for(const bomb of bombs)if(getBombDangerCells(bomb).has(currentKey))enemy.evadeTimer=Math.max(enemy.evadeTimer,bomb.t+.18);
    }
-   enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;
+   enemy.speed=enemy.isHorned?(enemy.isEnraged?enemy.huntSpeed*1.22:enemy.baseSpeed):enemy.isHunter?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;
    if(enemy.path.length){followEnemyPath(enemy,dt);continue}
    enemy.evadeRepath=Math.max(0,(enemy.evadeRepath||0)-dt);
    continue;
@@ -1027,7 +1028,8 @@ function updateEnemies(dt){
   }
 
   // Azul: antes de ser atingido patrulha; após o primeiro dano, persegue sem desistir.
-  const seesPlayer=enemy.isHorned?!!enemy.isEnraged:canSeePlayer(enemy);
+  const blueDistance=enemy.isHorned?distance(enemy.x,enemy.y,player.x,player.y):Infinity;
+  const seesPlayer=enemy.isHorned?(enemy.isEnraged||blueDistance<=4.6&&canSeePlayer(enemy)):canSeePlayer(enemy);
   if(enemy.isHorned&&enemy.isEnraged){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=999;
   }else if(seesPlayer){
@@ -1040,10 +1042,10 @@ function updateEnemies(dt){
   }
 
   if((enemy.mode==="chase"||enemy.mode==="search")&&enemy.lastSeen){
-   enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter?enemy.huntSpeed*1.22:enemy.isMushroom?enemy.huntSpeed*1.25:enemy.baseSpeed*1.16;
+   enemy.speed=enemy.isHorned?(enemy.isEnraged?enemy.huntSpeed*1.22:enemy.baseSpeed):enemy.isHunter?enemy.huntSpeed*1.22:enemy.isMushroom?enemy.huntSpeed*1.25:enemy.baseSpeed*1.16;
    if(enemy.repath<=0||!enemy.path.length){
     enemy.path=findEnemyRoute(enemy,enemy.lastSeen.x,enemy.lastSeen.y,danger);
-    enemy.repath=enemy.isHorned&&enemy.isEnraged?.14:enemy.isHunter?.12:enemy.isMushroom?.13:.2;
+    enemy.repath=enemy.isHorned?(enemy.isEnraged?.09:.12):enemy.isHunter?.12:enemy.isMushroom?.13:.2;
    }
    if(enemy.path.length){followEnemyPath(enemy,dt);continue}
    // O caçador continua atualizando a rota sem ficar preso em uma rota impossível.
