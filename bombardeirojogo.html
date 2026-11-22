@@ -759,7 +759,7 @@ function newLevel(preservePowerUps=false){
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
  const count=4+Math.floor(Math.random()*3),mushroomCount=level>=4&&level<=8?Math.min(2,Math.floor(Math.random()*3),count):0,hornedCount=level>=6&&level<=10?Math.min(2,Math.floor(Math.random()*3),count-mushroomCount):0,spawnPositions=createEnemySpawnPositions(count);prepareCoinDrops();const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
- spawnPositions.forEach((p,index)=>{const isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isMushroom&&!isHorned&&hunterSlots.has(index),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isHorned?1.72:isHunter?1.55:1.28),isHunter,isHorned,isMushroom,isEnraged:false,hp:isHunter||isHorned?2:1,maxHp:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0})});
+ spawnPositions.forEach((p,index)=>{const isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isMushroom&&!isHorned&&hunterSlots.has(index),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isHorned?1.72:isHunter?1.55:1.28),isHunter,isHorned,isMushroom,isEnraged:false,hp:isHunter||isHorned?2:1,maxHp:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0})});
  updateHUD();
 }
 
@@ -876,7 +876,23 @@ function choosePatrolPath(enemy,blockedDanger=null){
  const selected=reachable.find(p=>p.dist>=2&&!(enemy.patrolTarget&&p.x===enemy.patrolTarget.x&&p.y===enemy.patrolTarget.y))||reachable[0];
  enemy.path=selected.path.slice();enemy.patrolTarget={x:selected.x,y:selected.y};enemy.patrolWait=.05+Math.random()*.25;
 }
-function findBombEscapePath(enemy,danger){
+function isBehindBombCover(x,y){
+ for(const bomb of bombs){
+  const bx=Math.floor(bomb.x),by=Math.floor(bomb.y);
+  if(by===y&&bx!==x){
+   const step=Math.sign(bx-x);let covered=false;
+   for(let tx=x+step;tx!==bx;tx+=step){const tile=tileAt(tx,y);if(tile===2){covered=true;break}if(tile===1)break}
+   if(covered)return true;
+  }
+  if(bx===x&&by!==y){
+   const step=Math.sign(by-y);let covered=false;
+   for(let ty=y+step;ty!==by;ty+=step){const tile=tileAt(x,ty);if(tile===2){covered=true;break}if(tile===1)break}
+   if(covered)return true;
+  }
+ }
+ return false;
+}
+function findBombEscapePath(enemy,danger,preferCover=false){
  const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),safe=[];
  let head=0;
  while(head<queue.length){
@@ -884,7 +900,8 @@ function findBombEscapePath(enemy,danger){
   if(p.path.length>0&&!danger.has(key)){
    let nearestBomb=99;
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
-   safe.push({path:p.path,score:p.path.length-nearestBomb*.12});
+   const coverBonus=preferCover&&isBehindBombCover(p.x,p.y)?2.4:0;
+   safe.push({path:p.path,score:p.path.length-nearestBomb*.12-coverBonus});
   }
   if(p.path.length>=COLS*ROWS)continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
@@ -897,8 +914,19 @@ function findBombEscapePath(enemy,danger){
  return safe.length?safe[0].path:[];
 }
 function reactToNewBomb(){
- // A bomba só muda a decisão de quem está realmente ameaçado ou tem rota cruzando a explosão.
- for(const enemy of enemies)if(enemy.alive)enemy.repath=0;
+ const danger=getAllBombDangerCells();
+ for(const enemy of enemies){
+  if(!enemy.alive||enemy.burrowing)continue;
+  const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
+  const currentThreatened=danger.has(currentKey);
+  const routeThreatened=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
+  enemy.repath=0;
+  if(currentThreatened||routeThreatened){
+   // Caçadores reagem quase imediatamente; os cautelosos avaliam por um instante.
+   enemy.bombEscapePending=true;
+   enemy.bombReactionTimer=enemy.isHunter?.07:enemy.isHorned?.15:.25+Math.random()*.08;
+  }
+ }
 }
 function followEnemyPath(enemy,dt){
  if(!enemy.path||!enemy.path.length)return false;const target=enemy.path[0],tx=target.x+.5,ty=target.y+.5,dx=tx-enemy.x,dy=ty-enemy.y,dist=Math.hypot(dx,dy);
@@ -944,6 +972,21 @@ function updateEnemies(dt){
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentInDanger=danger.has(currentKey);
   const routeInDanger=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
+
+  // Reação à bomba recém-colocada: pequena pausa para avaliar e então uma rota segura.
+  if(enemy.bombEscapePending&&(currentInDanger||routeInDanger)){
+   enemy.bombReactionTimer=Math.max(0,(enemy.bombReactionTimer||0)-dt);
+   if(enemy.bombReactionTimer>0){enemy.speed=0;continue}
+   const escape=findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter));
+   enemy.bombEscapePending=false;
+   if(escape.length){
+    enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;enemy.evadeTimer=0;
+    if(currentInDanger)for(const bomb of bombs)if(getBombDangerCells(bomb).has(currentKey))enemy.evadeTimer=Math.max(enemy.evadeTimer,bomb.t+.18);
+    enemy.speed=enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
+    followEnemyPath(enemy,dt);continue;
+   }
+   if(routeInDanger){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
+  }
 
   // Prioridade máxima: sair de uma explosão que realmente ameaça a posição atual.
   if(currentInDanger){
