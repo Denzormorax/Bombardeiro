@@ -11,6 +11,7 @@ on:
       - "game-assets/**"
       - "bomba explosão.mp3"
       - "moeda.mp3"
+      - "botões.mp3"
       - "tela floresta.jpg"
       - "android/**"
       - ".github/workflows/gerar-apk.yml"
@@ -41,7 +42,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick ffmpeg
-      - name: Converter e suavizar os áudios da explosão e da moeda
+      - name: Converter e suavizar os áudios da explosão, moeda e botões
         run: |
           mkdir -p game-assets/audio
           ffmpeg -hide_banner -loglevel error -y \
@@ -54,14 +55,20 @@ jobs:
             -af "volume=0.85,alimiter=limit=0.95" \
             -ar 44100 -ac 2 -c:a pcm_s16le \
             game-assets/audio/coin_pickup.wav
+          ffmpeg -hide_banner -loglevel error -y \
+            -i "botões.mp3" \
+            -af "volume=0.85,alimiter=limit=0.95" \
+            -ar 44100 -ac 2 -c:a pcm_s16le \
+            game-assets/audio/ui_click.wav
           test -s game-assets/audio/explosion.wav
           test -s game-assets/audio/coin_pickup.wav
+          test -s game-assets/audio/ui_click.wav
           echo "Áudios convertidos para WAV PCM 16-bit, 44.1 kHz, estéreo."
       - name: Salvar WAVs convertidos no repositório
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add game-assets/audio/explosion.wav game-assets/audio/coin_pickup.wav
+          git add game-assets/audio/explosion.wav game-assets/audio/coin_pickup.wav game-assets/audio/ui_click.wav
           if git diff --cached --quiet; then
             echo "Os WAVs já estão atualizados; nenhum commit adicional necessário."
           else
@@ -88,6 +95,7 @@ jobs:
           test -s bombardeirojogo.html
           test -s game-assets/audio/explosion.wav
           test -s game-assets/audio/coin_pickup.wav
+          test -s game-assets/audio/ui_click.wav
           test -s assets-manifest.sha256
           echo "Arquivos no pacote: $(wc -l < assets-manifest.sha256)"
           du -sh .
