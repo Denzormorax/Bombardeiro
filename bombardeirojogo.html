@@ -130,11 +130,23 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 .menuHorizonGlow{position:absolute;z-index:1;left:25%;right:20%;top:38%;height:22%;background:#ffdc9a55;filter:blur(30px);border-radius:50%}
 
 /* MASCOTE DO MENU: VISTO DE COSTAS */
+.mascotFlight{
+ position:relative;width:112px;height:112px;margin:12px auto 12px;
+}
 .mascot{
  position:relative;isolation:isolate;
- width:112px;height:112px;margin:12px auto 12px;
+ width:112px;height:112px;margin:0;
  border-radius:50%;background:transparent;border:0;
- box-shadow:none;animation:mascotFloat 2.4s ease-in-out infinite;
+ box-shadow:none;animation:mascotFloat 2.4s ease-in-out 1.85s infinite;
+}
+.mascotFlight.entering{animation:mascotFlyIn 1.85s cubic-bezier(.16,.76,.22,1) both}
+@keyframes mascotFlyIn{
+ 0%{transform:translate(-108vw,52vh) rotate(-32deg) scale(.72);opacity:0}
+ 12%{opacity:1}
+ 38%{transform:translate(-48vw,25vh) rotate(-19deg) scale(.82);opacity:1}
+ 68%{transform:translate(-13vw,5vh) rotate(8deg) scale(1.04);opacity:1}
+ 84%{transform:translate(3vw,-2vh) rotate(-4deg) scale(.98);opacity:1}
+ 100%{transform:translate(0,0) rotate(0) scale(1);opacity:1}
 }
 .mascot .rearBack{
  position:absolute;z-index:2;left:27%;right:27%;top:37%;bottom:4%;
@@ -175,6 +187,31 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 }
 .mascot .rearGlove.left{left:8%;transform:rotate(12deg)}
 .mascot .rearGlove.right{right:8%;transform:rotate(-12deg)}
+/* Braço direito articulado: levanta e acena depois do pouso. */
+.mascot .rearWaveArm{
+ position:absolute;z-index:3;right:8%;top:49%;width:25%;height:45%;
+ transform-origin:50% 15%;
+}
+.mascot .rearWaveArm .rearArm{
+ left:0;right:auto;top:0;width:100%;height:64%;
+ transform:none;border-radius:45%;
+}
+.mascot .rearWaveArm .rearGlove{
+ left:0;right:auto;top:53%;width:100%;height:45%;
+ transform:none;border-radius:48%;
+}
+.mascotFlight.entering .rearWaveArm{animation:mascotWave 2.65s ease-in-out 1.85s both}
+@keyframes mascotWave{
+ 0%,8%{transform:rotate(0deg)}
+ 18%{transform:rotate(122deg)}
+ 29%{transform:rotate(103deg)}
+ 40%{transform:rotate(132deg)}
+ 51%{transform:rotate(105deg)}
+ 62%{transform:rotate(132deg)}
+ 73%{transform:rotate(108deg)}
+ 86%{transform:rotate(116deg)}
+ 100%{transform:rotate(0deg)}
+}
 @keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .menuButtons{display:flex;gap:12px;width:min(430px,92vw);margin-top:12px}
 .menuButtons button{flex:1;min-height:53px;border:2px solid #b5f4ff;border-radius:13px;background:linear-gradient(145deg,#13b8d8,#075d91);color:white;font-size:14px;font-weight:900;letter-spacing:1px;text-shadow:0 2px 3px #00354a;box-shadow:0 5px 0 #06415f,0 10px 18px #0007}
@@ -293,10 +330,13 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 </div>
 <div id="menuContent" class="hidden">
  <div class="gameLogo">BOMBER QUEST<small>AVENTURAS</small></div>
- <div class="mascot">
-  <div class="rearArm left"></div><div class="rearArm right"></div>
-  <div class="rearBack"></div><div class="rearHelmet"></div>
-  <div class="rearGlove left"></div><div class="rearGlove right"></div>
+ <div class="mascotFlight">
+  <div class="mascot">
+   <div class="rearArm left"></div>
+   <div class="rearWaveArm"><div class="rearArm"></div><div class="rearGlove"></div></div>
+   <div class="rearBack"></div><div class="rearHelmet"></div>
+   <div class="rearGlove left"></div>
+  </div>
  </div>
  <div class="menuButtons"><button id="historyBtn">HISTÓRIA</button><button class="coming" id="comingBtn">EM BREVE</button></div>
  <div class="menuFooter">UMA GRANDE AVENTURA ESTÁ COMEÇANDO!</div>
@@ -472,6 +512,8 @@ function showMenuScreen(which){
  $("hud").style.display="none";$("controls").style.display="none";
  if(which==="main"){
   $("menuBackdrop").classList.remove("hidden");$("menuHud").classList.remove("hidden");$("menuContent").classList.remove("hidden");
+  const flight=$("menuContent").querySelector(".mascotFlight");
+  if(flight){flight.classList.remove("entering");void flight.offsetWidth;flight.classList.add("entering");}
   $("menuScoreValue").textContent=score;menuReturn="main";
  }else if(which==="worlds"){
   $("worldsPanel").classList.remove("hidden");$("menuBackdrop").classList.remove("hidden");menuReturn="worlds";
