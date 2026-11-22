@@ -9,12 +9,13 @@ on:
       - "bombardeirojogo.html"
       - "bombericon.jpg"
       - "game-assets/**"
+      - "bomba explosão.mp3"
       - "tela floresta.jpg"
       - "android/**"
       - ".github/workflows/gerar-apk.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -38,7 +39,28 @@ jobs:
       - name: Preparar ferramenta de recorte do ícone
         run: |
           sudo apt-get update
-          sudo apt-get install -y imagemagick
+          sudo apt-get install -y imagemagick ffmpeg
+      - name: Converter e suavizar o áudio da explosão
+        run: |
+          mkdir -p game-assets/audio
+          ffmpeg -hide_banner -loglevel error -y \\
+            -i "bomba explosão.mp3" \\
+            -af "volume=0.85,alimiter=limit=0.95" \\
+            -ar 44100 -ac 2 -c:a pcm_s16le \\
+            game-assets/audio/explosion.wav
+          test -s game-assets/audio/explosion.wav
+          echo "Áudio convertido para WAV PCM 16-bit, 44.1 kHz, estéreo."
+      - name: Salvar WAV convertido no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add game-assets/audio/explosion.wav
+          if git diff --cached --quiet; then
+            echo "O WAV já está atualizado; nenhum commit adicional necessário."
+          else
+            git commit -m "Atualiza áudio de explosão para WAV suavizado"
+            git push origin HEAD:main
+          fi
       - name: Gerar ícones oficiais do aplicativo
         run: bash android/generate-app-icon.sh
       - name: Preparar Gradle
