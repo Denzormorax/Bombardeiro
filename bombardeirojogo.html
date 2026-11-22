@@ -654,7 +654,7 @@ let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTi
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
 let basePlayerSpeed=4.0,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
-let gameClock=0,lastTime=0,exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};
+let gameClock=0,lastTime=0,exit={x:-1,y:-1,found:false};
 let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,shopReturnPaused=false,menuReturn="main";
 let selectedMapLevel=1,mapMoveTimer=null;
 const controlSettings={moveType:"stick",moveSize:145,bombSize:82,pauseSize:48,positions:{}};
@@ -891,7 +891,7 @@ function makeMap(){
  map=Array.from({length:ROWS},(_,y)=>
   Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:0)
  );
- exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};
+ exit={x:-1,y:-1,found:false};
 
  // Pequena área segura para o nascimento. Fora dela, até as células
  // próximas do jogador entram no sorteio normal de blocos.
@@ -907,7 +907,7 @@ function makeMap(){
   const y0=1+Math.floor(sy*(ROWS-2)/2),y1=1+Math.floor((sy+1)*(ROWS-2)/2);
   const cells=[];
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
-   if(map[y][x]===0&&!isStartSafeCell(x,y)&&!(x===exit.x&&y===exit.y))cells.push({x,y});
+   if(map[y][x]===0&&!isStartSafeCell(x,y))cells.push({x,y});
   }
   shuffleArray(cells);
   sectors.push({cells});
@@ -921,22 +921,8 @@ function makeMap(){
   }
  }
 
- // O jogador sempre nasce com espaço para sair e o esconderijo da saída
- // continua sendo um bloco destrutível, como nas fases anteriores.
- for(const p of [{x:1,y:1},{x:2,y:1},{x:1,y:2},{x:2,y:2},{x:3,y:1},{x:1,y:3}])map[p.y][p.x]=0;
- map[exit.y][exit.x]=2;
-
- // Verifica a conectividade estrutural ignorando blocos destrutíveis.
- // Eles podem ser removidos com bombas; pilares fixos nunca são atravessados.
- const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]);
- let head=0;
- while(head<queue.length){
-  const p=queue[head++];
-  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-   const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
-   if(x<1||y<1||x>=COLS-1||y>=ROWS-1||visited.has(key)||map[y][x]===1)continue;
-   visited.add(key);queue.push({x,y});
-  }
+// O portal não ocupa mais um bloco do mapa: ele nasce em um piso livre
+  // somente depois que todos os inimigos forem derrotados.
  }
  if(!visited.has(cellKey(exit.x,exit.y))){
   // Segurança para futuras mudanças na disposição dos pilares.
@@ -948,7 +934,7 @@ function makeMap(){
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
  coinDrops={};const candidates=[];
- for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(map[y][x]===2&&!(x===exit.x&&y===exit.y))candidates.push({x,y});
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(map[y][x]===2)candidates.push({x,y});
  shuffleArray(candidates);const amount=8+Math.floor(Math.random()*3);
  for(let i=0;i<Math.min(amount,candidates.length);i++){const p=candidates[i];coinDrops[cellKey(p.x,p.y)]="yellow"}
 }
@@ -990,9 +976,9 @@ function createEnemySpawnPositions(count){
   const y0=1+Math.floor(sy*(ROWS-2)/2),y1=1+Math.floor((sy+1)*(ROWS-2)/2);
   const cells=[];
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
-   if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
+   if(map[y][x]!==0||isStartSafeCell(x,y))continue;
    const px=x+.5,py=y+.5,dist=distance(px,py,player.x,player.y);
-   if(dist<4.5||distance(px,py,exit.x+.5,exit.y+.5)<1.5||hasClearSpawnLane(x,y))continue;
+   if(dist<4.5||hasClearSpawnLane(x,y))continue;
    let openNeighbors=0;
    for(const [dx,dy] of dirs)if(tileAt(x+dx,y+dy)===0)openNeighbors++;
    if(openNeighbors>=1)cells.push({x,y,openNeighbors});
@@ -1260,7 +1246,7 @@ function updateEnemies(dt){
      let destination=null;
      for(let tries=0;tries<120;tries++){
       const x=1+Math.floor(Math.random()*(COLS-2)),y=1+Math.floor(Math.random()*(ROWS-2)),key=cellKey(x,y);
-      if(tileAt(x,y)!==0||bombAt(x,y)||danger.has(key)||(x===exit.x&&y===exit.y)||distance(x+.5,y+.5,player.x,player.y)<4.2)continue;
+      if(tileAt(x,y)!==0||bombAt(x,y)||danger.has(key)||distance(x+.5,y+.5,player.x,player.y)<4.2)continue;
       if(enemies.some(other=>other!==enemy&&other.alive&&!other.burrowing&&distance(x+.5,y+.5,other.x,other.y)<1.7))continue;
       destination={x,y};break;
      }
@@ -1378,7 +1364,7 @@ function isInsideFlameDamage(entity,cell){
 }
 function explode(b){
  playSfx("explosion");let brokeBlock=false;activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}if(x===exit.x&&y===exit.y&&!exit.found){exit.found=true;playSfx("exit")}break}}if(brokeBlock){rebuildStaticMapCache();playSfx("block");}
+ for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}}if(brokeBlock){rebuildStaticMapCache();playSfx("block");}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
@@ -1412,6 +1398,36 @@ document.querySelectorAll(".buyBtn").forEach(btn=>btn.addEventListener("click",(
 
 /* PROGRESSÃO E PORTA DE SAÍDA */
 function allEnemiesDefeated(){return enemies.length>0&&enemies.every(e=>!e.alive)}
+function spawnExitPortal(){
+ if(exit.found||!allEnemiesDefeated())return;
+ const sx=Math.floor(player.x),sy=Math.floor(player.y),queue=[{x:sx,y:sy}],reachable=new Set([cellKey(sx,sy)]);
+ for(let head=0;head<queue.length;head++){
+  const p=queue[head];
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
+   if(x<1||y<1||x>=COLS-1||y>=ROWS-1||reachable.has(key)||tileAt(x,y)===1)continue;
+   reachable.add(key);queue.push({x,y});
+  }
+ }
+ const candidates=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(tileAt(x,y)!==0||bombAt(x,y)||!reachable.has(cellKey(x,y)))continue;
+  if(distance(x+.5,y+.5,player.x,player.y)<2.5)continue;
+  if(coinsOnMap.some(c=>distance(x+.5,y+.5,c.x,c.y)<.55))continue;
+  candidates.push({x,y});
+ }
+ if(!candidates.length){
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+   if(tileAt(x,y)!==0||bombAt(x,y)||!reachable.has(cellKey(x,y)))continue;
+   if(distance(x+.5,y+.5,player.x,player.y)<.8)continue;
+   candidates.push({x,y});
+  }
+ }
+ if(!candidates.length)return;
+ const chosen=candidates[Math.floor(Math.random()*candidates.length)];
+ exit={x:chosen.x,y:chosen.y,found:true};
+ playSfx("exit");message("✨ PORTAL MÁGICO ENCONTRADO!");
+}
 function checkWin(){
  if(levelTransition)return;
  if(allEnemiesDefeated()&&exit.found&&Math.floor(player.x)===exit.x&&Math.floor(player.y)===exit.y){
@@ -1503,6 +1519,7 @@ function update(dt){
  }
  for(const c of coinsOnMap)c.life+=dt;
   updateDirtParticles(dt);
+  spawnExitPortal();
 }
 
 /* DESENHO DO CENÁRIO */
@@ -1670,9 +1687,43 @@ function drawCoin(c){
  const px=ox+c.x*TILE,py=oy+c.y*TILE,spin=Math.abs(Math.cos(c.life*5+c.phase)),radius=18,color=c.type==="yellow"?"#ffd928":c.type==="green"?"#36e477":"#fa4545",dark=c.type==="yellow"?"#a96d00":c.type==="green"?"#087d36":"#9c1717";
  ctx.save();ctx.translate(px,py);ctx.rotate(Math.sin(c.life*2+c.phase)*.12);ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillStyle=dark;ctx.beginPath();ctx.ellipse(0,0,Math.max(4,radius*spin),radius,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,Math.max(3,(radius-2)*spin),radius-2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff4b0";ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(0,0,Math.max(3,(radius-4)*spin),radius-4,0,0,Math.PI*2);ctx.stroke();if(spin>.3){ctx.fillStyle="#fff8d2";ctx.font="bold 17px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("$",0,1)}ctx.restore();
 }
-function drawExit(){
- if(!allEnemiesDefeated()||!exit.found)return;const px=ox+exit.x*TILE,py=oy+exit.y*TILE,glow=.7+.3*Math.sin(gameClock*5);ctx.save();ctx.shadowColor="#ffe36b";ctx.shadowBlur=18*glow;ctx.fillStyle="#ffd34d";ctx.fillRect(px+8,py+5,32,40);ctx.shadowBlur=0;ctx.fillStyle="#4b3212";ctx.fillRect(px+14,py+11,20,34);ctx.fillStyle="#fff3a0";ctx.fillRect(px+27,py+25,4,4);ctx.restore();
-}
+ function drawExit(){
+  if(!exit.found)return;
+  const px=ox+(exit.x+.5)*TILE,py=oy+(exit.y+.5)*TILE,t=gameClock;
+  const pulse=.9+.1*Math.sin(t*4.5),spin=t*1.7;
+  ctx.save();ctx.translate(px,py);
+  const aura=ctx.createRadialGradient(0,0,2,0,0,39);
+  aura.addColorStop(0,"#8ceeffaa");aura.addColorStop(.42,"#168dff66");aura.addColorStop(1,"#087bff00");
+  ctx.fillStyle=aura;ctx.fillRect(-40,-40,80,80);
+  ctx.globalCompositeOperation="lighter";
+  ctx.save();ctx.rotate(-spin*.72);ctx.strokeStyle="#35bfff";ctx.lineWidth=3;ctx.shadowColor="#159dff";ctx.shadowBlur=14;
+  ctx.beginPath();ctx.ellipse(0,0,23,30,0,.18,Math.PI*1.72);ctx.stroke();
+  ctx.strokeStyle="#b7f5ff";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,0,19,26,0,Math.PI*1.05,Math.PI*1.9);ctx.stroke();ctx.restore();
+  const core=ctx.createRadialGradient(-5,-9,2,0,0,27);
+  core.addColorStop(0,"#e7fbff");core.addColorStop(.2,"#55cfff");core.addColorStop(.55,"#1768c9");core.addColorStop(1,"#071c58");
+  ctx.fillStyle=core;ctx.beginPath();ctx.ellipse(0,0,15.5*pulse,23*pulse,0,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.rotate(spin*1.35);ctx.strokeStyle="#b9f7ff";ctx.lineWidth=2.2;ctx.shadowColor="#62dfff";ctx.shadowBlur=11;
+  ctx.beginPath();ctx.ellipse(0,0,10,17,0,-.25,Math.PI*1.48);ctx.stroke();
+  ctx.strokeStyle="#fff4b2";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,0,6,12,0,Math.PI*.65,Math.PI*1.8);ctx.stroke();ctx.restore();
+  const gold=ctx.createLinearGradient(-20,-27,20,27);
+  gold.addColorStop(0,"#fffbd0");gold.addColorStop(.28,"#fff06a");gold.addColorStop(.62,"#ffbd18");gold.addColorStop(1,"#fff5a0");
+  ctx.shadowColor="#ffd52e";ctx.shadowBlur=21;ctx.strokeStyle=gold;ctx.lineWidth=5.5;
+  ctx.beginPath();ctx.ellipse(0,0,19.5*pulse,27*pulse,Math.sin(t*1.8)*.07,0,Math.PI*2);ctx.stroke();
+  ctx.shadowBlur=8;ctx.strokeStyle="#fffbd0";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,0,15.5*pulse,23*pulse,0,0,Math.PI*2);ctx.stroke();
+  for(let i=0;i<4;i++){
+   const phase=(t*1.05+i*.25)%1,r=3+19*(1-phase),alpha=(1-phase)*.9;
+   ctx.globalAlpha=alpha;ctx.strokeStyle=i%2===0?"#fffde0":"#ffd84b";ctx.lineWidth=1.5+(1-phase)*1.1;ctx.shadowColor="#ffe96a";ctx.shadowBlur=9;
+   ctx.beginPath();ctx.ellipse(0,0,r*.72,r,spin*.35,0,Math.PI*2);ctx.stroke();
+  }
+  for(let i=0;i<8;i++){
+   const angle=spin*1.15+i*Math.PI/4,radius=27+Math.sin(t*4+i)*2;
+   const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*1.12,size=1.4+(i%3)*.55;
+   ctx.globalAlpha=.55+.4*Math.sin(t*5+i)*Math.sin(t*5+i);
+   ctx.fillStyle=i%2===0?"#83edff":"#fff1a0";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=9;
+   ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.restore();
+ }
 function drawBomb(b){
  const px=ox+b.x*TILE+24,py=oy+b.y*TILE+24,pulse=1+Math.sin(b.animTime*4.2)*.075;ctx.save();ctx.translate(px,py);ctx.scale(pulse,pulse);ctx.fillStyle="#080d12";ctx.beginPath();ctx.ellipse(0,15,17,6,0,0,Math.PI*2);ctx.fill();const bodyGradient=ctx.createRadialGradient(-6,-7,2,0,0,19);bodyGradient.addColorStop(0,"#71818b");bodyGradient.addColorStop(.35,"#364957");bodyGradient.addColorStop(1,"#101820");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a9bac2";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-6,-7,5,3,-.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
  const flicker=Math.sin(b.animTime*23+b.sparkPhase),flicker2=Math.cos(b.animTime*17+b.sparkPhase),sx=px+14+flicker*1.5,sy=py-21+flicker2*1.2;ctx.save();ctx.shadowColor="#ff6b18";ctx.shadowBlur=12;ctx.fillStyle="#ff6b18";ctx.beginPath();ctx.moveTo(sx,sy+5);ctx.quadraticCurveTo(sx-7,sy-2-flicker,sx,sy-9-Math.abs(flicker)*2);ctx.quadraticCurveTo(sx+7,sy-2+flicker,sx,sy+5);ctx.fill();ctx.fillStyle="#ffe36b";ctx.beginPath();ctx.moveTo(sx,sy+3);ctx.quadraticCurveTo(sx-3,sy-1,sx,sy-6-Math.abs(flicker2)*2);ctx.quadraticCurveTo(sx+4,sy-1,sx,sy+3);ctx.fill();ctx.shadowBlur=0;
