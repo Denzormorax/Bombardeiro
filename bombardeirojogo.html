@@ -686,8 +686,11 @@ function makeMap(){
  const sectorOrder=shuffleArray(sectors.slice());
  for(const sector of sectorOrder){
   if(placed>=targetBlocks)break;
-  const alreadyNear=sector.cells.filter(p=>distance(p.x+.5,p.y+.5,1.5,1.5)>=2.0&&distance(p.x+.5,p.y+.5,1.5,1.5)<=5.8&&p.x<=7&&p.y<=6).length;
-  const quota=Math.max(0,sector.quota-(sector===sectors[0]?alreadyNear:0));
+  const alreadyNear=sector.cells.filter(p=>{
+   const d=distance(p.x+.5,p.y+.5,1.5,1.5);
+   return d>=2.0&&d<=5.8&&p.x<=7&&p.y<=6;
+  }).length;
+  const quota=Math.max(0,sector.quota-alreadyNear);
   placeRandom(sector.cells,quota);
  }
  // Completa eventuais cotas recusadas pela proteção do caminho, sem favorecer
