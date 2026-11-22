@@ -89,7 +89,7 @@ jobs:
           # Ajusta a largura útil do logotipo para que o brilho e a inclinação não sejam cortados nas laterais.
           python3 - <<'PY'
           from pathlib import Path
-          p = Path("$GAME_ASSETS/bombardeirojogo.html")
+          p = Path("android/app/src/main/assets/game/bombardeirojogo.html")
           s = p.read_text(encoding="utf-8")
           old = " width:min(96vw,760px);"
           new = " width:min(88vw,700px);"
