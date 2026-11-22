@@ -647,6 +647,7 @@ let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
 let dirtParticles=[];
 let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
+let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
 let basePlayerSpeed=4.0,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
 let gameClock=0,lastTime=0,exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};
@@ -1465,11 +1466,21 @@ window.addEventListener("keydown",e=>{keys[e.key]=true;if(e.code==="Space"){e.pr
 window.addEventListener("keyup",e=>{keys[e.key]=false});
 
 /* ATUALIZAÇÃO */
+function updatePlayerBlink(dt,isMoving){
+ const canBlink=!isMoving&&player.facingX===0&&player.facingY===1&&player.hurtTimer<=0;
+ if(!canBlink){playerBlinkCooldown=2;playerBlinkTime=0;playerBlinkReady=false;return}
+ if(!playerBlinkReady){playerBlinkCooldown=2;playerBlinkReady=true}
+ if(playerBlinkTime>0){playerBlinkTime=Math.max(0,playerBlinkTime-dt);return}
+ playerBlinkCooldown-=dt;
+ if(playerBlinkCooldown<=0){playerBlinkTime=.14;playerBlinkCooldown=2}
+}
 function updatePlayer(dt){
  player.inv=Math.max(0,player.inv-dt);player.hurtTimer=Math.max(0,(player.hurtTimer||0)-dt);bombCooldown=Math.max(0,bombCooldown-dt);
  if(player.passBomb){const b=player.passBomb,aindaColidindo=circleRectCollision(player.x,player.y,PLAYER_RADIUS,b.x+.12,b.y+.12,.76,.76);if(!aindaColidindo){b.ownerPass=false;player.passBomb=null}}
  const m=getMove();let dx=m.x,dy=m.y;if(Math.abs(dx)>.001&&Math.abs(dy)>.001){if(Math.abs(dx)>=Math.abs(dy))dy=0;else dx=0}
- if(Math.abs(dx)>.08||Math.abs(dy)>.08){if(Math.abs(dx)>=Math.abs(dy)){player.facingX=Math.sign(dx);player.facingY=0}else{player.facingX=0;player.facingY=Math.sign(dy)}}
+ const playerMoving=Math.abs(dx)>.08||Math.abs(dy)>.08;
+ if(playerMoving){if(Math.abs(dx)>=Math.abs(dy)){player.facingX=Math.sign(dx);player.facingY=0}else{player.facingX=0;player.facingY=Math.sign(dy)}}
+ updatePlayerBlink(dt,playerMoving);
  if(pushBombOwned&&tryPushBomb(dx,dy)){collectCoins();checkWin();return}
  moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");collectCoins();
  for(const e of enemies)if(e.alive&&!e.burrowing&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
@@ -1612,7 +1623,10 @@ function drawPlayer(){
  ctx.fillStyle="#21a9d0";ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();
  ctx.fillStyle="#8ceaff";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
  if(hurt){ctx.strokeStyle="#17232b";ctx.lineWidth=2.2;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2,-2.5);ctx.lineTo(eyeX+2,1.5);ctx.moveTo(eyeX+2,-2.5);ctx.lineTo(eyeX-2,1.5);ctx.stroke()}ctx.fillStyle="#4a1820";ctx.beginPath();ctx.roundRect(-7,5,14,7,2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-6,5.5);ctx.lineTo(6,5.5);ctx.lineTo(4.5,9);ctx.lineTo(-4.5,9);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=.7;ctx.stroke()}
- else{const eyeShiftX=facingX*2.1,eyeShiftY=facingY*2.1;ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#17232b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#18242a";ctx.lineWidth=1.8;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-4,7);ctx.quadraticCurveTo(0,10,4,7);ctx.stroke()}
+ else{const eyeShiftX=facingX*2.1,eyeShiftY=facingY*2.1;
+ if(playerBlinkTime>0){ctx.strokeStyle="#17232b";ctx.lineWidth=2.1;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){const eyeY=-1+eyeShiftY;ctx.beginPath();ctx.moveTo(eyeX-3,eyeY);ctx.quadraticCurveTo(eyeX,eyeY+2.5,eyeX+3,eyeY);ctx.stroke()}}
+ else{ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#17232b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.fill()}
+ ctx.strokeStyle="#18242a";ctx.lineWidth=1.8;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-4,7);ctx.quadraticCurveTo(0,10,4,7);ctx.stroke()}
  ctx.restore();
 }
 function drawEnemyFace(e,color,helmetColor,deathProgress=0){
