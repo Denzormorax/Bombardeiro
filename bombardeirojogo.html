@@ -680,7 +680,7 @@ $("exitNo").addEventListener("click",closeExitConfirm);
 window.handleAndroidBack=function(){
  if($("exitConfirm").classList.contains("visible")){closeExitConfirm();return true}
  if($("overlay").style.display==="flex"){
-  if(!$("settingsPanel").classList.contains("hidden")){showPanel("settingsMenu");return true}
+  if(!$("settingsPanel").classList.contains("hidden")){showPanel(menuReturn==="game"?"pausePanel":"settingsMenu");return true}
   if(!$("soundPanel").classList.contains("hidden")){showPanel("settingsMenu");return true}
   if(!$("settingsMenu").classList.contains("hidden")){closeSettingsMenu();return true}
   if(!$("shopPanel").classList.contains("hidden")){closeShop();return true}
