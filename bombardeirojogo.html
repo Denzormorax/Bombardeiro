@@ -531,6 +531,30 @@ function carveMapRoom(cx,cy,rx,ry){
    if(((x-cx)*(x-cx))/(Math.max(1,rx*rx))+((y-cy)*(y-cy))/(Math.max(1,ry*ry))<=1.35)carveMapCell(x,y);
 }
 function isStartSafeCell(x,y){return (x>=1&&x<=2&&y>=1&&y<=2)||(x===3&&y===1)||(x===1&&y===3)}
+function keepsWalkableMapConnected(blockX,blockY){
+ const total=map.reduce((sum,row,y)=>sum+row.reduce((n,t,x)=>n+(t===0&&!(x===blockX&&y===blockY)?1:0),0),0);
+ const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ let head=0;
+ while(head<queue.length){
+  const p=queue[head++];
+  for(const [dx,dy] of dirs){
+   const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
+   if(x<1||y<1||x>=COLS-1||y>=ROWS-1||visited.has(key)||(x===blockX&&y===blockY)||map[y][x]!==0)continue;
+   visited.add(key);queue.push({x,y});
+  }
+ }
+ return visited.size===total;
+}
+function hasClearSpawnLane(x,y){
+ const dx=x+.5-player.x,dy=y+.5-player.y,dist=Math.hypot(dx,dy);
+ if(dist<.01)return true;
+ const steps=Math.ceil(dist*16);
+ for(let i=1;i<steps;i++){
+  const t=i/steps;
+  if(tileAt(Math.floor(player.x+dx*t),Math.floor(player.y+dy*t))!==0)return false;
+ }
+ return true;
+}
 function makeMap(){
  map=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:2));
  const design=forestLayouts[(Math.max(1,Math.min(TOTAL_LEVELS,level))-1)%forestLayouts.length];
@@ -541,14 +565,22 @@ function makeMap(){
  for(let y=1;y<=2;y++)for(let x=1;x<=2;x++)map[y][x]=0;
  map[1][3]=0;map[3][1]=0;
  exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};map[exit.y][exit.x]=2;
- // Obstáculos destrutíveis variáveis: os corredores deixam de ser linhas totalmente abertas.
+ // Blocos destrutíveis aleatórios, sem cortar a conectividade dos corredores.
+ // A área inicial e a saída ficam protegidas.
  const scatter=[];
  for(let y=2;y<ROWS-2;y++)for(let x=2;x<COLS-2;x++){
   if(map[y][x]!==0||isStartSafeCell(x,y)||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<2.2)continue;
-  if(Math.random()<.19)scatter.push({x,y});
+  const neighbors=[[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>tileAt(x+dx,y+dy)===0).length;
+  if(neighbors>=2)scatter.push({x,y,priority:Math.random()});
  }
  shuffleArray(scatter);
- for(const p of scatter)map[p.y][p.x]=2;
+ const targetBlocks=Math.min(scatter.length,Math.floor(scatter.length*(.24+Math.min(level,10)*.008)));
+ let placedBlocks=0;
+ for(const p of scatter){
+  if(placedBlocks>=targetBlocks)break;
+  if(map[p.y][p.x]!==0||!keepsWalkableMapConnected(p.x,p.y))continue;
+  map[p.y][p.x]=2;placedBlocks++;
+ }
 }
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
@@ -594,9 +626,9 @@ function createEnemySpawnPositions(count){
   const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
   let breakable=0;
   for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy;if(nx>0&&ny>0&&nx<COLS-1&&ny<ROWS-1&&!isStartSafeCell(nx,ny)&&!(nx===exit.x&&ny===exit.y))breakable++}
-  if(breakable>=2)candidates.push({x,y,cover:breakable+Math.random()*.2});
+  if(breakable>=2)candidates.push({x,y,cover:breakable+Math.random()*.2,openLane:hasClearSpawnLane(x,y)});
  }
- shuffleArray(candidates);candidates.sort((a,b)=>b.cover-a.cover);
+ shuffleArray(candidates);candidates.sort((a,b)=>(Number(a.openLane)-Number(b.openLane))||b.cover-a.cover);
  const selected=[];
  for(const candidate of candidates){
   if(selected.length>=count)break;
@@ -615,7 +647,7 @@ function newLevel(preservePowerUps=false){
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
- const enemyOptions=[4,5,7],baseCount=enemyOptions[Math.floor(Math.random()*enemyOptions.length)],mushroomCount=level>=4&&level<=8?2+Math.floor(Math.random()*2):0,hornedCount=level>=6&&level<=10?2+Math.floor(Math.random()*2):0,count=baseCount+mushroomCount+hornedCount,spawnPositions=createEnemySpawnPositions(count),slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
+ const enemyOptions=[4,5,7],baseCount=enemyOptions[Math.floor(Math.random()*enemyOptions.length)]+2,mushroomCount=level>=4&&level<=8?2+Math.floor(Math.random()*2):0,hornedCount=level>=6&&level<=10?2+Math.floor(Math.random()*2):0,count=baseCount+mushroomCount+hornedCount,spawnPositions=createEnemySpawnPositions(count),slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
  spawnPositions.forEach((p,index)=>{const isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isMushroom&&!isHorned&&hunterSlots.has(index),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isHorned?1.72:isHunter?1.55:1.28),isHunter,isHorned,isMushroom,isEnraged:false,hp:isHunter||isHorned?2:1,maxHp:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0})});
  updateHUD();
 }
@@ -877,8 +909,10 @@ function updateSlidingBombs(dt){
  }
 }
 function isInsideFlameDamage(entity,cell){
- // A chama só causa dano quando o centro do personagem entra na região quente central.
- return distance(entity.x,entity.y,cell.x+.5,cell.y+.5)<=.34;
+ // Considera a hitbox circular do personagem contra o quadrado inteiro da chama.
+ // Inimigos encostados na bomba ou na borda da explosão também recebem dano.
+ const radius=entity===player?PLAYER_RADIUS:ENEMY_RADIUS;
+ return circleRectCollision(entity.x,entity.y,radius,cell.x,cell.y,1,1);
 }
 function explode(b){
  activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
