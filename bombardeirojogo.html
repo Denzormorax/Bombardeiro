@@ -356,7 +356,7 @@ const canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
 const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W;backgroundCanvas.height=H;const backgroundCtx=backgroundCanvas.getContext("2d");let backgroundTheme=null;
 const staticFloorCanvas=document.createElement("canvas");staticFloorCanvas.width=W;staticFloorCanvas.height=H;const staticFloorCtx=staticFloorCanvas.getContext("2d");
-const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=H;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));
+const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));
 const $=id=>document.getElementById(id);
 const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_tiles.svg";
 
@@ -1246,8 +1246,8 @@ function drawForestBackground(target){
  }
  c.restore();c.globalAlpha=1;
 }
-function drawTileTo(target,x,y,type){
- const px=ox+x*TILE,py=oy+y*TILE,theme=currentForestTheme();
+function drawTileTo(target,x,y,type,offsetY=0){
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY,theme=currentForestTheme();
  if(forestSpriteSheet.complete&&forestSpriteSheet.naturalWidth){
   const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);
   target.drawImage(forestSpriteSheet,col*48,0,48,48,px,py,TILE,TILE);
@@ -1265,8 +1265,8 @@ function drawTile(x,y,type){drawTileTo(ctx,x,y,type)}
 function rebuildStaticMapCache(){
  staticFloorCtx.clearRect(0,0,W,H);
  for(let y=0;y<ROWS;y++){
-  const rowCtx=staticRowCtx[y];rowCtx.clearRect(0,0,W,H);
-  for(let x=0;x<COLS;x++){drawTileTo(staticFloorCtx,x,y,0);const type=map[y][x];if(type!==0)drawTileTo(rowCtx,x,y,type)}
+  const rowCtx=staticRowCtx[y],rowOffset=oy+y*TILE;rowCtx.clearRect(0,0,W,TILE);
+  for(let x=0;x<COLS;x++){drawTileTo(staticFloorCtx,x,y,0);const type=map[y][x];if(type!==0)drawTileTo(rowCtx,x,y,type,rowOffset)}
  }
 }
 function drawCharacter(x,y,color,helmet,scale=1){
@@ -1357,7 +1357,7 @@ function draw(){
  ctx.drawImage(backgroundCanvas,0,0);
  ctx.drawImage(staticFloorCanvas,0,0);
  for(let y=0;y<ROWS;y++){
-  ctx.drawImage(staticRowCanvases[y],0,0);
+  ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
