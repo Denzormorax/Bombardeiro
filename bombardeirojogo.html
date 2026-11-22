@@ -620,53 +620,34 @@ function updateShopButtons(){
 function resetPowerUps(){bombPowerUps=0;firePowerUps=0;speedPowerUps=0;pushBombOwned=false;maxBombs=1;firePower=1;if(player)player.speed=basePlayerSpeed;updateHUD()}
 function createEnemySpawnPositions(count){
  const candidates=[];
- // Centros ímpares permitem abrir uma cruz sem atravessar as colunas indestrutíveis.
- for(let y=3;y<=ROWS-4;y+=2)for(let x=3;x<=COLS-4;x+=2){
-  if(map[y][x]!==0||isStartSafeCell(x,y))continue;
-  if(distance(x+.5,y+.5,player.x,player.y)<5||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<3.5)continue;
-  const cross=[{x,y},{x:x-1,y},{x:x+1,y},{x,y:y-1},{x,y:y+1}];
-  const diagonals=[{x:x-1,y:y-1},{x:x+1,y:y-1},{x:x-1,y:y+1},{x:x+1,y:y+1}];
-  const ends=[{x:x-2,y},{x:x+2,y},{x,y:y-2},{x,y:y+2}];
-  if(cross.some(p=>isFixedPillar(p.x,p.y))||[...diagonals,...ends].some(p=>p.x<=0||p.y<=0||p.x>=COLS-1||p.y>=ROWS-1))continue;
-  candidates.push({x,y,openLane:hasClearSpawnLane(x,y),cover:cross.filter(p=>map[p.y][p.x]===0).length+Math.random()*.2});
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
+  if(distance(x+.5,y+.5,player.x,player.y)<5||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<2.5)continue;
+  const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  let breakable=0;
+  for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy;if(nx>0&&ny>0&&nx<COLS-1&&ny<ROWS-1&&!isStartSafeCell(nx,ny)&&!(nx===exit.x&&ny===exit.y))breakable++}
+  if(breakable>=2)candidates.push({x,y,cover:breakable+Math.random()*.2,openLane:hasClearSpawnLane(x,y)});
  }
- shuffleArray(candidates);
- candidates.sort((a,b)=>(Number(a.openLane)-Number(b.openLane))||b.cover-a.cover);
+ shuffleArray(candidates);candidates.sort((a,b)=>(Number(a.openLane)-Number(b.openLane))||b.cover-a.cover);
  const selected=[];
- const reachesExit=()=>{
-  const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-  for(let i=0;i<queue.length;i++){
-   const p=queue[i];if(p.x===exit.x&&p.y===exit.y)return true;
-   for(const [dx,dy] of dirs){const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);if(x<=0||y<=0||x>=COLS-1||y>=ROWS-1||visited.has(key)||map[y][x]!==0)continue;visited.add(key);queue.push({x,y})}
-  }
-  return false;
- };
  for(const candidate of candidates){
   if(selected.length>=count)break;
-  if(selected.some(p=>Math.abs(candidate.x-p.x)<4&&Math.abs(candidate.y-p.y)<4))continue;
+  if(selected.some(p=>distance(candidate.x+.5,candidate.y+.5,p.x+.5,p.y+.5)<3.2))continue;
   const {x,y}=candidate;
-  const cross=[{x,y},{x:x-1,y},{x:x+1,y},{x,y:y-1},{x,y:y+1}];
-  const walls=[{x:x-1,y:y-1},{x:x+1,y:y-1},{x:x-1,y:y+1},{x:x+1,y:y+1},{x:x-2,y},{x:x+2,y},{x,y:y-2},{x,y:y+2}];
-  const changed=new Map();
-  for(const p of walls){const key=cellKey(p.x,p.y);if(!changed.has(key))changed.set(key,map[p.y][p.x]);if(!isFixedPillar(p.x,p.y))map[p.y][p.x]=2}
-  for(const p of cross){const key=cellKey(p.x,p.y);if(!changed.has(key))changed.set(key,map[p.y][p.x]);map[p.y][p.x]=0}
-  // Só aceita a arena se o jogador continuar conectado à saída.
-  if(!reachesExit()){
-   for(const [key,value] of changed){const [cx,cy]=key.split(",").map(Number);map[cy][cx]=value}
-   continue;
-  }
+  if(map[y][x]!==0)continue;
+  // Mantém o corredor original do mapa: não cria paredes ao redor do inimigo.
   selected.push({x,y});
  }
  return selected;
 }
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
- makeMap();bombs=[];flames=[];coinsOnMap=[];enemies=[];
+ makeMap();prepareCoinDrops();bombs=[];flames=[];coinsOnMap=[];enemies=[];
  basePlayerSpeed=4.3+Math.min(level*.08,1);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
- const enemyOptions=[4,5,7],baseCount=enemyOptions[Math.floor(Math.random()*enemyOptions.length)]+2,mushroomCount=level>=4&&level<=8?2+Math.floor(Math.random()*2):0,hornedCount=level>=6&&level<=10?2+Math.floor(Math.random()*2):0,count=baseCount+mushroomCount+hornedCount,spawnPositions=createEnemySpawnPositions(count);prepareCoinDrops();const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
+ const enemyOptions=[4,5,7],baseCount=enemyOptions[Math.floor(Math.random()*enemyOptions.length)]+2,mushroomCount=level>=4&&level<=8?2+Math.floor(Math.random()*2):0,hornedCount=level>=6&&level<=10?2+Math.floor(Math.random()*2):0,count=baseCount+mushroomCount+hornedCount,spawnPositions=createEnemySpawnPositions(count),slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
  spawnPositions.forEach((p,index)=>{const isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isMushroom&&!isHorned&&hunterSlots.has(index),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isHorned?1.72:isHunter?1.55:1.28),isHunter,isHorned,isMushroom,isEnraged:false,hp:isHunter||isHorned?2:1,maxHp:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0})});
  updateHUD();
 }
