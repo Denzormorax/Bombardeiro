@@ -1,0 +1,12 @@
+Sound effects bundled with Bombardeiro
+
+All OGG files in this directory are from Kenney audio packs and are licensed CC0 1.0 Universal (public domain dedication). They may be used, modified and redistributed, including inside offline games and APKs. Attribution is not required; credit is provided here as a courtesy.
+
+Creator: Kenney Vleugels (Kenney.nl)
+Sources:
+- https://kenney.nl/assets/impact-sounds
+- https://kenney.nl/assets/sci-fi-sounds
+- https://kenney.nl/assets/rpg-audio
+License: https://creativecommons.org/publicdomain/zero/1.0/
+
+Files: explosion.ogg, explosion_low.ogg, block_break.ogg, player_hit.ogg, robot_shutdown.ogg, coin_pickup.ogg, exit_reveal.ogg

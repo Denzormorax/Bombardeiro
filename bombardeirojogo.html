@@ -357,18 +357,37 @@ const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W;backgroundCanvas.height=H;const backgroundCtx=backgroundCanvas.getContext("2d");let backgroundTheme=null;
 const $=id=>document.getElementById(id);
 
-/* ÁUDIO FUTURISTA: SONS SINTETIZADOS LOCALMENTE, SEM ARQUIVOS EXTERNOS */
+/* ÁUDIO HÍBRIDO: EFEITOS OGG LOCAIS + CAMADAS WEB AUDIO. FUNCIONA OFFLINE. */
 const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
+const audioSamples={
+ bomb:"audio/bomb_place.ogg",explosion:"audio/explosion.ogg",explosionLow:"audio/explosion_low.ogg",
+ block:"audio/block_break.ogg",enemyHit:"audio/enemy_hit.ogg",enemyDown:"audio/robot_shutdown.ogg",
+ hurt:"audio/player_hit.ogg",coin:"audio/coin_pickup.ogg",exit:"audio/exit_reveal.ogg"
+};
+const audioSampleCache={};
+function playSample(name,level=1){try{const src=audioSamples[name];if(!src||audioSettings.sfxVolume<=0)return;let base=audioSampleCache[name];if(!base){base=new Audio(src);base.preload="auto";audioSampleCache[name]=base}const clip=base.cloneNode();clip.volume=Math.max(0,Math.min(1,audioSettings.sfxVolume*level));clip.currentTime=0;const p=clip.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 function loadAudioSettings(){try{const v=JSON.parse(localStorage.getItem("bombard-audio")||"null");if(v){if(Number.isFinite(+v.musicVolume))audioSettings.musicVolume=Math.max(0,Math.min(1,+v.musicVolume));if(Number.isFinite(+v.sfxVolume))audioSettings.sfxVolume=Math.max(0,Math.min(1,+v.sfxVolume))}}catch(e){}$("musicVolume").value=Math.round(audioSettings.musicVolume*100);$("sfxVolume").value=Math.round(audioSettings.sfxVolume*100);updateAudioLabels()}
 function saveAudioSettings(){try{localStorage.setItem("bombard-audio",JSON.stringify(audioSettings))}catch(e){}}
 function updateAudioLabels(){$("musicVolumeValue").textContent=Math.round(audioSettings.musicVolume*100)+"%";$("sfxVolumeValue").textContent=Math.round(audioSettings.sfxVolume*100)+"%"}
 function ensureAudio(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;try{if(!audioContext){audioContext=new C();sfxBus=audioContext.createGain();musicBus=audioContext.createGain();sfxBus.gain.value=audioSettings.sfxVolume;musicBus.gain.value=audioSettings.musicVolume;sfxBus.connect(audioContext.destination);musicBus.connect(audioContext.destination)}if(audioContext.state==="suspended")audioContext.resume();return true}catch(e){return false}}
-function unlockGameAudio(){ensureAudio()}window.addEventListener("pointerdown",unlockGameAudio,{once:true,passive:true});window.addEventListener("keydown",unlockGameAudio,{once:true});
+function unlockGameAudio(){ensureAudio();for(const a of Object.values(audioSampleCache)){try{a.load()}catch(e){}}}window.addEventListener("pointerdown",unlockGameAudio,{once:true,passive:true});window.addEventListener("keydown",unlockGameAudio,{once:true});
 function setAudioVolume(which,value){audioSettings[which]=Math.max(0,Math.min(1,value));if(which==="sfxVolume"&&sfxBus)sfxBus.gain.setTargetAtTime(audioSettings.sfxVolume,audioContext.currentTime,.025);if(which==="musicVolume"&&musicBus)musicBus.gain.setTargetAtTime(audioSettings.musicVolume,audioContext.currentTime,.025);updateAudioLabels();saveAudioSettings()}
 $("musicVolume").addEventListener("input",e=>setAudioVolume("musicVolume",Number(e.target.value)/100));$("sfxVolume").addEventListener("input",e=>setAudioVolume("sfxVolume",Number(e.target.value)/100));loadAudioSettings();
 function audioTone(a,b,d,w="sine",v=.2,delay=0){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;try{const t=audioContext.currentTime+delay,o=audioContext.createOscillator(),g=audioContext.createGain();o.type=w;o.frequency.setValueAtTime(Math.max(25,a),t);o.frequency.exponentialRampToValueAtTime(Math.max(25,b),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+d+.025)}catch(e){}}
 function audioNoise(d,v=.2,hz=1500,delay=0){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;try{const t=audioContext.currentTime+delay,n=Math.max(1,Math.floor(audioContext.sampleRate*d)),buf=audioContext.createBuffer(1,n,audioContext.sampleRate),data=buf.getChannelData(0);for(let i=0;i<n;i++)data[i]=Math.random()*2-1;const src=audioContext.createBufferSource(),filter=audioContext.createBiquadFilter(),g=audioContext.createGain();src.buffer=buf;filter.type="lowpass";filter.frequency.setValueAtTime(hz,t);filter.frequency.exponentialRampToValueAtTime(Math.max(100,hz*.28),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(filter);filter.connect(g);g.connect(sfxBus);src.start(t);src.stop(t+d+.02)}catch(e){}}
-function playSfx(name){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;switch(name){case "bomb":audioTone(520,190,.18,"sine",.2);audioTone(980,430,.12,"triangle",.11,.035);break;case "explosion":audioNoise(.42,.34,1050);audioTone(105,38,.48,"sine",.34);audioTone(690,95,.24,"sawtooth",.09,.015);break;case "block":audioNoise(.16,.19,2600);audioTone(310,95,.2,"triangle",.13,.025);audioTone(1250,480,.09,"sine",.07,.04);break;case "enemyHit":audioTone(250,105,.16,"sawtooth",.18);audioTone(760,280,.11,"square",.07,.015);break;case "enemyDown":audioTone(460,720,.13,"triangle",.16);audioTone(720,1120,.2,"sine",.13,.075);break;case "hurt":audioTone(190,48,.34,"sawtooth",.22);audioNoise(.13,.1,650,.02);break;case "coin":audioTone(740,1120,.11,"sine",.12);audioTone(1120,1480,.14,"triangle",.1,.075);break;case "exit":audioTone(280,560,.28,"sine",.16);audioTone(560,980,.38,"triangle",.13,.16);break;case "powerup":audioTone(390,780,.16,"triangle",.13);audioTone(780,1170,.2,"sine",.14,.12);audioTone(1170,1560,.22,"sine",.1,.25);break;case "victory":[523,659,784,1046].forEach((n,i)=>audioTone(n,n*1.18,.34,"sine",.14,i*.13));break;case "defeat":audioTone(330,220,.25,"triangle",.16);audioTone(220,110,.42,"sawtooth",.13,.2);break}}
+function playSfx(name){if(audioSettings.sfxVolume<=0)return;switch(name){
+case "bomb":playSample("bomb",.75);audioTone(150,75,.12,"sine",.055,.025);break;
+case "explosion":playSample("explosion",.9);playSample("explosionLow",.82);break;
+case "block":playSample("block",.9);break;
+case "enemyHit":playSample("enemyHit",.75);break;
+case "enemyDown":playSample("enemyDown",.9);audioTone(240,55,.42,"sawtooth",.09,.12);break;
+case "hurt":playSample("hurt",.9);audioTone(125,42,.28,"sine",.13);break;
+case "coin":playSample("coin",.8);audioTone(880,1320,.12,"sine",.11,.015);audioTone(1320,1760,.16,"triangle",.085,.09);break;
+case "exit":playSample("exit",.8);audioTone(440,880,.34,"sine",.09,.08);break;
+case "powerup":audioTone(390,780,.16,"triangle",.13);audioTone(780,1170,.2,"sine",.14,.12);audioTone(1170,1560,.22,"sine",.1,.25);break;
+case "victory":[523,659,784,1046].forEach((n,i)=>audioTone(n,n*1.18,.34,"sine",.14,i*.13));break;
+case "defeat":audioTone(330,220,.25,"triangle",.16);audioTone(220,110,.42,"sawtooth",.13,.2);break;
+}}
 const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,ENEMY_DEATH_TIME=.48,TOTAL_LEVELS=10;
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
