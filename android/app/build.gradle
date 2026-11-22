@@ -7,11 +7,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.bombardeiro.game"
+        applicationId "com.bombardeiro.game.storagepilot"
         minSdk 23
         targetSdk 28
         versionCode 1
-        versionName "1.0"
+        versionName "1.0-storage-test"
     }
 
     compileOptions {
