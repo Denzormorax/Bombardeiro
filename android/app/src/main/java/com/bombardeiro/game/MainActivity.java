@@ -88,6 +88,7 @@ public class MainActivity extends Activity {
                 if (separator < 1) throw new Exception("Manifesto de recursos inválido.");
                 String expectedHash = line.substring(0, separator).trim();
                 String relativePath = line.substring(separator + 2).trim();
+                while (relativePath.startsWith("./")) relativePath = relativePath.substring(2);
                 if (relativePath.isEmpty() || relativePath.startsWith("/") || relativePath.contains("..")) {
                     throw new Exception("Caminho de recurso inválido: " + relativePath);
                 }
