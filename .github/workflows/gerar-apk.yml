@@ -64,4 +64,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Rebuild after refreshing the offline audio assets.
+# Rebuild after refreshing the retro arcade explosion and coin sounds.
