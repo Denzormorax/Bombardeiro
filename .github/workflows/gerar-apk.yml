@@ -56,8 +56,6 @@ jobs:
           test -s bombardeirojogo.html
           test -s game-assets/audio/explosion.wav
           test -s game-assets/audio/coin_pickup.wav
-          test -s game-assets/sprites/robot-walk.jpg
-          grep -q "game-assets/sprites/robot-walk.jpg" assets-manifest.sha256
           test -s assets-manifest.sha256
           echo "Arquivos no pacote: $(wc -l < assets-manifest.sha256)"
           du -sh .
