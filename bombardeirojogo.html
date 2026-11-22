@@ -618,25 +618,136 @@ const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=9
 const $=id=>document.getElementById(id);
 const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpriteSheets();buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_themes.svg";
 
-/* ÁUDIO HÍBRIDO: EFEITOS OGG LOCAIS + CAMADAS WEB AUDIO. FUNCIONA OFFLINE. */
-const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
+/* ÁUDIO DE BAIXA LATÊNCIA: BUFFERS DECODIFICADOS + WEB AUDIO. FUNCIONA OFFLINE. */
+const audioSettings={musicVolume:.65,sfxVolume:.8};
+let audioContext=null,sfxBus=null,musicBus=null,audioResumePromise=null;
 const audioSamples={
  bomb:"game-assets/audio/bomb_place.ogg",explosion:"game-assets/audio/explosion.wav",
  block:"game-assets/audio/block_break.ogg",uiClick:"game-assets/audio/ui_click.wav",enemyHit:"game-assets/audio/enemy_hit.ogg",enemyDown:"game-assets/audio/enemy_poof.ogg",
  hurt:"game-assets/audio/player_hit.ogg",coin:"game-assets/audio/coin_pickup.wav",exit:"game-assets/audio/exit_reveal.ogg"
 };
-const audioSampleCache={};
-function playSample(name,level=1){try{const src=audioSamples[name];if(!src||audioSettings.sfxVolume<=0)return;let base=audioSampleCache[name];if(!base){base=new Audio(src);base.preload="auto";audioSampleCache[name]=base}const clip=base.cloneNode();clip.volume=Math.max(0,Math.min(1,audioSettings.sfxVolume*level));clip.currentTime=0;const p=clip.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
-function preloadPortalAudio(){try{let base=audioSampleCache.exit;if(!base){base=new Audio(audioSamples.exit);base.preload="auto";audioSampleCache.exit=base}base.load()}catch(e){}}
-function loadAudioSettings(){try{const v=JSON.parse(localStorage.getItem("bombard-audio")||"null");if(v){if(Number.isFinite(+v.musicVolume))audioSettings.musicVolume=Math.max(0,Math.min(1,+v.musicVolume));if(Number.isFinite(+v.sfxVolume))audioSettings.sfxVolume=Math.max(0,Math.min(1,+v.sfxVolume))}}catch(e){}$("musicVolume").value=Math.round(audioSettings.musicVolume*100);$("sfxVolume").value=Math.round(audioSettings.sfxVolume*100);updateAudioLabels()}
+const audioBufferCache=Object.create(null),audioLoadPromises=Object.create(null);
+const audioFallbackCache=Object.create(null);
+function ensureAudio(){
+ const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;
+ try{
+  if(!audioContext){
+   try{audioContext=new C({latencyHint:"interactive"})}catch(e){audioContext=new C()}
+   sfxBus=audioContext.createGain();musicBus=audioContext.createGain();
+   sfxBus.gain.value=audioSettings.sfxVolume;musicBus.gain.value=audioSettings.musicVolume;
+   sfxBus.connect(audioContext.destination);musicBus.connect(audioContext.destination);
+  }
+  return true;
+ }catch(e){return false}
+}
+function resumeGameAudio(){
+ if(!ensureAudio())return Promise.resolve(false);
+ if(audioContext.state==="running")return Promise.resolve(true);
+ if(!audioResumePromise){
+  try{audioResumePromise=audioContext.resume().then(()=>audioContext.state==="running").catch(()=>false).finally(()=>{audioResumePromise=null})}
+  catch(e){audioResumePromise=null;return Promise.resolve(false)}
+ }
+ return audioResumePromise;
+}
+async function loadAudioBuffer(name){
+ if(audioBufferCache[name])return audioBufferCache[name];
+ if(audioLoadPromises[name])return audioLoadPromises[name];
+ const src=audioSamples[name];if(!src||!ensureAudio())return null;
+ audioLoadPromises[name]=(async()=>{
+  try{
+   const response=await fetch(src,{cache:"force-cache"});
+   if(!response.ok)throw new Error("Falha ao carregar áudio: "+src);
+   const bytes=await response.arrayBuffer();
+   const decoded=await audioContext.decodeAudioData(bytes.slice(0));
+   audioBufferCache[name]=decoded;return decoded;
+  }catch(error){
+   // Fallback para WebViews que não permitem fetch de arquivos locais.
+   try{
+    let media=audioFallbackCache[name];
+    if(!media){media=new Audio(src);media.preload="auto";media.load();audioFallbackCache[name]=media}
+   }catch(e){}
+   return null;
+  }finally{delete audioLoadPromises[name]}
+ })();
+ return audioLoadPromises[name];
+}
+function preloadGameAudio(){
+ if(!ensureAudio())return;
+ Object.keys(audioSamples).forEach(name=>{loadAudioBuffer(name)});
+}
+function playDecodedBuffer(buffer,level=1){
+ if(!buffer||!ensureAudio()||audioSettings.sfxVolume<=0)return;
+ const source=audioContext.createBufferSource(),gain=audioContext.createGain();
+ source.buffer=buffer;gain.gain.value=Math.max(0,Math.min(1,level));
+ source.connect(gain);gain.connect(sfxBus);
+ try{source.start(audioContext.currentTime+.003)}catch(e){}
+}
+function playSample(name,level=1){
+ if(!audioSamples[name]||audioSettings.sfxVolume<=0)return;
+ if(audioBufferCache[name]){
+  if(audioContext&&audioContext.state==="running")playDecodedBuffer(audioBufferCache[name],level);
+  else resumeGameAudio().then(ok=>{if(ok)playDecodedBuffer(audioBufferCache[name],level)});
+  return;
+ }
+ // A decodificação ocorre antecipadamente; este caminho também cobre o primeiro carregamento.
+ loadAudioBuffer(name).then(buffer=>{
+  if(!buffer)return;
+  resumeGameAudio().then(ok=>{if(ok)playDecodedBuffer(buffer,level)});
+ });
+}
+function unlockGameAudio(){
+ resumeGameAudio();
+ preloadGameAudio();
+}
+window.addEventListener("pointerdown",unlockGameAudio,{once:true,passive:true});
+window.addEventListener("keydown",unlockGameAudio,{once:true});
+function loadAudioSettings(){
+ try{const v=JSON.parse(localStorage.getItem("bombard-audio")||"null");if(v){
+  if(Number.isFinite(+v.musicVolume))audioSettings.musicVolume=Math.max(0,Math.min(1,+v.musicVolume));
+  if(Number.isFinite(+v.sfxVolume))audioSettings.sfxVolume=Math.max(0,Math.min(1,+v.sfxVolume));
+ }}catch(e){}
+ $("musicVolume").value=Math.round(audioSettings.musicVolume*100);
+ $("sfxVolume").value=Math.round(audioSettings.sfxVolume*100);updateAudioLabels();
+}
 function saveAudioSettings(){try{localStorage.setItem("bombard-audio",JSON.stringify(audioSettings))}catch(e){}}
-function updateAudioLabels(){$("musicVolumeValue").textContent=Math.round(audioSettings.musicVolume*100)+"%";$("sfxVolumeValue").textContent=Math.round(audioSettings.sfxVolume*100)+"%"}
-function ensureAudio(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;try{if(!audioContext){audioContext=new C();sfxBus=audioContext.createGain();musicBus=audioContext.createGain();sfxBus.gain.value=audioSettings.sfxVolume;musicBus.gain.value=audioSettings.musicVolume;sfxBus.connect(audioContext.destination);musicBus.connect(audioContext.destination)}if(audioContext.state==="suspended")audioContext.resume();return true}catch(e){return false}}
-function unlockGameAudio(){ensureAudio();for(const a of Object.values(audioSampleCache)){try{a.load()}catch(e){}}}window.addEventListener("pointerdown",unlockGameAudio,{once:true,passive:true});window.addEventListener("keydown",unlockGameAudio,{once:true});
-function setAudioVolume(which,value){audioSettings[which]=Math.max(0,Math.min(1,value));if(which==="sfxVolume"&&sfxBus)sfxBus.gain.setTargetAtTime(audioSettings.sfxVolume,audioContext.currentTime,.025);if(which==="musicVolume"&&musicBus)musicBus.gain.setTargetAtTime(audioSettings.musicVolume,audioContext.currentTime,.025);updateAudioLabels();saveAudioSettings()}
-$("musicVolume").addEventListener("input",e=>setAudioVolume("musicVolume",Number(e.target.value)/100));$("sfxVolume").addEventListener("input",e=>setAudioVolume("sfxVolume",Number(e.target.value)/100));loadAudioSettings();preloadPortalAudio();
-function audioTone(a,b,d,w="sine",v=.2,delay=0){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;try{const t=audioContext.currentTime+delay,o=audioContext.createOscillator(),g=audioContext.createGain();o.type=w;o.frequency.setValueAtTime(Math.max(25,a),t);o.frequency.exponentialRampToValueAtTime(Math.max(25,b),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+d+.025)}catch(e){}}
-function audioNoise(d,v=.2,hz=1500,delay=0){if(!ensureAudio()||audioSettings.sfxVolume<=0)return;try{const t=audioContext.currentTime+delay,n=Math.max(1,Math.floor(audioContext.sampleRate*d)),buf=audioContext.createBuffer(1,n,audioContext.sampleRate),data=buf.getChannelData(0);for(let i=0;i<n;i++)data[i]=Math.random()*2-1;const src=audioContext.createBufferSource(),filter=audioContext.createBiquadFilter(),g=audioContext.createGain();src.buffer=buf;filter.type="lowpass";filter.frequency.setValueAtTime(hz,t);filter.frequency.exponentialRampToValueAtTime(Math.max(100,hz*.28),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(filter);filter.connect(g);g.connect(sfxBus);src.start(t);src.stop(t+d+.02)}catch(e){}}
+function updateAudioLabels(){
+ $("musicVolumeValue").textContent=Math.round(audioSettings.musicVolume*100)+"%";
+ $("sfxVolumeValue").textContent=Math.round(audioSettings.sfxVolume*100)+"%";
+}
+function setAudioVolume(which,value){
+ audioSettings[which]=Math.max(0,Math.min(1,value));
+ if(which==="sfxVolume"&&sfxBus&&audioContext)sfxBus.gain.setTargetAtTime(audioSettings.sfxVolume,audioContext.currentTime,.015);
+ if(which==="musicVolume"&&musicBus&&audioContext)musicBus.gain.setTargetAtTime(audioSettings.musicVolume,audioContext.currentTime,.015);
+ updateAudioLabels();saveAudioSettings();
+}
+$("musicVolume").addEventListener("input",e=>setAudioVolume("musicVolume",Number(e.target.value)/100));
+$("sfxVolume").addEventListener("input",e=>setAudioVolume("sfxVolume",Number(e.target.value)/100));
+loadAudioSettings();
+// Inicia o pré-carregamento assim que o documento abre; a reprodução aguarda o desbloqueio do usuário.
+preloadGameAudio();
+function audioTone(a,b,d,w="sine",v=.2,delay=0){
+ if(!ensureAudio()||audioSettings.sfxVolume<=0)return;
+ resumeGameAudio().then(ok=>{if(!ok)return;try{
+  const t=audioContext.currentTime+delay,o=audioContext.createOscillator(),g=audioContext.createGain();
+  o.type=w;o.frequency.setValueAtTime(Math.max(25,a),t);o.frequency.exponentialRampToValueAtTime(Math.max(25,b),t+d);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+d+.025);
+ }catch(e){}});
+}
+function audioNoise(d,v=.2,hz=1500,delay=0){
+ if(!ensureAudio()||audioSettings.sfxVolume<=0)return;
+ resumeGameAudio().then(ok=>{if(!ok)return;try{
+  const t=audioContext.currentTime+delay,n=Math.max(1,Math.floor(audioContext.sampleRate*d));
+  const buf=audioContext.createBuffer(1,n,audioContext.sampleRate),data=buf.getChannelData(0);
+  for(let i=0;i<n;i++)data[i]=Math.random()*2-1;
+  const src=audioContext.createBufferSource(),filter=audioContext.createBiquadFilter(),g=audioContext.createGain();
+  src.buffer=buf;filter.type="lowpass";filter.frequency.setValueAtTime(hz,t);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(100,hz*.28),t+d);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(filter);filter.connect(g);g.connect(sfxBus);
+  src.start(t);src.stop(t+d+.02);
+ }catch(e){}});
+}
 function playSfx(name){if(audioSettings.sfxVolume<=0)return;switch(name){
 case "bomb":playSample("bomb",.42);break;
 case "explosion":playSample("explosion",.82);break;
