@@ -222,6 +222,8 @@ jobs:
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
           cp "tela floresta.jpg" "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
+          cp "Mapa deserto.jpg" "$GAME_ASSETS/Mapa deserto.jpg"
+          test -s "$GAME_ASSETS/Mapa deserto.jpg"
           test -s "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
           cd "$GAME_ASSETS"
           find . -type f ! -name "assets-manifest.sha256" -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "${file#./}"; done > assets-manifest.sha256
