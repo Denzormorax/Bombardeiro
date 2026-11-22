@@ -556,65 +556,64 @@ function hasClearSpawnLane(x,y){
  return true;
 }
 function makeMap(){
- // Mapa novo: começa realmente aberto. Os pilares fixos continuam nos
- // mesmos lugares, mas os blocos destrutíveis são sorteados célula por célula.
+ // Mapa começa aberto; somente os pilares fixos permanecem ocupados.
+ // Não há corredores ou salas pré-desenhados.
  map=Array.from({length:ROWS},(_,y)=>
   Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:0)
  );
  exit={x:Math.floor(COLS/2),y:Math.floor(ROWS/2),found:false};
 
- // Só a pequena área de nascimento fica livre. O restante, inclusive
- // a região próxima do jogador, participa do sorteio de blocos.
+ // Pequena área segura para o nascimento. Fora dela, até as células
+ // próximas do jogador entram no sorteio normal de blocos.
  for(let y=1;y<=2;y++)for(let x=1;x<=2;x++)map[y][x]=0;
  map[1][3]=0;map[3][1]=0;
 
- const candidates=[];
- for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  if(map[y][x]===0&&!isStartSafeCell(x,y)&&!(x===exit.x&&y===exit.y))candidates.push({x,y});
+ // Divide o mapa em seis setores e sorteia os blocos dentro de cada um.
+ // Isso mantém densidade semelhante na esquerda, centro e direita,
+ // tanto na parte superior quanto na inferior.
+ const sectors=[];
+ for(let sy=0;sy<2;sy++)for(let sx=0;sx<3;sx++){
+  const x0=1+Math.floor(sx*(COLS-2)/3),x1=1+Math.floor((sx+1)*(COLS-2)/3);
+  const y0=1+Math.floor(sy*(ROWS-2)/2),y1=1+Math.floor((sy+1)*(ROWS-2)/2);
+  const cells=[];
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+   if(map[y][x]===0&&!isStartSafeCell(x,y)&&!(x===exit.x&&y===exit.y))cells.push({x,y});
+  }
+  shuffleArray(cells);
+  sectors.push({cells});
  }
- shuffleArray(candidates);
-
- // Densidade equilibrada: blocos espalhados por toda a área jogável,
- // sem depender de corredores ou salas desenhados previamente.
- const blockRatio=.43+Math.random()*.06;
- const blockCount=Math.round(candidates.length*blockRatio);
- for(let i=0;i<blockCount;i++){
-  const p=candidates[i];
-  map[p.y][p.x]=2;
- }
-
- // Encontra uma rota mínima até a saída atravessando blocos destrutíveis,
- // mas nunca pilares fixos. A ordem dos vizinhos também é aleatória para
- // que o caminho não fique sempre no mesmo lado do mapa.
- const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- const routeDirs=shuffleArray(dirs.slice());
- const startKey=cellKey(1,1),exitKey=cellKey(exit.x,exit.y);
- const queue=[{x:1,y:1}],previous=new Map([[startKey,null]]);
- let head=0,found=false;
- while(head<queue.length){
-  const p=queue[head++],key=cellKey(p.x,p.y);
-  if(key===exitKey){found=true;break}
-  const order=shuffleArray(routeDirs.slice());
-  for(const [dx,dy] of order){
-   const x=p.x+dx,y=p.y+dy,nextKey=cellKey(x,y);
-   if(x<1||y<1||x>=COLS-1||y>=ROWS-1||previous.has(nextKey)||map[y][x]===1)continue;
-   previous.set(nextKey,key);queue.push({x,y});
+ for(const sector of sectors){
+  const ratio=.42+Math.random()*.08;
+  const amount=Math.round(sector.cells.length*ratio);
+  for(let i=0;i<amount;i++){
+   const p=sector.cells[i];
+   map[p.y][p.x]=2;
   }
  }
- if(found){
-  let key=exitKey;
-  while(key!==null){
-   const [x,y]=key.split(",").map(Number);
-   if(x!==exit.x||y!==exit.y)map[y][x]=0;
-   key=previous.get(key);
-  }
- }
- // A saída permanece escondida em um bloco destrutível até o momento
- // em que todas as criaturas forem derrotadas.
+
+ // O jogador sempre nasce com espaço para sair e o esconderijo da saída
+ // continua sendo um bloco destrutível, como nas fases anteriores.
+ for(const p of [{x:1,y:1},{x:2,y:1},{x:1,y:2},{x:2,y:2},{x:3,y:1},{x:1,y:3}])map[p.y][p.x]=0;
  map[exit.y][exit.x]=2;
 
- // Segurança extra: nunca deixar o jogador nascer encostado em bloco.
- for(const p of [{x:1,y:1},{x:2,y:1},{x:1,y:2},{x:2,y:2},{x:3,y:1},{x:1,y:3}])map[p.y][p.x]=0;
+ // Verifica a conectividade estrutural ignorando blocos destrutíveis.
+ // Eles podem ser removidos com bombas; pilares fixos nunca são atravessados.
+ const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]);
+ let head=0;
+ while(head<queue.length){
+  const p=queue[head++];
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
+   if(x<1||y<1||x>=COLS-1||y>=ROWS-1||visited.has(key)||map[y][x]===1)continue;
+   visited.add(key);queue.push({x,y});
+  }
+ }
+ if(!visited.has(cellKey(exit.x,exit.y))){
+  // Segurança para futuras mudanças na disposição dos pilares.
+  map[exit.y][exit.x]=0;
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(!isFixedPillar(x,y)&&!visited.has(cellKey(x,y)))map[y][x]=0;
+  map[exit.y][exit.x]=2;
+ }
 }
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
