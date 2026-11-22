@@ -17169,13 +17169,18 @@ function drawEnemyRockDetails(e,color,helmetColor,deathProgress=0){
  ctx.restore();
 }
 drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
- if(currentWorld==="desert"&&!e.isMushroom){
-  if(e.isHorned){color=e.isEnraged?"#c82d38":"#b85a35";helmetColor=e.isEnraged?"#741923":"#713c2b"}
-  else if(e.isHunter){color="#8d6945";helmetColor="#533d2b"}
-  else{color="#c58a45";helmetColor="#80502d"}
+ if(currentWorld==="desert"){
+  if(!e.isMushroom){
+   if(e.isHorned){color=e.isEnraged?"#c82d38":"#b85a35";helmetColor=e.isEnraged?"#741923":"#713c2b"}
+   else if(e.isHunter){color="#8d6945";helmetColor="#533d2b"}
+   else{color="#c58a45";helmetColor="#80502d"}
+  }
+  drawEnemyFaceOriginal(e,color,helmetColor,deathProgress);
+  drawEnemyRockDetails(e,color,helmetColor,deathProgress);
+  return;
  }
+ // Na Floresta, mantém exatamente o visual original, sem fragmentos rochosos.
  drawEnemyFaceOriginal(e,color,helmetColor,deathProgress);
- drawEnemyRockDetails(e,color,helmetColor,deathProgress);
 };
 const handleBackOriginal=window.handleAndroidBack;
 window.handleAndroidBack=function(){if(!$("desertPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return handleBackOriginal()};
