@@ -654,8 +654,8 @@ let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTi
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
 let basePlayerSpeed=4.0,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
-let gameClock=0,lastTime=0,exit={x:-1,y:-1,found:false};
-let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,shopReturnPaused=false,menuReturn="main";
+let gameClock=0,lastTime=0,exit={x:-1,y:-1,found:false,spawnTime:0};
+let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,portalEnterStart=0,shopReturnPaused=false,menuReturn="main";
 let selectedMapLevel=1,mapMoveTimer=null;
 const controlSettings={moveType:"stick",moveSize:145,bombSize:82,pauseSize:48,positions:{}};
 const controlEls={stick:$("stick"),dpad:$("dpad"),bombBtn:$("bombBtn"),shopBtn:$("shopBtn"),pauseBtn:$("pauseBtn")};
@@ -891,7 +891,7 @@ function makeMap(){
  map=Array.from({length:ROWS},(_,y)=>
   Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:0)
  );
- exit={x:-1,y:-1,found:false};
+ exit={x:-1,y:-1,found:false,spawnTime:0};
 
  // Pequena área segura para o nascimento. Fora dela, até as células
  // próximas do jogador entram no sorteio normal de blocos.
@@ -1399,11 +1399,12 @@ function spawnExitPortal(){
    reachable.add(key);queue.push({x,y});
   }
  }
- const candidates=[];
+ const candidates=[],coinCells=new Set();
+ for(const coin of coinsOnMap)coinCells.add(cellKey(Math.floor(coin.x),Math.floor(coin.y)));
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  if(tileAt(x,y)!==0||bombAt(x,y)||!reachable.has(cellKey(x,y)))continue;
+  const key=cellKey(x,y);
+  if(tileAt(x,y)!==0||bombAt(x,y)||!reachable.has(key)||coinCells.has(key))continue;
   if(distance(x+.5,y+.5,player.x,player.y)<2.5)continue;
-  if(coinsOnMap.some(c=>distance(x+.5,y+.5,c.x,c.y)<.55))continue;
   candidates.push({x,y});
  }
  if(!candidates.length){
@@ -1415,13 +1416,13 @@ function spawnExitPortal(){
  }
  if(!candidates.length)return;
  const chosen=candidates[Math.floor(Math.random()*candidates.length)];
- exit={x:chosen.x,y:chosen.y,found:true};
+ exit={x:chosen.x,y:chosen.y,found:true,spawnTime:gameClock};
  playSfx("exit");message("✨ PORTAL MÁGICO ENCONTRADO!");
 }
 function checkWin(){
  if(levelTransition)return;
  if(allEnemiesDefeated()&&exit.found&&Math.floor(player.x)===exit.x&&Math.floor(player.y)===exit.y){
-  levelTransition=true;score+=500;updateHUD();
+  levelTransition=true;portalEnterStart=gameClock;score+=500;updateHUD();
   if(level>=TOTAL_LEVELS){unlockedLevel=TOTAL_LEVELS;saveProgress();setTimeout(()=>{if(running)gameOver(true)},1100)}
   else{
    unlockedLevel=Math.max(unlockedLevel,level+1);saveProgress();
@@ -1629,9 +1630,9 @@ function drawCharacter(x,y,color,helmet,scale=1){
  const px=ox+x*TILE,py=oy+y*TILE;ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,14,15,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();ctx.fillStyle=helmet;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.fillStyle="#18242a";ctx.fillRect(-5,7,10,3);ctx.restore();
 }
 function drawPlayer(){
- const px=ox+player.x*TILE,groundY=oy+player.y*TILE,bob=Math.sin(gameClock*3.8)*3.2,bodyY=groundY-bob,hurt=player.hurtTimer>0,hurtPulse=hurt?Math.sin((player.hurtTimer/.48)*Math.PI):0,facingX=player.facingX||0,facingY=player.facingY||1;
+ const px=ox+player.x*TILE,groundY=oy+player.y*TILE,bob=Math.sin(gameClock*3.8)*3.2,bodyY=groundY-bob,hurt=player.hurtTimer>0,hurtPulse=hurt?Math.sin((player.hurtTimer/.48)*Math.PI):0,facingX=player.facingX||0,facingY=player.facingY||1,enterProgress=levelTransition?Math.min(1,Math.max(0,(gameClock-portalEnterStart)/.72)):0;
  const shadowScale=1-bob*.025;ctx.save();ctx.globalAlpha=.34;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+15,17*shadowScale,7*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
- const tilt=hurt?Math.sin(gameClock*42)*.055*hurtPulse:0;ctx.save();ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.35,1.35);
+ const tilt=hurt?Math.sin(gameClock*42)*.055*hurtPulse:0;ctx.save();ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.35,1.35);if(enterProgress>0){ctx.beginPath();ctx.rect(-22,-22,44,44*(1-enterProgress));ctx.clip();ctx.globalAlpha=1-enterProgress*.12;}
  const bodyGradient=ctx.createRadialGradient(-5,-7,2,0,0,19);bodyGradient.addColorStop(0,hurt?"#fff4f4":"#ffffff");bodyGradient.addColorStop(1,hurt?"#d7baba":"#c9dce4");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();
  ctx.fillStyle="#21a9d0";ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();
  ctx.fillStyle="#8ceaff";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
@@ -1679,9 +1680,9 @@ function drawCoin(c){
 }
  function drawExit(){
   if(!exit.found)return;
-  const px=ox+(exit.x+.5)*TILE,py=oy+(exit.y+.5)*TILE,t=gameClock;
+  const px=ox+(exit.x+.5)*TILE,py=oy+(exit.y+.5)*TILE,t=gameClock,appear=Math.min(1,Math.max(0,(t-(exit.spawnTime||t))/.72)),ease=1-Math.pow(1-appear,3);
   const pulse=.9+.1*Math.sin(t*4.5),spin=t*1.7;
-  ctx.save();ctx.translate(px,py);
+  ctx.save();ctx.translate(px,py);ctx.globalAlpha=ease;ctx.scale(.28+.72*ease,.28+.72*ease);
   const aura=ctx.createRadialGradient(0,0,2,0,0,39);
   aura.addColorStop(0,"#8ceeffaa");aura.addColorStop(.42,"#168dff66");aura.addColorStop(1,"#087bff00");
   ctx.fillStyle=aura;ctx.fillRect(-40,-40,80,80);
