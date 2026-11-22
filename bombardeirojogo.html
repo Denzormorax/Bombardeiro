@@ -169,18 +169,31 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  font-weight:1000;
  line-height:1;
  letter-spacing:clamp(2px,1vw,6px);
- font-size:clamp(38px,9vw,76px);
- color:#f4fcff;
- -webkit-text-stroke:1.5px #1265b5;
+ font-size:clamp(30px,7vw,58px);
+ color:#fff;
+ -webkit-text-stroke:1.7px #168cff;
+ paint-order:stroke fill;
+ transform-origin:center center;
+ animation:logoConePulse 3.6s cubic-bezier(.42,0,.58,1) infinite;
  text-shadow:
-  0 2px 0 #0b4b91,
-  0 4px 0 #07366f,
-  0 0 8px #55c8ff,
-  0 0 18px #168bff,
-  0 0 34px #0875ff,
-  0 8px 18px #000e;
- filter:drop-shadow(0 0 8px #168bff99);
+  0 1px 0 #c8f2ff,
+  0 3px 0 #1768b5,
+  0 5px 0 #104b91,
+  0 7px 0 #082f65,
+  0 0 5px #b9efff,
+  0 0 11px #55c8ff,
+  0 0 20px #168bff,
+  0 0 30px #0875ff,
+  0 9px 16px #000e;
+ filter:drop-shadow(0 0 7px #168bffbb);
 }
+@keyframes logoConePulse{
+ 0%,100%{transform:perspective(420px) rotateX(13deg) scale(.78,.84)}
+ 22%{transform:perspective(420px) rotateX(13deg) scale(1.02,1.04)}
+ 48%{transform:perspective(420px) rotateX(13deg) scale(.76,.82)}
+ 74%{transform:perspective(420px) rotateX(13deg) scale(1.04,1.06)}
+}
+@media(prefers-reduced-motion:reduce){.gameLogo{animation:none;transform:perspective(420px) rotateX(13deg) scale(.92)}}
 /* MASCOTE DO MENU: VISTO DE COSTAS */
 .mascotFlight{
  position:relative;width:112px;height:112px;margin:12px auto 12px;
