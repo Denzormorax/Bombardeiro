@@ -1604,50 +1604,9 @@ function rebuildStaticMapCache(){
 function drawCharacter(x,y,color,helmet,scale=1){
  const px=ox+x*TILE,py=oy+y*TILE;ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,14,15,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();ctx.fillStyle=helmet;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.fillStyle="#18242a";ctx.fillRect(-5,7,10,3);ctx.restore();
 }
-// Sprite do robozinho: imagem-fonte processada uma única vez em cache.
-const robotSpriteImage=new Image();
-let robotSpriteFrames=null,robotSpriteReady=false;
-robotSpriteImage.onload=()=>{
- try{
-  const W=robotSpriteImage.naturalWidth,H=robotSpriteImage.naturalHeight;
-  const cellW=Math.floor(W*0.14),cellH=Math.floor(H*0.222);
-  const xStarts=[Math.round(W*.212),Math.round(W*.357),Math.round(W*.505),Math.round(W*.652)];
-  const yStarts=[Math.round(H*.038),Math.round(H*.271),Math.round(H*.482),Math.round(H*.689)];
-  robotSpriteFrames=Array.from({length:4},(_,dir)=>Array.from({length:4},(_,frame)=>{
-   const c=document.createElement("canvas");c.width=cellW;c.height=cellH;
-   const g=c.getContext("2d",{willReadFrequently:true});
-   g.drawImage(robotSpriteImage,xStarts[frame],yStarts[dir],cellW,cellH,0,0,cellW,cellH);
-   const pixels=g.getImageData(0,0,cellW,cellH),d=pixels.data;
-   for(let p=0;p<d.length;p+=4){
-    const hi=Math.max(d[p],d[p+1],d[p+2]),lo=Math.min(d[p],d[p+1],d[p+2]),gray=(d[p]+d[p+1]+d[p+2])/3;
-    if(hi-lo<=5&&gray>=190&&gray<=246)d[p+3]=0;
-   }
-   g.putImageData(pixels,0,0);
-   return c;
-  }));
-  robotSpriteReady=true;
- }catch(e){console.error("[Bombardeiro] Falha ao preparar os quadros do robozinho:",e);robotSpriteReady=false;robotSpriteFrames=null}
-};
-robotSpriteImage.onerror=()=>{console.error("[Bombardeiro] Não foi possível carregar o sprite:",robotSpriteImage.src);robotSpriteReady=false;robotSpriteFrames=null};
-robotSpriteImage.src="game-assets/sprites/robot-walk.jpg";
 function drawPlayer(){
- const px=ox+player.x*TILE,groundY=oy+player.y*TILE;
- const hurt=player.hurtTimer>0,facingX=player.facingX||0,facingY=player.facingY||1;
- const moving=Math.abs(move.x)>.08||Math.abs(move.y)>.08||Math.abs((keys.ArrowLeft||keys.a)?-1:0)>.08||Math.abs((keys.ArrowRight||keys.d)?1:0)>.08||Math.abs((keys.ArrowUp||keys.w)?-1:0)>.08||Math.abs((keys.ArrowDown||keys.s)?1:0)>.08;
- const dir=Math.abs(facingX)>0?(facingX<0?2:3):(facingY<0?0:1);
- const shadowBob=moving?Math.sin(gameClock*12)*1.1:0;
- ctx.save();ctx.globalAlpha=.34;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+15,16-shadowBob*.2,6,0,0,Math.PI*2);ctx.fill();ctx.restore();
- if(robotSpriteReady&&robotSpriteFrames){
-  const frame=moving?Math.floor(gameClock*9)%4:1;
-  const sprite=robotSpriteFrames[dir][frame];
-  ctx.save();ctx.translate(px,groundY-1+(moving?Math.abs(Math.sin(gameClock*9))*1.2:0));
-  if(hurt){ctx.globalAlpha=.62+.38*Math.abs(Math.sin(gameClock*24))}
-  ctx.drawImage(sprite,-24,-31,48,43);
-  if(hurt){ctx.globalAlpha=.32;ctx.fillStyle="#ff2638";ctx.beginPath();ctx.ellipse(0,-10,17,20,0,0,Math.PI*2);ctx.fill()}
-  ctx.restore();return;
- }
- // Fallback original: mantém o personagem anterior caso a imagem não carregue.
- const bob=Math.sin(gameClock*3.8)*3.2,bodyY=groundY-bob,hurtPulse=hurt?Math.sin((player.hurtTimer/.48)*Math.PI):0;
+ const px=ox+player.x*TILE,groundY=oy+player.y*TILE,bob=Math.sin(gameClock*3.8)*3.2,bodyY=groundY-bob,hurt=player.hurtTimer>0,hurtPulse=hurt?Math.sin((player.hurtTimer/.48)*Math.PI):0,facingX=player.facingX||0,facingY=player.facingY||1;
+ const shadowScale=1-bob*.025;ctx.save();ctx.globalAlpha=.34;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+15,17*shadowScale,7*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  const tilt=hurt?Math.sin(gameClock*42)*.055*hurtPulse:0;ctx.save();ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.35,1.35);
  const bodyGradient=ctx.createRadialGradient(-5,-7,2,0,0,19);bodyGradient.addColorStop(0,hurt?"#fff4f4":"#ffffff");bodyGradient.addColorStop(1,hurt?"#d7baba":"#c9dce4");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();
  ctx.fillStyle="#21a9d0";ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();
