@@ -920,17 +920,7 @@ function makeMap(){
    map[p.y][p.x]=2;
   }
  }
-
-// O portal não ocupa mais um bloco do mapa: ele nasce em um piso livre
-  // somente depois que todos os inimigos forem derrotados.
  }
- if(!visited.has(cellKey(exit.x,exit.y))){
-  // Segurança para futuras mudanças na disposição dos pilares.
-  map[exit.y][exit.x]=0;
-  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(!isFixedPillar(x,y)&&!visited.has(cellKey(x,y)))map[y][x]=0;
-  map[exit.y][exit.x]=2;
- }
-}
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
 function prepareCoinDrops(){
  coinDrops={};const candidates=[];
@@ -1020,7 +1010,7 @@ function createEnemySpawnPositions(count){
  if(selected.length<count){
   const fallback=[];
   for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-   if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
+   if(map[y][x]!==0||isStartSafeCell(x,y))continue;
    if(distance(x+.5,y+.5,player.x,player.y)<3.5)continue;
    fallback.push({x,y,index:Math.min(5,Math.floor((y-1)/((ROWS-2)/2))*3+Math.floor((x-1)/((COLS-2)/3)))});
   }
