@@ -142,25 +142,6 @@ jobs:
            transform-origin:50% 50%;
            animation:logoSeesaw 4.8s ease-in-out infinite;
           }
-          .gameLogo::before{
-           content:"";
-           position:absolute;
-           z-index:-1;
-           inset:-12% -3%;
-           border-radius:50%;
-           background:conic-gradient(from 0deg,rgba(55,195,255,.05),rgba(55,195,255,.95),rgba(245,92,220,.92),rgba(139,75,255,.92),rgba(55,195,255,.05));
-           filter:blur(15px);
-           opacity:.48;
-           transform:scale(1.02);
-           -webkit-mask:radial-gradient(ellipse at center,transparent 57%,#000 76%);
-           mask:radial-gradient(ellipse at center,transparent 57%,#000 76%);
-           animation:logoBloom 8s linear infinite;
-           pointer-events:none;
-          }
-          @keyframes logoBloom{
-           from{transform:scale(1.02) rotate(0deg);filter:blur(15px) hue-rotate(0deg);}
-           to{transform:scale(1.02) rotate(360deg);filter:blur(15px) hue-rotate(35deg);}
-          }
           .gameLogo img{
            display:block;
            position:absolute;
@@ -236,7 +217,7 @@ jobs:
           s = s.replace("</head>", responsive_css + "\\n</head>", 1)
 
           p.write_text(s, encoding="utf-8")
-          print("Logo PNG transparente incorporado; proporção 3044:988, bloom neon animado e efeito gangorra preservados.")
+          print("Logo PNG transparente incorporado; halo estático no contorno, sem animação sobre o interior, e efeito gangorra preservado.")
           PY
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
