@@ -42,7 +42,8 @@ jobs:
           GAME_ASSETS="android/app/src/main/assets/game"
           mkdir -p "$GAME_ASSETS"
           cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
-          cp -R game-assets/. "$GAME_ASSETS/"
+          mkdir -p "$GAME_ASSETS/game-assets"
+          cp -R game-assets/. "$GAME_ASSETS/game-assets/"
           cd "$GAME_ASSETS"
           find . -type f ! -name "assets-manifest.sha256" -printf '%P\0' | sort -z | xargs -0 sha256sum > assets-manifest.sha256
           test -s bombardeirojogo.html
