@@ -166,7 +166,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 #menuBackdrop:before,#menuBackdrop:after,#menuBackdrop > :not(.menuEffects){display:none!important}
 .gameLogo{
  width:min(94vw,720px);
- aspect-ratio:4.8/1;
+ aspect-ratio:5.3/1;
  height:auto;
  margin:0 auto 10px;
  overflow:hidden;
@@ -175,18 +175,17 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  background:transparent;
  transform-origin:50% 50%;
  animation:logoSeesaw 4.8s ease-in-out infinite;
- filter:drop-shadow(0 7px 12px rgba(0,0,0,.52)) drop-shadow(0 0 12px rgba(117,218,255,.32));
 }
 .gameLogo img{
  display:block;
  position:absolute;
  left:0;
- top:50%;
+ top:0;
  width:100%;
  height:auto;
  max-width:none;
- transform:translateY(-50%);
- filter:url(#logoBlueKey);
+ transform:none;
+ filter:drop-shadow(0 0 3px rgba(55,195,255,.98)) drop-shadow(0 0 7px rgba(245,92,220,.86)) drop-shadow(0 0 13px rgba(139,75,255,.72));
  user-select:none;
  -webkit-user-drag:none;
  pointer-events:none;
@@ -520,7 +519,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  <div id="menuScore">⭐ PONTOS: <span id="menuScoreValue">0</span></div>
 </div>
 <div id="menuContent" class="hidden">
- <svg aria-hidden="true" width="0" height="0" style="position:absolute"><filter id="logoBlueKey" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.2 0 -1.6 0 1.1"/></filter></svg><div class="gameLogo" aria-label="Bombardeiro"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgIC
+ <div class="gameLogo" aria-label="Bombardeiro"><img id="bombardeiroLogoImage" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgIC
 AgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/
 2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoK
 CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAPcC+QDASIAAhEBAxEB/8QA
@@ -16992,5 +16991,35 @@ running=false;paused=true;$("hud").style.display="none";$("controls").style.disp
 requestAnimationFrame(function loop(t){const dt=Math.min(.035,(t-lastTime)/1000||0);lastTime=t;update(dt);draw();requestAnimationFrame(loop)});
 })();
 </script>
+
+<script>
+/* Recorta o logotipo original e remove somente o fundo azul conectado às bordas. */
+(function(){
+ const logo=document.getElementById("bombardeiroLogoImage");
+ if(!logo)return;
+ function processar(){
+  if(logo.dataset.processed==="1"||!logo.naturalWidth||!logo.naturalHeight)return;
+  logo.dataset.processed="1";
+  try{
+   const scale=Math.min(1,2000/logo.naturalWidth);
+   const w=Math.max(1,Math.round(logo.naturalWidth*scale));
+   const h=Math.max(1,Math.round(logo.naturalHeight*.575*scale));
+   const c=document.createElement("canvas");c.width=w;c.height=h;
+   const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(logo,0,0,w,h);
+   const frame=x.getImageData(0,0,w,h),p=frame.data,n=w*h;
+   const seen=new Uint8Array(n),q=new Int32Array(n);let head=0,tail=0;
+   function blue(i){const k=i*4,r=p[k],g=p[k+1],b=p[k+2];return b>58&&g>52&&b>r*1.075&&g>r*1.045;}
+   function add(i){if(i>=0&&i<n&&!seen[i]&&blue(i)){seen[i]=1;q[tail++]=i;}}
+   for(let xx=0;xx<w;xx++){add(xx);add((h-1)*w+xx);}
+   for(let yy=0;yy<h;yy++){add(yy*w);add(yy*w+w-1);}
+   while(head<tail){const i=q[head++];p[i*4+3]=0;const xx=i%w;if(xx)add(i-1);if(xx+1<w)add(i+1);if(i>=w)add(i-w);if(i+w<n)add(i+w);}
+   x.putImageData(frame,0,0);
+   logo.onload=null;logo.src=c.toDataURL("image/png");
+  }catch(e){logo.dataset.processed="0";}
+ }
+ if(logo.complete)processar();else logo.addEventListener("load",processar,{once:true});
+})();
+</script>
+
 </body>
 </html>
