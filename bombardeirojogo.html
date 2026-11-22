@@ -599,7 +599,9 @@ function makeMap(){
    if(p.x===exit.x&&p.y===exit.y)return true;
    for(const [dx,dy] of dirs){
     const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
-    if(x<1||y<1||x>=COLS-1||y>=ROWS-1||visited.has(key)||map[y][x]!==0)continue;
+    if(x<1||y<1||x>=COLS-1||y>=ROWS-1||visited.has(key))continue;
+    if(x===exit.x&&y===exit.y)return true;
+    if(map[y][x]!==0)continue;
     visited.add(key);queue.push({x,y});
    }
   }
