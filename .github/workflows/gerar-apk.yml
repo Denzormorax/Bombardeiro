@@ -9,6 +9,7 @@ on:
       - "bombardeirojogo.html"
       - "bombericon.jpg"
       - "game-assets/**"
+      - "logo-bombardeiro-transparente.png"
       - "bomba explosão.mp3"
       - "moeda.mp3"
       - "botões.mp3"
@@ -86,14 +87,29 @@ jobs:
           GAME_ASSETS="android/app/src/main/assets/game"
           mkdir -p "$GAME_ASSETS"
           cp bombardeirojogo.html "$GAME_ASSETS/bombardeirojogo.html"
+          cp logo-bombardeiro-transparente.png "$GAME_ASSETS/logo-bombardeiro-transparente.png"
           # Corrige a exibição do logotipo usando a proporção real da imagem original.
           # A imagem JPEG inteira é preservada; nenhum pixel é recortado nem removido.
           python3 - <<'PY'
+          import base64
           import re
           from pathlib import Path
 
           p = Path("android/app/src/main/assets/game/bombardeirojogo.html")
           s = p.read_text(encoding="utf-8")
+          logo_path = Path("logo-bombardeiro-transparente.png")
+          logo_bytes = logo_path.read_bytes()
+          if not logo_bytes.startswith(bytes([137,80,78,71,13,10,26,10])):
+              raise SystemExit("O novo logotipo não é um PNG válido.")
+          logo_b64 = base64.b64encode(logo_bytes).decode("ascii")
+          s, logo_replaced = re.subn(
+              r'(id="bombardeiroLogoImage"\s+src=")data:image/jpeg;base64,[^"]+',
+              lambda match: match.group(1) + "data:image/png;base64," + logo_b64,
+              s,
+              count=1
+          )
+          if logo_replaced != 1:
+              raise SystemExit("A imagem JPEG antiga do logotipo não foi localizada para substituição.")
 
           # Substitui somente o primeiro bloco estrutural .gameLogo.
           selector = re.search(r"\.gameLogo\s*\{", s)
@@ -114,16 +130,36 @@ jobs:
               raise SystemExit("Bloco CSS .gameLogo incompleto.")
 
           logo_css = """.gameLogo{
-           width:min(88vw,700px);
+           width:min(90vw,720px);
            aspect-ratio:3044/988;
            height:auto;
            margin:0 auto 10px;
+           top:-6px;
            overflow:visible;
            position:relative;
            isolation:isolate;
            background:transparent;
            transform-origin:50% 50%;
            animation:logoSeesaw 4.8s ease-in-out infinite;
+          }
+          .gameLogo::before{
+           content:"";
+           position:absolute;
+           z-index:-1;
+           inset:-12% -3%;
+           border-radius:50%;
+           background:conic-gradient(from 0deg,rgba(55,195,255,.05),rgba(55,195,255,.95),rgba(245,92,220,.92),rgba(139,75,255,.92),rgba(55,195,255,.05));
+           filter:blur(15px);
+           opacity:.48;
+           transform:scale(1.02);
+           -webkit-mask:radial-gradient(ellipse at center,transparent 57%,#000 76%);
+           mask:radial-gradient(ellipse at center,transparent 57%,#000 76%);
+           animation:logoBloom 8s linear infinite;
+           pointer-events:none;
+          }
+          @keyframes logoBloom{
+           from{transform:scale(1.02) rotate(0deg);filter:blur(15px) hue-rotate(0deg);}
+           to{transform:scale(1.02) rotate(360deg);filter:blur(15px) hue-rotate(35deg);}
           }
           .gameLogo img{
            display:block;
@@ -158,8 +194,10 @@ jobs:
               raise SystemExit("Validação de proporção/exibição integral falhou.")
           if "Recorta o logotipo original" in s:
               raise SystemExit("O script antigo de recorte ainda está presente.")
-          if 'id="bombardeiroLogoImage" src="data:image/jpeg;base64,' not in s:
-              raise SystemExit("Imagem original incorporada não foi encontrada.")
+          if 'id="bombardeiroLogoImage" src="data:image/png;base64,' not in s:
+              raise SystemExit("Novo PNG transparente não foi incorporado.")
+          if 'data:image/jpeg;base64,' in s:
+              raise SystemExit("A imagem JPEG antiga ainda está incorporada.")
 
           responsive_css = """<style>
           /* Menu compacto para celulares em modo paisagem ou telas baixas. */
@@ -170,7 +208,7 @@ jobs:
               gap:0 !important;
             }
             #menuContent .gameLogo {
-              width:min(88vw,700px,92vh) !important;
+              width:min(90vw,720px,92vh) !important;
               margin:0 auto 4px !important;
               flex:0 0 auto !important;
             }
@@ -198,7 +236,7 @@ jobs:
           s = s.replace("</head>", responsive_css + "\\n</head>", 1)
 
           p.write_text(s, encoding="utf-8")
-          print("Logo integral: proporção real 3044:988, object-fit:contain, overflow visível; script de recorte removido.")
+          print("Logo PNG transparente incorporado; proporção 3044:988, bloom neon animado e efeito gangorra preservados.")
           PY
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
