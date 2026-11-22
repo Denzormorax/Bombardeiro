@@ -15,7 +15,7 @@ canvas{display:block;width:100vw;height:100vh;object-fit:contain}
 #hudRight{display:flex;align-items:center;gap:6px}
 .hudbox{background:#101820e8;border:1px solid #5d7888;border-radius:8px;padding:7px 10px;white-space:nowrap}
 #coinHud{color:#ffe36b;border-color:#b58b27}
-#lifeHud{display:flex;align-items:center;gap:9px}
+#lifeHud{display:flex;align-items:center;gap:9px}.phaseInfo{display:flex;flex-direction:column;gap:2px;min-width:0}.phaseThemeName{font-size:10px;line-height:1.1;color:#b9f3a0;max-width:145px;white-space:normal;text-shadow:0 1px 3px #000}
 #lifeHearts{display:flex;align-items:center;gap:5px}
 .lifeHeart{font-size:20px;line-height:1;color:#ff3d55;text-shadow:0 0 5px #ff526b,0 2px 3px #000}
 .lifeHeart.empty{color:transparent;-webkit-text-stroke:1.5px #f2f5f7;text-shadow:0 0 3px #ffffff66}
@@ -291,7 +291,7 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
  <div class="menuFooter">UMA GRANDE AVENTURA ESTÁ COMEÇANDO!</div>
 </div>
 <div id="hud">
- <div class="hudbox" id="lifeHud"><span>FASE: <span id="level">1</span></span><div id="lifeHearts" aria-label="Três vidas"><span class="lifeHeart">♥</span><span class="lifeHeart">♥</span><span class="lifeHeart">♥</span></div></div>
+ <div class="hudbox" id="lifeHud"><div class="phaseInfo"><span>FASE: <span id="level">1</span></span><span id="forestThemeName" class="phaseThemeName">Bosque Esmeralda</span></div><div id="lifeHearts" aria-label="Três vidas"><span class="lifeHeart">♥</span><span class="lifeHeart">♥</span><span class="lifeHeart">♥</span></div></div>
  <div id="hudRight"><div class="hudbox">PONTOS: <span id="score">0</span></div><div class="hudbox" id="coinHud">🪙 <span id="coins">0</span></div></div>
 </div>
 <div id="controls">
@@ -358,9 +358,9 @@ const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W
 const staticFloorCanvas=document.createElement("canvas");staticFloorCanvas.width=W;staticFloorCanvas.height=H;const staticFloorCtx=staticFloorCanvas.getContext("2d");
 const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));
 // Sprite de caixa em chamas pré-renderizado uma única vez.
-const burningCrateCanvas=document.createElement("canvas");burningCrateCanvas.width=64;burningCrateCanvas.height=64;const burningCrateCtx=burningCrateCanvas.getContext("2d");let burningCrateReady=false;const burningCrates=[];
+const burningCrateCanvases=Array.from({length:10},()=>{const c=document.createElement("canvas");c.width=64;c.height=64;return c});let burningCrateReady=false;const burningCrates=[];const themedSpriteSheets=Array(10).fill(null);let cachedTileThemeIndex=-1;
 const $=id=>document.getElementById(id);
-const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_tiles.svg";
+const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpriteSheets();buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_tiles.svg";
 
 /* ÁUDIO HÍBRIDO: EFEITOS OGG LOCAIS + CAMADAS WEB AUDIO. FUNCIONA OFFLINE. */
 const audioSettings={musicVolume:.65,sfxVolume:.8};let audioContext=null,sfxBus=null,musicBus=null;
@@ -673,7 +673,7 @@ function findFreeCoinPosition(x,y){
 function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position)coinsOnMap.push({x:position.x,y:position.y,type,phase:Math.random()*Math.PI*2,life:0})}
 function coinValue(type){return type==="yellow"?2:type==="green"?4:6}
 function updateHUD(){
- $("level").textContent=level;const hearts=$("lifeHearts").children;
+ $("level").textContent=level;$("forestThemeName").textContent=currentForestTheme().name;const hearts=$("lifeHearts").children;
  for(let i=0;i<hearts.length;i++)hearts[i].classList.toggle("empty",i>=lives);
  $("lifeHearts").setAttribute("aria-label",lives+" vidas restantes");
  $("score").textContent=score;$("coins").textContent=coins;$("shopCoins").textContent=coins;$("menuScoreValue").textContent=score;updateShopButtons();
@@ -1253,7 +1253,8 @@ function drawTileTo(target,x,y,type,offsetY=0){
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,theme=currentForestTheme();
  if(forestSpriteSheet.complete&&forestSpriteSheet.naturalWidth){
   const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);
-  target.drawImage(forestSpriteSheet,col*48,0,48,48,px,py,TILE,TILE);
+  const themed=themedSpriteSheets[Math.max(0,Math.min(9,level-1))]||forestSpriteSheet;
+  target.drawImage(themed,col*48,0,48,48,px,py,TILE,TILE);
   if(type===0&&((x*13+y*7+level)%9===0)){
    target.fillStyle=theme.accent;const fx=px+9+((x*5+y*3)%25),fy=py+12+((x*7+y*2)%24);
    target.fillRect(fx,fy,3,3);target.fillRect(fx+3,fy-3,3,3);target.fillRect(fx-3,fy+3,3,3);
@@ -1265,25 +1266,45 @@ function drawTileTo(target,x,y,type,offsetY=0){
  target.strokeStyle="#ffffff16";target.strokeRect(px,py,TILE,TILE);
 }
 function drawTile(x,y,type){drawTileTo(ctx,x,y,type)}
+function buildThemedSpriteSheets(){
+ const tintSets=[
+  ["#a77b43","#5da83f","#59734a","#a76b38"],["#8b9850","#3e9b58","#526f51","#9a7040"],
+  ["#b08a54","#77a94a","#65764d","#bd7950"],["#80643c","#638c3c","#6f7048","#8a5c32"],
+  ["#526f54","#3f9670","#536d62","#805b3d"],["#718d82","#57947b","#637d78","#8b7860"],
+  ["#9a9b50","#69a94c","#78844b","#b17b45"],["#779a55","#5eaa70","#657b55","#a27b4a"],
+  ["#b08b45","#8caa45","#77754b","#b27b3c"],["#718b69","#548d72","#65796b","#8c7654"]
+ ];
+ for(let i=0;i<10;i++){
+  const c=document.createElement("canvas");c.width=192;c.height=48;const q=c.getContext("2d");
+  q.drawImage(forestSpriteSheet,0,0);
+  for(let col=0;col<4;col++){q.save();q.globalCompositeOperation="multiply";q.globalAlpha=.43;q.fillStyle=tintSets[i][col];q.fillRect(col*48,0,48,48);q.restore();}
+  themedSpriteSheets[i]=c;
+ }
+}
 function buildBurningCrateSprite(){
- const c=burningCrateCtx;c.clearRect(0,0,64,64);
- c.drawImage(forestSpriteSheet,144,0,48,48,8,13,48,48);
+ for(let i=0;i<10;i++){
+ const c=burningCrateCanvases[i].getContext("2d");c.clearRect(0,0,64,64);
+ c.drawImage(themedSpriteSheets[i]||forestSpriteSheet,144,0,48,48,8,13,48,48);
  c.save();c.globalCompositeOperation="lighter";
  const glow=c.createRadialGradient(32,39,3,32,39,29);glow.addColorStop(0,"#72f7ffbb");glow.addColorStop(.5,"#168eff66");glow.addColorStop(1,"#087bff00");c.fillStyle=glow;c.fillRect(2,8,60,56);
  c.shadowColor="#31cfff";c.shadowBlur=7;c.fillStyle="#087dff";
  c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();
  c.shadowBlur=0;c.fillStyle="#69efff";c.beginPath();c.moveTo(20,52);c.quadraticCurveTo(17,39,27,30);c.quadraticCurveTo(28,42,33,39);c.quadraticCurveTo(35,27,40,23);c.quadraticCurveTo(43,41,47,52);c.closePath();c.fill();
- c.fillStyle="#e0ffff";c.globalAlpha=.8;c.beginPath();c.ellipse(33,48,9,5,0,0,Math.PI*2);c.fill();c.restore();burningCrateReady=true;
+ c.fillStyle="#e0ffff";c.globalAlpha=.8;c.beginPath();c.ellipse(33,48,9,5,0,0,Math.PI*2);c.fill();c.restore();
+ }
+ burningCrateReady=true;
 }
 function drawBurningCrate(crate){
  const progress=1-crate.t/crate.total,fade=crate.t/crate.total,px=ox+crate.x*TILE,py=oy+crate.y*TILE;
  if(!burningCrateReady){drawTileTo(ctx,crate.x,crate.y,2);return}
  const flicker=1+Math.sin(crate.phase+gameClock*29)*.045;
- ctx.save();ctx.globalAlpha=Math.max(0,fade);ctx.translate(px+TILE/2,py+TILE/2);ctx.scale(flicker*(.94+progress*.08),flicker);ctx.drawImage(burningCrateCanvas,-32,-32,64,64);
+ const themedBurn=burningCrateCanvases[Math.max(0,Math.min(9,level-1))];
+ ctx.save();ctx.globalAlpha=Math.max(0,fade);ctx.translate(px+TILE/2,py+TILE/2);ctx.scale(flicker*(.94+progress*.08),flicker);ctx.drawImage(themedBurn,-32,-32,64,64);
  ctx.globalAlpha=Math.max(0,fade*(.28+progress*.45));ctx.fillStyle="#48cfff";ctx.fillRect(-TILE/2+5,-TILE/2+8,TILE-10,TILE-16);ctx.restore();
 }
 
 function rebuildStaticMapCache(){
+ cachedTileThemeIndex=Math.max(0,Math.min(9,level-1));
  staticFloorCtx.clearRect(0,0,W,H);
  for(let y=0;y<ROWS;y++){
   const rowCtx=staticRowCtx[y],rowOffset=oy+y*TILE;rowCtx.clearRect(0,0,W,TILE);
@@ -1373,6 +1394,7 @@ function drawFlame(f){
  ctx.restore();
 }
 function draw(){
+ if(cachedTileThemeIndex!==Math.max(0,Math.min(9,level-1))&&map&&map.length)rebuildStaticMapCache();
  ctx.clearRect(0,0,W,H);
  if(backgroundTheme!==currentForestTheme()){drawForestBackground(backgroundCtx);backgroundTheme=currentForestTheme()}
  ctx.drawImage(backgroundCanvas,0,0);
