@@ -161,6 +161,42 @@ jobs:
           if 'id="bombardeiroLogoImage" src="data:image/jpeg;base64,' not in s:
               raise SystemExit("Imagem original incorporada não foi encontrada.")
 
+          responsive_css = """<style>
+          /* Menu compacto para celulares em modo paisagem ou telas baixas. */
+          @media (max-height:600px) {
+            #menuContent {
+              inset:44px 10px 8px !important;
+              justify-content:center !important;
+              gap:0 !important;
+            }
+            #menuContent .gameLogo {
+              width:min(88vw,700px,92vh) !important;
+              margin:0 auto 4px !important;
+              flex:0 0 auto !important;
+            }
+            #menuContent .mascotFlight {
+              zoom:.72;
+              height:80px;
+              margin:4px auto 2px;
+              flex:0 0 80px;
+            }
+            #menuContent .menuButtons {
+              margin-top:6px;
+              flex:0 0 auto;
+            }
+            #menuContent .menuButtons button {
+              min-height:44px;
+            }
+            #menuContent .menuFooter {
+              margin-top:6px;
+              flex:0 0 auto;
+            }
+          }
+          </style>"""
+          if "</head>" not in s:
+              raise SystemExit("Não foi possível inserir o ajuste responsivo do menu.")
+          s = s.replace("</head>", responsive_css + "\\n</head>", 1)
+
           p.write_text(s, encoding="utf-8")
           print("Logo integral: proporção real 3044:988, object-fit:contain, overflow visível; script de recorte removido.")
           PY
