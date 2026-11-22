@@ -590,19 +590,21 @@ function makeMap(){
   }
  }
 
- // BLOQUEIO PRIORITÁRIO NO LADO DO JOGADOR:
- // a maior parte dos blocos fica na metade esquerda; o lado direito
- // permanece relativamente mais aberto para formar os bolsões dos inimigos.
+ // PRIORIDADE REAL AO ENTORNO DO PERSONAGEM:
+ // a seleção começa pelas células livres próximas do nascimento, e só depois
+ // completa a quantidade no restante do lado esquerdo e no lado direito.
  const candidates=[];
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
   if(map[y][x]!==0||isStartSafeCell(x,y)||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<1.35)continue;
   candidates.push({x,y});
  }
+ const nearPlayerCandidates=shuffleArray(candidates.filter(p=>{
+  const d=distance(p.x+.5,p.y+.5,1.5,1.5);
+  return d>=2.0&&d<=5.8;
+ }));
  const leftCandidates=shuffleArray(candidates.filter(p=>p.x<Math.ceil(COLS*.68)));
  const rightCandidates=shuffleArray(candidates.filter(p=>p.x>=Math.ceil(COLS*.68)));
- const targetBlocks=Math.round(candidates.length*(.25+Math.random()*.06));
- const leftTarget=Math.min(leftCandidates.length,Math.round(targetBlocks*.76));
- const rightTarget=Math.min(rightCandidates.length,targetBlocks-leftTarget);
+ const targetBlocks=Math.round(candidates.length*(.27+Math.random()*.06));
  const hasStartToExitRoute=()=>{
   const queue=[{x:1,y:1}],visited=new Set([cellKey(1,1)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
   let head=0;
@@ -630,9 +632,18 @@ function makeMap(){
    placed++;added++;
   }
  };
- placePriorityBlocks(leftCandidates,leftTarget);
- placePriorityBlocks(rightCandidates,rightTarget);
- // Se a rota principal impediu atingir a meta, completa primeiro no lado esquerdo.
+ // Tenta bloquear cerca de 65% dos corredores que ficam a uma distância
+ // jogável do personagem, sem tocar na área segura de nascimento.
+ const nearTarget=Math.min(nearPlayerCandidates.length,Math.max(
+  Math.ceil(nearPlayerCandidates.length*.65),Math.round(targetBlocks*.24)
+ ));
+ placePriorityBlocks(nearPlayerCandidates,nearTarget);
+ // O restante mantém uma preferência de 3 para 1 pelo lado do personagem.
+ const leftTarget=Math.min(leftCandidates.length,Math.round(targetBlocks*.76));
+ placePriorityBlocks(leftCandidates,Math.max(0,leftTarget-placed));
+ placePriorityBlocks(rightCandidates,targetBlocks-placed);
+ // Se alguma tentativa foi rejeitada para preservar a rota, completa primeiro
+ // com outras células do lado esquerdo, depois usa o lado direito.
  if(placed<targetBlocks){
   placePriorityBlocks(leftCandidates,targetBlocks-placed);
   placePriorityBlocks(rightCandidates,targetBlocks-placed);
@@ -675,56 +686,68 @@ function updateShopButtons(){
 }
 function resetPowerUps(){bombPowerUps=0;firePowerUps=0;speedPowerUps=0;pushBombOwned=false;maxBombs=1;firePower=1;if(player)player.speed=basePlayerSpeed;updateHUD()}
 function createEnemySpawnPositions(count){
- // Os inimigos ficam prioritariamente no extremo direito do mapa,
- // em pequenos bolsões cercados por blocos, longe da área inicial.
- const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- const rightStart=Math.ceil(COLS*.68),candidates=[];
- for(let y=1;y<ROWS-1;y++)for(let x=rightStart;x<COLS-1;x++){
-  if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
-  if(distance(x+.5,y+.5,player.x,player.y)<4.2||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<1.8)continue;
-  let openNeighbors=0;
-  for(const [dx,dy] of dirs)if(tileAt(x+dx,y+dy)===0)openNeighbors++;
-  if(openNeighbors>=2)candidates.push({x,y,neighbors:openNeighbors});
+ // Divide o mapa em seis regiões. A preferência continua sendo o lado direito,
+ // mas cada inimigo precisa ocupar uma região diferente sempre que possível.
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1]],sectors=[];
+ for(let sy=0;sy<2;sy++)for(let sx=0;sx<3;sx++){
+  const x0=1+Math.floor(sx*(COLS-2)/3),x1=1+Math.floor((sx+1)*(COLS-2)/3);
+  const y0=1+Math.floor(sy*(ROWS-2)/2),y1=1+Math.floor((sy+1)*(ROWS-2)/2);
+  const cells=[];
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+   if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y))continue;
+   if(distance(x+.5,y+.5,player.x,player.y)<4.2||distance(x+.5,y+.5,exit.x+.5,exit.y+.5)<1.8)continue;
+   let openNeighbors=0;
+   for(const [dx,dy] of dirs)if(tileAt(x+dx,y+dy)===0)openNeighbors++;
+   if(openNeighbors>=2)cells.push({x,y,openNeighbors});
+  }
+  sectors.push(shuffleArray(cells));
  }
- shuffleArray(candidates);
- // Prefere células com poucos vizinhos livres: pequenos espaços de patrulha,
- // em vez de grandes áreas abertas ou corredores que atravessam o mapa.
- candidates.sort((a,b)=>a.neighbors-b.neighbors);
  const selected=[],used=new Set();
  const addCandidate=(p,minSpacing)=>{
   const key=cellKey(p.x,p.y);
   if(used.has(key)||selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<minSpacing))return false;
   selected.push({x:p.x,y:p.y});used.add(key);return true;
  };
- // Primeiro tenta espalhar os spawns pelo alto/baixo do canto direito.
- const upper=candidates.filter(p=>p.y<Math.ceil(ROWS/2));
- const lower=candidates.filter(p=>p.y>=Math.ceil(ROWS/2));
- const first=[upper,lower];
- shuffleArray(first);
- for(const group of first){
+ // Ordem de preferência: dois cantos direitos, regiões centrais e,
+ // somente se necessário, regiões esquerdas. A ordem varia a cada fase.
+ const rightAndMiddle=[2,5,1,4],left=[0,3];
+ shuffleArray(rightAndMiddle);shuffleArray(left);
+ const sectorOrder=rightAndMiddle.concat(left);
+ // Um nascimento por setor, com distância mínima suficiente para evitar grupos.
+ for(const index of sectorOrder){
   if(selected.length>=count)break;
-  for(const p of group)if(addCandidate(p,1.4))break;
+  const pool=sectors[index].filter(p=>p.openNeighbors<=3);
+  const candidates=shuffleArray(pool.length?pool.slice():sectors[index].slice());
+  const chosen=candidates.find(p=>!selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<2.7));
+  if(chosen)addCandidate(chosen,2.7);
  }
- // Completa somente dentro da zona direita, agrupando em bolsões pequenos.
- for(const p of candidates){
+ // Completa com seleção espacial: cada novo ponto procura ficar longe dos
+ // inimigos já posicionados, sem abandonar a distribuição por regiões.
+ const allCandidates=shuffleArray(sectors.flat());
+ for(const minSpacing of [2.7,2.2,1.7]){
   if(selected.length>=count)break;
-  addCandidate(p,1.05);
+  for(const p of allCandidates){
+   if(selected.length>=count)break;
+   addCandidate(p,minSpacing);
+  }
  }
- // Último recurso: ainda no lado direito, aceita apenas uma célula vazia
- // com pelo menos um vizinho livre para que o inimigo consiga patrulhar.
+ // Último recurso: células vazias com pelo menos um vizinho livre, sempre
+ // escolhidas pela maior distância dos inimigos já colocados.
  if(selected.length<count){
   const fallback=[];
-  for(let y=1;y<ROWS-1;y++)for(let x=rightStart;x<COLS-1;x++){
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
    if(map[y][x]!==0||isStartSafeCell(x,y)||(x===exit.x&&y===exit.y)||distance(x+.5,y+.5,player.x,player.y)<3.8)continue;
    let openNeighbors=0;
    for(const [dx,dy] of dirs)if(tileAt(x+dx,y+dy)===0)openNeighbors++;
-   if(openNeighbors>=1)fallback.push({x,y,neighbors:openNeighbors});
+   if(openNeighbors>=1)fallback.push({x,y,openNeighbors});
   }
   shuffleArray(fallback);
-  fallback.sort((a,b)=>a.neighbors-b.neighbors);
-  for(const p of fallback){
+  for(const minSpacing of [2.2,1.7,1.2]){
+   for(const p of fallback){
+    if(selected.length>=count)break;
+    addCandidate(p,minSpacing);
+   }
    if(selected.length>=count)break;
-   addCandidate(p,.8);
   }
  }
  return selected;
