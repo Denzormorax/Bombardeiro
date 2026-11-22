@@ -734,7 +734,7 @@ function createEnemySpawnPositions(count){
   const secondRound=shuffleArray(sectorOrder.slice());
   for(const index of secondRound){
    if(selected.length>=count)break;
-   if(sectorCounts[index]>=1)continue;
+   if(sectorCounts[index]>=2)continue;
    const pool=shuffleArray(sectors[index].filter(p=>p.openNeighbors<=3).slice());
    const chosen=pool.find(p=>!selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<3.2));
    if(chosen)addCandidate(chosen,index,3.2,2);
