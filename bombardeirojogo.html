@@ -672,8 +672,8 @@ function createEnemySpawnPositions(count){
    for(const sectorIndex of sectorOrder){
     if(selected.length>=count)break;
     const group=sectors[sectorIndex];
-    while(group.length){
-     const p=group.pop(),key=cellKey(p.x,p.y);
+    for(const p of group){
+     const key=cellKey(p.x,p.y);
      if(used.has(key)||tileAt(p.x,p.y)!==0)continue;
      if(selected.some(q=>distance(p.x+.5,p.y+.5,q.x+.5,q.y+.5)<minimumSpacing))continue;
      selected.push(p);used.add(key);added=true;break;
