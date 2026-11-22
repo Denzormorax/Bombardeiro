@@ -455,6 +455,15 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 #desertMapMascot{position:absolute;width:clamp(43px,7vw,65px);height:clamp(43px,7vw,65px);left:0;top:0;transform:translate(-50%,-112%);z-index:8;pointer-events:none;transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1);filter:drop-shadow(0 5px 3px #542d16)}
 #desertMapMascot .miniBody{border-color:#d58a43;box-shadow:0 4px 0 #79451f}
 #desertMapMascot .miniHelmet{background:linear-gradient(#ffe0a0,#b96b31);border-bottom-color:#80441f}
+#desertMapMascot .miniEyes{position:absolute;z-index:3;left:29%;right:29%;top:42%;display:flex;justify-content:space-between}
+#desertMapMascot .miniEyes i{display:block;width:6px;height:9px;border-radius:50%;background:#fff;position:relative;box-shadow:inset 0 -1px 0 #e8d5b7}
+#desertMapMascot .miniEyes i:after{content:"";position:absolute;width:3px;height:5px;left:2px;top:3px;border-radius:50%;background:#382719}
+#desertMapMascot .miniMouth{position:absolute;z-index:3;left:40%;top:68%;width:20%;height:8%;border-bottom:2px solid #382719;border-radius:50%}
+#desertLevelNodes .mapNode{border-color:#ffe1a1;background:radial-gradient(circle at 32% 25%,#fff0bd,#d99a45 58%,#8e4e25);color:#fff9e8;text-shadow:0 2px 3px #75401f;box-shadow:0 4px 0 #70401f,0 0 13px #ffc76b,0 0 25px #e8a64b88}
+#desertLevelNodes .mapNode.available{animation:desertPulse 1.8s ease-in-out infinite}
+#desertLevelNodes .mapNode.completed{background:linear-gradient(145deg,#ffe5a1,#c47a28);border-color:#fff0c4;color:#fff;text-shadow:0 2px 2px #75401f;box-shadow:0 4px 0 #80500e,0 0 8px #ffd27a66;animation:none}
+#desertLevelNodes .mapNode.locked{background:linear-gradient(145deg,#82786b,#4a4038);border-color:#b4a18a;color:#d9cbb8;box-shadow:0 4px 0 #30251d;filter:saturate(.55)}
+@keyframes desertPulse{0%,100%{box-shadow:0 4px 0 #70401f,0 0 10px #ffc76b,0 0 19px #e8a64b88}50%{box-shadow:0 4px 0 #70401f,0 0 19px #ffc76b,0 0 34px #e8a64b}}
 #desertProgressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);margin:0;text-align:center;font-size:12px;color:#ffe6b7;text-shadow:0 2px 5px #542d16}
 #forestMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;margin:0;overflow:hidden}
 #forestPath{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
@@ -17109,6 +17118,15 @@ buildBurningCrateSprite=function(){
  if(!desertSpriteSheet.complete||!desertSpriteSheet.naturalWidth)return;
  for(let i=0;i<10;i++){const c=burningCrateCanvases[i].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(desertThemedSpriteSheets[i]||desertSpriteSheet,288,0,96,96,4,5,56,56);c.save();c.globalCompositeOperation="lighter";const g=c.createRadialGradient(32,39,3,32,39,29);g.addColorStop(0,"#ffe3a0cc");g.addColorStop(.5,"#e77a2766");g.addColorStop(1,"#b94b1200");c.fillStyle=g;c.fillRect(2,8,60,56);c.shadowColor="#ff9a38";c.shadowBlur=7;c.fillStyle="#e77a20";c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();c.restore()}
  burningCrateReady=true;
+};
+const drawEnemyFaceOriginal=drawEnemyFace;
+drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
+ if(currentWorld==="desert"&&!e.isMushroom){
+  if(e.isHorned){color=e.isEnraged?"#c82d38":"#b85a35";helmetColor=e.isEnraged?"#741923":"#713c2b"}
+  else if(e.isHunter){color="#8d6945";helmetColor="#533d2b"}
+  else{color="#c58a45";helmetColor="#80502d"}
+ }
+ return drawEnemyFaceOriginal(e,color,helmetColor,deathProgress);
 };
 const handleBackOriginal=window.handleAndroidBack;
 window.handleAndroidBack=function(){if(!$("desertPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return handleBackOriginal()};
