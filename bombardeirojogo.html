@@ -16895,7 +16895,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  const deathScale=deathProgress>0?Math.max(.25,1-deathProgress*.45):1,deathAlpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
  ctx.save();ctx.globalAlpha=.34*deathAlpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+14,15*(1-bob*.025)*deathScale,6*(1-bob*.025)*deathScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  const tilt=hurt?Math.sin(gameClock*38)*.045:Math.sin(gameClock*2.8+e.x)*.018;ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.22*deathScale,1.22*deathScale);
- if(e.isHorned){ctx.fillStyle=e.isEnraged?"#7b151d":"#173c91";ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
+ if(e.isHorned){ctx.fillStyle=currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
  if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
  else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
  if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5);ctx.lineTo(eyeX+2.2,1.8);ctx.moveTo(eyeX+2.2,-2.5);ctx.lineTo(eyeX-2.2,1.8);ctx.stroke()}}
@@ -16916,7 +16916,7 @@ function drawEnemy(e){
  }
  let bodyColor=e.isMushroom?"#27c957":e.isHorned?(e.isEnraged?"#c82d38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":"#a94bd8"):(currentWorld==="volcano"?"#df6329":"#d64c4c"),helmetColor=e.isMushroom?"#126b31":e.isHorned?(e.isEnraged?"#741923":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":"#542080"):(currentWorld==="volcano"?"#702b20":"#8c2020");
  if(e.hitFlash>0&&Math.sin(gameClock*65)>.25){bodyColor=e.isHorned&&e.isEnraged?"#ff6262":"#ef7777";helmetColor="#a92727"}
- if((e.isHunter||e.isHorned)&&!isDying){ctx.save();ctx.globalAlpha=e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py,20,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if((e.isHunter||e.isHorned)&&!isDying){ctx.save();ctx.globalAlpha=e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py,20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
  if((e.isHunter||e.isHorned)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-31;ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
 }
@@ -17335,6 +17335,7 @@ gameOver=function(win){gameOverWithDesert(win);if(currentWorld==="volcano")$("en
 const volcanoSpriteSheet=new Image(),volcanoThemedSpriteSheets=Array(10).fill(null),volcanoDetails=[];
 const volcanoBlockGlowCanvases=Array(10).fill(null),volcanoBlockGlowPositions=[];
 const volcanoEnemyFlameCanvases=Array(4).fill(null);
+const volcanoEnemyPalettes=[["#ef642b","#ffd45a"],["#f0a33c","#ffdf78"],["#e84b22","#ffd15a"],["#bd5034","#ffd06a"]];
 function buildVolcanoEffectCaches(){
  for(let i=0;i<10;i++){
   const t=volcanoThemes[i],c=document.createElement("canvas");c.width=64;c.height=64;
@@ -17419,7 +17420,7 @@ function drawLavaEnemyDetails(e,deathProgress){
  const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob;
  const alpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
  const variant=e.isMushroom?1:e.isHorned?2:e.isHunter?3:0;
- const palette=[["#ef642b","#ffd45a"],["#f0a33c","#ffdf78"],["#e84b22","#ffd15a"],["#bd5034","#ffd06a"]][variant];
+ const palette=volcanoEnemyPalettes[variant];
  ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,bodyY);ctx.rotate(Math.sin(gameClock*2.8+e.x)*.018);
  // Fissuras quentes discretas, sem filtros caros por quadro.
  ctx.globalCompositeOperation="lighter";ctx.lineCap="round";ctx.lineJoin="round";
