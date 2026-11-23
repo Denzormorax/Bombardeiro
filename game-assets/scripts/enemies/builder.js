@@ -134,6 +134,8 @@
     enemy.buildRetreatX = result.retreatX;
     enemy.buildRetreatY = result.retreatY;
     enemy.buildBomb = ctx.bomb;
+    enemy.buildBombX = ctx.bomb.x;
+    enemy.buildBombY = ctx.bomb.y;
     enemy.buildDirection = result.retreatDirection;
     enemy.buildDebugReason = "building";
     enemy.bombEscapePending = false;
@@ -144,5 +146,98 @@
     return true;
   }
 
-  return Object.freeze({ planShield, beginShieldBuild });
+  function updateEnemy(enemy, dt, ctx) {
+    if (enemy.building) {
+      if (enemy.buildPhase === "retreat") {
+        if (!ctx.bombs.includes(enemy.buildBomb) ||
+            enemy.buildBomb.x !== enemy.buildBombX ||
+            enemy.buildBomb.y !== enemy.buildBombY) {
+          enemy.building = false;
+          enemy.buildPhase = null;
+          enemy.buildBomb = null;
+          enemy.path = [];
+          enemy.mode = enemy.isEnraged ? "chase" : "patrol";
+          enemy.buildDebugReason = "bomb-ended-or-moved";
+          return false;
+        }
+
+        enemy.speed = Math.max(enemy.huntSpeed * 1.45, 2.6);
+        if (enemy.path.length) {
+          ctx.followEnemyPath(enemy, dt);
+          if (enemy.path.length) return true;
+        }
+
+        const sx = enemy.buildBlockX, sy = enemy.buildBlockY;
+        const tx = enemy.buildRetreatX, ty = enemy.buildRetreatY;
+        const stillAtRetreat = Math.floor(enemy.x) === tx && Math.floor(enemy.y) === ty;
+        const occupied = ctx.enemies.some(other => other !== enemy && other.alive &&
+          !other.burrowing && Math.floor(other.x) === sx && Math.floor(other.y) === sy);
+        const retreatOccupied = ctx.enemies.some(other => other !== enemy && other.alive &&
+          !other.burrowing && Math.floor(other.x) === tx && Math.floor(other.y) === ty);
+
+        if (!stillAtRetreat ||
+            ctx.tileAt(sx, sy) !== 0 ||
+            ctx.waterPuddleCells.has(ctx.cellKey(sx, sy)) ||
+            ctx.bombAt(sx, sy) ||
+            (Math.floor(ctx.player.x) === sx && Math.floor(ctx.player.y) === sy) ||
+            occupied ||
+            (ctx.exit.found && ctx.exit.x === sx && ctx.exit.y === sy) ||
+            ctx.tileAt(tx, ty) !== 0 ||
+            ctx.bombAt(tx, ty) ||
+            ctx.waterPuddleCells.has(ctx.cellKey(tx, ty)) ||
+            (Math.floor(ctx.player.x) === tx && Math.floor(ctx.player.y) === ty) ||
+            retreatOccupied ||
+            (ctx.exit.found && ctx.exit.x === tx && ctx.exit.y === ty)) {
+          enemy.building = false;
+          enemy.buildPhase = null;
+          enemy.buildBomb = null;
+          enemy.path = [];
+          enemy.mode = enemy.isEnraged ? "chase" : "patrol";
+          enemy.buildDebugReason = "construction-cell-became-unavailable";
+          return false;
+        }
+
+        // O bloco é destrutível. As verificações locais protegem personagens,
+        // bombas, água e saída sem exigir conectividade global impossível do mapa.
+        ctx.map[sy][sx] = 2;
+        ctx.rebuildStaticMapCache();
+        ctx.builderBuildAnimations.push({ x: sx, y: sy, age: 0, duration: .24 });
+        ctx.spawnSandBuildParticles(sx, sy);
+        enemy.buildPhase = "raise";
+        enemy.buildTimer = .24;
+        enemy.speed = 0;
+        enemy.buildDebugReason = "raising-shield";
+        return true;
+      }
+
+      if (enemy.buildPhase === "raise") {
+        enemy.buildTimer = Math.max(0, (enemy.buildTimer || 0) - dt);
+        if (enemy.buildTimer > 0) {
+          enemy.speed = 0;
+          return true;
+        }
+      }
+
+      enemy.building = false;
+      enemy.buildPhase = null;
+      enemy.buildBomb = null;
+      enemy.buildBombX = null;
+      enemy.buildBombY = null;
+      enemy.path = [];
+      enemy.mode = enemy.isEnraged ? "chase" : "patrol";
+      enemy.repath = 0;
+      enemy.buildDebugReason = "shield-complete";
+      return false;
+    }
+
+    // Tenta construir em cada atualização enquanto houver bomba ativa.
+    // A rotina é isolada deste módulo e não depende da fuga genérica dos demais inimigos.
+    for (const activeBomb of ctx.bombs) {
+      if (ctx.distance(enemy.x, enemy.y, activeBomb.x + .5, activeBomb.y + .5) > 5.2) continue;
+      if (ctx.beginShieldBuild(enemy, activeBomb)) return true;
+    }
+    return false;
+  }
+
+  return Object.freeze({ planShield, beginShieldBuild, updateEnemy });
 });
