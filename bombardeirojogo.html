@@ -17232,7 +17232,7 @@ function addVolcanoWorldUI(){
   path.querySelectorAll(".pathShadow").forEach(e=>e.setAttribute("stroke","#32131b"));
   path.querySelectorAll(".pathBase").forEach(e=>e.setAttribute("stroke","#a94c2e"));
   path.querySelectorAll(".pathCenter").forEach(e=>e.setAttribute("stroke","#ffc16b"));
-  const mascot=panel.querySelector("#volcanoMapMascot");mascot.style.filter="drop-shadow(0 0 8px #ff702d)";
+  const mascot=panel.querySelector("#volcanoMapMascot");mascot.style.cssText="position:absolute;z-index:4;width:38px;height:38px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 8px #ff702d);transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1)";
   $("desertPanel").parentNode.appendChild(panel);
   $("volcanoBackArrowBtn").onclick=()=>showMenuScreen("worlds");
  }
@@ -17262,10 +17262,10 @@ selectMapLevel=function(i){
 showMenuScreen=function(which){
  if(which==="volcano"){
   $("overlay").style.display="none";$("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");$("desertPanel").classList.add("hidden");
-  $("volcanoPanel").style.display="flex";$("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
+  $("volcanoPanel").classList.remove("hidden");$("volcanoPanel").style.display="flex";$("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
   currentWorld="volcano";loadProgress();buildBurningCrateSprite();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildVolcanoMap();menuReturn="volcano";return;
  }
- $("volcanoPanel").style.display="none";
+ $("volcanoPanel").style.display="none";$("volcanoPanel").classList.add("hidden");
  return showMenuWithDesert(which);
 };
 startGame=function(n=1){$("volcanoPanel").style.display="none";return startGameWithDesert(n)};
