@@ -10,10 +10,10 @@
  <filter id="rockShadow" x="-12%" y="-12%" width="124%" height="135%"><feGaussianBlur in="SourceAlpha" stdDeviation="5"/><feOffset dy="7"/><feComponentTransfer><feFuncA type="linear" slope=".62"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
  <g id="sprout">
   <path d="M0 26Q-3 5 2-17" fill="none" stroke="#244d2c" stroke-width="6" stroke-linecap="round"/>
-  <path d="M0 10Q-35-5-39-30Q-13-37 3 2Z" fill="url(#leaf)" stroke="#285b32" stroke-width="2.5"/>
-  <path d="M2 1Q27-29 53-17Q51 10 7 17Z" fill="url(#leafLight)" stroke="#285b32" stroke-width="2.5"/>
-  <path d="M1-8Q-5-38 15-55Q37-35 8-3Z" fill="url(#leaf)" stroke="#285b32" stroke-width="2.5"/>
-  <path d="M-32-27Q-13-14 1 5M46-14Q24-4 8 12M16-48Q11-25 5-8" fill="none" stroke="#e4f8b5" stroke-width="2.8" opacity=".75"/>
+  <path d="M0 13Q-49-3-55-42Q-16-52 5 4Z" fill="url(#leaf)" stroke="#285b32" stroke-width="3"/>
+  <path d="M3 3Q38-39 72-23Q69 14 9 23Z" fill="url(#leafLight)" stroke="#285b32" stroke-width="3"/>
+  <path d="M1-10Q-8-51 20-74Q49-47 11-4Z" fill="url(#leaf)" stroke="#285b32" stroke-width="3"/>
+  <path d="M-46-37Q-18-19 2 7M63-19Q33-5 10 17M21-65Q15-34 7-10" fill="none" stroke="#e4f8b5" stroke-width="3.2" opacity=".78"/>
  </g>
 </defs>
 <!-- Large irregular interlocked boulders. Their silhouettes overlap and run beyond every edge,
