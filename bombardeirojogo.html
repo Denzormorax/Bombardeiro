@@ -15797,6 +15797,7 @@ const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,EN
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
 let dirtParticles=[],waterPuddles=[],waterParticles=[],builderBuildAnimations=[];
+const destroyedBlockEffects=[];
 const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[];let waterPuddleFramesReady=false;
 let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
@@ -16603,7 +16604,7 @@ function placeBomb(){
  bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
+function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
 function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
@@ -16623,7 +16624,7 @@ function isInsideFlameDamage(entity,cell){
 }
 function explode(b){
  playSfx("explosion");let brokeBlock=false;activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}}if(brokeBlock){rebuildStaticMapCache();}
+ for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}}if(brokeBlock){rebuildStaticMapCache();}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter||e.isBuilder){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
@@ -16798,6 +16799,36 @@ function updateWaterParticles(dt){
   if(p.t<=0)waterParticles.splice(i,1);
  }
 }
+// Efeitos exclusivos de destruição dos blocos: areia no deserto e erupção na lava.
+function spawnDestroyedBlockEffect(x,y,world){
+ if(world!=="desert"&&world!=="volcano")return;
+ const effect={x,y,world,age:0,duration:world==="desert" ? .86 : .78,particles:[]};
+ const count=world==="desert"?26:30;
+ for(let i=0;i<count;i++){
+  const a=Math.random()*Math.PI*2,speed=world==="desert"?.55+Math.random()*2.15:.8+Math.random()*2.65;
+  effect.particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-(world==="volcano"?.95:.42),size:world==="desert"?1.8+Math.random()*3.2:1.7+Math.random()*3.5,spin:Math.random()*6.28,kind:i%5});
+ }
+ destroyedBlockEffects.push(effect);
+}
+function updateDestroyedBlockEffects(dt){
+ for(let i=destroyedBlockEffects.length-1;i>=0;i--){const e=destroyedBlockEffects[i];e.age+=dt;for(const p of e.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-(e.world==="desert"?1.15:1.65)*dt);p.vy+=(e.world==="desert"?3.1:3.8)*dt;p.spin+=dt*5}if(e.age>=e.duration)destroyedBlockEffects.splice(i,1)}
+}
+function drawDestroyedBlockEffects(){
+ if(!destroyedBlockEffects.length)return;ctx.save();
+ for(const e of destroyedBlockEffects){const progress=e.age/e.duration,fade=Math.max(0,1-progress),cx=ox+e.x*TILE,cy=oy+e.y*TILE;
+  ctx.save();ctx.globalAlpha=fade;
+  if(e.world==="desert"){
+   // Nuvem de areia dourada que se abre e cai, sem usar o efeito de madeira da floresta.
+   const radius=9+progress*25;const cloud=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);cloud.addColorStop(0,"rgba(255,224,151,.62)");cloud.addColorStop(.48,"rgba(220,163,78,.34)");cloud.addColorStop(1,"rgba(190,126,49,0)");ctx.fillStyle=cloud;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
+  }else{
+   // Pulso de erupção com núcleo incandescente e anel de choque vulcânico.
+   const radius=7+progress*31;const glow=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);glow.addColorStop(0,"rgba(255,250,190,.95)");glow.addColorStop(.24,"rgba(255,160,48,.78)");glow.addColorStop(.62,"rgba(220,48,20,.34)");glow.addColorStop(1,"rgba(120,12,8,0)");ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,177,75,"+(fade*.8)+")";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,5+progress*26,0,Math.PI*2);ctx.stroke();
+  }
+  for(const p of e.particles){const px=ox+p.x*TILE,py=oy+p.y*TILE;ctx.globalAlpha=fade*(.72+.28*Math.sin(p.spin));if(e.world==="desert"){ctx.fillStyle=p.kind===0?"#fff0bd":p.kind===1?"#f4cc82":p.kind===2?"#d99a4d":"#bd7839";ctx.beginPath();ctx.ellipse(px,py,p.size*1.35,p.size*.72,p.spin,0,Math.PI*2);ctx.fill()}else{ctx.fillStyle=p.kind===0?"#fff6b0":p.kind===1?"#ffcb54":p.kind===2?"#ff762d":"#c92c16";ctx.shadowColor="#ff6426";ctx.shadowBlur=7;ctx.beginPath();ctx.arc(px,py,p.size*(.75+fade*.3),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}}
+  ctx.restore();
+ }
+ ctx.restore();
+}
 function spawnWaterSplash(x,y){
  for(let i=0;i<6;i++){
   const angle=(Math.PI*2*i/6)+(Math.random()-.5)*.55,speed=.42+Math.random()*.72;
@@ -16817,7 +16848,7 @@ function update(dt){
   for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,flameCell.x,flameCell.y,1,1)&&!f.hitEnemies.has(enemy)){f.hitEnemies.add(enemy);damageEnemy(enemy)}
  }
  for(const c of coinsOnMap)c.life+=dt;
-  updateDirtParticles(dt);updateWaterParticles(dt);
+  updateDirtParticles(dt);updateWaterParticles(dt);updateDestroyedBlockEffects(dt);
   spawnExitPortal();
 }
 
@@ -17286,9 +17317,10 @@ function draw(){
  drawVolcanoCraterAnimation();
  drawDesertDuneAnimation();
  drawBuilderBuildAnimations();
+ drawDestroyedBlockEffects();
  drawIndestructibleShimmer();
  for(let y=0;y<ROWS;y++){
-  for(const crate of burningCrates)if(crate.y===y)drawBurningCrate(crate);
+  for(const crate of burningCrates)if(crate.y===y&&currentWorld!=="desert"&&currentWorld!=="volcano")drawBurningCrate(crate);
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   if(currentWorld==="volcano"){for(const e of enemyDrawRows[y])drawEnemy(e)}
   else{for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}}
@@ -17935,6 +17967,7 @@ function updateBlueFlameEnemies(dt){
 }
 function detonateBlueFlame(e){
  if(!e||!e.alive||e.blueFlameDetonating)return;
+ playSfx("explosion");
  e.blueFlameDetonating=true;e.blueFlameFuse=0;e.blueFlameCooldown=1.15;
  e.mode="chase";e.speed=e.baseSpeed;e.path=[];e.repath=0;e.lastSeen={x:player.x,y:player.y};
  // Explosão visual independente: não mata o inimigo nem consome bombas do jogador.
