@@ -16360,7 +16360,7 @@ function buildBuilderSandShield(enemy,bomb){
   if(dx*vx+dy*vy<=.15)continue;
   const sx=bx+dx,sy=by+dy,tx=bx+dx*2,ty=by+dy*2;
   if(sx<=0||sy<=0||sx>=COLS-1||sy>=ROWS-1||tx<=0||ty<=0||tx>=COLS-1||ty>=ROWS-1)continue;
-  if(tileAt(sx,sy)!==0||bombAt(sx,sy)||Math.floor(player.x)===sx&&Math.floor(player.y)===sy)continue;
+  if(tileAt(sx,sy)!==0||bombAt(sx,sy)||waterPuddleCells.has(cellKey(sx,sy))||Math.floor(player.x)===sx&&Math.floor(player.y)===sy)continue;
   if(enemies.some(other=>other!==enemy&&other.alive&&!other.burrowing&&Math.floor(other.x)===sx&&Math.floor(other.y)===sy))continue;
   const alreadyBehind=(dx!==0?ey===by&&((ex-bx)*dx)>=2:ex===bx&&((ey-by)*dy)>=2);
   const targetX=alreadyBehind?ex:tx,targetY=alreadyBehind?ey:ty;
@@ -16397,7 +16397,7 @@ function reactToNewBomb(newBomb=null){
   if(currentThreatened||routeThreatened){
    // Todos os inimigos, inclusive o cogumelo, priorizam sair da área da explosão.
    enemy.bombEscapePending=true;
-   enemy.bombReactionTimer=enemy.isMushroom?.02:enemy.isHorned?.04:enemy.isHunter||enemy.isBuilder?.07:.08;
+   enemy.bombReactionTimer=enemy.isMushroom ? .02 : enemy.isHorned ? .04 : (enemy.isHunter||enemy.isBuilder) ? .07 : .08;
   }else if(routeBlockedByBomb||nearbyBomb){
    // Se a bomba apenas bloqueia a perseguição, recalcula o caminho para contorná-la.
    enemy.path=[];
