@@ -18081,22 +18081,22 @@ drawForestBackground=function(target){syncThemedBackdrop();return drawWithThemed
 syncThemedBackdrop();
 
 
-/* MUNDO 2 — DUNAS DE AREIA: textura animada dos blocos destrutíveis.
-   Seis quadros por tema, pré-renderizados uma única vez e reutilizados em cache.
-   A animação só faz drawImage por bloco; nenhum gradiente/filtro é recalculado por frame. */
+/* MUNDO 2 — PIRÂMIDES DE AREIA: sprite 3D em perspectiva superior.
+   Canvas transparente: desenha somente a pirâmide e os grãos de areia, sem fundo quadrado.
+   Seis quadros por tema, pré-renderizados e reutilizados; a camada permanece atrás das entidades. */
 const desertDuneFrames=Array.from({length:10},()=>Array(6).fill(null));
 const desertDunePositions=[];
 const desertDunePalettes=[
- ["#70401f","#a95e28","#f6c24e","#ffe58a","#fff3bd"],
- ["#744326","#b36a2e","#ffd05a","#ffe99a","#fff5c8"],
- ["#80502b","#bd7130","#f7b83d","#ffe08a","#fff0b0"],
- ["#704126","#ad5e2b","#f3ad38","#ffdc70","#fff0a8"],
- ["#79502c","#b96b2c","#ffc64b","#ffe58b","#fff4bd"],
- ["#75452a","#aa5d2b","#f4b443","#ffe18a","#fff5c4"],
- ["#68402a","#a85e31","#f2b84a","#ffe49a","#fff4c0"],
- ["#80502e","#b66a2b","#ffd05b","#ffea9c","#fff5c9"],
- ["#70452b","#b36a35","#f7bf4c","#ffe58e","#fff5bf"],
- ["#76502f","#aa642f","#f4b747","#ffe18c","#fff2b5"]
+ ["#9a5425","#c77b2d","#f4bd4a","#ffe18a","#fff4c2"],
+ ["#a35d29","#ce8735","#ffd05a","#ffea9b","#fff6cf"],
+ ["#92502a","#c87932","#f6b943","#ffe08a","#fff1b8"],
+ ["#984f25","#c8752d","#f2ad3c","#ffdc70","#fff0ad"],
+ ["#9b592b","#ce7d30","#ffc64b","#ffe58b","#fff5c6"],
+ ["#8e4d28","#c06e2d","#f4b443","#ffe18a","#fff5cb"],
+ ["#884a29","#bd7133","#f2b84a","#ffe49a","#fff4c8"],
+ ["#a05b2b","#cf8130","#ffd05b","#ffea9c","#fff5d0"],
+ ["#96532b","#c87935","#f7bf4c","#ffe58e","#fff5c5"],
+ ["#9b5b30","#c87931","#f4b747","#ffe18c","#fff2bb"]
 ];
 function buildDesertDuneFrames(){
  for(let theme=0;theme<10;theme++){
@@ -18106,45 +18106,67 @@ function buildDesertDuneFrames(){
    const c=document.createElement("canvas");c.width=96;c.height=96;
    const q=c.getContext("2d");q.imageSmoothingEnabled=true;
    const phase=frame/6*Math.PI*2;
-   // Base escura e borda irregular de areia compactada.
-   q.fillStyle="#4b2c1d";q.beginPath();q.roundRect(1,1,94,94,8);q.fill();
-   const base=q.createLinearGradient(0,8,0,94);base.addColorStop(0,p[1]);base.addColorStop(.55,p[0]);base.addColorStop(1,"#482a1d");
-   q.fillStyle=base;q.beginPath();q.moveTo(4,43);q.quadraticCurveTo(18,19,42,17);q.quadraticCurveTo(66,12,91,43);q.lineTo(92,91);q.quadraticCurveTo(48,98,4,90);q.closePath();q.fill();
-   // Corpo da duna com brilho na crista.
-   const dune=q.createLinearGradient(12,15,76,79);dune.addColorStop(0,p[4]);dune.addColorStop(.2,p[3]);dune.addColorStop(.58,p[2]);dune.addColorStop(1,p[1]);
-   q.fillStyle=dune;q.beginPath();q.moveTo(5,43);q.quadraticCurveTo(20,20,42,18);q.quadraticCurveTo(67,14,91,43);q.quadraticCurveTo(76,52,65,48);q.quadraticCurveTo(47,43,31,55);q.quadraticCurveTo(17,62,5,54);q.closePath();q.fill();
-   q.strokeStyle=p[4];q.globalAlpha=.78;q.lineWidth=2.5;q.beginPath();q.moveTo(8,42);q.quadraticCurveTo(27,17,46,19);q.quadraticCurveTo(70,15,88,41);q.stroke();q.globalAlpha=1;
-   // Cortina/cachoeira de areia em quatro faixas curvas.
-   q.save();q.beginPath();q.moveTo(29,38);q.quadraticCurveTo(47,31,67,39);q.lineTo(74,83);q.quadraticCurveTo(49,91,24,82);q.closePath();q.clip();
-   const fall=q.createLinearGradient(25,0,74,0);fall.addColorStop(0,p[3]);fall.addColorStop(.35,p[2]);fall.addColorStop(.72,p[1]);fall.addColorStop(1,"#a95725");
-   q.fillStyle=fall;q.fillRect(22,34,55,55);
-   for(let k=0;k<5;k++){
-    const x=29+k*9+Math.sin(phase+k)*2.2;
-    q.strokeStyle=k%2?p[4]:p[3];q.globalAlpha=.55+(k%3)*.12;q.lineWidth=k===2?3:1.8;
-    q.beginPath();q.moveTo(x,35);q.bezierCurveTo(x-4,48,x+4,59,x+Math.sin(phase+k)*3,88);q.stroke();
-   }
+   // Não preencher o canvas: a transparência externa é intencional.
+   // Sombra suave oval, sem retângulo de fundo.
+   q.save();q.fillStyle="#4b2c1d";q.globalAlpha=.25;q.filter="blur(3px)";
+   q.beginPath();q.ellipse(49,72,39,13,0,0,Math.PI*2);q.fill();q.restore();
+   // Espessura da base em losango e quatro faces triangulares da pirâmide.
+   q.beginPath();q.moveTo(48,27);q.lineTo(89,57);q.lineTo(48,89);q.lineTo(7,57);q.closePath();
+   q.fillStyle="#75401f";q.fill();
+   q.beginPath();q.moveTo(7,57);q.lineTo(48,82);q.lineTo(48,89);q.lineTo(7,64);q.closePath();q.fillStyle=p[0];q.fill();
+   q.beginPath();q.moveTo(48,82);q.lineTo(89,57);q.lineTo(89,64);q.lineTo(48,89);q.closePath();q.fillStyle="#71391e";q.fill();
+   // Face posterior, iluminada.
+   q.beginPath();q.moveTo(48,9);q.lineTo(48,27);q.lineTo(89,57);q.closePath();
+   const back=q.createLinearGradient(48,9,88,57);back.addColorStop(0,p[4]);back.addColorStop(.55,p[3]);back.addColorStop(1,p[2]);q.fillStyle=back;q.fill();
+   // Face direita, tom médio.
+   q.beginPath();q.moveTo(48,9);q.lineTo(89,57);q.lineTo(48,82);q.closePath();
+   const right=q.createLinearGradient(48,9,82,78);right.addColorStop(0,p[3]);right.addColorStop(.58,p[2]);right.addColorStop(1,p[0]);q.fillStyle=right;q.fill();
+   // Face frontal, sombra mais profunda para dar volume.
+   q.beginPath();q.moveTo(48,9);q.lineTo(48,82);q.lineTo(7,57);q.closePath();
+   const front=q.createLinearGradient(48,10,28,80);front.addColorStop(0,p[2]);front.addColorStop(.55,p[1]);front.addColorStop(1,p[0]);q.fillStyle=front;q.fill();
+   // Face esquerda com luz dourada.
+   q.beginPath();q.moveTo(48,9);q.lineTo(7,57);q.lineTo(48,27);q.closePath();
+   const left=q.createLinearGradient(48,9,12,57);left.addColorStop(0,p[4]);left.addColorStop(.55,p[3]);left.addColorStop(1,p[1]);q.fillStyle=left;q.fill();
+   // Arestas e linhas estruturais: deixam clara a perspectiva vista de cima.
+   q.lineCap="round";q.lineJoin="round";
+   q.strokeStyle="#fff0ad";q.globalAlpha=.82;q.lineWidth=1.8;
+   q.beginPath();q.moveTo(48,9);q.lineTo(48,27);q.moveTo(48,9);q.lineTo(89,57);q.moveTo(48,9);q.lineTo(48,82);q.moveTo(48,9);q.lineTo(7,57);q.stroke();
+   q.globalAlpha=.65;q.strokeStyle="#75401f";q.lineWidth=1.4;
+   q.beginPath();q.moveTo(48,27);q.lineTo(89,57);q.lineTo(48,82);q.lineTo(7,57);q.closePath();q.stroke();
+   q.globalAlpha=1;
+   // Cascata dourada na face esquerda.
+   q.save();q.beginPath();q.moveTo(45,15);q.lineTo(10,56);q.lineTo(28,68);q.lineTo(49,29);q.closePath();q.clip();
+   const fallL=q.createLinearGradient(12,20,47,67);fallL.addColorStop(0,p[4]);fallL.addColorStop(.45,p[3]);fallL.addColorStop(1,p[1]);q.fillStyle=fallL;q.fillRect(5,12,48,62);
+   for(let k=0;k<4;k++){const x=43-k*7+Math.sin(phase+k)*1.7;q.strokeStyle=k%2?p[4]:p[3];q.globalAlpha=.75;q.lineWidth=k===1?2.4:1.3;q.beginPath();q.moveTo(x,17);q.bezierCurveTo(x-7,31,x-12,45,x-22,62);q.stroke()}
    q.globalAlpha=1;q.restore();
-   // Pequena nuvem de areia acumulada no pé da queda.
-   q.fillStyle=p[1];q.beginPath();q.moveTo(18,79);q.quadraticCurveTo(25,70,34,77);q.quadraticCurveTo(43,69,52,78);q.quadraticCurveTo(64,69,77,80);q.quadraticCurveTo(69,91,46,91);q.quadraticCurveTo(25,91,18,79);q.fill();
-   q.strokeStyle=p[3];q.lineWidth=2;q.beginPath();q.moveTo(24,80);q.quadraticCurveTo(36,74,45,81);q.quadraticCurveTo(58,73,72,81);q.stroke();
-   // Partículas: distribuição determinística em três correntes, com deslocamento por quadro.
+   // Segunda queda de areia na face direita.
+   q.save();q.beginPath();q.moveTo(51,15);q.lineTo(86,56);q.lineTo(68,69);q.lineTo(47,29);q.closePath();q.clip();
+   const fallR=q.createLinearGradient(84,18,49,69);fallR.addColorStop(0,p[4]);fallR.addColorStop(.42,p[2]);fallR.addColorStop(1,p[0]);q.fillStyle=fallR;q.fillRect(45,12,48,62);
+   for(let k=0;k<4;k++){const x=53+k*7+Math.sin(phase+k+1)*1.7;q.strokeStyle=k%2?p[4]:p[3];q.globalAlpha=.72;q.lineWidth=k===2?2.4:1.3;q.beginPath();q.moveTo(x,17);q.bezierCurveTo(x+7,31,x+12,45,x+22,62);q.stroke()}
+   q.globalAlpha=1;q.restore();
+   // Terceira corrente central, mais discreta, reforça a animação da areia.
+   q.save();q.strokeStyle=p[4];q.globalAlpha=.8;q.lineWidth=1.5;q.setLineDash([3,4]);
+   q.lineDashOffset=-frame*2;q.beginPath();q.moveTo(48,31);q.lineTo(48,76);q.stroke();q.restore();
+   // Três correntes de partículas (6 por corrente), com posições animadas por quadro.
    for(let stream=0;stream<3;stream++){
-    for(let i=0;i<8;i++){
+    for(let i=0;i<6;i++){
      const seed=(i*17+stream*13+theme*7)%19;
-     const x=30+stream*15+Math.sin(seed*1.7+phase)*4+(i%3)*3;
-     const travel=(i*8+frame*13+stream*9)%55;
-     const y=34+travel;
-     const r=.8+((i+stream)%3)*.48;
-     q.globalAlpha=.48+((i+frame)%4)*.13;q.fillStyle=(i+stream)%3===0?p[4]:(i%2?p[3]:p[2]);
-     q.beginPath();q.ellipse(x,y,r,r*1.35,phase*.18,0,Math.PI*2);q.fill();
+     let x,y;
+     if(stream===0){x=43-i*5+Math.sin(seed+phase)*2;y=17+i*8+frame*1.2}
+     else if(stream===1){x=53+i*5+Math.sin(seed+phase)*2;y=18+i*8+frame*1.1}
+     else{x=48+Math.sin(seed+phase)*2;y=34+i*8+frame*1.5}
+     q.globalAlpha=.55+((i+frame)%4)*.11;q.fillStyle=(i+stream)%3===0?p[4]:(i%2?p[3]:p[2]);
+     q.beginPath();q.ellipse(x,y,.8+((i+stream)%3)*.38,1.1+((i+stream)%3)*.35,phase*.18,0,Math.PI*2);q.fill();
     }
    }
-   // Poeira lateral e pequenos grãos brilhantes.
-   q.globalAlpha=.65;q.fillStyle=p[3];
-   for(let i=0;i<10;i++){const side=i%2?1:-1,x=side<0?15+(i*7)%12:70+(i*5)%13,y=47+(i*11+frame*4)%39,r=.7+(i%3)*.35;q.beginPath();q.arc(x,y,r,0,Math.PI*2);q.fill()}
+   // Grãos soltos na base, fora da silhueta principal.
+   q.globalAlpha=.82;q.fillStyle=p[3];
+   for(let i=0;i<8;i++){const side=i%2?1:-1,x=side<0?8+(i*5)%13:75+(i*7)%13,y=58+(i*7+frame*3)%24;q.beginPath();q.arc(x,y,.7+(i%3)*.3,0,Math.PI*2);q.fill()}
    q.globalAlpha=1;
-   // Contorno suave para manter leitura do bloco no tabuleiro.
-   q.strokeStyle="#ffe39a88";q.lineWidth=1;q.beginPath();q.roundRect(1.5,1.5,93,93,8);q.stroke();
+   // Contorno apenas da pirâmide; nenhum contorno retangular.
+   q.strokeStyle="#ffe39a";q.globalAlpha=.72;q.lineWidth=1.2;
+   q.beginPath();q.moveTo(48,9);q.lineTo(89,57);q.lineTo(48,89);q.lineTo(7,57);q.closePath();q.stroke();
+   q.globalAlpha=1;
    desertDuneFrames[theme][frame]=c;
   }
  }
@@ -18177,7 +18199,7 @@ rebuildStaticMapCache=function(){
  if(currentWorld==="desert"&&map&&map.length){
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y][x]===2)desertDunePositions.push({x,y,phase:((x*17+y*29+level*11)%31)/31*6});
  }
-};
+};;
 
 updateHUD();
 
