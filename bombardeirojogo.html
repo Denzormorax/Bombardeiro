@@ -9,8 +9,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#101820;color:white;font-family:Arial,sans-serif;touch-action:none;user-select:none}
-#game{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#9bcf91,#386b48 48%,#132f2b);overflow:hidden}
-canvas{display:block;width:100vw;height:100vh;object-fit:contain}
+#game{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#9bcf91,#386b48 48%,#132f2b);overflow:hidden;isolation:isolate;--world-sky-top:#9bcf91;--world-sky-mid:#386b48;--world-sky-bottom:#132f2b;--world-far:#376c42;--world-near:#1a3e2b;--world-glow:#fff1a8;--world-accent:#f4c86c}
+#game::before,#game::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0}
+#game::before{background:linear-gradient(180deg,transparent 32%,var(--world-far) 32%);clip-path:polygon(0 61%,8% 48%,16% 59%,25% 42%,34% 61%,44% 45%,54% 60%,64% 43%,74% 59%,84% 46%,93% 60%,100% 49%,100% 100%,0 100%);opacity:.82}
+#game::after{inset:auto 0 0;height:43%;background:linear-gradient(180deg,color-mix(in srgb,var(--world-near) 72%,transparent),var(--world-near));clip-path:polygon(0 28%,12% 12%,24% 34%,37% 18%,51% 38%,65% 15%,79% 33%,91% 13%,100% 27%,100% 100%,0 100%);opacity:.92}
+#game[data-world="forest"]::before{background:repeating-linear-gradient(90deg,transparent 0 4%,var(--world-far) 4% 5.5%,transparent 5.5% 9%),linear-gradient(180deg,transparent 0 25%,var(--world-far) 25%);clip-path:polygon(0 70%,5% 35%,10% 70%,15% 25%,20% 70%,26% 38%,32% 70%,38% 30%,44% 70%,50% 36%,56% 70%,62% 27%,68% 70%,74% 34%,80% 70%,86% 28%,92% 70%,100% 38%,100% 100%,0 100%)}
+#game[data-world="desert"]::before{background:linear-gradient(180deg,var(--world-far),var(--world-near));clip-path:polygon(0 70%,12% 42%,23% 58%,36% 27%,49% 64%,63% 35%,77% 61%,89% 31%,100% 55%,100% 100%,0 100%)}
+#game[data-world="volcano"]::before{background:linear-gradient(180deg,var(--world-far),var(--world-near));clip-path:polygon(0 70%,12% 43%,22% 61%,36% 18%,45% 58%,58% 35%,69% 63%,82% 24%,91% 57%,100% 39%,100% 100%,0 100%)}
+canvas{position:relative;z-index:1;display:block;width:100vw;height:100vh;object-fit:contain}
 #hud{position:fixed;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:6px;pointer-events:none;z-index:3;font-size:13px;font-weight:bold;text-shadow:0 2px 4px #000}
 #hudRight{display:flex;align-items:center;gap:6px}
 .hudbox{background:#101820e8;border:1px solid #5d7888;border-radius:8px;padding:7px 10px;white-space:nowrap}
@@ -18043,6 +18049,31 @@ function drawBlueFlameEnemy(e){
 }
 const drawEnemyBeforeBlueFlame=drawEnemy;
 drawEnemy=function(e){if(e.isBlueFlame){drawBlueFlameEnemy(e);return}drawEnemyBeforeBlueFlame(e)};
+
+
+/* FUNDO PANORÂMICO TEMÁTICO: preenche as áreas externas ao tabuleiro sem alterar o canvas. */
+const drawWithThemedBackdrop=drawForestBackground;
+let themedBackdropKey="";
+function syncThemedBackdrop(){
+ const el=$("game"),theme=currentForestTheme();
+ if(!el||!theme)return;
+ const world=currentWorld==="desert"?"desert":currentWorld==="volcano"?"volcano":"forest";
+ const key=world+":"+level+":"+theme.name;
+ if(key===themedBackdropKey)return;
+ themedBackdropKey=key;
+ el.dataset.world=world;
+ el.dataset.theme=theme.name;
+ el.style.setProperty("--world-sky-top",theme.sky[0]);
+ el.style.setProperty("--world-sky-mid",theme.sky[1]);
+ el.style.setProperty("--world-sky-bottom",theme.sky[2]);
+ el.style.setProperty("--world-far",theme.far);
+ el.style.setProperty("--world-near",theme.near);
+ el.style.setProperty("--world-glow",theme.glow);
+ el.style.setProperty("--world-accent",theme.accent);
+ el.style.background="radial-gradient(ellipse at 50% 40%, "+theme.glow+"55 0%, transparent 58%),radial-gradient(ellipse at 78% 18%, "+theme.accent+"44 0%, transparent 42%),linear-gradient(180deg,"+theme.sky[0]+" 0%,"+theme.sky[1]+" 52%,"+theme.sky[2]+" 100%)";
+}
+drawForestBackground=function(target){syncThemedBackdrop();return drawWithThemedBackdrop(target)};
+syncThemedBackdrop();
 
 updateHUD();
 
