@@ -465,6 +465,33 @@ p{color:#d2e0e8;font-size:12px;line-height:1.35;margin:5px 0}
 #desertLevelNodes .mapNode.locked{background:linear-gradient(145deg,#82786b,#4a4038);border-color:#b4a18a;color:#d9cbb8;box-shadow:0 4px 0 #30251d;filter:saturate(.55)}
 @keyframes desertPulse{0%,100%{box-shadow:0 4px 0 #70401f,0 0 10px #ffc76b,0 0 19px #e8a64b88}50%{box-shadow:0 4px 0 #70401f,0 0 19px #ffc76b,0 0 34px #e8a64b}}
 #desertProgressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);margin:0;text-align:center;font-size:12px;color:#ffe6b7;text-shadow:0 2px 5px #542d16}
+
+#volcanoPanel{position:fixed;inset:0;z-index:12;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;padding:clamp(12px,2vh,18px) clamp(12px,3vw,35px);border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;background:linear-gradient(180deg,rgba(35,13,18,.12),rgba(10,8,16,.22)),radial-gradient(ellipse at 50% 82%,#74301d 0%,#28151e 52%,#0d111c 100%)}
+#volcanoPanel>*{position:relative;z-index:1}
+#volcanoPanel .menuTitle{position:relative;align-self:center;margin:3px 0 8px;font-size:clamp(24px,4vw,36px);color:#ffb36b;text-shadow:0 3px 0 #5a211a,0 0 15px #ff793d}
+#volcanoBackArrowBtn{position:absolute;top:12px;left:12px;z-index:10;width:43px;height:43px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid #ffb0a0;border-radius:12px;background:linear-gradient(145deg,#b83225,#681b1b);color:#fff0e8;font-size:29px;font-weight:bold;line-height:1;box-shadow:0 4px 12px #0009,0 0 12px #ff542e66;cursor:pointer}
+#volcanoBackArrowBtn:active{transform:scale(.94);filter:brightness(1.3)}
+#volcanoMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;margin:0;overflow:hidden}
+#volcanoPath{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#volcanoPath .pathShadow{fill:none;stroke:#32131b;stroke-width:24;stroke-linecap:round;stroke-linejoin:round;opacity:.72}
+#volcanoPath .pathBase{fill:none;stroke:#a94c2e;stroke-width:15;stroke-linecap:round;stroke-linejoin:round}
+#volcanoPath .pathCenter{fill:none;stroke:#ffc16b;stroke-width:3;stroke-dasharray:5 10;stroke-linecap:round;opacity:.9}
+#volcanoLevelNodes{position:absolute;inset:0;pointer-events:none}
+#volcanoMapMascot{position:absolute;width:clamp(43px,7vw,65px);height:clamp(43px,7vw,65px);left:0;top:0;transform:translate(-50%,-112%);z-index:8;pointer-events:none;transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1);filter:drop-shadow(0 5px 3px #32131b)}
+#volcanoMapMascot .miniBody{position:absolute;inset:7px;z-index:1;border-radius:50%;background:radial-gradient(circle at 32% 25%,#fff 0%,#fff4eb 52%,#e7bca8 100%);opacity:1;border:4px solid #ef7540;box-shadow:0 4px 0 #7b2c20}
+#volcanoMapMascot .miniHelmet{position:absolute;z-index:2;left:20%;right:20%;top:12%;height:32%;border-radius:50% 50% 10px 10px;background:linear-gradient(#ffd18a,#c44726);border-bottom:2px solid #7b241b}
+#volcanoMapMascot .miniEyes{position:absolute;z-index:3;left:29%;right:29%;top:42%;display:flex;justify-content:space-between}
+#volcanoMapMascot .miniEyes i{display:block;width:6px;height:9px;border-radius:50%;background:#fff;position:relative;box-shadow:inset 0 -1px 0 #e8d5b7}
+#volcanoMapMascot .miniEyes i:after{content:"";position:absolute;width:3px;height:5px;left:2px;top:3px;border-radius:50%;background:#382019}
+#volcanoMapMascot .miniMouth{position:absolute;z-index:3;left:40%;top:68%;width:20%;height:8%;border-bottom:2px solid #382019;border-radius:50%}
+#volcanoLevelNodes .mapNode{border-color:#ffc08a;background:radial-gradient(circle at 32% 25%,#ffe0b0,#e56b32 58%,#7c2b20);color:#fff9e8;text-shadow:0 2px 3px #6b261b;box-shadow:0 4px 0 #68251c,0 0 13px #ff914f,0 0 25px #e85b3488}
+#volcanoLevelNodes .mapNode.available{animation:volcanoPulse 1.8s ease-in-out infinite}
+#volcanoLevelNodes .mapNode.completed{background:linear-gradient(145deg,#ffe5a1,#c85b2c);border-color:#fff0c4;color:#fff;text-shadow:0 2px 2px #75401f;box-shadow:0 4px 0 #71301e,0 0 8px #ff9c6266;animation:none}
+#volcanoLevelNodes .mapNode.locked{background:linear-gradient(145deg,#82786b,#4a302b);border-color:#b4a18a;color:#d9cbb8;box-shadow:0 4px 0 #30201d;filter:saturate(.55)}
+@keyframes volcanoPulse{0%,100%{box-shadow:0 4px 0 #68251c,0 0 10px #ff914f,0 0 19px #e85b3488}50%{box-shadow:0 4px 0 #68251c,0 0 19px #ff914f,0 0 34px #e85b34}}
+#volcanoProgressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);margin:0;text-align:center;font-size:12px;color:#ffe0c5;text-shadow:0 2px 5px #542018}
+@media(max-width:600px){#volcanoPanel{padding:10px 8px}#volcanoMap{width:100%;height:min(48vh,250px);min-height:160px}.mapNode{width:clamp(34px,7vw,49px);height:clamp(34px,7vw,49px);border-width:2px}#volcanoMapMascot{width:48px;height:48px}#volcanoPanel .menuTitle{font-size:24px;margin-top:5px}#volcanoBackArrowBtn{top:9px;left:9px;width:39px;height:39px}}
+
 #forestMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;margin:0;overflow:hidden}
 #forestPath{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 #forestPath .pathShadow{fill:none;stroke:#09291d;stroke-width:24;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
@@ -15570,7 +15597,7 @@ const canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
 const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W;backgroundCanvas.height=H;const backgroundCtx=backgroundCanvas.getContext("2d");let backgroundTheme=null;
 const staticFloorCanvas=document.createElement("canvas");staticFloorCanvas.width=W;staticFloorCanvas.height=H;const staticFloorCtx=staticFloorCanvas.getContext("2d");
-const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));const indestructibleTilePositions=[];
+const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));const indestructibleTilePositions=[];const enemyDrawRows=Array.from({length:ROWS},()=>[]);
 // Sprite de caixa em chamas pré-renderizado uma única vez.
 const burningCrateCanvases=Array.from({length:10},()=>{const c=document.createElement("canvas");c.width=64;c.height=64;return c});let burningCrateReady=false;const burningCrates=[];const themedSpriteSheets=Array(10).fill(null);let cachedTileThemeIndex=-1;
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
@@ -16887,7 +16914,7 @@ function drawEnemy(e){
   ctx.save();ctx.globalAlpha=e.burrowing?Math.max(.2,1-progress*.8):Math.min(1,progress+.15);ctx.translate(px,py+13);ctx.scale(1,scaleY);ctx.translate(-px,-(py+13));
   drawEnemyFace(e,"#27c957","#126b31",0);ctx.restore();return;
  }
- let bodyColor=e.isMushroom?"#27c957":e.isHorned?(e.isEnraged?"#c82d38":"#2878ee"):e.isHunter?"#a94bd8":"#d64c4c",helmetColor=e.isMushroom?"#126b31":e.isHorned?(e.isEnraged?"#741923":"#1745a0"):e.isHunter?"#542080":"#8c2020";
+ let bodyColor=e.isMushroom?"#27c957":e.isHorned?(e.isEnraged?"#c82d38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":"#a94bd8"):(currentWorld==="volcano"?"#df6329":"#d64c4c"),helmetColor=e.isMushroom?"#126b31":e.isHorned?(e.isEnraged?"#741923":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":"#542080"):(currentWorld==="volcano"?"#702b20":"#8c2020");
  if(e.hitFlash>0&&Math.sin(gameClock*65)>.25){bodyColor=e.isHorned&&e.isEnraged?"#ff6262":"#ef7777";helmetColor="#a92727"}
  if((e.isHunter||e.isHorned)&&!isDying){ctx.save();ctx.globalAlpha=e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py,20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
@@ -17004,6 +17031,18 @@ function drawDirtParticles(){
  for(const p of dirtParticles){ctx.globalAlpha=Math.min(1,p.t/p.life);ctx.fillStyle="#9a6738";ctx.beginPath();ctx.arc(ox+p.x*TILE,oy+p.y*TILE,p.size,0,Math.PI*2);ctx.fill();ctx.fillStyle="#c18a50";ctx.fillRect(ox+p.x*TILE-1,oy+p.y*TILE-1,2,2)}
  ctx.restore();
 }
+function drawVolcanoBlockGlow(){
+ if(currentWorld!=="volcano"||!volcanoBlockGlowPositions.length)return;
+ const cache=volcanoBlockGlowCanvases[Math.max(0,Math.min(9,level-1))];
+ if(!cache)return;
+ ctx.save();
+ for(const tile of volcanoBlockGlowPositions){
+  const pulse=.62+.15*Math.sin(gameClock*1.05+tile.phase);
+  ctx.globalAlpha=pulse;
+  ctx.drawImage(cache,ox+tile.x*TILE-8,oy+tile.y*TILE-8,64,64);
+ }
+ ctx.restore();
+}
 function drawIndestructibleShimmer(){
  if(!indestructibleTilePositions.length)return;
  // Faixa branca inclinada atravessa cada bloco na diagonal, com bloom suave.
@@ -17023,6 +17062,10 @@ function drawIndestructibleShimmer(){
 }
 function draw(){
  if(cachedTileThemeIndex!==Math.max(0,Math.min(9,level-1))&&map&&map.length)rebuildStaticMapCache();
+ if(currentWorld==="volcano"){
+  for(const row of enemyDrawRows)row.length=0;
+  for(const enemy of enemies){const row=Math.floor(enemy.y);if(row>=0&&row<ROWS&&((enemy.alive)||(enemy.deathTimer||0)>0))enemyDrawRows[row].push(enemy)}
+ }
  ctx.clearRect(0,0,W,H);
  if(backgroundTheme!==currentForestTheme()){drawForestBackground(backgroundCtx);backgroundTheme=currentForestTheme()}
  ctx.drawImage(backgroundCanvas,0,0);
@@ -17031,11 +17074,13 @@ function draw(){
  // As poças ficam inteiramente atrás de todos os elementos móveis, sem cortes por ordenação de linhas.
  for(let y=0;y<ROWS;y++)ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
  for(const puddle of waterPuddles)drawWaterPuddle(puddle);
+ drawVolcanoBlockGlow();
  drawIndestructibleShimmer();
  for(let y=0;y<ROWS;y++){
   for(const crate of burningCrates)if(crate.y===y)drawBurningCrate(crate);
   if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
-  for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}
+  if(currentWorld==="volcano"){for(const e of enemyDrawRows[y])drawEnemy(e)}
+  else{for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
  }
  drawDirtParticles();drawWaterParticles();
@@ -17225,16 +17270,7 @@ function addVolcanoWorldUI(){
   panel.querySelectorAll("[id]").forEach(el=>{if(ids[el.id])el.id=ids[el.id]});
   panel.querySelector(".menuTitle").textContent="🌋 REINO DAS LAVAS";
   panel.querySelector("#volcanoProgressText").textContent="FASES CONCLUÍDAS: 0/10";
-  panel.style.cssText="position:fixed;inset:0;z-index:12;width:100%;height:100dvh;max-height:none;margin:0;padding:18px;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 75%,#74301d 0%,#28151e 52%,#0d111c 100%);border:0;border-radius:0";
-  panel.querySelector(".menuTitle").style.color="#ffb36b";
-  const mapEl=panel.querySelector("#volcanoMap");mapEl.style.cssText="position:relative;width:min(100%,560px);height:clamp(170px,34vh,260px);margin:12px auto;background:linear-gradient(180deg,#3c2027aa,#160f19dd);border:2px solid #df7541;border-radius:18px;overflow:hidden";
-  const path=panel.querySelector("#volcanoPath");path.style.cssText="position:absolute;inset:0;width:100%;height:100%";
-  path.querySelectorAll(".pathShadow").forEach(e=>e.setAttribute("stroke","#32131b"));
-  path.querySelectorAll(".pathBase").forEach(e=>e.setAttribute("stroke","#a94c2e"));
-  path.querySelectorAll(".pathCenter").forEach(e=>e.setAttribute("stroke","#ffc16b"));
-  const mascot=panel.querySelector("#volcanoMapMascot");mascot.style.cssText="position:absolute;z-index:4;width:38px;height:38px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 8px #ff702d);pointer-events:none;transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1)";
-  const back=panel.querySelector("#volcanoBackArrowBtn");back.style.cssText="position:absolute;top:12px;left:12px;z-index:20;width:43px;height:43px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid #ffb0a0;border-radius:12px;background:linear-gradient(145deg,#b83225,#681b1b);color:#fff0e8;font-size:29px;font-weight:bold;line-height:1;box-shadow:0 4px 12px #0009,0 0 12px #ff542e66;cursor:pointer";
-  back.addEventListener("pointerdown",()=>{back.style.filter="brightness(1.2)"});
+  panel.style.cssText="";
   $("desertPanel").parentNode.appendChild(panel);
   $("volcanoBackArrowBtn").onclick=()=>showMenuScreen("worlds");
  }
@@ -17253,37 +17289,19 @@ function launchVolcanoLevel(i){
  $("hud").style.display="flex";$("controls").style.display="block";
  startGameOriginal(i);
 }
-function bindVolcanoMapInput(){
- const nodes=$("volcanoLevelNodes");
- if(!nodes||nodes.dataset.inputBound==="1")return;
- nodes.dataset.inputBound="1";
- const activate=e=>{
-  const button=e.target&&e.target.closest?e.target.closest(".mapNode"):null;
-  if(!button||!nodes.contains(button)||button.disabled)return;
-  const levelNumber=Number(button.dataset.level);
-  if(!Number.isInteger(levelNumber))return;
-  if(e.cancelable)e.preventDefault();
-  e.stopPropagation();
-  launchVolcanoLevel(levelNumber);
- };
- // Android WebView: pointerup inicia a fase no primeiro toque, sem depender
- // da síntese posterior do evento click. O bloqueio impede disparo duplicado.
- nodes.addEventListener("pointerup",activate,true);
- // Fallback para teclado, acessibilidade e WebViews sem Pointer Events.
- nodes.addEventListener("click",activate,true);
-}
 function buildVolcanoMap(){
- const nodes=$("volcanoLevelNodes");
- // O painel é clonado do Deserto e os seletores CSS originais usam IDs antigos.
- // Recria aqui a camada de hit-test para que ela cubra o mapa inteiro.
- nodes.style.cssText="position:absolute;inset:0;pointer-events:none";
- nodes.innerHTML="";
+ const nodes=$("volcanoLevelNodes");nodes.innerHTML="";
  for(let i=1;i<=TOTAL_LEVELS;i++){
-  const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.style.pointerEvents="auto";n.style.touchAction="manipulation";n.style.webkitTapHighlightColor="transparent";n.textContent=i;
-  if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
-  nodes.appendChild(n);
+  const p=mapPoint(i),n=document.createElement("button");
+  n.type="button";n.className="mapNode";n.dataset.level=String(i);
+  n.style.left=p.x+"%";n.style.top=p.y+"%";n.style.pointerEvents="auto";
+  n.style.touchAction="manipulation";n.style.webkitTapHighlightColor="transparent";
+  n.textContent=i;
+  if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}
+  else if(i===unlockedLevel)n.classList.add("available");
+  else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
+  n.addEventListener("click",()=>selectMapLevel(i));nodes.appendChild(n);
  }
- bindVolcanoMapInput();
  const chosen=Math.min(Math.max(1,selectedMapLevel),unlockedLevel),p=mapPoint(chosen),m=$("volcanoMapMascot");
  m.style.left=p.x+"%";m.style.top=p.y+"%";
  $("volcanoProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
@@ -17292,7 +17310,13 @@ const buildMapWithDesert=buildForestMap,selectMapWithDesert=selectMapLevel;
 buildForestMap=function(){if(currentWorld==="volcano")buildVolcanoMap();else buildMapWithDesert()};
 selectMapLevel=function(i){
  if(currentWorld!=="volcano")return selectMapWithDesert(i);
- launchVolcanoLevel(i);
+ if(i>unlockedLevel||i<1||i>TOTAL_LEVELS)return;
+ if(mapMoveTimer)clearTimeout(mapMoveTimer);
+ selectedMapLevel=i;
+ $("volcanoLevelNodes").querySelectorAll(".mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));
+ const p=mapPoint(i),m=$("volcanoMapMascot");
+ m.style.left=p.x+"%";m.style.top=p.y+"%";
+ mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;launchVolcanoLevel(i)},430);
 };
 showMenuScreen=function(which){
  if(which==="volcano"){
@@ -17302,13 +17326,40 @@ showMenuScreen=function(which){
   currentWorld="volcano";loadProgress();buildBurningCrateSprite();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildVolcanoMap();menuReturn="volcano";return;
  }
  $("volcanoPanel").style.display="none";$("volcanoPanel").classList.add("hidden");
- if(which==="worlds")volcanoLaunching=false;
+ if(which==="worlds"){volcanoLaunching=false;if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}}
  return showMenuWithDesert(which);
 };
 startGame=function(n=1){$("volcanoPanel").style.display="none";return startGameWithDesert(n)};
 updateHUD=function(){updateHudOriginal();$("level").textContent=worldLevelNumber();$("forestThemeName").textContent=currentForestTheme().name};
 gameOver=function(win){gameOverWithDesert(win);if(currentWorld==="volcano")$("endText").textContent=win?"Parabéns! Você completou as 10 fases do Reino das Lavas! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins};
 const volcanoSpriteSheet=new Image(),volcanoThemedSpriteSheets=Array(10).fill(null),volcanoDetails=[];
+const volcanoBlockGlowCanvases=Array(10).fill(null),volcanoBlockGlowPositions=[];
+const volcanoEnemyFlameCanvases=Array(4).fill(null);
+function buildVolcanoEffectCaches(){
+ for(let i=0;i<10;i++){
+  const t=volcanoThemes[i],c=document.createElement("canvas");c.width=64;c.height=64;
+  const q=c.getContext("2d");q.globalCompositeOperation="lighter";
+  const halo=q.createRadialGradient(32,32,3,32,32,31);
+  halo.addColorStop(0,t.hot+"66");halo.addColorStop(.42,t.accent+"44");halo.addColorStop(1,t.accent+"00");
+  q.fillStyle=halo;q.fillRect(0,0,64,64);
+  const core=q.createRadialGradient(32,32,12,32,32,27);
+  core.addColorStop(0,t.hot+"00");core.addColorStop(.72,t.hot+"22");core.addColorStop(1,t.accent+"00");
+  q.fillStyle=core;q.fillRect(0,0,64,64);volcanoBlockGlowCanvases[i]=c;
+ }
+ const palettes=[["#ef642b","#ffd45a"],["#f0a33c","#ffdf78"],["#e84b22","#ffd15a"],["#bd5034","#ffd06a"]];
+ for(let i=0;i<palettes.length;i++){
+  const c=document.createElement("canvas");c.width=64;c.height=64;
+  const q=c.getContext("2d");q.globalCompositeOperation="lighter";
+  const halo=q.createRadialGradient(32,23,2,32,23,29);
+  halo.addColorStop(0,palettes[i][0]+"88");halo.addColorStop(.55,palettes[i][0]+"44");halo.addColorStop(1,palettes[i][0]+"00");
+  q.fillStyle=halo;q.fillRect(0,0,64,64);
+  q.fillStyle=palettes[i][0];q.beginPath();q.moveTo(18,38);q.quadraticCurveTo(10,27,22,15);q.quadraticCurveTo(18,8,31,1);q.quadraticCurveTo(31,13,37,18);q.quadraticCurveTo(42,8,48,14);q.quadraticCurveTo(57,27,45,38);q.quadraticCurveTo(32,45,18,38);q.closePath();q.fill();
+  q.fillStyle=palettes[i][1];q.beginPath();q.moveTo(23,38);q.quadraticCurveTo(18,28,29,18);q.quadraticCurveTo(28,12,34,9);q.quadraticCurveTo(37,22,42,24);q.quadraticCurveTo(47,31,40,38);q.quadraticCurveTo(31,43,23,38);q.closePath();q.fill();
+  q.fillStyle="#fff3c4";q.beginPath();q.moveTo(29,38);q.quadraticCurveTo(25,31,32,25);q.quadraticCurveTo(32,19,36,17);q.quadraticCurveTo(42,29,37,38);q.quadraticCurveTo(33,42,29,38);q.closePath();q.fill();
+  volcanoEnemyFlameCanvases[i]=c;
+ }
+}
+buildVolcanoEffectCaches();
 volcanoSpriteSheet.onload=()=>{
  for(let i=0;i<10;i++){const c=document.createElement("canvas");c.width=384;c.height=96;const q=c.getContext("2d");q.imageSmoothingEnabled=false;q.drawImage(volcanoSpriteSheet,0,i*96,384,96,0,0,384,96);volcanoThemedSpriteSheets[i]=c}
  if(currentWorld==="volcano"){buildBurningCrateSprite();rebuildStaticMapCache()}
@@ -17342,6 +17393,8 @@ createForestPuddles=function(){
 rebuildStaticMapCache=function(){
  cacheWithDesert();
  if(currentWorld!=="volcano")return;
+ volcanoBlockGlowPositions.length=0;
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y][x]===2)volcanoBlockGlowPositions.push({x,y,phase:((x*13+y*7+level)%19)*.17});
  for(const p of volcanoDetails){
   const x=ox+p.x*TILE,y=oy+p.y*TILE,seed=p.seed;
   staticFloorCtx.save();staticFloorCtx.globalCompositeOperation="lighter";
@@ -17364,20 +17417,25 @@ buildBurningCrateSprite=function(){
 };
 function drawLavaEnemyDetails(e,deathProgress){
  const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob;
- const alpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1,variant=Math.abs(Math.sin(e.x*12.9898+e.y*78.233));
- const palettes=e.isMushroom?["#f0a33c","#ffdf78"]:e.isHorned?(e.isEnraged?["#ff4a1d","#ffd15a"]:["#e84b22","#ffb13e"]):e.isHunter?["#c15cff","#ffd06a"]:["#ef642b","#ffd45a"];
+ const alpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
+ const variant=e.isMushroom?1:e.isHorned?2:e.isHunter?3:0;
+ const palette=[["#ef642b","#ffd45a"],["#f0a33c","#ffdf78"],["#e84b22","#ffd15a"],["#bd5034","#ffd06a"]][variant];
  ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,bodyY);ctx.rotate(Math.sin(gameClock*2.8+e.x)*.018);
- // Fissuras ramificadas nas laterais do corpo: nunca atravessam olhos ou boca.
+ // Fissuras quentes discretas, sem filtros caros por quadro.
  ctx.globalCompositeOperation="lighter";ctx.lineCap="round";ctx.lineJoin="round";
  for(const side of [-1,1]){
-  ctx.shadowColor=palettes[0];ctx.shadowBlur=5;ctx.strokeStyle=palettes[0];ctx.lineWidth=2.4;
+  ctx.strokeStyle=palette[0];ctx.lineWidth=2.4;
   ctx.beginPath();ctx.moveTo(side*10,-5);ctx.lineTo(side*13,-1);ctx.lineTo(side*10,3);ctx.lineTo(side*14,7);ctx.stroke();
-  ctx.shadowBlur=0;ctx.strokeStyle=palettes[1];ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(side*10,-5);ctx.lineTo(side*13,-1);ctx.lineTo(side*10,3);ctx.stroke();
+  ctx.strokeStyle=palette[1];ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(side*10,-5);ctx.lineTo(side*13,-1);ctx.lineTo(side*10,3);ctx.stroke();
  }
- // Chama pequena sobre a cabeça, com núcleo claro e oscilação leve.
- const flicker=Math.sin(gameClock*13+e.x*4+e.y)*1.8,fy=-23+flicker;
- ctx.shadowColor=palettes[0];ctx.shadowBlur=10;ctx.fillStyle=palettes[0];ctx.beginPath();ctx.moveTo(-6,-17);ctx.quadraticCurveTo(-10,-27+flicker,0,fy-10);ctx.quadraticCurveTo(1,-24+flicker,7,-18);ctx.quadraticCurveTo(9,-8,0,-12);ctx.closePath();ctx.fill();
- ctx.shadowBlur=0;ctx.fillStyle=palettes[1];ctx.beginPath();ctx.moveTo(-2,-15);ctx.quadraticCurveTo(-4,-23+flicker,1,fy-5);ctx.quadraticCurveTo(6,-19,4,-14);ctx.quadraticCurveTo(1,-11,-2,-15);ctx.fill();
+ // Chamas maiores pré-renderizadas, com oscilação lenta e discreta.
+ const flame=volcanoEnemyFlameCanvases[variant];
+ if(flame){
+  const sway=Math.sin(gameClock*2.2+e.x*2+e.y)*.025,scale=1+Math.sin(gameClock*2.4+e.x+e.y)*.035;
+  ctx.save();ctx.globalAlpha=alpha*(.9+.08*Math.sin(gameClock*1.5+e.x+e.y));
+  ctx.translate(0,-50);ctx.rotate(sway);ctx.scale(1,scale);ctx.drawImage(flame,-32,0,64,64);ctx.restore();
+ }
  ctx.restore();
 }
 drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
@@ -17386,7 +17444,7 @@ drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
  if(!flashing){
   if(e.isMushroom){color="#c65b22";helmetColor="#7b2b1c"}
   else if(e.isHorned){color=e.isEnraged?"#ff4b20":"#d94c25";helmetColor=e.isEnraged?"#55151a":"#70221d"}
-  else if(e.isHunter){color="#a64c9d";helmetColor="#4c244d"}
+  else if(e.isHunter){color="#b54e35";helmetColor="#57261f"}
   else{color="#df6329";helmetColor="#702b20"}
  }
  enemyFaceWithDesert(e,color,helmetColor,deathProgress);
