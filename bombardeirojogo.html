@@ -17232,7 +17232,7 @@ function addVolcanoWorldUI(){
   path.querySelectorAll(".pathShadow").forEach(e=>e.setAttribute("stroke","#32131b"));
   path.querySelectorAll(".pathBase").forEach(e=>e.setAttribute("stroke","#a94c2e"));
   path.querySelectorAll(".pathCenter").forEach(e=>e.setAttribute("stroke","#ffc16b"));
-  const mascot=panel.querySelector("#volcanoMapMascot");mascot.style.cssText="position:absolute;z-index:4;width:38px;height:38px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 8px #ff702d);transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1)";
+  const mascot=panel.querySelector("#volcanoMapMascot");mascot.style.cssText="position:absolute;z-index:4;width:38px;height:38px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 8px #ff702d);pointer-events:none;transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1)";
   const back=panel.querySelector("#volcanoBackArrowBtn");back.style.cssText="position:absolute;top:12px;left:12px;z-index:20;width:43px;height:43px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid #ffb0a0;border-radius:12px;background:linear-gradient(145deg,#b83225,#681b1b);color:#fff0e8;font-size:29px;font-weight:bold;line-height:1;box-shadow:0 4px 12px #0009,0 0 12px #ff542e66;cursor:pointer";
   back.addEventListener("pointerdown",()=>{back.style.filter="brightness(1.2)"});
   $("desertPanel").parentNode.appendChild(panel);
@@ -17273,9 +17273,13 @@ function bindVolcanoMapInput(){
  nodes.addEventListener("click",activate,true);
 }
 function buildVolcanoMap(){
- const nodes=$("volcanoLevelNodes");nodes.innerHTML="";
+ const nodes=$("volcanoLevelNodes");
+ // O painel é clonado do Deserto e os seletores CSS originais usam IDs antigos.
+ // Recria aqui a camada de hit-test para que ela cubra o mapa inteiro.
+ nodes.style.cssText="position:absolute;inset:0;pointer-events:none";
+ nodes.innerHTML="";
  for(let i=1;i<=TOTAL_LEVELS;i++){
-  const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.textContent=i;
+  const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.style.pointerEvents="auto";n.style.touchAction="manipulation";n.style.webkitTapHighlightColor="transparent";n.textContent=i;
   if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
   nodes.appendChild(n);
  }
