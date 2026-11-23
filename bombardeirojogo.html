@@ -17037,9 +17037,9 @@ function drawVolcanoBlockGlow(){
  if(!cache)return;
  ctx.save();
  for(const tile of volcanoBlockGlowPositions){
-  const pulse=.62+.15*Math.sin(gameClock*1.05+tile.phase);
+  const pulse=.62+.30*(.5+.5*Math.sin(gameClock*.82+tile.phase));
   ctx.globalAlpha=pulse;
-  ctx.drawImage(cache,ox+tile.x*TILE-8,oy+tile.y*TILE-8,64,64);
+  ctx.drawImage(cache,ox+tile.x*TILE-20,oy+tile.y*TILE-20,80,80);
  }
  ctx.restore();
 }
@@ -17335,17 +17335,18 @@ gameOver=function(win){gameOverWithDesert(win);if(currentWorld==="volcano")$("en
 const volcanoSpriteSheet=new Image(),volcanoThemedSpriteSheets=Array(10).fill(null),volcanoDetails=[];
 const volcanoBlockGlowCanvases=Array(10).fill(null),volcanoBlockGlowPositions=[];
 const volcanoEnemyFlameCanvases=Array(4).fill(null);
+const volcanoEnemyFlameFrames=Array.from({length:4},()=>Array(4).fill(null));
 const volcanoEnemyPalettes=[["#ef642b","#ffd45a"],["#f0a33c","#ffdf78"],["#e84b22","#ffd15a"],["#bd5034","#ffd06a"]];
 function buildVolcanoEffectCaches(){
  for(let i=0;i<10;i++){
-  const t=volcanoThemes[i],c=document.createElement("canvas");c.width=64;c.height=64;
+  const t=volcanoThemes[i],c=document.createElement("canvas");c.width=80;c.height=80;
   const q=c.getContext("2d");q.globalCompositeOperation="lighter";
-  const halo=q.createRadialGradient(32,32,3,32,32,31);
-  halo.addColorStop(0,t.hot+"66");halo.addColorStop(.42,t.accent+"44");halo.addColorStop(1,t.accent+"00");
-  q.fillStyle=halo;q.fillRect(0,0,64,64);
-  const core=q.createRadialGradient(32,32,12,32,32,27);
-  core.addColorStop(0,t.hot+"00");core.addColorStop(.72,t.hot+"22");core.addColorStop(1,t.accent+"00");
-  q.fillStyle=core;q.fillRect(0,0,64,64);volcanoBlockGlowCanvases[i]=c;
+  const halo=q.createRadialGradient(40,40,3,40,40,39);
+  halo.addColorStop(0,"#ff3b16cc");halo.addColorStop(.34,"#ff4b18a8");halo.addColorStop(.72,t.accent+"66");halo.addColorStop(1,t.accent+"00");
+  q.fillStyle=halo;q.fillRect(0,0,80,80);
+  const core=q.createRadialGradient(40,40,7,40,40,27);
+  core.addColorStop(0,t.hot+"00");core.addColorStop(.48,"#ff6a20aa");core.addColorStop(.78,"#ff321866");core.addColorStop(1,"#ff321800");
+  q.fillStyle=core;q.fillRect(0,0,80,80);volcanoBlockGlowCanvases[i]=c;
  }
  const palettes=[["#ef642b","#ffd45a"],["#f0a33c","#ffdf78"],["#e84b22","#ffd15a"],["#bd5034","#ffd06a"]];
  for(let i=0;i<palettes.length;i++){
@@ -17358,6 +17359,12 @@ function buildVolcanoEffectCaches(){
   q.fillStyle=palettes[i][1];q.beginPath();q.moveTo(23,38);q.quadraticCurveTo(18,28,29,18);q.quadraticCurveTo(28,12,34,9);q.quadraticCurveTo(37,22,42,24);q.quadraticCurveTo(47,31,40,38);q.quadraticCurveTo(31,43,23,38);q.closePath();q.fill();
   q.fillStyle="#fff3c4";q.beginPath();q.moveTo(29,38);q.quadraticCurveTo(25,31,32,25);q.quadraticCurveTo(32,19,36,17);q.quadraticCurveTo(42,29,37,38);q.quadraticCurveTo(33,42,29,38);q.closePath();q.fill();
   volcanoEnemyFlameCanvases[i]=c;
+  for(let frame=0;frame<4;frame++){
+   const fc=document.createElement("canvas");fc.width=76;fc.height=76;const fq=fc.getContext("2d");
+   fq.translate(38,38);fq.rotate((frame-1.5)*.075);fq.transform(1,0,(frame-1.5)*.055,1,0,0);
+   const sx=1+Math.sin(frame*Math.PI/2)*.10,sy=1+Math.cos(frame*Math.PI/2)*.08;
+   fq.scale(sx,sy);fq.drawImage(c,-32,-32,64,64);volcanoEnemyFlameFrames[i][frame]=fc;
+  }
  }
 }
 buildVolcanoEffectCaches();
@@ -17431,11 +17438,13 @@ function drawLavaEnemyDetails(e,deathProgress){
   ctx.beginPath();ctx.moveTo(side*10,-5);ctx.lineTo(side*13,-1);ctx.lineTo(side*10,3);ctx.stroke();
  }
  // Chamas maiores pré-renderizadas, com oscilação lenta e discreta.
- const flame=volcanoEnemyFlameCanvases[variant];
+ const frameIndex=Math.floor(gameClock*6.5+e.x*1.3+e.y*.7)%4;
+ const flame=volcanoEnemyFlameFrames[variant][frameIndex];
  if(flame){
-  const sway=Math.sin(gameClock*2.2+e.x*2+e.y)*.025,scale=1+Math.sin(gameClock*2.4+e.x+e.y)*.035;
-  ctx.save();ctx.globalAlpha=alpha*(.9+.08*Math.sin(gameClock*1.5+e.x+e.y));
-  ctx.translate(0,-50);ctx.rotate(sway);ctx.scale(1,scale);ctx.drawImage(flame,-32,0,64,64);ctx.restore();
+  const sway=Math.sin(gameClock*2.6+e.x*2+e.y)*.075,scale=1+Math.sin(gameClock*3.1+e.x+e.y)*.09;
+  const drift=Math.sin(gameClock*3.4+e.x*1.7+e.y)*2.2;
+  ctx.save();ctx.globalAlpha=alpha*(.84+.16*(.5+.5*Math.sin(gameClock*2.1+e.x+e.y)));
+  ctx.translate(drift,-51);ctx.rotate(sway);ctx.scale(1,scale);ctx.drawImage(flame,-38,-2,76,76);ctx.restore();
  }
  ctx.restore();
 }
