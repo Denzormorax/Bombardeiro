@@ -16357,26 +16357,41 @@ function spawnSandBuildParticles(x,y){
 }
 function buildBuilderSandShield(enemy,bomb){
  const bx=Math.floor(bomb.x),by=Math.floor(bomb.y),ex=Math.floor(enemy.x),ey=Math.floor(enemy.y);
- const vx=enemy.x-(bomb.x+.5),vy=enemy.y-(bomb.y+.5),dirs=[[1,0],[-1,0],[0,1],[0,-1]].sort((a,b)=>(b[0]*vx+b[1]*vy)-(a[0]*vx+a[1]*vy));
+ let vx=enemy.x-(bomb.x+.5),vy=enemy.y-(bomb.y+.5);
+ if(Math.hypot(vx,vy)<.05){vx=enemy.x-player.x;vy=enemy.y-player.y}
+ if(Math.hypot(vx,vy)<.05){vx=enemy.facingX||0;vy=enemy.facingY||1}
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1]].sort((a,b)=>(b[0]*vx+b[1]*vy)-(a[0]*vx+a[1]*vy));
  for(const [dx,dy] of dirs){
-  if(dx*vx+dy*vy<=.15)continue;
-  const sx=bx+dx,sy=by+dy,tx=bx+dx*2,ty=by+dy*2;
-  if(sx<=0||sy<=0||sx>=COLS-1||sy>=ROWS-1||tx<=0||ty<=0||tx>=COLS-1||ty>=ROWS-1)continue;
-  if(tileAt(sx,sy)!==0||bombAt(sx,sy)||waterPuddleCells.has(cellKey(sx,sy))||exit.found&&exit.x===sx&&exit.y===sy||Math.floor(player.x)===sx&&Math.floor(player.y)===sy)continue;
+  if(dx*vx+dy*vy<=.05)continue;
+  const sx=bx+dx,sy=by+dy;
+  if(sx<=0||sy<=0||sx>=COLS-1||sy>=ROWS-1)continue;
+  const enemyOnBuildCell=ex===sx&&ey===sy;
+  if(tileAt(sx,sy)!==0||bombAt(sx,sy)||waterPuddleCells.has(cellKey(sx,sy))||exit.found&&exit.x===sx&&exit.y===sy)continue;
+  if(Math.floor(player.x)===sx&&Math.floor(player.y)===sy)continue;
   if(enemies.some(other=>other!==enemy&&other.alive&&!other.burrowing&&Math.floor(other.x)===sx&&Math.floor(other.y)===sy))continue;
-  const alreadyBehind=(dx!==0?ey===by&&((ex-bx)*dx)>=2:ex===bx&&((ey-by)*dy)>=2);
-  const targetX=alreadyBehind?ex:tx,targetY=alreadyBehind?ey:ty;
-  if(!alreadyBehind){
-   if(tileAt(tx,ty)!==0||bombAt(tx,ty)||Math.floor(player.x)===tx&&Math.floor(player.y)===ty)continue;
-   if(enemies.some(other=>other!==enemy&&other.alive&&!other.burrowing&&Math.floor(other.x)===tx&&Math.floor(other.y)===ty))continue;
-  }
-  map[sy][sx]=1;
+
+  // A barreira é um bloco destrutível (tile 2), nunca um muro permanente.
+  // Se o construtor estiver exatamente na célula escolhida, ele precisa
+  // sair dela imediatamente: a rota é calculada depois que o bloco fecha o raio.
+  map[sy][sx]=2;
   if(!keepsWalkableMapConnected(sx,sy)){map[sy][sx]=0;continue}
-  const danger=getAllBombDangerCells(),path=alreadyBehind?[]:findGridPath(ex,ey,targetX,targetY,danger);
-  if(!alreadyBehind&&(!path.length||path.some(p=>p.x===sx&&p.y===sy))){map[sy][sx]=0;continue}
+  const dangerAfterShield=getAllBombDangerCells();
+  const enemyKey=cellKey(ex,ey);
+  const mustRetreat=enemyOnBuildCell||dangerAfterShield.has(enemyKey);
+  const retreatPath=mustRetreat?findBombEscapePath(enemy,dangerAfterShield,false):[];
+  if(mustRetreat&&!retreatPath.length){map[sy][sx]=0;continue}
+  if(retreatPath.some(p=>p.x===sx&&p.y===sy)){map[sy][sx]=0;continue}
+
   rebuildStaticMapCache();
-  enemy.path=path;enemy.patrolTarget=null;enemy.repath=0;enemy.mode="build";enemy.building=true;enemy.buildTimer=.12;
-  enemy.bombEscapePending=false;enemy.evadeTimer=0;enemy.speed=enemy.huntSpeed*1.1;
+  enemy.path=retreatPath;
+  enemy.patrolTarget=null;
+  enemy.repath=0;
+  enemy.mode="build";
+  enemy.building=true;
+  enemy.buildTimer=.06;
+  enemy.bombEscapePending=false;
+  enemy.evadeTimer=0;
+  enemy.speed=enemy.huntSpeed*1.18;
   spawnSandBuildParticles(sx,sy);
   return true;
  }
