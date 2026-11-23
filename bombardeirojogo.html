@@ -17747,7 +17747,7 @@ function updateBlueFlameEnemies(dt){
   if(e.blueFlameFuse>0){
    e.blueFlameFuse=Math.max(0,e.blueFlameFuse-dt);
    e.speed=0;e.path.length=0;
-   if(e.blueFlameFuse<=0)detonateBlueFlame(e,false);
+   if(e.blueFlameFuse<=0)detonateBlueFlame(e);
    continue;
   }
   const d=distance(e.x,e.y,player.x,player.y);
@@ -17769,9 +17769,7 @@ function updateBlueFlameEnemies(dt){
   }
  }
 }
-const killEnemyBeforeBlueFlame=killEnemy;
-const explodeBeforeBlueFlame=explode;
-function detonateBlueFlame(e,chainReaction=true){
+function detonateBlueFlame(e){
  if(!e||!e.alive||e.blueFlameDetonating)return;
  e.blueFlameDetonating=true;e.blueFlameFuse=0;e.blueFlameCooldown=1.15;
  e.mode="chase";e.speed=e.baseSpeed;e.path=[];e.repath=0;e.lastSeen={x:player.x,y:player.y};
