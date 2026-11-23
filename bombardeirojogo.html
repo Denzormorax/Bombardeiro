@@ -15606,7 +15606,7 @@ const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W
 const staticFloorCanvas=document.createElement("canvas");staticFloorCanvas.width=W;staticFloorCanvas.height=H;const staticFloorCtx=staticFloorCanvas.getContext("2d");
 const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));const indestructibleTilePositions=[];const enemyDrawRows=Array.from({length:ROWS},()=>[]);
 // Sprite de caixa em chamas pré-renderizado uma única vez.
-const burningCrateCanvases=Array.from({length:10},()=>{const c=document.createElement("canvas");c.width=64;c.height=64;return c});let burningCrateReady=false;const burningCrates=[];const themedSpriteSheets=Array(10).fill(null);let cachedTileThemeIndex=-1;
+const BURNING_CRATE_FRAMES=8;const burningCrateCanvases=Array.from({length:10},()=>Array.from({length:BURNING_CRATE_FRAMES},()=>{const c=document.createElement("canvas");c.width=64;c.height=64;return c}));let burningCrateReady=false;const burningCrates=[];const themedSpriteSheets=Array(10).fill(null);let cachedTileThemeIndex=-1;
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
 const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=96;portalAuraCanvas.height=96;const portalAuraCtx=portalAuraCanvas.getContext("2d");
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
@@ -17122,25 +17122,70 @@ function buildThemedSpriteSheets(){
  }
 }
 function buildBurningCrateSprite(){
- for(let i=0;i<10;i++){
- const c=burningCrateCanvases[i].getContext("2d");c.clearRect(0,0,64,64);
- c.drawImage(themedSpriteSheets[i]||forestSpriteSheet,288,0,96,96,4,5,56,56);
- c.save();c.globalCompositeOperation="lighter";
- const glow=c.createRadialGradient(32,39,3,32,39,29);glow.addColorStop(0,"#72f7ffbb");glow.addColorStop(.5,"#168eff66");glow.addColorStop(1,"#087bff00");c.fillStyle=glow;c.fillRect(2,8,60,56);
- c.shadowColor="#31cfff";c.shadowBlur=7;c.fillStyle="#087dff";
- c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();
- c.shadowBlur=0;c.fillStyle="#69efff";c.beginPath();c.moveTo(20,52);c.quadraticCurveTo(17,39,27,30);c.quadraticCurveTo(28,42,33,39);c.quadraticCurveTo(35,27,40,23);c.quadraticCurveTo(43,41,47,52);c.closePath();c.fill();
- c.fillStyle="#e0ffff";c.globalAlpha=.8;c.beginPath();c.ellipse(33,48,9,5,0,0,Math.PI*2);c.fill();c.restore();
+ // Dez temas x oito quadros: a caixa e as pequenas chamas ficam prontas em cache.
+ // Assim, durante o jogo, cada quadro usa apenas drawImage, sem gradientes ou blur dinâmicos.
+ const flameSpots=[
+  {x:12,y:43,h:13,w:7,phase:0},{x:22,y:49,h:11,w:6,phase:1.2},
+  {x:33,y:46,h:15,w:7,phase:2.1},{x:46,y:43,h:12,w:6,phase:2.8},
+  {x:16,y:26,h:10,w:5,phase:3.4},{x:39,y:25,h:11,w:6,phase:4.2},
+  {x:27,y:17,h:9,w:5,phase:5.1},{x:50,y:31,h:9,w:5,phase:5.8}
+ ];
+ for(let themeIndex=0;themeIndex<10;themeIndex++){
+  for(let frame=0;frame<BURNING_CRATE_FRAMES;frame++){
+   const canvas=burningCrateCanvases[themeIndex][frame],c=canvas.getContext("2d");
+   c.clearRect(0,0,64,64);
+   c.drawImage(themedSpriteSheets[themeIndex]||forestSpriteSheet,288,0,96,96,4,5,56,56);
+   c.save();c.globalCompositeOperation="lighter";
+   // Pequenos focos de calor separados deixam a madeira visível enquanto o fogo se espalha.
+   for(let i=0;i<flameSpots.length;i++){
+    const spot=flameSpots[i],wave=Math.sin(frame/BURNING_CRATE_FRAMES*Math.PI*2+spot.phase);
+    const height=spot.h*(.76+(wave+1)*.16),width=spot.w*(.88+(1-wave)*.08);
+    const x=spot.x+Math.sin(frame*.9+spot.phase)*1.1,y=spot.y+Math.cos(frame*.8+spot.phase)*.8;
+    const halo=c.createRadialGradient(x,y-height*.24,1,x,y-height*.18,height*.92);
+    halo.addColorStop(0,"rgba(255,222,112,.68)");
+    halo.addColorStop(.42,"rgba(255,112,24,.34)");
+    halo.addColorStop(1,"rgba(210,38,8,0)");
+    c.fillStyle=halo;c.fillRect(x-height,y-height*1.2,height*2,height*2.2);
+    c.save();c.translate(x,y);c.scale(width/7,height/14);
+    c.shadowColor="#ff7a18";c.shadowBlur=7;
+    c.fillStyle="#e9470b";c.beginPath();
+    c.moveTo(-4,1);c.quadraticCurveTo(-8,-7,-2,-12);
+    c.quadraticCurveTo(-2,-7,0,-10);c.quadraticCurveTo(2,-18,5,-20);
+    c.quadraticCurveTo(5,-10,9,-7);c.quadraticCurveTo(11,-2,5,2);
+    c.closePath();c.fill();
+    c.shadowBlur=0;c.fillStyle="#ffad32";c.beginPath();
+    c.moveTo(-2,1);c.quadraticCurveTo(-5,-5,0,-9);
+    c.quadraticCurveTo(1,-5,4,-12);c.quadraticCurveTo(7,-4,6,1);
+    c.closePath();c.fill();
+    c.fillStyle="#fff0a1";c.globalAlpha=.9;
+    c.beginPath();c.moveTo(1,1);c.quadraticCurveTo(-1,-4,3,-7);
+    c.quadraticCurveTo(5,-3,4,1);c.closePath();c.fill();
+    c.restore();
+   }
+   // Brasas minúsculas e discretas, também pré-renderizadas nos oito quadros.
+   c.globalAlpha=.85;c.fillStyle="#ffd66a";
+   for(let i=0;i<3;i++){
+    const x=17+i*14+Math.sin(frame*1.3+i)*2,y=13+((frame*3+i*7)%12);
+    c.beginPath();c.arc(x,y,1.1+(i%2)*.45,0,Math.PI*2);c.fill();
+   }
+   c.restore();
+  }
  }
  burningCrateReady=true;
 }
 function drawBurningCrate(crate){
  const progress=1-crate.t/crate.total,fade=crate.t/crate.total,px=ox+crate.x*TILE,py=oy+crate.y*TILE;
  if(!burningCrateReady){drawTileTo(ctx,crate.x,crate.y,2);return}
- const flicker=1+Math.sin(crate.phase+gameClock*29)*.045;
- const themedBurn=burningCrateCanvases[Math.max(0,Math.min(9,level-1))];
- ctx.save();ctx.globalAlpha=Math.max(0,fade);ctx.translate(px+TILE/2,py+TILE/2);ctx.scale(flicker*(.94+progress*.08),flicker);ctx.drawImage(themedBurn,-32,-32,64,64);
- if(currentWorld!=="volcano"){ctx.globalAlpha=Math.max(0,fade*(.28+progress*.45));ctx.fillStyle="#48cfff";ctx.fillRect(-TILE/2+5,-TILE/2+8,TILE-10,TILE-16)}ctx.restore();
+ const flicker=1+Math.sin(crate.phase+gameClock*29)*.025;
+ const themeIndex=Math.max(0,Math.min(9,level-1));
+ const frame=(Math.floor(gameClock*13+crate.phase*2)%BURNING_CRATE_FRAMES+BURNING_CRATE_FRAMES)%BURNING_CRATE_FRAMES;
+ const burningSprite=burningCrateCanvases[themeIndex][frame];
+ ctx.save();ctx.globalAlpha=Math.max(0,fade);
+ ctx.translate(px+TILE/2,py+TILE/2);
+ ctx.scale(flicker*(.94+progress*.08),flicker);
+ ctx.drawImage(burningSprite,-32,-32,64,64);
+ // A caixa some gradualmente, enquanto os focos de fogo continuam visíveis até o fim.
+ ctx.restore();
 }
 
 function rebuildStaticMapCache(){
