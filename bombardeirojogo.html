@@ -17035,7 +17035,7 @@ function drawBurningCrate(crate){
  const flicker=1+Math.sin(crate.phase+gameClock*29)*.045;
  const themedBurn=burningCrateCanvases[Math.max(0,Math.min(9,level-1))];
  ctx.save();ctx.globalAlpha=Math.max(0,fade);ctx.translate(px+TILE/2,py+TILE/2);ctx.scale(flicker*(.94+progress*.08),flicker);ctx.drawImage(themedBurn,-32,-32,64,64);
- ctx.globalAlpha=Math.max(0,fade*(.28+progress*.45));ctx.fillStyle="#48cfff";ctx.fillRect(-TILE/2+5,-TILE/2+8,TILE-10,TILE-16);ctx.restore();
+ if(currentWorld!=="volcano"){ctx.globalAlpha=Math.max(0,fade*(.28+progress*.45));ctx.fillStyle="#48cfff";ctx.fillRect(-TILE/2+5,-TILE/2+8,TILE-10,TILE-16)}ctx.restore();
 }
 
 function rebuildStaticMapCache(){
