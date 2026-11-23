@@ -16869,7 +16869,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  ctx.save();ctx.globalAlpha=.34*deathAlpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+14,15*(1-bob*.025)*deathScale,6*(1-bob*.025)*deathScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  const tilt=hurt?Math.sin(gameClock*38)*.045:Math.sin(gameClock*2.8+e.x)*.018;ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.22*deathScale,1.22*deathScale);
  if(e.isHorned){ctx.fillStyle=e.isEnraged?"#7b151d":"#173c91";ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
- if(e.isMushroom){ctx.fillStyle=currentWorld==="desert"?"#8b7b38":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="desert"?"#b4a34e":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
+ if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
  else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
  if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5);ctx.lineTo(eyeX+2.2,1.8);ctx.moveTo(eyeX+2.2,-2.5);ctx.lineTo(eyeX-2.2,1.8);ctx.stroke()}}
  else{const eyeShiftX=facingX*2,eyeShiftY=facingY*2;ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#24101b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.fill()}
@@ -17184,6 +17184,178 @@ drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
 };
 const handleBackOriginal=window.handleAndroidBack;
 window.handleAndroidBack=function(){if(!$("desertPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return handleBackOriginal()};
+
+/* MUNDO 4 — REINO DAS LAVAS: mesmos sistemas de jogo, identidade visual própria. */
+const showMenuWithDesert=showMenuScreen,startGameWithDesert=startGame;
+const themeWithDesert=currentForestTheme,bgWithDesert=drawForestBackground,tileWithDesert=drawTileTo;
+const puddlesWithDesert=createForestPuddles,cacheWithDesert=rebuildStaticMapCache;
+const crateWithDesert=buildBurningCrateSprite,enemyFaceWithDesert=drawEnemyFace,gameOverWithDesert=gameOver;
+const volcanoThemes=[
+{name:"Magma Cintilante",sky:["#ff9a54","#6d241d","#170e18"],floor:"rgba(78,29,20,.86)",floor2:"rgba(255,104,32,.28)",wall:["#63251d","#a94325","#28131a"],far:"#57231f",near:"#26131a",glow:"#ff9b38",accent:"#ff6a24",style:"magma",hot:"#ffd45a"},
+{name:"Geada Incandescente",sky:["#c2d4d0","#52666d","#1d3038"],floor:"rgba(78,91,89,.84)",floor2:"rgba(222,234,222,.34)",wall:["#5b6664","#c2c6b7","#27383d"],far:"#53676a",near:"#263a43",glow:"#ff9566",accent:"#dff4ed",style:"frost",hot:"#fff0c6"},
+{name:"Floresta de Cinzas",sky:["#796d60","#332d2a","#111513"],floor:"rgba(43,39,33,.88)",floor2:"rgba(173,93,48,.22)",wall:["#3d332c","#79604b","#1c1a19"],far:"#332e29",near:"#171917",glow:"#e87932",accent:"#9a5730",style:"ash",hot:"#ffb34c"},
+{name:"Cavernas de Obsidiana",sky:["#66508b","#241b48","#0c0a1c"],floor:"rgba(29,22,53,.9)",floor2:"rgba(135,73,185,.26)",wall:["#30244e","#7755a1","#120e29"],far:"#292044",near:"#100d20",glow:"#bd65ff",accent:"#8c5acb",style:"obsidian",hot:"#e7a1ff"},
+{name:"Reino da Aurora",sky:["#ffb66a","#9b3425","#2b101b"],floor:"rgba(91,35,25,.86)",floor2:"rgba(255,173,57,.3)",wall:["#6b2922","#bd5430","#32151d"],far:"#713027",near:"#2b151c",glow:"#ffd16b",accent:"#f47c2b",style:"aurora",hot:"#fff0a0"},
+{name:"Neblina Sulfurosa",sky:["#b8b56c","#555333","#202414"],floor:"rgba(65,66,35,.88)",floor2:"rgba(194,199,91,.24)",wall:["#4d4b2b","#898348","#202316"],far:"#4a492c",near:"#202317",glow:"#d8e56a",accent:"#a6b442",style:"sulfur",hot:"#fff0a0"},
+{name:"Vale Calcinado",sky:["#e69a60","#80432d","#2a1713"],floor:"rgba(88,47,31,.88)",floor2:"rgba(224,128,59,.25)",wall:["#693b2a","#aa6139","#301c17"],far:"#82452e",near:"#321d18",glow:"#ff9b45",accent:"#d36b31",style:"caldera",hot:"#ffd07a"},
+{name:"Floresta de Geleiras",sky:["#8ccee6","#24506b","#0b1d32"],floor:"rgba(24,62,82,.88)",floor2:"rgba(89,190,224,.25)",wall:["#1e526c","#4c9bb8","#102c43"],far:"#22506b",near:"#102a40",glow:"#57cfff",accent:"#36a6d4",style:"bluefire",hot:"#d7fbff"},
+{name:"Geleira Dourada",sky:["#ffe5a1","#b88942","#352518"],floor:"rgba(113,79,39,.86)",floor2:"rgba(255,211,106,.28)",wall:["#76552d","#c59a4d","#3c2b1b"],far:"#86602e",near:"#3c2a1a",glow:"#ffe28a",accent:"#e6b34b",style:"goldice",hot:"#fff4c0"},
+{name:"Bosque Lunar Vulcânico",sky:["#64718b","#252d45","#0b111e"],floor:"rgba(36,42,55,.9)",floor2:"rgba(179,111,83,.2)",wall:["#343d51","#66758b","#171e2e"],far:"#303b52",near:"#151d2d",glow:"#ff8d63",accent:"#7889a8",style:"moonlava",hot:"#ffc08a"}
+];
+function volcanoProgressLoad(){try{const n=Number(localStorage.getItem("bomberquest-volcano-unlocked")||1);unlockedLevel=Math.max(1,Math.min(TOTAL_LEVELS,n||1))}catch(e){unlockedLevel=1}}
+loadProgress=function(){if(currentWorld==="volcano")volcanoProgressLoad();else if(currentWorld==="desert")desertProgressLoad();else loadProgressOriginal()};
+saveProgress=function(){if(currentWorld==="volcano"){try{localStorage.setItem("bomberquest-volcano-unlocked",String(unlockedLevel))}catch(e){}}else if(currentWorld==="desert"){try{localStorage.setItem("bomberquest-desert-unlocked",String(unlockedLevel))}catch(e){}}else saveProgressOriginal()};
+worldLevelNumber=function(){return currentWorld==="volcano"?level+20:currentWorld==="desert"?level+10:level};
+currentForestTheme=function(){return currentWorld==="volcano"?volcanoThemes[Math.max(0,Math.min(9,level-1))]:themeWithDesert()};
+function addVolcanoWorldUI(){
+ if(!$("volcanoBtn")){
+  const card=$("desertBtn").cloneNode(true);card.id="volcanoBtn";card.className="worldCard volcanoCard";
+  card.querySelector(".worldName").textContent="🌋 REINO DAS LAVAS";
+  const art=card.querySelector(".desertArt");art.className="volcanoArt";
+  card.style.borderColor="#ff8744";card.style.background="linear-gradient(#ffb36a 0%,#8b3427 46%,#32151c 100%)";
+  card.style.boxShadow="0 7px 0 #451b19,0 12px 18px #0008";
+  art.style.cssText="position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 52% 58%,#ffcf58 0 4%,#f15a24 5% 15%,transparent 16%),linear-gradient(180deg,#572b37 0%,#24151e 55%,#130e17 100%)";
+  art.innerHTML='<span style="position:absolute;left:8%;right:8%;bottom:25px;height:95px;background:#70271f;clip-path:polygon(0 90%,18% 40%,33% 68%,52% 8%,70% 60%,87% 28%,100% 85%,100% 100%,0 100%)"></span><span style="position:absolute;left:0;right:0;top:24px;font-size:35px">🌋 🔥 🌋</span>';
+  $("desertBtn").parentNode.appendChild(card);
+  card.addEventListener("click",()=>showMenuScreen("volcano"));
+ }
+ if(!$("volcanoPanel")){
+  const panel=$("desertPanel").cloneNode(true);panel.id="volcanoPanel";
+  const ids={"desertBackArrowBtn":"volcanoBackArrowBtn","desertMap":"volcanoMap","desertPath":"volcanoPath","desertLevelNodes":"volcanoLevelNodes","desertMapMascot":"volcanoMapMascot","desertProgressText":"volcanoProgressText"};
+  panel.querySelectorAll("[id]").forEach(el=>{if(ids[el.id])el.id=ids[el.id]});
+  panel.querySelector(".menuTitle").textContent="🌋 REINO DAS LAVAS";
+  panel.querySelector("#volcanoProgressText").textContent="FASES CONCLUÍDAS: 0/10";
+  panel.style.cssText="position:fixed;inset:0;z-index:12;width:100%;height:100dvh;max-height:none;margin:0;padding:18px;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 75%,#74301d 0%,#28151e 52%,#0d111c 100%);border:0;border-radius:0";
+  panel.querySelector(".menuTitle").style.color="#ffb36b";
+  const mapEl=panel.querySelector("#volcanoMap");mapEl.style.cssText="position:relative;width:min(100%,560px);height:clamp(170px,34vh,260px);margin:12px auto;background:linear-gradient(180deg,#3c2027aa,#160f19dd);border:2px solid #df7541;border-radius:18px;overflow:hidden";
+  const path=panel.querySelector("#volcanoPath");path.style.cssText="position:absolute;inset:0;width:100%;height:100%";
+  path.querySelectorAll(".pathShadow").forEach(e=>e.setAttribute("stroke","#32131b"));
+  path.querySelectorAll(".pathBase").forEach(e=>e.setAttribute("stroke","#a94c2e"));
+  path.querySelectorAll(".pathCenter").forEach(e=>e.setAttribute("stroke","#ffc16b"));
+  const mascot=panel.querySelector("#volcanoMapMascot");mascot.style.filter="drop-shadow(0 0 8px #ff702d)";
+  $("desertPanel").parentNode.appendChild(panel);
+  $("volcanoBackArrowBtn").onclick=()=>showMenuScreen("worlds");
+ }
+}
+addVolcanoWorldUI();
+function buildVolcanoMap(){
+ const nodes=$("volcanoLevelNodes");nodes.innerHTML="";
+ for(let i=1;i<=TOTAL_LEVELS;i++){
+  const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.textContent=i;
+  if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
+  n.addEventListener("click",()=>selectMapLevel(i));nodes.appendChild(n);
+ }
+ const chosen=Math.min(Math.max(1,selectedMapLevel),unlockedLevel),p=mapPoint(chosen),m=$("volcanoMapMascot");
+ m.style.left=p.x+"%";m.style.top=p.y+"%";
+ $("volcanoProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
+}
+const buildMapWithDesert=buildForestMap,selectMapWithDesert=selectMapLevel;
+buildForestMap=function(){if(currentWorld==="volcano")buildVolcanoMap();else buildMapWithDesert()};
+selectMapLevel=function(i){
+ if(currentWorld!=="volcano")return selectMapWithDesert(i);
+ if(i>unlockedLevel||i<1)return;
+ if(mapMoveTimer)clearTimeout(mapMoveTimer);selectedMapLevel=i;
+ $("volcanoLevelNodes").querySelectorAll(".mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));
+ const p=mapPoint(i),m=$("volcanoMapMascot");m.style.left=p.x+"%";m.style.top=p.y+"%";
+ mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;startGame(i)},430);
+};
+showMenuScreen=function(which){
+ if(which==="volcano"){
+  $("overlay").style.display="none";$("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");$("desertPanel").classList.add("hidden");
+  $("volcanoPanel").style.display="flex";$("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
+  currentWorld="volcano";loadProgress();buildBurningCrateSprite();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildVolcanoMap();menuReturn="volcano";return;
+ }
+ $("volcanoPanel").style.display="none";
+ return showMenuWithDesert(which);
+};
+startGame=function(n=1){$("volcanoPanel").style.display="none";return startGameWithDesert(n)};
+updateHUD=function(){updateHudOriginal();$("level").textContent=worldLevelNumber();$("forestThemeName").textContent=currentForestTheme().name};
+gameOver=function(win){gameOverWithDesert(win);if(currentWorld==="volcano")$("endText").textContent=win?"Parabéns! Você completou as 10 fases do Reino das Lavas! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins};
+const volcanoSpriteSheet=new Image(),volcanoThemedSpriteSheets=Array(10).fill(null),volcanoDetails=[];
+volcanoSpriteSheet.onload=()=>{
+ for(let i=0;i<10;i++){const c=document.createElement("canvas");c.width=384;c.height=96;const q=c.getContext("2d");q.imageSmoothingEnabled=false;q.drawImage(volcanoSpriteSheet,0,i*96,384,96,0,0,384,96);volcanoThemedSpriteSheets[i]=c}
+ if(currentWorld==="volcano"){buildBurningCrateSprite();rebuildStaticMapCache()}
+};
+volcanoSpriteSheet.src="game-assets/sprites/volcano_themes.svg";
+drawForestBackground=function(target){
+ if(currentWorld!=="volcano")return bgWithDesert(target);
+ const c=target||ctx,t=currentForestTheme(),g=c.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,t.sky[0]);g.addColorStop(.48,t.sky[1]);g.addColorStop(1,t.sky[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
+ const halo=c.createRadialGradient(W*.52,H*.26,4,W*.52,H*.26,Math.max(W,H)*.72);halo.addColorStop(0,t.glow+"88");halo.addColorStop(.55,t.glow+"22");halo.addColorStop(1,"#00000000");c.fillStyle=halo;c.fillRect(0,0,W,H);
+ c.fillStyle=t.far;c.beginPath();c.moveTo(0,H*.66);for(let i=0;i<=8;i++){const x=i*W/8;c.lineTo(x+W/16,H*(.48+(i%2)*.1));c.lineTo(x+W/8,H*(.66+((i+1)%3)*.025))}c.lineTo(W,H);c.lineTo(0,H);c.fill();
+ c.fillStyle=t.near;c.beginPath();c.moveTo(0,H*.78);for(let i=0;i<=6;i++){const x=i*W/6;c.quadraticCurveTo(x+W/12,H*(.64+(i%2)*.07),x+W/6,H*(.78+((i+1)%2)*.02))}c.lineTo(W,H);c.lineTo(0,H);c.fill();
+ c.save();c.globalCompositeOperation="lighter";c.globalAlpha=.72;
+ for(let i=0;i<5;i++){const x=65+i*205,y=H*(.62+(i%2)*.07);c.strokeStyle=t.accent;c.lineWidth=5;c.beginPath();c.moveTo(x,y);c.lineTo(x+34,y-10);c.lineTo(x+59,y+4);c.lineTo(x+94,y-7);c.stroke();c.strokeStyle=t.hot;c.lineWidth=2;c.beginPath();c.moveTo(x+2,y);c.lineTo(x+34,y-10);c.lineTo(x+59,y+4);c.lineTo(x+94,y-7);c.stroke()}
+ c.restore();c.globalAlpha=1;
+};
+drawTileTo=function(target,x,y,type,offsetY=0){
+ if(currentWorld!=="volcano")return tileWithDesert(target,x,y,type,offsetY);
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY;
+ if(volcanoSpriteSheet.complete&&volcanoSpriteSheet.naturalWidth){
+  const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1),tile=volcanoThemedSpriteSheets[Math.max(0,Math.min(9,level-1))]||volcanoSpriteSheet;
+  target.imageSmoothingEnabled=false;target.drawImage(tile,col*96,0,96,96,px,py,TILE,TILE);return;
+ }
+ target.fillStyle=currentForestTheme().floor;target.fillRect(px,py,TILE,TILE);target.fillStyle=currentForestTheme().accent;target.fillRect(px+8,py+14,5,3);target.fillRect(px+27,py+32,7,3);
+};
+createForestPuddles=function(){
+ if(currentWorld!=="volcano")return puddlesWithDesert();
+ waterPuddles=[];waterPuddleCells.clear();volcanoDetails.length=0;
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(map[y][x]===0&&!isStartSafeCell(x,y)&&((x*13+y*7+level)%5===0))volcanoDetails.push({x,y,seed:(x*17+y*31+level)%13});
+};
+rebuildStaticMapCache=function(){
+ cacheWithDesert();
+ if(currentWorld!=="volcano")return;
+ for(const p of volcanoDetails){
+  const x=ox+p.x*TILE,y=oy+p.y*TILE,seed=p.seed;
+  staticFloorCtx.save();staticFloorCtx.globalCompositeOperation="lighter";
+  staticFloorCtx.strokeStyle=seed%3===0?"#ffb14a":"#ed5424";staticFloorCtx.lineWidth=2;
+  staticFloorCtx.beginPath();staticFloorCtx.moveTo(x+7,y+12);staticFloorCtx.lineTo(x+18,y+20);staticFloorCtx.lineTo(x+14,y+29);staticFloorCtx.lineTo(x+31,y+37);staticFloorCtx.stroke();
+  staticFloorCtx.fillStyle="#ffd36a";staticFloorCtx.fillRect(x+28,y+13,2,2);staticFloorCtx.fillRect(x+12,y+35,2,2);staticFloorCtx.restore();
+ }
+};
+buildBurningCrateSprite=function(){
+ if(currentWorld!=="volcano")return crateWithDesert();
+ if(!volcanoSpriteSheet.complete||!volcanoSpriteSheet.naturalWidth)return;
+ const colors=["#ff5a20","#ff8c3b","#d85b28","#c45cff","#ff7b24","#c9d84d","#f07835","#4ccfff","#ffd45c","#ff9b6b"];
+ for(let i=0;i<10;i++){
+  const c=burningCrateCanvases[i].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(volcanoThemedSpriteSheets[i]||volcanoSpriteSheet,288,0,96,96,4,5,56,56);
+  c.save();c.globalCompositeOperation="lighter";const g=c.createRadialGradient(32,39,3,32,39,29);g.addColorStop(0,colors[i]+"cc");g.addColorStop(.5,colors[i]+"66");g.addColorStop(1,colors[i]+"00");c.fillStyle=g;c.fillRect(2,8,60,56);
+  c.shadowColor=colors[i];c.shadowBlur=8;c.fillStyle=colors[i];c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();
+  c.fillStyle="#fff0c2";c.beginPath();c.moveTo(23,52);c.quadraticCurveTo(19,39,29,30);c.quadraticCurveTo(30,43,35,39);c.quadraticCurveTo(37,29,40,25);c.quadraticCurveTo(46,42,46,52);c.closePath();c.fill();c.restore();
+ }
+ burningCrateReady=true;
+};
+function drawLavaEnemyDetails(e,deathProgress){
+ const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob;
+ const alpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1,variant=Math.abs(Math.sin(e.x*12.9898+e.y*78.233));
+ const palettes=e.isMushroom?["#f0a33c","#ffdf78"]:e.isHorned?(e.isEnraged?["#ff4a1d","#ffd15a"]:["#e84b22","#ffb13e"]):e.isHunter?["#c15cff","#ffd06a"]:["#ef642b","#ffd45a"];
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,bodyY);ctx.rotate(Math.sin(gameClock*2.8+e.x)*.018);
+ // Fissuras ramificadas nas laterais do corpo: nunca atravessam olhos ou boca.
+ ctx.globalCompositeOperation="lighter";ctx.lineCap="round";ctx.lineJoin="round";
+ for(const side of [-1,1]){
+  ctx.shadowColor=palettes[0];ctx.shadowBlur=5;ctx.strokeStyle=palettes[0];ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.moveTo(side*10,-5);ctx.lineTo(side*13,-1);ctx.lineTo(side*10,3);ctx.lineTo(side*14,7);ctx.stroke();
+  ctx.shadowBlur=0;ctx.strokeStyle=palettes[1];ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(side*10,-5);ctx.lineTo(side*13,-1);ctx.lineTo(side*10,3);ctx.stroke();
+ }
+ // Chama pequena sobre a cabeça, com núcleo claro e oscilação leve.
+ const flicker=Math.sin(gameClock*13+e.x*4+e.y)*1.8,fy=-23+flicker;
+ ctx.shadowColor=palettes[0];ctx.shadowBlur=10;ctx.fillStyle=palettes[0];ctx.beginPath();ctx.moveTo(-6,-17);ctx.quadraticCurveTo(-10,-27+flicker,0,fy-10);ctx.quadraticCurveTo(1,-24+flicker,7,-18);ctx.quadraticCurveTo(9,-8,0,-12);ctx.closePath();ctx.fill();
+ ctx.shadowBlur=0;ctx.fillStyle=palettes[1];ctx.beginPath();ctx.moveTo(-2,-15);ctx.quadraticCurveTo(-4,-23+flicker,1,fy-5);ctx.quadraticCurveTo(6,-19,4,-14);ctx.quadraticCurveTo(1,-11,-2,-15);ctx.fill();
+ ctx.restore();
+}
+drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
+ if(currentWorld!=="volcano")return enemyFaceWithDesert(e,color,helmetColor,deathProgress);
+ const flashing=e.hitFlash>0&&Math.sin(gameClock*65)>.25;
+ if(!flashing){
+  if(e.isMushroom){color="#c65b22";helmetColor="#7b2b1c"}
+  else if(e.isHorned){color=e.isEnraged?"#ff4b20":"#d94c25";helmetColor=e.isEnraged?"#55151a":"#70221d"}
+  else if(e.isHunter){color="#a64c9d";helmetColor="#4c244d"}
+  else{color="#df6329";helmetColor="#702b20"}
+ }
+ enemyFaceWithDesert(e,color,helmetColor,deathProgress);
+ drawLavaEnemyDetails(e,deathProgress);
+};
+
 updateHUD();
 
 })();
