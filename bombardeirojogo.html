@@ -17272,6 +17272,45 @@ function startIntroSplash(){
  setTimeout(()=>{splash.remove();showMenuScreen("main")},9000);
 }
 
+/* BOMBARDEIRO_RUNTIME_DIAGNOSTIC_V1
+   Captura erros do WebView para impedir tela branca sem explicação. */
+(function(){
+ function showBombardeiroRuntimeError(reason,where){
+  try{
+   if(window.__bombardeiroRuntimeErrorShown)return;
+   window.__bombardeiroRuntimeErrorShown=true;
+   running=false;paused=true;
+   var panel=document.getElementById("bombardeiroRuntimeError");
+   if(!panel){
+    panel=document.createElement("div");
+    panel.id="bombardeiroRuntimeError";
+    panel.style.cssText="position:fixed;inset:0;z-index:2147483647;background:#101820;color:#fff;padding:24px 18px;overflow:auto;font:14px/1.5 Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;gap:12px";
+    var title=document.createElement("div");
+    title.textContent="O jogo encontrou um erro ao iniciar";
+    title.style.cssText="font-size:21px;font-weight:bold;color:#ffcf62";
+    var detail=document.createElement("pre");
+    detail.id="bombardeiroRuntimeErrorDetail";
+    detail.style.cssText="white-space:pre-wrap;overflow-wrap:anywhere;background:#202d38;border:1px solid #526879;border-radius:8px;padding:12px;color:#fff";
+    var note=document.createElement("div");
+    note.textContent="Tire uma captura desta tela e envie ao Loki. Ela mostra a causa técnica para corrigirmos sem apagar o progresso.";
+    note.style.cssText="color:#c5d5df";
+    panel.appendChild(title);panel.appendChild(detail);panel.appendChild(note);document.body.appendChild(panel);
+   }
+   var detail=document.getElementById("bombardeiroRuntimeErrorDetail");
+   if(detail)detail.textContent=String(reason||"Erro sem mensagem")+(where?"\n\nLocal: "+where:"");
+  }catch(ignore){}
+ }
+ window.addEventListener("error",function(event){
+  showBombardeiroRuntimeError(event.error&&event.error.stack?event.error.stack:event.message,
+   (event.filename||"")+(event.lineno?":"+event.lineno:"")+(event.colno?":"+event.colno:""));
+ });
+ window.addEventListener("unhandledrejection",function(event){
+  var reason=event.reason&&event.reason.stack?event.reason.stack:event.reason;
+  showBombardeiroRuntimeError(reason,"Promise rejeitada");
+ });
+ window.__bombardeiroShowRuntimeError=showBombardeiroRuntimeError;
+})();
+
 /* INICIALIZAÇÃO */
 loadControls();loadProgress();buildPortalVisualCache();selectedMapLevel=1;newLevel();
 running=false;paused=true;$("hud").style.display="none";$("controls").style.display="none";startIntroSplash();
