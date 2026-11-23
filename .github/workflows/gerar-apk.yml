@@ -250,8 +250,9 @@ jobs:
           test -s assets-manifest.sha256
           echo "Arquivos no pacote: $(wc -l < assets-manifest.sha256)"
           du -sh .
-      - name: Validar sintaxe JavaScript do jogo
+      - name: Validar sintaxe e testes isolados do jogo
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           import re
           import subprocess
@@ -259,15 +260,21 @@ jobs:
 
           html_path = Path("android/app/src/main/assets/game/bombardeirojogo.html")
           html = html_path.read_text(encoding="utf-8")
-          scripts = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.IGNORECASE | re.DOTALL)
-          if not scripts:
-              raise SystemExit("Nenhum script JavaScript foi encontrado no HTML do jogo.")
-          for index, script in enumerate(scripts, 1):
-              check_file = Path(f"/tmp/bombardeiro-script-{index}.js")
+          scripts = re.findall(r"<script\\b[^>]*>(.*?)</script\\s*>", html, flags=re.IGNORECASE | re.DOTALL)
+          inline_scripts = [script for script in scripts if script.strip()]
+          if not inline_scripts:
+              raise SystemExit("Nenhum script JavaScript inline foi encontrado no HTML do jogo.")
+          for index, script in enumerate(inline_scripts, 1):
+              check_file = Path(f"/tmp/bombardeiro-inline-{index}.js")
               check_file.write_text(script, encoding="utf-8")
               subprocess.run(["node", "--check", str(check_file)], check=True)
-          print(f"Sintaxe JavaScript válida: {len(scripts)} scripts verificados.")
+          print(f"Sintaxe inline válida: {len(inline_scripts)} scripts verificados.")
           PY
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find game-assets tests -type f -name '*.js' -print0)
+          echo "Sintaxe dos módulos e testes JavaScript válida."
+          node --test tests/*.test.js
       - name: Gerar APK
         run: gradle -p android :app:assembleDebug --no-daemon --stacktrace
       - name: Disponibilizar APK para download
