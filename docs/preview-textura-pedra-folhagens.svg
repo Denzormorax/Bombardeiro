@@ -1,104 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768">
-<title>Textura de bloco indestrutível — pedras empilhadas com folhagens</title>
+<title>Prévia — cinco pedras 3D empilhadas com folhagens nas frestas</title>
 <defs>
-  <linearGradient id="stoneA" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#85877f"/><stop offset=".32" stop-color="#62665f"/><stop offset=".72" stop-color="#424943"/><stop offset="1" stop-color="#252d29"/></linearGradient>
-  <linearGradient id="stoneB" x1=".1" y1="0" x2=".9" y2="1"><stop stop-color="#aaa99b"/><stop offset=".28" stop-color="#77796e"/><stop offset=".68" stop-color="#50564e"/><stop offset="1" stop-color="#303a34"/></linearGradient>
-  <linearGradient id="stoneC" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#777c78"/><stop offset=".35" stop-color="#555d5a"/><stop offset=".8" stop-color="#343e3b"/><stop offset="1" stop-color="#202b28"/></linearGradient>
-  <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b4e77b"/><stop offset=".38" stop-color="#5caa43"/><stop offset="1" stop-color="#205b32"/></linearGradient>
-  <linearGradient id="leaf2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d0ed8b"/><stop offset=".45" stop-color="#78bd4c"/><stop offset="1" stop-color="#326c35"/></linearGradient>
-  <filter id="grain" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="12"/><feColorMatrix values=".35 0 0 0 .25 .35 0 0 0 .25 .35 0 0 0 .25 0 0 0 .16 0"/><feBlend in="SourceGraphic" mode="soft-light"/></filter>
-  <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="8"/><feOffset dy="9"/><feComponentTransfer><feFuncA type="linear" slope=".55"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <g id="sprig">
-    <path d="M0 30 Q-4 4 4 -18" fill="none" stroke="#285b32" stroke-width="5" stroke-linecap="round"/>
-    <path d="M1 12 Q-28 -4 -31 -24 Q-8 -28 3 3Z" fill="url(#leaf)" stroke="#285b32" stroke-width="2"/>
-    <path d="M3 1 Q25 -23 45 -14 Q43 8 7 15Z" fill="url(#leaf2)" stroke="#285b32" stroke-width="2"/>
-    <path d="M2 -8 Q-2 -32 13 -45 Q31 -31 8 -4Z" fill="url(#leaf)" stroke="#285b32" stroke-width="2"/>
-    <path d="M-25 -20 Q-10 -12 0 4 M39 -12 Q22 -4 8 10 M14 -39 Q9 -22 5 -7" fill="none" stroke="#d2ef9b" stroke-width="2" opacity=".65"/>
-  </g>
-  <g id="rock1" filter="url(#shadow)">
-    <path d="M-93 -24 L-75 -66 L-28 -83 L20 -73 L77 -49 L94 -7 L72 48 L29 73 L-38 68 L-82 43 L-103 5Z" fill="url(#stoneA)" stroke="#252e2a" stroke-width="8"/>
-    <path d="M-75 -62 L-28 -79 L20 -69 L-1 -32 L-48 -23Z" fill="#a1a195" opacity=".36"/>
-    <path d="M-48 -22 L-1 -32 L35 -8 L15 34 L-35 43 L-80 18Z" fill="#343d38" opacity=".48"/>
-    <path d="M20 -69 L75 -45 L88 -6 L47 3 L-1 -32Z" fill="#b7b4a5" opacity=".24"/>
-    <path d="M-80 18 L-35 43 L15 34 L29 68 L-38 63 L-78 39Z" fill="#202b27" opacity=".45"/>
-    <path d="M-61 -51 L-26 -65 M34 -54 L66 -34 M-66 5 L-48 22 M40 43 L60 28" stroke="#d0cdbd" stroke-width="5" opacity=".25" stroke-linecap="round"/>
-    <path d="M-8 -22 l-13 19 9 13 M54 -4 l-17 14 5 16" fill="none" stroke="#222c28" stroke-width="4" opacity=".7"/>
-  </g>
-  <g id="rock2" filter="url(#shadow)">
-    <path d="M-76 -10 L-57 -55 L-13 -72 L42 -59 L77 -21 L70 29 L29 61 L-29 66 L-70 39 L-88 9Z" fill="url(#stoneB)" stroke="#303832" stroke-width="7"/>
-    <path d="M-57 -53 L-13 -69 L42 -56 L10 -23 L-38 -17Z" fill="#d0cbbb" opacity=".32"/>
-    <path d="M10 -23 L42 -56 L72 -20 L35 10 L-8 12Z" fill="#a9aa9c" opacity=".22"/>
-    <path d="M-38 -17 L10 -23 L35 10 L18 51 L-29 60 L-70 34Z" fill="#333d37" opacity=".42"/>
-    <path d="M-48 -43 L-19 -55 M42 -39 L61 -17 M-57 20 L-32 39 M25 43 L49 22" stroke="#e0ddcc" stroke-width="4" opacity=".23" stroke-linecap="round"/>
-    <path d="M-2 -8 l-12 17 7 11 M48 4 l-14 11" fill="none" stroke="#202a26" stroke-width="4" opacity=".65"/>
-  </g>
-  <g id="rock3" filter="url(#shadow)">
-    <path d="M-60 -20 L-43 -57 L3 -67 L48 -43 L65 -4 L49 38 L5 58 L-43 42 L-67 9Z" fill="url(#stoneC)" stroke="#202b27" stroke-width="7"/>
-    <path d="M-43 -54 L3 -64 L48 -40 L12 -20 L-26 -19Z" fill="#c1c0b2" opacity=".28"/>
-    <path d="M-26 -19 L12 -20 L49 3 L25 39 L-20 43 L-58 10Z" fill="#202c28" opacity=".42"/>
-    <path d="M-33 -43 L-5 -52 M29 -34 L49 -12 M-45 13 L-22 29" stroke="#d7d3c3" stroke-width="4" opacity=".22" stroke-linecap="round"/>
-  </g>
+ <linearGradient id="base" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#465047"/><stop offset="1" stop-color="#18251f"/></linearGradient>
+ <linearGradient id="top1" x1=".15" y1="0" x2=".85" y2="1"><stop stop-color="#d0cbbb"/><stop offset=".22" stop-color="#99998c"/><stop offset=".58" stop-color="#666b62"/><stop offset="1" stop-color="#343e38"/></linearGradient>
+ <linearGradient id="top2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c1c0b4"/><stop offset=".3" stop-color="#85877c"/><stop offset=".7" stop-color="#5a625a"/><stop offset="1" stop-color="#303a34"/></linearGradient>
+ <linearGradient id="side" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#596159"/><stop offset=".4" stop-color="#343e38"/><stop offset="1" stop-color="#151f1a"/></linearGradient>
+ <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d3f49a"/><stop offset=".3" stop-color="#8bc957"/><stop offset=".72" stop-color="#43883b"/><stop offset="1" stop-color="#20512e"/></linearGradient>
+ <linearGradient id="leafLight" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e0f5a4"/><stop offset=".5" stop-color="#8dc95b"/><stop offset="1" stop-color="#3b7938"/></linearGradient>
+ <filter id="drop" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="13"/><feOffset dy="18"/><feComponentTransfer><feFuncA type="linear" slope=".72"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="soft"><feGaussianBlur stdDeviation="5"/></filter>
+ <g id="sprout">
+  <path d="M0 26 Q-3 5 2 -17" fill="none" stroke="#244d2c" stroke-width="6" stroke-linecap="round"/>
+  <path d="M0 10 Q-35 -5 -39 -30 Q-13 -37 3 2Z" fill="url(#leaf)" stroke="#285b32" stroke-width="2.5"/>
+  <path d="M2 1 Q27 -29 53 -17 Q51 10 7 17Z" fill="url(#leafLight)" stroke="#285b32" stroke-width="2.5"/>
+  <path d="M1 -8 Q-5 -38 15 -55 Q37 -35 8 -3Z" fill="url(#leaf)" stroke="#285b32" stroke-width="2.5"/>
+  <path d="M-32 -27 Q-13 -14 1 5 M46 -14 Q24 -4 8 12 M16 -48 Q11 -25 5 -8" fill="none" stroke="#e4f8b5" stroke-width="2.8" opacity=".75"/>
+ </g>
 </defs>
-<rect width="768" height="768" fill="#202a26"/>
-<rect width="768" height="768" fill="#596159" opacity=".3"/>
-<!-- Dense, interlocked stones -->
-<g>
-  <use href="#rock1" transform="translate(95 92) rotate(-8) scale(.82)"/>
-  <use href="#rock2" transform="translate(272 83) rotate(8) scale(.94)"/>
-  <use href="#rock3" transform="translate(443 78) rotate(-7) scale(1.02)"/>
-  <use href="#rock1" transform="translate(654 94) rotate(13) scale(.78)"/>
-  <use href="#rock2" transform="translate(40 258) rotate(-15) scale(.8)"/>
-  <use href="#rock1" transform="translate(205 245) rotate(7) scale(1.02)"/>
-  <use href="#rock2" transform="translate(397 248) rotate(-8) scale(.94)"/>
-  <use href="#rock1" transform="translate(590 249) rotate(11) scale(1.02)"/>
-  <use href="#rock3" transform="translate(744 260) rotate(-9) scale(.8)"/>
-  <use href="#rock1" transform="translate(92 427) rotate(10) scale(.9)"/>
-  <use href="#rock2" transform="translate(277 421) rotate(-12) scale(1.02)"/>
-  <use href="#rock1" transform="translate(477 424) rotate(8) scale(.96)"/>
-  <use href="#rock2" transform="translate(672 426) rotate(-8) scale(.92)"/>
-  <use href="#rock3" transform="translate(8 594) rotate(8) scale(.82)"/>
-  <use href="#rock1" transform="translate(174 603) rotate(-10) scale(1.02)"/>
-  <use href="#rock2" transform="translate(365 595) rotate(10) scale(.96)"/>
-  <use href="#rock1" transform="translate(560 601) rotate(-7) scale(1.02)"/>
-  <use href="#rock3" transform="translate(746 604) rotate(11) scale(.85)"/>
-  <use href="#rock2" transform="translate(45 755) rotate(-5) scale(.75)"/>
-  <use href="#rock1" transform="translate(257 758) rotate(8) scale(.84)"/>
-  <use href="#rock3" transform="translate(464 758) rotate(-6) scale(.82)"/>
-  <use href="#rock2" transform="translate(670 758) rotate(9) scale(.85)"/>
+<rect width="768" height="768" fill="url(#base)"/>
+<!-- Earth and moss visible only in the deep gaps -->
+<path d="M0 590 Q130 535 240 590T480 575T768 590V768H0Z" fill="#263b2b" opacity=".55"/>
+<g fill="#101b15" opacity=".55">
+ <ellipse cx="383" cy="620" rx="280" ry="78"/>
+ <ellipse cx="384" cy="375" rx="265" ry="82"/>
 </g>
-<!-- Fine mineral speckling and crevice grit -->
-<g fill="#d7d4c4" opacity=".34">
-  <circle cx="83" cy="77" r="3"/><circle cx="116" cy="112" r="2"/><circle cx="246" cy="58" r="3"/><circle cx="298" cy="103" r="2"/>
-  <circle cx="421" cy="55" r="2.5"/><circle cx="466" cy="97" r="2"/><circle cx="638" cy="72" r="3"/><circle cx="695" cy="115" r="2"/>
-  <circle cx="177" cy="226" r="3"/><circle cx="235" cy="278" r="2"/><circle cx="374" cy="224" r="2"/><circle cx="431" cy="275" r="3"/>
-  <circle cx="564" cy="222" r="2"/><circle cx="625" cy="280" r="3"/><circle cx="259" cy="401" r="2"/><circle cx="314" cy="450" r="3"/>
-  <circle cx="464" cy="398" r="2"/><circle cx="519" cy="448" r="2"/><circle cx="152" cy="578" r="3"/><circle cx="205" cy="628" r="2"/>
-  <circle cx="349" cy="574" r="2"/><circle cx="404" cy="631" r="3"/><circle cx="548" cy="575" r="2"/><circle cx="612" cy="629" r="3"/>
+<!-- Five large interlocked stones: two bottom, two middle, one crown -->
+<g filter="url(#drop)">
+ <!-- Lower left boulder -->
+ <path d="M76 555 L101 468 L163 414 L250 421 L310 470 L322 560 L281 653 L201 687 L112 656 L65 600Z" fill="url(#side)" stroke="#18231d" stroke-width="12" stroke-linejoin="round"/>
+ <path d="M76 555 L101 468 L163 414 L250 421 L310 470 L258 506 L174 520 L101 590Z" fill="url(#top1)" stroke="#a5a596" stroke-opacity=".3" stroke-width="5"/>
+ <path d="M101 468 L163 414 L250 421 L205 465 L145 490Z" fill="#e0ddcf" opacity=".27"/>
+ <path d="M101 590 L174 520 L258 506 L310 560 L281 653 L201 687 L112 656Z" fill="url(#side)" opacity=".88"/>
+ <path d="M145 490 L205 465 L258 506 L220 551 L151 559Z" fill="#4c554d" opacity=".65"/>
+ <path d="M98 478 L158 429 L229 435 M88 558 L125 526" fill="none" stroke="#f0ead8" stroke-width="7" opacity=".28" stroke-linecap="round"/>
+ <path d="M177 571l-18 28 13 17 M262 543l-20 23 9 17" fill="none" stroke="#111d17" stroke-width="7" opacity=".8"/>
+ <!-- Lower right boulder -->
+ <path d="M401 472 L469 415 L560 424 L638 478 L676 566 L635 650 L552 690 L464 660 L397 590Z" fill="url(#side)" stroke="#17221c" stroke-width="12" stroke-linejoin="round"/>
+ <path d="M401 472 L469 415 L560 424 L638 478 L676 566 L600 531 L514 520 L445 559Z" fill="url(#top2)" stroke="#b5b19f" stroke-opacity=".25" stroke-width="5"/>
+ <path d="M469 415 L560 424 L638 478 L580 484 L514 520 L445 559Z" fill="#ded9c8" opacity=".25"/>
+ <path d="M445 559 L514 520 L600 531 L676 566 L635 650 L552 690 L464 660 L397 590Z" fill="url(#side)"/>
+ <path d="M514 520 L580 484 L638 478 L676 566 L600 531Z" fill="#778074" opacity=".55"/>
+ <path d="M477 434 L550 438 L619 483 M422 485l42-39" fill="none" stroke="#f0ead8" stroke-width="7" opacity=".27" stroke-linecap="round"/>
+ <path d="M538 568l-18 26 12 20 M626 566l-20 20 8 19" fill="none" stroke="#111d17" stroke-width="7" opacity=".8"/>
+ <!-- Middle left boulder, slightly overhanging -->
+ <path d="M132 349 L149 268 L218 220 L304 233 L360 291 L353 384 L296 446 L207 453 L139 413Z" fill="url(#side)" stroke="#17221c" stroke-width="12" stroke-linejoin="round"/>
+ <path d="M132 349 L149 268 L218 220 L304 233 L360 291 L302 322 L218 337 L154 397Z" fill="url(#top2)" stroke="#b8b5a6" stroke-opacity=".3" stroke-width="5"/>
+ <path d="M149 268 L218 220 L304 233 L261 275 L194 300Z" fill="#e5e0d1" opacity=".27"/>
+ <path d="M154 397 L218 337 L302 322 L360 291 L353 384 L296 446 L207 453 L139 413Z" fill="url(#side)"/>
+ <path d="M194 300 L261 275 L302 322 L254 359 L181 366Z" fill="#4d584f" opacity=".65"/>
+ <path d="M162 278 L217 235 L289 245 M150 355l36-38" fill="none" stroke="#f1eddf" stroke-width="7" opacity=".28" stroke-linecap="round"/>
+ <path d="M231 377l-16 23 12 15 M319 343l-17 23 10 15" fill="none" stroke="#111d17" stroke-width="7" opacity=".8"/>
+ <!-- Middle right boulder -->
+ <path d="M358 300 L417 235 L504 218 L583 260 L622 336 L596 423 L524 473 L432 453 L368 394Z" fill="url(#side)" stroke="#17221c" stroke-width="12" stroke-linejoin="round"/>
+ <path d="M358 300 L417 235 L504 218 L583 260 L622 336 L558 350 L478 332 L398 371Z" fill="url(#top1)" stroke="#c4bfad" stroke-opacity=".25" stroke-width="5"/>
+ <path d="M417 235 L504 218 L583 260 L531 289 L478 332 L398 371Z" fill="#e5e0d0" opacity=".27"/>
+ <path d="M398 371 L478 332 L558 350 L622 336 L596 423 L524 473 L432 453 L368 394Z" fill="url(#side)"/>
+ <path d="M478 332 L531 289 L583 260 L622 336 L558 350Z" fill="#59645a" opacity=".55"/>
+ <path d="M428 250 L495 232 L567 269 M380 312l38-51" fill="none" stroke="#f1eddf" stroke-width="7" opacity=".28" stroke-linecap="round"/>
+ <path d="M476 390l-17 24 13 16 M575 379l-19 24 10 16" fill="none" stroke="#111d17" stroke-width="7" opacity=".8"/>
+ <!-- Crown stone, perched across the two middle stones -->
+ <path d="M244 207 L269 128 L337 76 L430 82 L499 135 L510 220 L465 286 L382 312 L294 281 L238 245Z" fill="url(#side)" stroke="#17221c" stroke-width="13" stroke-linejoin="round"/>
+ <path d="M244 207 L269 128 L337 76 L430 82 L499 135 L441 169 L357 185 L276 249Z" fill="url(#top1)" stroke="#c9c4b4" stroke-opacity=".34" stroke-width="6"/>
+ <path d="M269 128 L337 76 L430 82 L385 128 L316 158Z" fill="#f0ebdc" opacity=".3"/>
+ <path d="M276 249 L357 185 L441 169 L499 135 L510 220 L465 286 L382 312 L294 281 L238 245Z" fill="url(#side)"/>
+ <path d="M316 158 L385 128 L441 169 L399 215 L319 221Z" fill="#667064" opacity=".75"/>
+ <path d="M285 137 L338 92 L414 97 M262 214l40-47" fill="none" stroke="#fff8e6" stroke-width="8" opacity=".32" stroke-linecap="round"/>
+ <path d="M348 232l-19 27 14 17 M461 207l-18 25 12 17" fill="none" stroke="#101b15" stroke-width="8" opacity=".85"/>
 </g>
-<g fill="#101b17" opacity=".65">
-  <path d="M147 151q18 -14 35 -2l-9 13-23 5z M331 158l17 -12 21 8-9 13z M525 152l19 -11 18 8-13 14z"/>
-  <path d="M114 329l17 -12 23 8-12 14z M350 334l18 -13 20 6-9 15z M612 336l17 -12 20 8-14 13z"/>
-  <path d="M211 509l18 -12 19 7-12 13z M446 514l17 -12 22 7-13 14z M679 510l17 -11 20 8-12 13z"/>
+<!-- Deep crevices separating the stacked stones -->
+<g fill="none" stroke="#101a14" stroke-width="17" stroke-linecap="round" opacity=".85">
+ <path d="M305 310 Q339 292 367 316"/>
+ <path d="M350 443 Q386 425 418 450"/>
+ <path d="M254 455 Q280 438 303 454"/>
 </g>
-<!-- Green plants emerging from stone gaps -->
-<g filter="url(#shadow)">
-  <use href="#sprig" transform="translate(151 168) rotate(-12) scale(1.02)"/>
-  <use href="#sprig" transform="translate(354 174) rotate(18) scale(.82)"/>
-  <use href="#sprig" transform="translate(568 164) rotate(-16) scale(.95)"/>
-  <use href="#sprig" transform="translate(83 345) rotate(12) scale(.82)"/>
-  <use href="#sprig" transform="translate(302 337) rotate(-12) scale(1.08)"/>
-  <use href="#sprig" transform="translate(510 350) rotate(15) scale(.9)"/>
-  <use href="#sprig" transform="translate(710 342) rotate(-18) scale(.82)"/>
-  <use href="#sprig" transform="translate(181 520) rotate(10) scale(.92)"/>
-  <use href="#sprig" transform="translate(405 520) rotate(-15) scale(1.05)"/>
-  <use href="#sprig" transform="translate(626 526) rotate(18) scale(.92)"/>
-  <use href="#sprig" transform="translate(76 690) rotate(-10) scale(.72)"/>
-  <use href="#sprig" transform="translate(298 690) rotate(12) scale(.78)"/>
-  <use href="#sprig" transform="translate(526 694) rotate(-12) scale(.82)"/>
-  <use href="#sprig" transform="translate(716 690) rotate(15) scale(.72)"/>
+<!-- Small leafy shoots growing FROM the cracks, not scattered on top -->
+<g filter="url(#drop)">
+ <use href="#sprout" transform="translate(340 307) rotate(-18) scale(.83)"/>
+ <use href="#sprout" transform="translate(384 438) rotate(16) scale(.78)"/>
+ <use href="#sprout" transform="translate(294 454) rotate(-28) scale(.68)"/>
+ <use href="#sprout" transform="translate(465 292) rotate(24) scale(.72)"/>
+ <use href="#sprout" transform="translate(205 435) rotate(-10) scale(.58)"/>
 </g>
-<!-- Subtle surface texture -->
-<rect width="768" height="768" filter="url(#grain)" opacity=".24"/>
-<rect x="5" y="5" width="758" height="758" fill="none" stroke="#a6aa96" stroke-opacity=".18" stroke-width="3"/>
+<!-- Tiny moss patches nestled in crevices -->
+<g fill="#548b43" opacity=".9">
+ <path d="M321 320q16-17 30-5q-5 15-24 17z M368 451q18-16 31-2q-9 13-27 12z M279 466q14-14 25-4q-5 12-21 12z"/>
+</g>
+<!-- restrained ambient highlights and fine stone grain -->
+<g fill="#e2dfd0" opacity=".24">
+ <circle cx="184" cy="277" r="3"/><circle cx="229" cy="250" r="2"/><circle cx="287" cy="148" r="3"/>
+ <circle cx="397" cy="108" r="2.5"/><circle cx="466" cy="260" r="3"/><circle cx="544" cy="300" r="2"/>
+ <circle cx="165" cy="520" r="3"/><circle cx="245" cy="604" r="2"/><circle cx="493" cy="591" r="3"/><circle cx="591" cy="625" r="2"/>
+</g>
+<rect x="4" y="4" width="760" height="760" rx="10" fill="none" stroke="#b4b9a5" stroke-opacity=".15" stroke-width="3"/>
 </svg>
