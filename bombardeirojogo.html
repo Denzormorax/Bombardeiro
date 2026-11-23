@@ -16342,8 +16342,10 @@ function findBombEscapePath(enemy,danger,preferCover=false){
   if(p.path.length>0&&!danger.has(key)){
    let nearestBomb=99;
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
-   const coverBonus=preferCover&&isBehindBombCover(p.x,p.y)?2.4:0;
-   safe.push({path:p.path,score:p.path.length-nearestBomb*.12-coverBonus});
+   const desertHunter=currentWorld==="desert"&&enemy.isHunter;
+   const coverBonus=preferCover&&isBehindBombCover(p.x,p.y)?(desertHunter?7.5:2.4):0;
+   const score=desertHunter?p.path.length*.62-nearestBomb*.42-coverBonus:p.path.length-nearestBomb*.12-coverBonus;
+   safe.push({path:p.path,score});
   }
   if(p.path.length>=COLS*ROWS)continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
@@ -16450,11 +16452,13 @@ function reactToNewBomb(newBomb=null){
   }
   const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
   const nearbyBomb=bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<(enemy.isMushroom?4.8:enemy.isHorned?5.2:3.8));
+  const desertHunterThreat=currentWorld==="desert"&&enemy.isHunter&&nearbyBomb;
   enemy.repath=0;
-  if(currentThreatened||routeThreatened){
-   // Todos os inimigos, inclusive o cogumelo, priorizam sair da área da explosão.
+  if(currentThreatened||routeThreatened||desertHunterThreat){
+   // O caçador do deserto reage também à proximidade da bomba: procura rota segura e cobertura,
+   // em vez de ficar parado diante dela aguardando a explosão.
    enemy.bombEscapePending=true;
-   enemy.bombReactionTimer=enemy.isMushroom ? .02 : enemy.isHorned ? .04 : (enemy.isHunter||enemy.isBuilder) ? .07 : .08;
+   enemy.bombReactionTimer=desertHunterThreat?.02:enemy.isMushroom ? .02 : enemy.isHorned ? .04 : (enemy.isHunter||enemy.isBuilder) ? .07 : .08;
   }else if(routeBlockedByBomb||nearbyBomb){
    // Se a bomba apenas bloqueia a perseguição, recalcula o caminho para contorná-la.
    enemy.path=[];
