@@ -10,12 +10,12 @@
  <linearGradient id="shadeB" x1="0" y1="0" x2=".3" y2="1"><stop stop-color="#e0e5df" stop-opacity=".2"/><stop offset=".5" stop-color="#263a40" stop-opacity=".02"/><stop offset="1" stop-color="#13262c" stop-opacity=".5"/></linearGradient>
 </defs>
 <!-- soft contact shadows directly beneath the stones -->
-<ellipse cx="153" cy="365" rx="116" ry="22" fill="#071317" opacity=".72" filter="url(#groundShadow)"/>
-<ellipse cx="365" cy="377" rx="104" ry="21" fill="#071317" opacity=".76" filter="url(#groundShadow)"/>
+<ellipse cx="153" cy="378" rx="125" ry="23" fill="#071317" opacity=".72" filter="url(#groundShadow)"/>
+<ellipse cx="365" cy="395" rx="112" ry="22" fill="#071317" opacity=".76" filter="url(#groundShadow)"/>
 <path d="M48 363h16v-8h24v-8h32v-8h32v8h24v8h16v16H48z" fill="#101d20" opacity=".38"/>
 <path d="M270 380h16v-8h24v-8h32v-8h40v8h24v8h16v16H270z" fill="#101d20" opacity=".4"/>
 <!-- left stone: broad angular top and deep right/front bevel; slightly enlarged -->
-<g transform="translate(-3 -3) scale(1.025)">
+<g transform="translate(-21 -40) scale(1.15)">
 <path d="M42 277v-38h16v-32h24v-24h32v-16h64v8h24v16h24v32h16v48h-16v48h-24v24h-40v16h-72v-8H66v-24H50v-32H42z" fill="#24353b"/>
 <path d="M50 270v-34h16v-32h24v-24h32v-16h56v8h24v16h16v32h16v40h-16v40h-24v24h-40v8h-64v-8H74v-24H58v-32H50z" fill="url(#sideA)"/>
 <path d="M50 270v-34h16v-32h24v-24h32v-16h56v8h24v16h16v32h16v32h-24v16h-32v16h-48v8H90v-8H66v-24H50z" fill="url(#topA)"/>
@@ -34,7 +34,7 @@
 <path d="M202 236h16v32h-16v24h-16v-40h16z" fill="#354951"/>
 </g>
 <!-- right stone, slightly smaller and overlapping in depth; slightly enlarged -->
-<g transform="translate(-3 -3) scale(1.025)">
+<g transform="translate(-57 -40) scale(1.15)">
 <path d="M264 306v-32h16v-32h24v-24h32v-16h56v8h24v16h24v32h16v40h-16v40h-24v24h-40v16h-64v-8h-24v-24h-16v-32h-8z" fill="#1e3036"/>
 <path d="M272 300v-32h16v-32h24v-24h32v-16h48v8h24v16h16v32h16v40h-16v32h-24v24h-40v8h-56v-8h-24v-24h-16v-32z" fill="url(#sideB)"/>
 <path d="M272 300v-32h16v-32h24v-24h32v-16h48v8h24v16h16v32h16v32h-24v16h-32v16h-48v8h-40v-8h-24v-24h-8z" fill="url(#topB)"/>
