@@ -17743,17 +17743,18 @@ function updateBlueFlameEnemies(dt){
   if(!e.alive){e.deathTimer=Math.max(0,(e.deathTimer||0)-dt);continue}
   e.hitFlash=Math.max(0,e.hitFlash-dt);e.hurtTimer=Math.max(0,e.hurtTimer-dt);
   e.blueFlamePhase+=dt;
+  e.blueFlameCooldown=Math.max(0,(e.blueFlameCooldown||0)-dt);
   if(e.blueFlameFuse>0){
    e.blueFlameFuse=Math.max(0,e.blueFlameFuse-dt);
    e.speed=0;e.path.length=0;
-   if(e.blueFlameFuse<=0)detonateBlueFlame(e);
+   if(e.blueFlameFuse<=0)detonateBlueFlame(e,false);
    continue;
   }
   const d=distance(e.x,e.y,player.x,player.y);
   const sees=d<7.2&&canSeePlayer(e);
   if(sees||e.mode==="chase"){
    e.mode="chase";e.lastSeen={x:player.x,y:player.y};e.speed=e.huntSpeed*1.18;
-   if(d<=.58){e.blueFlameFuse=1.18;e.speed=0;e.path.length=0;e.mode="detonate";continue}
+   if(d<=.98&&e.blueFlameCooldown<=0){e.blueFlameFuse=.42;e.speed=0;e.path.length=0;e.mode="detonate";continue}
    e.repath-=dt;
    if(e.repath<=0||!e.path.length){
     e.path=findEnemyRoute(e,player.x,player.y,getAllBombDangerCells());
@@ -17770,14 +17771,30 @@ function updateBlueFlameEnemies(dt){
 }
 const killEnemyBeforeBlueFlame=killEnemy;
 const explodeBeforeBlueFlame=explode;
-function detonateBlueFlame(e){
+function detonateBlueFlame(e,chainReaction=true){
  if(!e||!e.alive||e.blueFlameDetonating)return;
- e.blueFlameDetonating=true;
- killEnemyBeforeBlueFlame(e);
- // Explosão idêntica à bomba inicial: cruz de alcance 1, sem consumir bomba do jogador.
- const savedActiveBombs=activeBombs;
- explodeBeforeBlueFlame({x:Math.floor(e.x),y:Math.floor(e.y),range:1,enemyDetonation:true});
- activeBombs=savedActiveBombs;
+ e.blueFlameDetonating=true;e.blueFlameFuse=0;e.blueFlameCooldown=1.15;
+ e.mode="chase";e.speed=e.baseSpeed;e.path=[];e.repath=0;e.lastSeen={x:player.x,y:player.y};
+ // Explosão visual independente: não mata o inimigo nem consome bombas do jogador.
+ const bx=Math.floor(e.x),by=Math.floor(e.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]],range=2;
+ for(const [dx,dy] of dirs)for(let i=1;i<=range;i++){
+  const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);
+  if(tile===1)break;
+  cells.push({x,y});
+  if(tile===2)break;
+ }
+ const hitEnemies=new Set([e]);
+ for(const cell of cells){
+  flames.push({x:cell.x,y:cell.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});
+  if(player.inv<=0&&isInsideFlameDamage(player,cell))hurtPlayer();
+  for(const other of enemies){
+   if(other!==e&&other.alive&&!other.burrowing&&!hitEnemies.has(other)&&circleRectCollision(other.x,other.y,ENEMY_RADIUS,cell.x,cell.y,1,1)){
+    hitEnemies.add(other);damageEnemy(other);
+   }
+  }
+  for(const bomb of bombs)if(Math.floor(bomb.x)===cell.x&&Math.floor(bomb.y)===cell.y)bomb.t=Math.min(bomb.t,.05);
+ }
+ e.blueFlameDetonating=false;
 }
 const damageEnemyBeforeBlueFlame=damageEnemy;
 damageEnemy=function(e){
@@ -17822,10 +17839,13 @@ function drawBlueFlameEnemy(e){
  const alpha=dying?Math.max(0,1-progress):1;
  ctx.save();ctx.globalAlpha=alpha;
  ctx.fillStyle="#001b35";ctx.globalAlpha*=.28;ctx.beginPath();ctx.ellipse(px,groundY+12,13,5,0,0,Math.PI*2);ctx.fill();
- ctx.globalAlpha=alpha;ctx.drawImage(blueFlameFrames[frame],px-38,groundY-59+bob,76,76);
- // Olhos e boca ficam no corpo da chama, usando os mesmos traços dos demais inimigos.
- ctx.translate(px,groundY-22+bob);ctx.scale(1.08,1.08);
- const hurt=(e.hurtTimer||0)>0||fuse;
+ const fuseProgress=fuse?Math.max(0,Math.min(1,1-e.blueFlameFuse/.42)):0;
+ const squash=fuse?1-.48*Math.sin(fuseProgress*Math.PI):1;
+ const flameHeight=76*squash;
+ ctx.globalAlpha=alpha;ctx.drawImage(blueFlameFrames[frame],px-38,groundY-59+bob+(76-flameHeight),76,flameHeight);
+ // Estado de desenho isolado para não contaminar o contexto do restante do jogo.
+ ctx.save();
+ ctx.translate(px,groundY-22+bob+(fuse?4*Math.sin(fuseProgress*Math.PI):0));ctx.scale(1.08,1.08);
  if(fuse){
   ctx.strokeStyle="#06213b";ctx.lineWidth=2.5;ctx.lineCap="round";
   for(const x of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(x-2.3,-2.5);ctx.lineTo(x+2.3,2);ctx.moveTo(x+2.3,-2.5);ctx.lineTo(x-2.3,2);ctx.stroke()}
@@ -17843,7 +17863,7 @@ function drawBlueFlameEnemy(e){
   const bw=34,bx=px-bw/2,by=groundY-65;
   ctx.fillStyle="#06182b";ctx.fillRect(bx-1,by-1,bw+2,6);ctx.fillStyle="#17364a";ctx.fillRect(bx,by,bw,4);
   ctx.fillStyle=e.hp===3?"#43eaff":e.hp===2?"#42baff":"#2684ff";ctx.fillRect(bx,by,bw*Math.max(0,e.hp/3),4);
-  if(fuse){ctx.globalAlpha=.45+.35*Math.sin(gameClock*18);ctx.strokeStyle="#8ffaff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,groundY-23,25,0,Math.PI*2);ctx.stroke()}
+  if(fuse){ctx.save();ctx.globalAlpha=.55+.35*Math.sin(gameClock*34);ctx.strokeStyle="#8ffaff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,groundY-23,25+Math.sin(gameClock*34)*2,0,Math.PI*2);ctx.stroke();ctx.restore()}
  }
  ctx.restore();
 }
