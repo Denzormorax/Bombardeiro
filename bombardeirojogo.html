@@ -17786,7 +17786,8 @@ function detonateBlueFlame(e){
   flames.push({x:cell.x,y:cell.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});
   if(player.inv<=0&&isInsideFlameDamage(player,cell))hurtPlayer();
   for(const other of enemies){
-   if(other!==e&&other.alive&&!other.burrowing&&!hitEnemies.has(other)&&circleRectCollision(other.x,other.y,ENEMY_RADIUS,cell.x,cell.y,1,1)){
+   // A explosão própria do foguinho não causa dano em outros foguinho azuis.
+   if(other!==e&&!other.isBlueFlame&&other.alive&&!other.burrowing&&!hitEnemies.has(other)&&circleRectCollision(other.x,other.y,ENEMY_RADIUS,cell.x,cell.y,1,1)){
     hitEnemies.add(other);damageEnemy(other);
    }
   }
@@ -17795,11 +17796,17 @@ function detonateBlueFlame(e){
  e.blueFlameDetonating=false;
 }
 const damageEnemyBeforeBlueFlame=damageEnemy;
+function damageBlueFlameByPlayerBomb(e){
+ if(!e||!e.isBlueFlame||!e.alive||e.burrowing)return;
+ // Só uma bomba do jogador pode ferir o foguinho; a explosão dele não o atinge.
+ detonateBlueFlame(e);
+ if(!e.alive)return;
+ playSfx("enemyHit");e.hurtTimer=ENEMY_HURT_TIME;e.hitFlash=.24;
+ e.hp=Math.max(0,(e.hp||0)-1);
+ if(e.hp<=0)killEnemy(e);
+}
 damageEnemy=function(e){
- if(e&&e.isBlueFlame&&e.alive){
-  // A bomba provoca a reação em cadeia e também aplica o dano normal ao foguinho.
-  detonateBlueFlame(e);return damageEnemyBeforeBlueFlame(e);
- }
+ if(e&&e.isBlueFlame){damageBlueFlameByPlayerBomb(e);return}
  return damageEnemyBeforeBlueFlame(e);
 };
 const blueFlameFrames=[];
