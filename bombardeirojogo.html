@@ -17739,7 +17739,8 @@ updateEnemies=function(dt){
 };
 function updateBlueFlameEnemies(dt){
  for(const e of enemies){
-  if(!e.isBlueFlame||!e.alive)continue;
+  if(!e.isBlueFlame)continue;
+  if(!e.alive){e.deathTimer=Math.max(0,(e.deathTimer||0)-dt);continue}
   e.hitFlash=Math.max(0,e.hitFlash-dt);e.hurtTimer=Math.max(0,e.hurtTimer-dt);
   e.blueFlamePhase+=dt;
   if(e.blueFlameFuse>0){
