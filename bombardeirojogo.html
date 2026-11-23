@@ -16561,7 +16561,9 @@ function updateEnemies(dt){
 /* BOMBAS E COMBATE *//* BOMBAS E COMBATE */
 function placeBomb(){
  if(!running||paused||customizing||bombCooldown>0||activeBombs>=maxBombs)return;const x=Math.floor(player.x),y=Math.floor(player.y);if(bombAt(x,y))return;
- const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
+ const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};
+ if(currentWorld==="desert"&&waterPuddleCells.has(cellKey(x,y))){const exits=waterPuddles.filter(p=>(p.x!==x||p.y!==y)&&!bombAt(p.x,p.y)&&map[p.y]?.[p.x]===0);if(exits.length){const destination=exits[Math.floor(Math.random()*exits.length)];bomb.whirlwind={toX:destination.x,toY:destination.y,t:0,duration:.82,moved:false}}}
+ bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
 function killEnemy(enemy){if(!enemy.alive)return;playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
@@ -16769,7 +16771,7 @@ function update(dt){
  if(!running||paused)return;
  const previousPositions={player:{x:player.x,y:player.y},enemies:enemies.map(e=>({x:e.x,y:e.y}))};
  gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);for(let i=0;i<enemies.length;i++){const e=enemies[i],p=previousPositions.enemies[i];if(e&&e.isBuilder)e._builderMoving=!!(e.alive&&!e.burrowing&&p&&Math.hypot(e.x-p.x,e.y-p.y)>.00025)}updateWaterWalkers(dt,previousPositions);updateSlidingBombs(dt);
- for(const b of bombs){b.t-=dt;b.animTime+=dt}const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
+ for(const b of bombs){b.animTime+=dt;if(b.whirlwind){const w=b.whirlwind;w.t+=dt;if(!w.moved&&w.t>=w.duration*.5){b.x=w.toX;b.y=w.toY;w.moved=true}if(w.t>=w.duration)delete b.whirlwind}else b.t-=dt}const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
  for(const f of flames){f.t-=dt;f.age=(f.age||0)+dt}flames=flames.filter(f=>f.t>0);
   for(const c of burningCrates)c.t-=dt;for(let i=burningCrates.length-1;i>=0;i--)if(burningCrates[i].t<=0)burningCrates.splice(i,1);
  for(const f of flames){
@@ -17144,10 +17146,12 @@ function drawExit(){
  ctx.restore();
 }
 function drawBomb(b){
- const px=ox+b.x*TILE+24,py=oy+b.y*TILE+24,pulse=1+Math.sin(b.animTime*4.2)*.075;ctx.save();ctx.translate(px,py);ctx.scale(pulse,pulse);ctx.fillStyle="#080d12";ctx.beginPath();ctx.ellipse(0,15,17,6,0,0,Math.PI*2);ctx.fill();const bodyGradient=ctx.createRadialGradient(-6,-7,2,0,0,19);bodyGradient.addColorStop(0,"#71818b");bodyGradient.addColorStop(.35,"#364957");bodyGradient.addColorStop(1,"#101820");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a9bac2";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-6,-7,5,3,-.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
+ const warp=b.whirlwind,progress=warp?Math.min(1,warp.t/warp.duration):0,warpScale=warp?Math.max(.08,Math.abs(1-progress*2)):1;
+ const px=ox+b.x*TILE+24,py=oy+b.y*TILE+24-(warp?Math.sin(progress*Math.PI)*12:0),pulse=1+Math.sin(b.animTime*4.2)*.075;ctx.save();if(warp){ctx.globalAlpha=Math.min(1,Math.abs(1-progress*2)*3);ctx.translate(px,py);ctx.scale(warpScale,warpScale);ctx.translate(-px,-py)}ctx.translate(px,py);ctx.scale(pulse,pulse);ctx.fillStyle="#080d12";ctx.beginPath();ctx.ellipse(0,15,17,6,0,0,Math.PI*2);ctx.fill();const bodyGradient=ctx.createRadialGradient(-6,-7,2,0,0,19);bodyGradient.addColorStop(0,"#71818b");bodyGradient.addColorStop(.35,"#364957");bodyGradient.addColorStop(1,"#101820");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a9bac2";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-6,-7,5,3,-.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
  const flicker=Math.sin(b.animTime*23+b.sparkPhase),flicker2=Math.cos(b.animTime*17+b.sparkPhase),sx=px+14+flicker*1.5,sy=py-21+flicker2*1.2;ctx.save();ctx.shadowColor="#ff6b18";ctx.shadowBlur=12;ctx.fillStyle="#ff6b18";ctx.beginPath();ctx.moveTo(sx,sy+5);ctx.quadraticCurveTo(sx-7,sy-2-flicker,sx,sy-9-Math.abs(flicker)*2);ctx.quadraticCurveTo(sx+7,sy-2+flicker,sx,sy+5);ctx.fill();ctx.fillStyle="#ffe36b";ctx.beginPath();ctx.moveTo(sx,sy+3);ctx.quadraticCurveTo(sx-3,sy-1,sx,sy-6-Math.abs(flicker2)*2);ctx.quadraticCurveTo(sx+4,sy-1,sx,sy+3);ctx.fill();ctx.shadowBlur=0;
  for(let i=0;i<3;i++){const phase=b.animTime*13+b.sparkPhase+i*2.1,particleX=sx+Math.sin(phase)*5,particleY=sy-5-Math.abs(Math.cos(phase))*7,particleSize=1+Math.abs(Math.sin(phase))*1.2;ctx.globalAlpha=.45+.5*Math.abs(Math.sin(phase));ctx.fillStyle=i%2===0?"#ffe36b":"#ff8a32";ctx.beginPath();ctx.arc(particleX,particleY,particleSize,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;ctx.restore();
  if(b.slide){ctx.fillStyle="#ffe36b";ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText("➜",px,py-29)}
+ ctx.restore();
 }
 function drawFlame(f){
  const px=ox+f.x*TILE,py=oy+f.y*TILE,age=f.age||0,phase=f.phase||0;
@@ -17421,7 +17425,7 @@ function drawEnemyRockDetails(e,color,helmetColor,deathProgress=0){
  ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt+(variation-.5)*.035);ctx.scale(1.22*deathScale*(.97+variation*.05),1.22*deathScale*(.97+variation*.05));
  // Reaproveita os mesmos fragmentos rochosos de todos os inimigos do deserto.
  // Apenas o construtor recebe rochas pretas; os demais mantêm suas cores originais.
- const rockFill=e.isBuilder?"#080808":color,rockEdge=e.isBuilder?"#030303":helmetColor,rockHighlight=e.isBuilder?"#292929":"#ffffff";
+ const rockFill=e.isBuilder?"#080808":color,rockEdge=e.isBuilder?"#8c592f":helmetColor,rockHighlight=e.isBuilder?"#292929":"#ffffff";
  for(const shard of enemyRockShapes){
   ctx.beginPath();ctx.moveTo(shard.p[0][0],shard.p[0][1]);for(let i=1;i<shard.p.length;i++)ctx.lineTo(shard.p[i][0],shard.p[i][1]);ctx.closePath();
   ctx.fillStyle=rockFill;ctx.strokeStyle=rockEdge;ctx.lineWidth=1.45;ctx.lineJoin="round";ctx.fill();ctx.stroke();
