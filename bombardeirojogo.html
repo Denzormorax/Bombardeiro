@@ -17240,21 +17240,46 @@ function addVolcanoWorldUI(){
  }
 }
 addVolcanoWorldUI();
+let volcanoLaunching=false;
 function launchVolcanoLevel(i){
- if(i<1||i>unlockedLevel||i>TOTAL_LEVELS)return;
+ const panel=$("volcanoPanel");
+ if(volcanoLaunching||running||!panel||panel.classList.contains("hidden")||panel.style.display==="none")return;
+ if(!Number.isInteger(i)||i<1||i>unlockedLevel||i>TOTAL_LEVELS)return;
+ volcanoLaunching=true;
  if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}
  selectedMapLevel=i;
- $("volcanoPanel").style.display="none";$("volcanoPanel").classList.add("hidden");
- $("desertPanel").classList.add("hidden");$("hud").style.display="flex";$("controls").style.display="block";
+ panel.style.display="none";panel.classList.add("hidden");
+ $("desertPanel").classList.add("hidden");
+ $("hud").style.display="flex";$("controls").style.display="block";
  startGameOriginal(i);
+}
+function bindVolcanoMapInput(){
+ const nodes=$("volcanoLevelNodes");
+ if(!nodes||nodes.dataset.inputBound==="1")return;
+ nodes.dataset.inputBound="1";
+ const activate=e=>{
+  const button=e.target&&e.target.closest?e.target.closest(".mapNode"):null;
+  if(!button||!nodes.contains(button)||button.disabled)return;
+  const levelNumber=Number(button.dataset.level);
+  if(!Number.isInteger(levelNumber))return;
+  if(e.cancelable)e.preventDefault();
+  e.stopPropagation();
+  launchVolcanoLevel(levelNumber);
+ };
+ // Android WebView: pointerup inicia a fase no primeiro toque, sem depender
+ // da síntese posterior do evento click. O bloqueio impede disparo duplicado.
+ nodes.addEventListener("pointerup",activate,true);
+ // Fallback para teclado, acessibilidade e WebViews sem Pointer Events.
+ nodes.addEventListener("click",activate,true);
 }
 function buildVolcanoMap(){
  const nodes=$("volcanoLevelNodes");nodes.innerHTML="";
  for(let i=1;i<=TOTAL_LEVELS;i++){
   const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.textContent=i;
   if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
-  n.addEventListener("click",()=>launchVolcanoLevel(i));nodes.appendChild(n);
+  nodes.appendChild(n);
  }
+ bindVolcanoMapInput();
  const chosen=Math.min(Math.max(1,selectedMapLevel),unlockedLevel),p=mapPoint(chosen),m=$("volcanoMapMascot");
  m.style.left=p.x+"%";m.style.top=p.y+"%";
  $("volcanoProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
@@ -17263,19 +17288,17 @@ const buildMapWithDesert=buildForestMap,selectMapWithDesert=selectMapLevel;
 buildForestMap=function(){if(currentWorld==="volcano")buildVolcanoMap();else buildMapWithDesert()};
 selectMapLevel=function(i){
  if(currentWorld!=="volcano")return selectMapWithDesert(i);
- if(i>unlockedLevel||i<1)return;
- if(mapMoveTimer)clearTimeout(mapMoveTimer);selectedMapLevel=i;
- $("volcanoLevelNodes").querySelectorAll(".mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));
- const p=mapPoint(i),m=$("volcanoMapMascot");m.style.left=p.x+"%";m.style.top=p.y+"%";
- mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;startGame(i)},430);
+ launchVolcanoLevel(i);
 };
 showMenuScreen=function(which){
  if(which==="volcano"){
+  volcanoLaunching=false;
   $("overlay").style.display="none";$("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");$("desertPanel").classList.add("hidden");
   $("volcanoPanel").classList.remove("hidden");$("volcanoPanel").style.display="flex";$("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
   currentWorld="volcano";loadProgress();buildBurningCrateSprite();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildVolcanoMap();menuReturn="volcano";return;
  }
  $("volcanoPanel").style.display="none";$("volcanoPanel").classList.add("hidden");
+ if(which==="worlds")volcanoLaunching=false;
  return showMenuWithDesert(which);
 };
 startGame=function(n=1){$("volcanoPanel").style.display="none";return startGameWithDesert(n)};
