@@ -16360,7 +16360,7 @@ function buildBuilderSandShield(enemy,bomb){
   if(dx*vx+dy*vy<=.15)continue;
   const sx=bx+dx,sy=by+dy,tx=bx+dx*2,ty=by+dy*2;
   if(sx<=0||sy<=0||sx>=COLS-1||sy>=ROWS-1||tx<=0||ty<=0||tx>=COLS-1||ty>=ROWS-1)continue;
-  if(tileAt(sx,sy)!==0||bombAt(sx,sy)||waterPuddleCells.has(cellKey(sx,sy))||Math.floor(player.x)===sx&&Math.floor(player.y)===sy)continue;
+  if(tileAt(sx,sy)!==0||bombAt(sx,sy)||waterPuddleCells.has(cellKey(sx,sy))||exit.found&&exit.x===sx&&exit.y===sy||Math.floor(player.x)===sx&&Math.floor(player.y)===sy)continue;
   if(enemies.some(other=>other!==enemy&&other.alive&&!other.burrowing&&Math.floor(other.x)===sx&&Math.floor(other.y)===sy))continue;
   const alreadyBehind=(dx!==0?ey===by&&((ex-bx)*dx)>=2:ex===bx&&((ey-by)*dy)>=2);
   const targetX=alreadyBehind?ex:tx,targetY=alreadyBehind?ey:ty;
