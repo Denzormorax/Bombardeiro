@@ -16800,6 +16800,53 @@ function updateWaterParticles(dt){
  }
 }
 // Efeitos exclusivos de destruição dos blocos: areia no deserto e erupção na lava.
+// Os brilhos são pré-renderizados em pequenos canvases reutilizáveis: evita recalcular
+// shadowBlur e gradientes radiais em todos os quadros sem reduzir a intensidade visual.
+const destroyedBlockVisualCache={
+ desertGlow:null,volcanoGlow:null,particles:{desert:new Map(),volcano:new Map()}
+};
+function buildDestroyedBlockGlow(world){
+ const key=world==="desert"?"desertGlow":"volcanoGlow";
+ if(destroyedBlockVisualCache[key])return destroyedBlockVisualCache[key];
+ const c=document.createElement("canvas");c.width=c.height=128;
+ const q=c.getContext("2d");
+ const g=q.createRadialGradient(64,64,1,64,64,63);
+ if(world==="desert"){
+  g.addColorStop(0,"rgba(255,239,190,.88)");
+  g.addColorStop(.48,"rgba(244,183,91,.58)");
+  g.addColorStop(1,"rgba(190,126,49,0)");
+ }else{
+  g.addColorStop(0,"rgba(255,255,220,1)");
+  g.addColorStop(.24,"rgba(255,183,65,.92)");
+  g.addColorStop(.62,"rgba(244,65,24,.55)");
+  g.addColorStop(1,"rgba(120,12,8,0)");
+ }
+ q.fillStyle=g;q.fillRect(0,0,128,128);
+ destroyedBlockVisualCache[key]=c;
+ return c;
+}
+function getDestroyedBlockParticleSprite(world,p){
+ const sizeKey=Math.round(p.size*2)/2,cache=destroyedBlockVisualCache.particles[world];
+ const key=p.kind+":"+sizeKey;
+ if(cache.has(key))return cache.get(key);
+ const c=document.createElement("canvas");c.width=c.height=64;
+ const q=c.getContext("2d");q.translate(32,32);
+ if(world==="desert"){
+  q.fillStyle=p.kind===0?"#fffde0":p.kind===1?"#ffe18a":p.kind===2?"#ffc04f":"#e99a35";
+  q.shadowColor="#ffd36a";q.shadowBlur=12;
+  q.beginPath();q.ellipse(0,0,sizeKey*1.65,sizeKey*.9,0,0,Math.PI*2);q.fill();
+  q.shadowBlur=0;q.fillStyle="#fff8cf";
+  q.beginPath();q.arc(-sizeKey*.22,-sizeKey*.18,Math.max(.8,sizeKey*.32),0,Math.PI*2);q.fill();
+ }else{
+  q.fillStyle=p.kind===0?"#fffde0":p.kind===1?"#ffe16a":p.kind===2?"#ff8a35":"#f0441e";
+  q.shadowColor=p.kind<2?"#fff0a0":"#ff4b16";q.shadowBlur=15;
+  q.beginPath();q.arc(0,0,sizeKey*1.05,0,Math.PI*2);q.fill();
+  q.shadowBlur=0;q.fillStyle="#fff4bf";
+  q.beginPath();q.arc(-sizeKey*.18,-sizeKey*.2,Math.max(.8,sizeKey*.3),0,Math.PI*2);q.fill();
+ }
+ cache.set(key,c);
+ return c;
+}
 function spawnDestroyedBlockEffect(x,y,world){
  if(world!=="desert"&&world!=="volcano")return;
  const effect={x,y,world,age:0,duration:world==="desert" ? .86 : .78,particles:[]};
@@ -16814,38 +16861,34 @@ function updateDestroyedBlockEffects(dt){
  for(let i=destroyedBlockEffects.length-1;i>=0;i--){const e=destroyedBlockEffects[i];e.age+=dt;for(const p of e.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-(e.world==="desert"?1.15:1.65)*dt);p.vy+=(e.world==="desert"?3.1:3.8)*dt;p.spin+=dt*5}if(e.age>=e.duration)destroyedBlockEffects.splice(i,1)}
 }
 function drawDestroyedBlockEffects(){
- if(!destroyedBlockEffects.length)return;ctx.save();
- for(const e of destroyedBlockEffects){const progress=e.age/e.duration,fade=Math.max(0,1-progress),cx=ox+e.x*TILE,cy=oy+e.y*TILE;
+ if(!destroyedBlockEffects.length)return;
+ ctx.save();
+ for(const e of destroyedBlockEffects){
+  const progress=e.age/e.duration,fade=Math.max(0,1-progress),cx=ox+e.x*TILE,cy=oy+e.y*TILE;
   ctx.save();ctx.globalAlpha=fade;
-  if(e.world==="desert"){
-   // Nuvem de areia dourada que se abre e cai, sem usar o efeito de madeira da floresta.
-   const radius=9+progress*25;const cloud=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);cloud.addColorStop(0,"rgba(255,239,190,.88)");cloud.addColorStop(.48,"rgba(244,183,91,.58)");cloud.addColorStop(1,"rgba(190,126,49,0)");ctx.fillStyle=cloud;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
-  }else{
-   // Pulso de erupção com núcleo incandescente e anel de choque vulcânico.
-   const radius=7+progress*31;const glow=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);glow.addColorStop(0,"rgba(255,255,220,1)");glow.addColorStop(.24,"rgba(255,183,65,.92)");glow.addColorStop(.62,"rgba(244,65,24,.55)");glow.addColorStop(1,"rgba(120,12,8,0)");ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,205,105,"+(fade*.98)+")";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,5+progress*26,0,Math.PI*2);ctx.stroke();
+  // Gradientes grandes são imagens prontas; apenas o tamanho muda durante a animação.
+  const radius=e.world==="desert"?9+progress*25:7+progress*31;
+  const glow=buildDestroyedBlockGlow(e.world);
+  ctx.drawImage(glow,cx-radius,cy-radius,radius*2,radius*2);
+  if(e.world==="volcano"){
+   ctx.strokeStyle="rgba(255,205,105,"+(fade*.98)+")";ctx.lineWidth=2.5;
+   ctx.beginPath();ctx.arc(cx,cy,5+progress*26,0,Math.PI*2);ctx.stroke();
   }
-  // Partículas mais nítidas e luminosas, mantendo a duração e a física originais.
-  ctx.save();ctx.globalCompositeOperation="lighter";
+  // A composição aditiva e os sprites mantêm o brilho original, sem shadowBlur por quadro.
+  ctx.globalCompositeOperation="lighter";
   for(const p of e.particles){
    const px=ox+p.x*TILE,py=oy+p.y*TILE;
    ctx.globalAlpha=fade*(.92+.08*Math.sin(p.spin));
+   const sprite=getDestroyedBlockParticleSprite(e.world,p);
    if(e.world==="desert"){
-    ctx.fillStyle=p.kind===0?"#fffde0":p.kind===1?"#ffe18a":p.kind===2?"#ffc04f":"#e99a35";
-    ctx.shadowColor="#ffd36a";ctx.shadowBlur=12;
-    ctx.beginPath();ctx.ellipse(px,py,p.size*1.65,p.size*.9,p.spin,0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.globalAlpha*=.9;ctx.fillStyle="#fff8cf";
-    ctx.beginPath();ctx.arc(px-p.size*.22,py-p.size*.18,Math.max(.8,p.size*.32),0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.translate(px,py);ctx.rotate(p.spin);
+    ctx.drawImage(sprite,-32,-32,64,64);ctx.restore();
    }else{
-    ctx.fillStyle=p.kind===0?"#fffde0":p.kind===1?"#ffe16a":p.kind===2?"#ff8a35":"#f0441e";
-    ctx.shadowColor=p.kind<2?"#fff0a0":"#ff4b16";ctx.shadowBlur=15;
-    ctx.beginPath();ctx.arc(px,py,p.size*(1.05+fade*.35),0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.globalAlpha*=.88;ctx.fillStyle="#fff4bf";
-    ctx.beginPath();ctx.arc(px-p.size*.18,py-p.size*.2,Math.max(.8,p.size*.3),0,Math.PI*2);ctx.fill();
+    const scale=1+fade*.35/1.05;
+    const drawSize=64*scale;
+    ctx.drawImage(sprite,px-drawSize/2,py-drawSize/2,drawSize,drawSize);
    }
   }
-  ctx.restore();
   ctx.restore();
  }
  ctx.restore();
