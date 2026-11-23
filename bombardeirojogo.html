@@ -16187,11 +16187,12 @@ function newLevel(preservePowerUps=false){
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
  const count=4+Math.floor(Math.random()*3),
+   builderCount=currentWorld==="desert"&&level>=1&&level<=9?2+Math.floor(Math.random()*2):0,
    mushroomCount=level>=5&&level<=9?Math.min(2,Math.max(1,Math.ceil(count/3)),count):level>=4&&level<=8?Math.min(2,Math.floor(Math.random()*3),count):0,
    hornedCount=level>=5&&level<=9?Math.min(count-mushroomCount,Math.max(2,Math.ceil(count*.45))):level>=6&&level<=10?Math.min(2,Math.floor(Math.random()*3),count-mushroomCount):0,
-   spawnPositions=createEnemySpawnPositions(count);prepareCoinDrops();
-  const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
- spawnPositions.forEach((p,index)=>{const isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isMushroom&&!isHorned&&(level>=5&&level<=9?true:hunterSlots.has(index)),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isHorned?1.72:isHunter?1.55:1.28),isHunter,isHorned,isMushroom,isEnraged:false,hp:isHunter||isHorned?2:1,maxHp:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0})});
+   spawnPositions=createEnemySpawnPositions(count+builderCount);prepareCoinDrops();
+  const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),builderSlots=new Set(slots.splice(0,builderCount)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
+ spawnPositions.forEach((p,index)=>{const isBuilder=builderSlots.has(index),isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isBuilder&&!isMushroom&&!isHorned&&(level>=5&&level<=9?true:hunterSlots.has(index)),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isBuilder?1.62:isHorned?1.72:isHunter?1.55:1.28),isBuilder,isHunter,isHorned,isMushroom,isEnraged:false,hp:isBuilder?3:isHunter||isHorned?2:1,maxHp:isBuilder?3:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0,building:false,buildTimer:0})});
  updateHUD();
 }
 
@@ -16278,7 +16279,7 @@ function findEnemyRoute(enemy,targetX,targetY,blockedDanger=null){
  return goals.length?goals[0].path:[];
 }
 function canSeePlayer(enemy){
- const dx=player.x-enemy.x,dy=player.y-enemy.y,dist=Math.hypot(dx,dy),vision=enemy.isHunter||enemy.isHorned?11:enemy.isMushroom?9:6.5;
+ const dx=player.x-enemy.x,dy=player.y-enemy.y,dist=Math.hypot(dx,dy),vision=enemy.isHunter||enemy.isHorned||enemy.isBuilder?11:enemy.isMushroom?9:6.5;
  if(dist>vision)return false;
  if(dist<.01)return true;
  const steps=Math.ceil(dist*16);
@@ -16345,10 +16346,48 @@ function findBombEscapePath(enemy,danger,preferCover=false){
  safe.sort((a,b)=>a.score-b.score);
  return safe.length?safe[0].path:[];
 }
-function reactToNewBomb(){
+function spawnSandBuildParticles(x,y){
+ const cx=x+.5,cy=y+.5;
+ for(let i=0;i<16;i++){
+  const a=Math.random()*Math.PI*2,speed=.45+Math.random()*1.05;
+  dirtParticles.push({x:cx+(Math.random()-.5)*.34,y:cy+(Math.random()-.5)*.34,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-.42,t:.28+Math.random()*.2,life:.48,size:1.2+Math.random()*2.1,kind:"build"});
+ }
+}
+function buildBuilderSandShield(enemy,bomb){
+ const bx=Math.floor(bomb.x),by=Math.floor(bomb.y),ex=Math.floor(enemy.x),ey=Math.floor(enemy.y);
+ const vx=enemy.x-(bomb.x+.5),vy=enemy.y-(bomb.y+.5),dirs=[[1,0],[-1,0],[0,1],[0,-1]].sort((a,b)=>(b[0]*vx+b[1]*vy)-(a[0]*vx+a[1]*vy));
+ for(const [dx,dy] of dirs){
+  if(dx*vx+dy*vy<=.15)continue;
+  const sx=bx+dx,sy=by+dy,tx=bx+dx*2,ty=by+dy*2;
+  if(sx<=0||sy<=0||sx>=COLS-1||sy>=ROWS-1||tx<=0||ty<=0||tx>=COLS-1||ty>=ROWS-1)continue;
+  if(tileAt(sx,sy)!==0||bombAt(sx,sy)||Math.floor(player.x)===sx&&Math.floor(player.y)===sy)continue;
+  if(enemies.some(other=>other!==enemy&&other.alive&&!other.burrowing&&Math.floor(other.x)===sx&&Math.floor(other.y)===sy))continue;
+  const alreadyBehind=(dx!==0?ey===by&&((ex-bx)*dx)>=2:ex===bx&&((ey-by)*dy)>=2);
+  const targetX=alreadyBehind?ex:tx,targetY=alreadyBehind?ey:ty;
+  if(!alreadyBehind){
+   if(tileAt(tx,ty)!==0||bombAt(tx,ty)||Math.floor(player.x)===tx&&Math.floor(player.y)===ty)continue;
+   if(enemies.some(other=>other!==enemy&&other.alive&&!other.burrowing&&Math.floor(other.x)===tx&&Math.floor(other.y)===ty))continue;
+  }
+  map[sy][sx]=1;
+  if(!keepsWalkableMapConnected(sx,sy)){map[sy][sx]=0;continue}
+  const danger=getAllBombDangerCells(),path=alreadyBehind?[]:findGridPath(ex,ey,targetX,targetY,danger);
+  if(!alreadyBehind&&(!path.length||path.some(p=>p.x===sx&&p.y===sy))){map[sy][sx]=0;continue}
+  rebuildStaticMapCache();
+  enemy.path=path;enemy.patrolTarget=null;enemy.repath=0;enemy.mode="build";enemy.building=true;enemy.buildTimer=.12;
+  enemy.bombEscapePending=false;enemy.evadeTimer=0;enemy.speed=enemy.huntSpeed*1.1;
+  spawnSandBuildParticles(sx,sy);
+  return true;
+ }
+ return false;
+}
+function reactToNewBomb(newBomb=null){
  const danger=getAllBombDangerCells();
  for(const enemy of enemies){
   if(!enemy.alive||enemy.burrowing)continue;
+  if(enemy.isBuilder){
+   const targetBomb=newBomb||bombs.reduce((best,b)=>!best||distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<distance(enemy.x,enemy.y,best.x+.5,best.y+.5)?b:best,null);
+   if(targetBomb&&distance(enemy.x,enemy.y,targetBomb.x+.5,targetBomb.y+.5)<=5.2&&buildBuilderSandShield(enemy,targetBomb))continue;
+  }
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentThreatened=danger.has(currentKey);
   const routeThreatened=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
@@ -16358,7 +16397,7 @@ function reactToNewBomb(){
   if(currentThreatened||routeThreatened){
    // Todos os inimigos, inclusive o cogumelo, priorizam sair da área da explosão.
    enemy.bombEscapePending=true;
-   enemy.bombReactionTimer=enemy.isMushroom?.02:enemy.isHorned?.04:enemy.isHunter?.07:.08;
+   enemy.bombReactionTimer=enemy.isMushroom?.02:enemy.isHorned?.04:enemy.isHunter||enemy.isBuilder?.07:.08;
   }else if(routeBlockedByBomb||nearbyBomb){
    // Se a bomba apenas bloqueia a perseguição, recalcula o caminho para contorná-la.
    enemy.path=[];
@@ -16387,6 +16426,12 @@ function updateEnemies(dt){
   if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);continue}
   enemy.hitFlash=Math.max(0,enemy.hitFlash-dt);
   enemy.hurtTimer=Math.max(0,(enemy.hurtTimer||0)-dt);
+  if(enemy.isBuilder&&enemy.building){
+   enemy.buildTimer=Math.max(0,(enemy.buildTimer||0)-dt);
+   if(enemy.buildTimer>0){enemy.speed=0;continue}
+   if(enemy.path.length){enemy.speed=enemy.huntSpeed*1.1;if(followEnemyPath(enemy,dt))continue}
+   enemy.building=false;enemy.path=[];enemy.mode=enemy.isEnraged?"chase":"patrol";enemy.repath=0;
+  }
   enemy.repath=(enemy.repath||0)-dt;
   enemy.evadeTimer=Math.max(0,(enemy.evadeTimer||0)-dt);
    enemy.emergeTimer=Math.max(0,(enemy.emergeTimer||0)-dt);
@@ -16449,7 +16494,7 @@ function updateEnemies(dt){
 
   if(routeInDanger&&enemy.mode!=="evade"){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
   if(enemy.mode==="evade"){
-   if(enemy.path.length){enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;followEnemyPath(enemy,dt);continue}
+   if(enemy.path.length){enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter||enemy.isBuilder?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;followEnemyPath(enemy,dt);continue}
    if(enemy.evadeTimer>0)continue;
    enemy.mode=enemy.isHunter||enemy.isHorned&&enemy.isEnraged||enemy.alert>0?"search":"patrol";
    enemy.repath=0;
@@ -16457,12 +16502,14 @@ function updateEnemies(dt){
 
   // Azul: antes de ser atingido patrulha; após o primeiro dano, persegue sem desistir.
   const blueDistance=enemy.isHorned?distance(enemy.x,enemy.y,player.x,player.y):Infinity;
-  const seesPlayer=enemy.isHorned?(enemy.isEnraged||blueDistance<=4.6&&canSeePlayer(enemy)):canSeePlayer(enemy);
-  if(enemy.isHorned&&enemy.isEnraged){
+  const seesPlayer=enemy.isHorned?(enemy.isEnraged||blueDistance<=4.6&&canSeePlayer(enemy)):enemy.isBuilder?(enemy.isEnraged||canSeePlayer(enemy)):canSeePlayer(enemy);
+  if(enemy.isBuilder&&enemy.isEnraged){
+   enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=999;
+  }else if(enemy.isHorned&&enemy.isEnraged){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=999;
   }else if(seesPlayer){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};
-   enemy.alert=enemy.isHunter?3.2:enemy.isMushroom?2.6:1.25;
+   enemy.alert=enemy.isHunter||enemy.isBuilder?3.2:enemy.isMushroom?2.6:1.25;
   }else if(enemy.mode==="chase"||enemy.mode==="search"){
    enemy.alert=Math.max(0,(enemy.alert||0)-dt);
    if(enemy.alert<=0){enemy.mode="patrol";enemy.lastSeen=null;enemy.path=[];enemy.patrolTarget=null}
@@ -16470,18 +16517,18 @@ function updateEnemies(dt){
   }
 
   if((enemy.mode==="chase"||enemy.mode==="search")&&enemy.lastSeen){
-   enemy.speed=enemy.isHorned?(enemy.isEnraged?enemy.huntSpeed*1.22:enemy.baseSpeed):enemy.isHunter?enemy.huntSpeed*1.22:enemy.isMushroom?enemy.huntSpeed*1.25:enemy.baseSpeed*1.16;
+   enemy.speed=enemy.isBuilder?enemy.huntSpeed*1.22:enemy.isHorned?(enemy.isEnraged?enemy.huntSpeed*1.22:enemy.baseSpeed):enemy.isHunter?enemy.huntSpeed*1.22:enemy.isMushroom?enemy.huntSpeed*1.25:enemy.baseSpeed*1.16;
    if(enemy.repath<=0||!enemy.path.length){
     enemy.path=findEnemyRoute(enemy,enemy.lastSeen.x,enemy.lastSeen.y,danger);
-    enemy.repath=enemy.isHorned?(enemy.isEnraged?.09:.12):enemy.isHunter?.12:enemy.isMushroom?.13:.2;
+    enemy.repath=enemy.isBuilder?.1:enemy.isHorned?(enemy.isEnraged?.09:.12):enemy.isHunter?.12:enemy.isMushroom?.13:.2;
    }
    if(enemy.path.length){followEnemyPath(enemy,dt);continue}
    // O caçador continua atualizando a rota sem ficar preso em uma rota impossível.
-   if(enemy.isHorned&&enemy.isEnraged)continue;
+   if(enemy.isHorned&&enemy.isEnraged||enemy.isBuilder&&enemy.isEnraged)continue;
    if(!seesPlayer){enemy.mode="patrol";enemy.alert=0;enemy.lastSeen=null}
   }
 
-  enemy.speed=enemy.isHunter?enemy.baseSpeed*1.08:enemy.baseSpeed;
+  enemy.speed=enemy.isBuilder?enemy.baseSpeed*1.12:enemy.isHunter?enemy.baseSpeed*1.08:enemy.baseSpeed;
   if(enemy.path.length){
    if(!followEnemyPath(enemy,dt)){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.22}
   }else{
@@ -16497,8 +16544,8 @@ function placeBomb(){
  const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned?"red":"green")}
-function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isHunter||enemy.isHorned){enemy.hp--;if(enemy.isHorned&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
+function killEnemy(enemy){if(!enemy.alive)return;playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
+function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isBuilder||enemy.isHunter||enemy.isHorned){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
  for(const b of bombs){if(b.ownerPass||b.slide)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
@@ -16520,7 +16567,7 @@ function explode(b){
  for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}}if(brokeBlock){rebuildStaticMapCache();}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
- for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
+ for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter||e.isBuilder){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
  if(player.inv>0)return;playSfx("hurt");lives--;resetPowerUps();updateHUD();player.hurtTimer=.48;if(lives<=0){gameOver(false);return}player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;
@@ -16847,6 +16894,45 @@ function buildWorldPuddleFrames(target,colors,glints){
   q.fillStyle=colors[4];q.fillRect(7+frame*2,16,3,2);target.push(c);
  }
 }
+function buildDesertQuicksandFrames(target){
+ if(target.length)return;
+ const sand=["#704326","#946037","#b77b43","#dca45e","#f0c77d","#ffe0a0"];
+ for(let frame=0;frame<8;frame++){
+  const c=document.createElement("canvas");c.width=48;c.height=48;
+  const q=c.getContext("2d");q.imageSmoothingEnabled=false;
+  q.save();q.translate(24,24);
+  q.fillStyle="#684326";q.beginPath();q.ellipse(0,0,22,19,0,0,Math.PI*2);q.fill();
+  const base=q.createRadialGradient(-4,-5,2,0,0,23);
+  base.addColorStop(0,"#57351f");base.addColorStop(.28,"#936037");base.addColorStop(.68,"#c58b4c");base.addColorStop(1,"#edc77f");
+  q.fillStyle=base;q.beginPath();q.ellipse(0,0,20,17,0,0,Math.PI*2);q.fill();
+  q.globalAlpha=.72;q.strokeStyle="#f4cf8b";q.lineWidth=2.5;q.beginPath();q.ellipse(-1,-1,16,13,0,0,Math.PI*2);q.stroke();
+  q.globalAlpha=.8;q.strokeStyle="#8c592f";q.lineWidth=3.4;q.lineCap="round";q.beginPath();
+  const rotation=frame*Math.PI/4,turns=2.25,steps=90;
+  for(let i=0;i<=steps;i++){
+   const t=i/steps,angle=rotation+t*Math.PI*2*turns,radius=19-t*16.3;
+   const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*.78;
+   if(i===0)q.moveTo(x,y);else q.lineTo(x,y);
+  }
+  q.stroke();
+  q.globalAlpha=.78;q.strokeStyle="#f2c778";q.lineWidth=1.7;q.beginPath();
+  for(let i=0;i<=steps;i++){
+   const t=i/steps,angle=rotation+Math.PI+t*Math.PI*2*turns,radius=17-t*14.7;
+   const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*.78;
+   if(i===0)q.moveTo(x,y);else q.lineTo(x,y);
+  }
+  q.stroke();
+  const hole=3.1+Math.sin(frame*Math.PI/4)*.7;
+  q.globalAlpha=1;q.fillStyle="#382314";q.beginPath();q.ellipse(0,0,hole,hole*.78,0,0,Math.PI*2);q.fill();
+  q.fillStyle="#1f160f";q.beginPath();q.ellipse(0,1,hole*.52,hole*.4,0,0,Math.PI*2);q.fill();
+  q.restore();
+  q.globalAlpha=.7;
+  for(let i=0;i<5;i++){
+   const a=frame*.61+i*Math.PI*2/5,r=18+(i%2)*2;
+   q.fillStyle=sand[(i+frame)%sand.length];q.fillRect(Math.round(24+Math.cos(a)*r),Math.round(24+Math.sin(a)*r*.78),2,2);
+  }
+  q.globalAlpha=1;target.push(c);
+ }
+}
 function drawLavaPoolSmoke(p,px,py){
  const phase=gameClock*1.15+p.phase,alpha=.18+.08*(.5+.5*Math.sin(phase*1.7));
  ctx.save();ctx.globalCompositeOperation="screen";ctx.lineWidth=2.2;ctx.lineCap="round";
@@ -16862,7 +16948,7 @@ function drawLavaPoolSmoke(p,px,py){
 function drawWaterPuddle(p){
  let frames=waterPuddleFrames;
  if(currentWorld==="desert"){
-  if(!desertWaterPuddleFrames.length)buildWorldPuddleFrames(desertWaterPuddleFrames,["#80502f","#b9783d","#dca354","#f0c477","#ffe0a0"],[[[8,8],[28,16],[36,32]],[[12,12],[32,8],[20,32]],[[24,8],[8,28],[36,24]],[[32,12],[16,32],[8,8]]]);
+  if(!desertWaterPuddleFrames.length)buildDesertQuicksandFrames(desertWaterPuddleFrames);
   frames=desertWaterPuddleFrames;
  }else if(currentWorld==="volcano"){
   if(!volcanoWaterPuddleFrames.length)buildWorldPuddleFrames(volcanoWaterPuddleFrames,["#70251b","#b9361d","#ed5a25","#ff9b39","#ffe078"],[[[8,8],[28,16],[36,32]],[[12,12],[32,8],[20,32]],[[24,8],[8,28],[36,24]],[[32,12],[16,32],[8,8]]]);
@@ -16935,7 +17021,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  const tilt=hurt?Math.sin(gameClock*38)*.045:Math.sin(gameClock*2.8+e.x)*.018;ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.22*deathScale,1.22*deathScale);
  if(e.isHorned){ctx.fillStyle=currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
  if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
- else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
+ else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(e.isBuilder){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.moveTo(-14,-5);ctx.lineTo(-11,-13);ctx.quadraticCurveTo(0,-20,11,-13);ctx.lineTo(14,-5);ctx.closePath();ctx.fill();ctx.fillRect(-16,-5,32,3);ctx.fillStyle="#ffe39a";ctx.fillRect(-5,-13,10,2)}else if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
  if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5);ctx.lineTo(eyeX+2.2,1.8);ctx.moveTo(eyeX+2.2,-2.5);ctx.lineTo(eyeX-2.2,1.8);ctx.stroke()}}
  else{const eyeShiftX=facingX*2,eyeShiftY=facingY*2;ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#24101b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.fill()}
  ctx.strokeStyle="#24101b";ctx.lineWidth=2.5;ctx.lineCap="round";
@@ -16952,11 +17038,11 @@ function drawEnemy(e){
   ctx.save();ctx.globalAlpha=e.burrowing?Math.max(.2,1-progress*.8):Math.min(1,progress+.15);ctx.translate(px,py+13);ctx.scale(1,scaleY);ctx.translate(-px,-(py+13));
   drawEnemyFace(e,"#27c957","#126b31",0);ctx.restore();return;
  }
- let bodyColor=e.isMushroom?"#27c957":e.isHorned?(e.isEnraged?"#c82d38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":"#a94bd8"):(currentWorld==="volcano"?"#df6329":"#d64c4c"),helmetColor=e.isMushroom?"#126b31":e.isHorned?(e.isEnraged?"#741923":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":"#542080"):(currentWorld==="volcano"?"#702b20":"#8c2020");
+ let bodyColor=e.isBuilder?"#d9a04b":e.isMushroom?"#27c957":e.isHorned?(e.isEnraged?"#c82d38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":"#a94bd8"):(currentWorld==="volcano"?"#df6329":"#d64c4c"),helmetColor=e.isBuilder?"#805027":e.isMushroom?"#126b31":e.isHorned?(e.isEnraged?"#741923":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":"#542080"):(currentWorld==="volcano"?"#702b20":"#8c2020");
  if(e.hitFlash>0&&Math.sin(gameClock*65)>.25){bodyColor=e.isHorned&&e.isEnraged?"#ff6262":"#ef7777";helmetColor="#a92727"}
- if((e.isHunter||e.isHorned)&&!isDying){ctx.save();ctx.globalAlpha=e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py,20,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if((e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py,20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
- if((e.isHunter||e.isHorned)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-31;ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
+ if((e.isHunter||e.isHorned||e.isBuilder)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-31;ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
 }
 
 function drawCoin(c){
@@ -17069,7 +17155,7 @@ function drawWaterParticles(){
 }
 function drawDirtParticles(){
  if(!dirtParticles.length)return;ctx.save();
- for(const p of dirtParticles){ctx.globalAlpha=Math.min(1,p.t/p.life);ctx.fillStyle="#9a6738";ctx.beginPath();ctx.arc(ox+p.x*TILE,oy+p.y*TILE,p.size,0,Math.PI*2);ctx.fill();ctx.fillStyle="#c18a50";ctx.fillRect(ox+p.x*TILE-1,oy+p.y*TILE-1,2,2)}
+ for(const p of dirtParticles){const build=p.kind==="build";ctx.globalAlpha=Math.min(1,p.t/p.life);ctx.fillStyle=build?"#e8bd55":"#9a6738";ctx.beginPath();ctx.arc(ox+p.x*TILE,oy+p.y*TILE,p.size,0,Math.PI*2);ctx.fill();ctx.fillStyle=build?"#fff0a0":"#c18a50";ctx.fillRect(ox+p.x*TILE-1,oy+p.y*TILE-1,2,2)}
  ctx.restore();
 }
 function drawVolcanoBlockGlow(){
