@@ -25,6 +25,15 @@
  <ellipse cx="383" cy="620" rx="280" ry="78"/>
  <ellipse cx="384" cy="375" rx="265" ry="82"/>
 </g>
+<!-- Pedra extra ao fundo, fechando a abertura central como uma rocha encaixada atrás da pilha -->
+<g filter="url(#drop)">
+ <path d="M286 372 L314 315 L370 286 L434 302 L485 356 L477 438 L435 493 L367 510 L307 474 L278 421Z" fill="url(#side)" stroke="#142019" stroke-width="12" stroke-linejoin="round"/>
+ <path d="M286 372 L314 315 L370 286 L434 302 L485 356 L429 379 L365 382 L301 433Z" fill="url(#top2)" stroke="#b9b5a6" stroke-opacity=".28" stroke-width="5"/>
+ <path d="M314 315 L370 286 L434 302 L398 339 L344 358Z" fill="#e5e0d0" opacity=".24"/>
+ <path d="M301 433 L365 382 L429 379 L485 356 L477 438 L435 493 L367 510 L307 474Z" fill="url(#side)"/>
+ <path d="M344 358 L398 339 L429 379 L390 414 L326 414Z" fill="#566057" opacity=".75"/>
+ <path d="M325 326 L369 300 L421 313 M300 386l33-31" fill="none" stroke="#f1eddf" stroke-width="6" opacity=".25" stroke-linecap="round"/>
+</g>
 <!-- Five large interlocked stones: two bottom, two middle, one crown -->
 <g filter="url(#drop)">
  <!-- Lower left boulder -->
