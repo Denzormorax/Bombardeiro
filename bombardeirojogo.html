@@ -17271,7 +17271,6 @@ function draw(){
  for(let y=0;y<ROWS;y++)ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
  for(const puddle of waterPuddles)drawWaterPuddle(puddle);
  drawBuilderBuildAnimations();
- drawVolcanoBlockGlow();
  drawIndestructibleShimmer();
  for(let y=0;y<ROWS;y++){
   for(const crate of burningCrates)if(crate.y===y)drawBurningCrate(crate);
@@ -17616,6 +17615,55 @@ function buildVolcanoEffectCaches(){
  }
 }
 buildVolcanoEffectCaches();
+/* Textura própria dos blocos destrutíveis: crateras vulcânicas circulares,
+   com borda rochosa e núcleo em brasa. Uma textura em cache por fase. */
+const volcanoCraterTiles=Array(10).fill(null);
+function buildVolcanoCraterTiles(){
+ const palettes=[
+  ["#542d2b","#9a4930","#ff3d1c","#ff9b24","#fff1a0"],
+  ["#49302b","#a65332","#e9431c","#ffad36","#fff4b0"],
+  ["#56302a","#ad4a2d","#f23819","#ffc044","#fff0a0"],
+  ["#45302d","#98503a","#ed3a20","#ff9a2b","#fff5c4"],
+  ["#59312a","#b04b2d","#ff4518","#ffd04a","#fff7c8"],
+  ["#4b302b","#9e4930","#e93618","#ffb238","#fff0a8"],
+  ["#56332e","#a95636","#f0441c","#ffb52e","#fff4bd"],
+  ["#49302c","#a0472e","#ff3c1c","#ffc044","#fff4b5"],
+  ["#55312b","#a94b2d","#ed3518","#ffa52e","#fff2ad"],
+  ["#4a302b","#a34d32","#f13b1b","#ffc24a","#fff6c8"]
+ ];
+ for(let i=0;i<10;i++){
+  const c=document.createElement("canvas");c.width=96;c.height=96;
+  const q=c.getContext("2d"),p=palettes[i];
+  q.clearRect(0,0,96,96);
+  q.fillStyle="#171c20";q.fillRect(1,1,94,94);
+  q.save();q.shadowColor=p[2];q.shadowBlur=13;
+  const rock=q.createRadialGradient(48,46,19,48,48,48);
+  rock.addColorStop(0,p[1]);rock.addColorStop(.68,p[0]);rock.addColorStop(1,"#241e20");
+  q.fillStyle=rock;q.beginPath();q.ellipse(48,48,43,42,-.04,0,Math.PI*2);q.fill();
+  q.shadowBlur=0;
+  q.strokeStyle="#d17a45";q.lineWidth=4;q.beginPath();q.ellipse(48,47,35,33,.08,0,Math.PI*2);q.stroke();
+  q.strokeStyle="#281d1b";q.lineWidth=7;q.beginPath();q.ellipse(48,48,29,27,-.08,0,Math.PI*2);q.stroke();
+  const lava=q.createRadialGradient(48,47,2,48,48,29);
+  lava.addColorStop(0,p[4]);lava.addColorStop(.22,p[4]);lava.addColorStop(.43,p[3]);lava.addColorStop(.72,p[2]);lava.addColorStop(1,"#7e211b");
+  q.fillStyle=lava;q.beginPath();q.ellipse(48,48,27,25,.06,0,Math.PI*2);q.fill();
+  q.globalCompositeOperation="lighter";
+  const bloom=q.createRadialGradient(48,47,3,48,47,34);
+  bloom.addColorStop(0,"#fff8c888");bloom.addColorStop(.35,p[3]+"66");bloom.addColorStop(1,p[2]+"00");
+  q.fillStyle=bloom;q.fillRect(10,10,76,76);
+  q.globalCompositeOperation="source-over";
+  q.fillStyle="#ffd58a";
+  for(let k=0;k<7;k++){
+   const a=k* Math.PI*2/7+.18,rx=35+((k*7+i)%4),ry=31+((k*3+i)%5);
+   q.beginPath();q.ellipse(48+Math.cos(a)*rx,47+Math.sin(a)*ry,2.2,1.2,a,0,Math.PI*2);q.fill();
+  }
+  q.strokeStyle="#281d1a";q.lineWidth=2;
+  q.beginPath();q.moveTo(18,24);q.lineTo(27,31);q.lineTo(24,38);
+  q.moveTo(76,19);q.lineTo(68,28);q.lineTo(72,35);
+  q.moveTo(18,70);q.lineTo(29,65);q.stroke();
+  q.restore();volcanoCraterTiles[i]=c;
+ }
+}
+buildVolcanoCraterTiles();
 volcanoSpriteSheet.onload=()=>{
  for(let i=0;i<10;i++){const c=document.createElement("canvas");c.width=384;c.height=96;const q=c.getContext("2d");q.imageSmoothingEnabled=false;q.drawImage(volcanoSpriteSheet,0,i*96,384,96,0,0,384,96);volcanoThemedSpriteSheets[i]=c}
  if(currentWorld==="volcano"){buildBurningCrateSprite();rebuildStaticMapCache()}
@@ -17635,8 +17683,12 @@ drawForestBackground=function(target){
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="volcano")return tileWithDesert(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY;
+ if(type===2){
+  const crater=volcanoCraterTiles[Math.max(0,Math.min(9,level-1))];
+  if(crater){target.drawImage(crater,px,py,TILE,TILE);return}
+ }
  if(volcanoSpriteSheet.complete&&volcanoSpriteSheet.naturalWidth){
-  const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1),tile=volcanoThemedSpriteSheets[Math.max(0,Math.min(9,level-1))]||volcanoSpriteSheet;
+  const col=type===1?2:(((x*7+y*11+level)%6===0)?0:1),tile=volcanoThemedSpriteSheets[Math.max(0,Math.min(9,level-1))]||volcanoSpriteSheet;
   target.imageSmoothingEnabled=false;target.drawImage(tile,col*96,0,96,96,px,py,TILE,TILE);return;
  }
  target.fillStyle=currentForestTheme().floor;target.fillRect(px,py,TILE,TILE);target.fillStyle=currentForestTheme().accent;target.fillRect(px+8,py+14,5,3);target.fillRect(px+27,py+32,7,3);
@@ -17954,6 +18006,22 @@ function drawBlueFlameEnemy(e){
   if(fuse){ctx.save();ctx.globalAlpha=.55+.35*Math.sin(gameClock*34);ctx.strokeStyle="#8ffaff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,groundY-23,25+Math.sin(gameClock*34)*2,0,Math.PI*2);ctx.stroke();ctx.restore()}
  }
  ctx.restore();
+ if(dying&&progress>0){
+  // A chama se apaga em pequenas nuvens de fumaça que sobem e se desfazem.
+  ctx.save();ctx.globalCompositeOperation="screen";
+  for(let i=0;i<5;i++){
+   const life=Math.max(0,Math.min(1,(progress-i*.14)*4.2));
+   if(life<=0)continue;
+   const drift=Math.sin(gameClock*7+i*2.35+e.blueFlamePhase)*3.8;
+   const sx=px+drift+(i-2)*1.8,sy=groundY-15-life*(23+i*2)-i*2;
+   const radius=2.8+life*(5.5+(i%2)*1.5);
+   ctx.globalAlpha=(1-life*.72)*Math.min(1,progress*5)*.58;
+   const smoke=ctx.createRadialGradient(sx-radius*.25,sy-radius*.3,1,sx,sy,radius);
+   smoke.addColorStop(0,"#ffffff");smoke.addColorStop(.48,"#d9e0e4");smoke.addColorStop(1,"#7d8990"+"00");
+   ctx.fillStyle=smoke;ctx.beginPath();ctx.arc(sx,sy,radius,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+ }
 }
 const drawEnemyBeforeBlueFlame=drawEnemy;
 drawEnemy=function(e){if(e.isBlueFlame){drawBlueFlameEnemy(e);return}drawEnemyBeforeBlueFlame(e)};
