@@ -16378,7 +16378,7 @@ function buildBuilderSandShield(enemy,bomb){
   const dangerAfterShield=getAllBombDangerCells();
   const enemyKey=cellKey(ex,ey);
   const mustRetreat=enemyOnBuildCell||dangerAfterShield.has(enemyKey);
-  const retreatPath=mustRetreat?findBombEscapePath(enemy,dangerAfterShield,false):[];
+  const retreatPath=mustRetreat?(enemyOnBuildCell?findGridPath(ex,ey,sx+dx,sy+dy,dangerAfterShield):findBombEscapePath(enemy,dangerAfterShield,false)):[];
   if(mustRetreat&&!retreatPath.length){map[sy][sx]=0;continue}
   if(retreatPath.some(p=>p.x===sx&&p.y===sy)){map[sy][sx]=0;continue}
 
