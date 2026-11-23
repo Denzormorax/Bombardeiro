@@ -17280,6 +17280,7 @@ function draw(){
  for(const puddle of waterPuddles)drawWaterPuddle(puddle);
  // A animação da lava é uma camada de cenário: sempre atrás de bombas e personagens.
  drawVolcanoCraterAnimation();
+ drawDesertDuneAnimation();
  drawBuilderBuildAnimations();
  drawIndestructibleShimmer();
  for(let y=0;y<ROWS;y++){
@@ -18074,6 +18075,105 @@ function syncThemedBackdrop(){
 }
 drawForestBackground=function(target){syncThemedBackdrop();return drawWithThemedBackdrop(target)};
 syncThemedBackdrop();
+
+
+/* MUNDO 2 — DUNAS DE AREIA: textura animada dos blocos destrutíveis.
+   Seis quadros por tema, pré-renderizados uma única vez e reutilizados em cache.
+   A animação só faz drawImage por bloco; nenhum gradiente/filtro é recalculado por frame. */
+const desertDuneFrames=Array.from({length:10},()=>Array(6).fill(null));
+const desertDunePositions=[];
+const desertDunePalettes=[
+ ["#70401f","#a95e28","#f6c24e","#ffe58a","#fff3bd"],
+ ["#744326","#b36a2e","#ffd05a","#ffe99a","#fff5c8"],
+ ["#80502b","#bd7130","#f7b83d","#ffe08a","#fff0b0"],
+ ["#704126","#ad5e2b","#f3ad38","#ffdc70","#fff0a8"],
+ ["#79502c","#b96b2c","#ffc64b","#ffe58b","#fff4bd"],
+ ["#75452a","#aa5d2b","#f4b443","#ffe18a","#fff5c4"],
+ ["#68402a","#a85e31","#f2b84a","#ffe49a","#fff4c0"],
+ ["#80502e","#b66a2b","#ffd05b","#ffea9c","#fff5c9"],
+ ["#70452b","#b36a35","#f7bf4c","#ffe58e","#fff5bf"],
+ ["#76502f","#aa642f","#f4b747","#ffe18c","#fff2b5"]
+];
+function buildDesertDuneFrames(){
+ for(let theme=0;theme<10;theme++){
+  if(desertDuneFrames[theme][0])continue;
+  const p=desertDunePalettes[theme];
+  for(let frame=0;frame<6;frame++){
+   const c=document.createElement("canvas");c.width=96;c.height=96;
+   const q=c.getContext("2d");q.imageSmoothingEnabled=true;
+   const phase=frame/6*Math.PI*2;
+   // Base escura e borda irregular de areia compactada.
+   q.fillStyle="#4b2c1d";q.beginPath();q.roundRect(1,1,94,94,8);q.fill();
+   const base=q.createLinearGradient(0,8,0,94);base.addColorStop(0,p[1]);base.addColorStop(.55,p[0]);base.addColorStop(1,"#482a1d");
+   q.fillStyle=base;q.beginPath();q.moveTo(4,43);q.quadraticCurveTo(18,19,42,17);q.quadraticCurveTo(66,12,91,43);q.lineTo(92,91);q.quadraticCurveTo(48,98,4,90);q.closePath();q.fill();
+   // Corpo da duna com brilho na crista.
+   const dune=q.createLinearGradient(12,15,76,79);dune.addColorStop(0,p[4]);dune.addColorStop(.2,p[3]);dune.addColorStop(.58,p[2]);dune.addColorStop(1,p[1]);
+   q.fillStyle=dune;q.beginPath();q.moveTo(5,43);q.quadraticCurveTo(20,20,42,18);q.quadraticCurveTo(67,14,91,43);q.quadraticCurveTo(76,52,65,48);q.quadraticCurveTo(47,43,31,55);q.quadraticCurveTo(17,62,5,54);q.closePath();q.fill();
+   q.strokeStyle=p[4];q.globalAlpha=.78;q.lineWidth=2.5;q.beginPath();q.moveTo(8,42);q.quadraticCurveTo(27,17,46,19);q.quadraticCurveTo(70,15,88,41);q.stroke();q.globalAlpha=1;
+   // Cortina/cachoeira de areia em quatro faixas curvas.
+   q.save();q.beginPath();q.moveTo(29,38);q.quadraticCurveTo(47,31,67,39);q.lineTo(74,83);q.quadraticCurveTo(49,91,24,82);q.closePath();q.clip();
+   const fall=q.createLinearGradient(25,0,74,0);fall.addColorStop(0,p[3]);fall.addColorStop(.35,p[2]);fall.addColorStop(.72,p[1]);fall.addColorStop(1,"#a95725");
+   q.fillStyle=fall;q.fillRect(22,34,55,55);
+   for(let k=0;k<5;k++){
+    const x=29+k*9+Math.sin(phase+k)*2.2;
+    q.strokeStyle=k%2?p[4]:p[3];q.globalAlpha=.55+(k%3)*.12;q.lineWidth=k===2?3:1.8;
+    q.beginPath();q.moveTo(x,35);q.bezierCurveTo(x-4,48,x+4,59,x+Math.sin(phase+k)*3,88);q.stroke();
+   }
+   q.globalAlpha=1;q.restore();
+   // Pequena nuvem de areia acumulada no pé da queda.
+   q.fillStyle=p[1];q.beginPath();q.moveTo(18,79);q.quadraticCurveTo(25,70,34,77);q.quadraticCurveTo(43,69,52,78);q.quadraticCurveTo(64,69,77,80);q.quadraticCurveTo(69,91,46,91);q.quadraticCurveTo(25,91,18,79);q.fill();
+   q.strokeStyle=p[3];q.lineWidth=2;q.beginPath();q.moveTo(24,80);q.quadraticCurveTo(36,74,45,81);q.quadraticCurveTo(58,73,72,81);q.stroke();
+   // Partículas: distribuição determinística em três correntes, com deslocamento por quadro.
+   for(let stream=0;stream<3;stream++){
+    for(let i=0;i<8;i++){
+     const seed=(i*17+stream*13+theme*7)%19;
+     const x=30+stream*15+Math.sin(seed*1.7+phase)*4+(i%3)*3;
+     const travel=(i*8+frame*13+stream*9)%55;
+     const y=34+travel;
+     const r=.8+((i+stream)%3)*.48;
+     q.globalAlpha=.48+((i+frame)%4)*.13;q.fillStyle=(i+stream)%3===0?p[4]:(i%2?p[3]:p[2]);
+     q.beginPath();q.ellipse(x,y,r,r*1.35,phase*.18,0,Math.PI*2);q.fill();
+    }
+   }
+   // Poeira lateral e pequenos grãos brilhantes.
+   q.globalAlpha=.65;q.fillStyle=p[3];
+   for(let i=0;i<10;i++){const side=i%2?1:-1,x=side<0?15+(i*7)%12:70+(i*5)%13,y=47+(i*11+frame*4)%39,r=.7+(i%3)*.35;q.beginPath();q.arc(x,y,r,0,Math.PI*2);q.fill()}
+   q.globalAlpha=1;
+   // Contorno suave para manter leitura do bloco no tabuleiro.
+   q.strokeStyle="#ffe39a88";q.lineWidth=1;q.beginPath();q.roundRect(1.5,1.5,93,93,8);q.stroke();
+   desertDuneFrames[theme][frame]=c;
+  }
+ }
+}
+function drawDesertDuneAnimation(){
+ if(currentWorld!=="desert"||!desertDunePositions.length)return;
+ buildDesertDuneFrames();
+ const theme=Math.max(0,Math.min(9,level-1)),frames=desertDuneFrames[theme];
+ ctx.save();
+ for(const tile of desertDunePositions){
+  const frame=(Math.floor(gameClock*7.2+tile.phase)%6+6)%6;
+  ctx.drawImage(frames[frame],ox+tile.x*TILE,oy+tile.y*TILE,TILE,TILE);
+ }
+ ctx.restore();
+}
+const drawTileBeforeDesertDune=drawTileTo;
+drawTileTo=function(target,x,y,type,offsetY=0){
+ if(currentWorld==="desert"&&type===2){
+  buildDesertDuneFrames();
+  const frame=desertDuneFrames[Math.max(0,Math.min(9,level-1))][0];
+  target.drawImage(frame,ox+x*TILE,oy+y*TILE-offsetY,TILE,TILE);
+  return;
+ }
+ return drawTileBeforeDesertDune(target,x,y,type,offsetY);
+};
+const rebuildMapBeforeDesertDunes=rebuildStaticMapCache;
+rebuildStaticMapCache=function(){
+ rebuildMapBeforeDesertDunes();
+ desertDunePositions.length=0;
+ if(currentWorld==="desert"&&map&&map.length){
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y][x]===2)desertDunePositions.push({x,y,phase:((x*17+y*29+level*11)%31)/31*6});
+ }
+};
 
 updateHUD();
 
