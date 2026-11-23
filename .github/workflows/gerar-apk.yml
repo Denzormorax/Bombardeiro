@@ -216,6 +216,22 @@ jobs:
               raise SystemExit("Não foi possível inserir o ajuste responsivo do menu.")
           s = s.replace("</head>", responsive_css + "\\n</head>", 1)
 
+          # Transição segura da abertura: primeiro revela o menu e só depois remove o splash.
+          # Se a função do menu falhar, mantém a abertura visível e mostra o diagnóstico em vez de tela branca.
+          old_transition = ' setTimeout(()=>{splash.remove();showMenuScreen("main")},9000);'
+          new_transition = ''' setTimeout(()=>{
+           try{
+            showMenuScreen("main");
+            requestAnimationFrame(()=>{if(splash && splash.isConnected)splash.remove()});
+           }catch(error){
+            if(window.__bombardeiroShowRuntimeError)window.__bombardeiroShowRuntimeError(error && error.stack ? error.stack : error,"Transição da abertura para o menu");
+            else console.error("Falha ao abrir menu principal:",error);
+           }
+          },9000);'''
+          if old_transition not in s:
+              raise SystemExit("Transição original da abertura não encontrada; compilação cancelada para evitar alteração incorreta.")
+          s = s.replace(old_transition, new_transition, 1)
+
           p.write_text(s, encoding="utf-8")
           print("Logo PNG transparente incorporado; halo estático no contorno, sem animação sobre o interior, e efeito gangorra preservado.")
           PY
