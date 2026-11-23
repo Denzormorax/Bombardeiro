@@ -16819,12 +16819,33 @@ function drawDestroyedBlockEffects(){
   ctx.save();ctx.globalAlpha=fade;
   if(e.world==="desert"){
    // Nuvem de areia dourada que se abre e cai, sem usar o efeito de madeira da floresta.
-   const radius=9+progress*25;const cloud=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);cloud.addColorStop(0,"rgba(255,224,151,.62)");cloud.addColorStop(.48,"rgba(220,163,78,.34)");cloud.addColorStop(1,"rgba(190,126,49,0)");ctx.fillStyle=cloud;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
+   const radius=9+progress*25;const cloud=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);cloud.addColorStop(0,"rgba(255,239,190,.88)");cloud.addColorStop(.48,"rgba(244,183,91,.58)");cloud.addColorStop(1,"rgba(190,126,49,0)");ctx.fillStyle=cloud;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
   }else{
    // Pulso de erupção com núcleo incandescente e anel de choque vulcânico.
-   const radius=7+progress*31;const glow=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);glow.addColorStop(0,"rgba(255,250,190,.95)");glow.addColorStop(.24,"rgba(255,160,48,.78)");glow.addColorStop(.62,"rgba(220,48,20,.34)");glow.addColorStop(1,"rgba(120,12,8,0)");ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,177,75,"+(fade*.8)+")";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,5+progress*26,0,Math.PI*2);ctx.stroke();
+   const radius=7+progress*31;const glow=ctx.createRadialGradient(cx,cy,1,cx,cy,radius);glow.addColorStop(0,"rgba(255,255,220,1)");glow.addColorStop(.24,"rgba(255,183,65,.92)");glow.addColorStop(.62,"rgba(244,65,24,.55)");glow.addColorStop(1,"rgba(120,12,8,0)");ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,205,105,"+(fade*.98)+")";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,5+progress*26,0,Math.PI*2);ctx.stroke();
   }
-  for(const p of e.particles){const px=ox+p.x*TILE,py=oy+p.y*TILE;ctx.globalAlpha=fade*(.72+.28*Math.sin(p.spin));if(e.world==="desert"){ctx.fillStyle=p.kind===0?"#fff0bd":p.kind===1?"#f4cc82":p.kind===2?"#d99a4d":"#bd7839";ctx.beginPath();ctx.ellipse(px,py,p.size*1.35,p.size*.72,p.spin,0,Math.PI*2);ctx.fill()}else{ctx.fillStyle=p.kind===0?"#fff6b0":p.kind===1?"#ffcb54":p.kind===2?"#ff762d":"#c92c16";ctx.shadowColor="#ff6426";ctx.shadowBlur=7;ctx.beginPath();ctx.arc(px,py,p.size*(.75+fade*.3),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}}
+  // Partículas mais nítidas e luminosas, mantendo a duração e a física originais.
+  ctx.save();ctx.globalCompositeOperation="lighter";
+  for(const p of e.particles){
+   const px=ox+p.x*TILE,py=oy+p.y*TILE;
+   ctx.globalAlpha=fade*(.92+.08*Math.sin(p.spin));
+   if(e.world==="desert"){
+    ctx.fillStyle=p.kind===0?"#fffde0":p.kind===1?"#ffe18a":p.kind===2?"#ffc04f":"#e99a35";
+    ctx.shadowColor="#ffd36a";ctx.shadowBlur=12;
+    ctx.beginPath();ctx.ellipse(px,py,p.size*1.65,p.size*.9,p.spin,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.globalAlpha*=.9;ctx.fillStyle="#fff8cf";
+    ctx.beginPath();ctx.arc(px-p.size*.22,py-p.size*.18,Math.max(.8,p.size*.32),0,Math.PI*2);ctx.fill();
+   }else{
+    ctx.fillStyle=p.kind===0?"#fffde0":p.kind===1?"#ffe16a":p.kind===2?"#ff8a35":"#f0441e";
+    ctx.shadowColor=p.kind<2?"#fff0a0":"#ff4b16";ctx.shadowBlur=15;
+    ctx.beginPath();ctx.arc(px,py,p.size*(1.05+fade*.35),0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.globalAlpha*=.88;ctx.fillStyle="#fff4bf";
+    ctx.beginPath();ctx.arc(px-p.size*.18,py-p.size*.2,Math.max(.8,p.size*.3),0,Math.PI*2);ctx.fill();
+   }
+  }
+  ctx.restore();
   ctx.restore();
  }
  ctx.restore();
