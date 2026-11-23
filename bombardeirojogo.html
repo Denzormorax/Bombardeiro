@@ -16567,7 +16567,7 @@ function placeBomb(){
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
 function killEnemy(enemy){if(!enemy.alive)return;playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
-function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isBuilder||enemy.isHunter||enemy.isHorned){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
+function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
  for(const b of bombs){if(b.ownerPass||b.slide)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
@@ -17797,8 +17797,8 @@ function detonateBlueFlame(e){
 const damageEnemyBeforeBlueFlame=damageEnemy;
 damageEnemy=function(e){
  if(e&&e.isBlueFlame&&e.alive){
-  // Qualquer bomba que alcance o foguinho provoca detonação imediata em cadeia.
-  detonateBlueFlame(e);return;
+  // A bomba provoca a reação em cadeia e também aplica o dano normal ao foguinho.
+  detonateBlueFlame(e);return damageEnemyBeforeBlueFlame(e);
  }
  return damageEnemyBeforeBlueFlame(e);
 };
