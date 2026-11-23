@@ -17738,12 +17738,69 @@ updateEnemies=function(dt){
  updateBlueFlameEnemies(dt);
 };
 function updateBlueFlameEnemies(dt){
+ const danger=getAllBombDangerCells();
  for(const e of enemies){
   if(!e.isBlueFlame)continue;
   if(!e.alive){e.deathTimer=Math.max(0,(e.deathTimer||0)-dt);continue}
   e.hitFlash=Math.max(0,e.hitFlash-dt);e.hurtTimer=Math.max(0,e.hurtTimer-dt);
   e.blueFlamePhase+=dt;
   e.blueFlameCooldown=Math.max(0,(e.blueFlameCooldown||0)-dt);
+
+  // Prioridade máxima: bombas do jogador. O Foguinho interrompe a investida,
+  // cancela a preparação da própria explosão e procura uma rota segura/abrigo.
+  const currentKey=cellKey(Math.floor(e.x),Math.floor(e.y));
+  const currentInDanger=danger.has(currentKey);
+  const routeInDanger=!!(e.path&&e.path.some(p=>danger.has(cellKey(p.x,p.y))));
+  if(currentInDanger||routeInDanger)e.bombEscapePending=true;
+  if(e.bombEscapePending){
+   e.bombReactionTimer=Math.max(0,(e.bombReactionTimer||0)-dt);
+   if(e.bombReactionTimer>0){e.speed=0;continue}
+   const escape=findBombEscapePath(e,danger,true);
+   e.bombEscapePending=false;
+   if(escape.length){
+    e.blueFlameFuse=0;
+    e.path=escape;e.mode="evade";e.evadeRepath=.22;e.evadeTimer=0;
+    if(currentInDanger){
+     for(const bomb of bombs){
+      if(getBombDangerCells(bomb).has(currentKey))
+       e.evadeTimer=Math.max(e.evadeTimer,(bomb.t||0)+.2);
+     }
+    }
+    e.speed=e.huntSpeed*1.22;
+    followEnemyPath(e,dt);
+    continue;
+   }
+   if(routeInDanger){e.path=[];e.repath=0}
+  }
+
+  // Enquanto a bomba ainda oferece perigo, continua recalculando a fuga.
+  if(currentInDanger){
+   if(e.mode!=="evade"||!e.path.length||(e.evadeRepath||0)<=0){
+    e.path=findBombEscapePath(e,danger,true);
+    e.mode="evade";e.evadeRepath=.22;
+    for(const bomb of bombs){
+     if(getBombDangerCells(bomb).has(currentKey))
+      e.evadeTimer=Math.max(e.evadeTimer||0,(bomb.t||0)+.2);
+    }
+   }
+   e.speed=e.huntSpeed*1.22;
+   if(e.path.length)followEnemyPath(e,dt);
+   else e.evadeRepath=Math.max(0,(e.evadeRepath||0)-dt);
+   continue;
+  }
+
+  // Só retoma a perseguição quando a ameaça desaparece e a rota está livre.
+  if(e.mode==="evade"){
+   if(e.path.length){
+    e.speed=e.huntSpeed*1.22;
+    followEnemyPath(e,dt);
+    continue;
+   }
+   e.evadeTimer=Math.max(0,(e.evadeTimer||0)-dt);
+   if(danger.size>0||e.evadeTimer>0){e.speed=0;continue}
+   e.mode="chase";e.path=[];e.repath=0;e.lastSeen={x:player.x,y:player.y};
+  }
+
   if(e.blueFlameFuse>0){
    e.blueFlameFuse=Math.max(0,e.blueFlameFuse-dt);
    e.speed=0;e.path.length=0;
@@ -17757,14 +17814,14 @@ function updateBlueFlameEnemies(dt){
    if(d<=.98&&e.blueFlameCooldown<=0){e.blueFlameFuse=.42;e.speed=0;e.path.length=0;e.mode="detonate";continue}
    e.repath-=dt;
    if(e.repath<=0||!e.path.length){
-    e.path=findEnemyRoute(e,player.x,player.y,getAllBombDangerCells());
+    e.path=findEnemyRoute(e,player.x,player.y,danger);
     e.repath=.12;
    }
    if(e.path.length)followEnemyPath(e,dt);
   }else{
    e.speed=e.baseSpeed;
    e.patrolWait-=dt;
-   if(!e.path.length&&e.patrolWait<=0){choosePatrolPath(e,getAllBombDangerCells());e.patrolWait=.35+Math.random()*.55}
+   if(!e.path.length&&e.patrolWait<=0){choosePatrolPath(e,danger);e.patrolWait=.35+Math.random()*.55}
    if(e.path.length)followEnemyPath(e,dt);
   }
  }
