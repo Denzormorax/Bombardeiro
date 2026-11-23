@@ -17691,6 +17691,164 @@ drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
  drawLavaEnemyDetails(e,deathProgress);
 };
 
+
+/* INIMIGO FOGUINHO AZUL — Mundo 4, fases 1 a 9. */
+const newLevelBeforeBlueFlame=newLevel;
+newLevel=function(preservePowerUps=false){
+ newLevelBeforeBlueFlame(preservePowerUps);
+ if(currentWorld!=="volcano"||level<1||level>9)return;
+ const extraCount=2+Math.floor(Math.random()*2);
+ const candidates=createEnemySpawnPositions(enemies.length+extraCount+3);
+ const chosen=[];
+ for(const p of candidates){
+  if(chosen.length>=extraCount)break;
+  const x=p.x+.5,y=p.y+.5;
+  if(enemies.some(e=>e.alive&&distance(x,y,e.x,e.y)<2.15))continue;
+  if(chosen.some(q=>distance(x,y,q.x,q.y)<2.15))continue;
+  chosen.push({x,y});
+ }
+ // Fallback raro para mapas com poucos espaços: procura pisos livres sem sobrepor atores.
+ if(chosen.length<extraCount){
+  const fallback=[];
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+   if(tileAt(x,y)!==0||isStartSafeCell(x,y)||distance(x+.5,y+.5,player.x,player.y)<4.5)continue;
+   if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<2.15))continue;
+   if(chosen.some(q=>distance(x+.5,y+.5,q.x,q.y)<2.15))continue;
+   fallback.push({x:x+.5,y:y+.5});
+  }
+  shuffleArray(fallback);
+  for(const p of fallback){if(chosen.length>=extraCount)break;chosen.push(p)}
+ }
+ for(const p of chosen){
+  const baseSpeed=1.35+Math.min(level*.07,.9);
+  enemies.push({x:p.x,y:p.y,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*1.7,isBlueFlame:true,
+   hp:3,maxHp:3,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,
+   alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:.2+Math.random()*.6,
+   patrolDirection:Math.random()<.5?1:-1,visionTimer:0,seesPlayer:false,blueFlameFuse:0,
+   blueFlamePhase:Math.random()*Math.PI*2,blueFlameDetonating:false,bombEscapePending:false,
+   bombReactionTimer:0,evadeTimer:0,evadeRepath:0});
+ }
+};
+const updateEnemiesBeforeBlueFlame=updateEnemies;
+updateEnemies=function(dt){
+ const all=enemies,regular=all.filter(e=>!e.isBlueFlame);
+ enemies=regular;
+ updateEnemiesBeforeBlueFlame(dt);
+ enemies=all;
+ updateBlueFlameEnemies(dt);
+};
+function updateBlueFlameEnemies(dt){
+ for(const e of enemies){
+  if(!e.isBlueFlame||!e.alive)continue;
+  e.hitFlash=Math.max(0,e.hitFlash-dt);e.hurtTimer=Math.max(0,e.hurtTimer-dt);
+  e.blueFlamePhase+=dt;
+  if(e.blueFlameFuse>0){
+   e.blueFlameFuse=Math.max(0,e.blueFlameFuse-dt);
+   e.speed=0;e.path.length=0;
+   if(e.blueFlameFuse<=0)detonateBlueFlame(e);
+   continue;
+  }
+  const d=distance(e.x,e.y,player.x,player.y);
+  const sees=d<7.2&&canSeePlayer(e);
+  if(sees||e.mode==="chase"){
+   e.mode="chase";e.lastSeen={x:player.x,y:player.y};e.speed=e.huntSpeed*1.18;
+   if(d<=.58){e.blueFlameFuse=1.18;e.speed=0;e.path.length=0;e.mode="detonate";continue}
+   e.repath-=dt;
+   if(e.repath<=0||!e.path.length){
+    e.path=findEnemyRoute(e,player.x,player.y,getAllBombDangerCells());
+    e.repath=.12;
+   }
+   if(e.path.length)followEnemyPath(e,dt);
+  }else{
+   e.speed=e.baseSpeed;
+   e.patrolWait-=dt;
+   if(!e.path.length&&e.patrolWait<=0){choosePatrolPath(e,getAllBombDangerCells());e.patrolWait=.35+Math.random()*.55}
+   if(e.path.length)followEnemyPath(e,dt);
+  }
+ }
+}
+const killEnemyBeforeBlueFlame=killEnemy;
+const explodeBeforeBlueFlame=explode;
+function detonateBlueFlame(e){
+ if(!e||!e.alive||e.blueFlameDetonating)return;
+ e.blueFlameDetonating=true;
+ killEnemyBeforeBlueFlame(e);
+ // Explosão idêntica à bomba inicial: cruz de alcance 1, sem consumir bomba do jogador.
+ const savedActiveBombs=activeBombs;
+ explodeBeforeBlueFlame({x:Math.floor(e.x),y:Math.floor(e.y),range:1,enemyDetonation:true});
+ activeBombs=savedActiveBombs;
+}
+const damageEnemyBeforeBlueFlame=damageEnemy;
+damageEnemy=function(e){
+ if(e&&e.isBlueFlame&&e.alive){
+  // Qualquer bomba que alcance o foguinho provoca detonação imediata em cadeia.
+  detonateBlueFlame(e);return;
+ }
+ return damageEnemyBeforeBlueFlame(e);
+};
+const blueFlameFrames=[];
+function buildBlueFlameFrames(){
+ if(blueFlameFrames.length)return;
+ for(let frame=0;frame<4;frame++){
+  const c=document.createElement("canvas");c.width=76;c.height=76;
+  const q=c.getContext("2d");q.translate(38,43);
+  const sway=[-.07,.025,.075,-.025][frame],scale=[.96,1.04,.99,1.03][frame];
+  q.rotate(sway);q.scale(1,scale);q.globalCompositeOperation="lighter";
+  const glow=q.createRadialGradient(0,-13,3,0,-13,34);
+  glow.addColorStop(0,"#8ffaffaa");glow.addColorStop(.48,"#25cffff0");glow.addColorStop(1,"#087aff00");
+  q.fillStyle=glow;q.beginPath();q.ellipse(0,-13,31,35,0,0,Math.PI*2);q.fill();
+  q.shadowColor="#25dfff";q.shadowBlur=13;
+  const outer=q.createLinearGradient(-17,0,17,-48);
+  outer.addColorStop(0,"#0874d9");outer.addColorStop(.48,"#20dfff");outer.addColorStop(1,"#c8ffff");
+  q.fillStyle=outer;q.beginPath();q.moveTo(-17,1);q.quadraticCurveTo(-25,-13,-12,-30);
+  q.quadraticCurveTo(-7,-39,1,-53);q.quadraticCurveTo(2,-37,12,-31);
+  q.quadraticCurveTo(25,-17,16,0);q.quadraticCurveTo(0,9,-17,1);q.closePath();q.fill();
+  q.shadowBlur=0;
+  const core=q.createLinearGradient(0,-2,0,-42);
+  core.addColorStop(0,"#26aaff");core.addColorStop(.55,"#9ffaff");core.addColorStop(1,"#ffffff");
+  q.fillStyle=core;q.beginPath();q.moveTo(-9,0);q.quadraticCurveTo(-14,-13,-4,-25);
+  q.quadraticCurveTo(0,-31,3,-42);q.quadraticCurveTo(7,-27,11,-19);
+  q.quadraticCurveTo(15,-7,8,0);q.quadraticCurveTo(0,5,-9,0);q.closePath();q.fill();
+  blueFlameFrames.push(c);
+ }
+}
+buildBlueFlameFrames();
+function drawBlueFlameEnemy(e){
+ const px=ox+e.x*TILE,groundY=oy+e.y*TILE;
+ const dying=!e.alive,progress=dying?1-Math.max(0,e.deathTimer||0)/ENEMY_DEATH_TIME:0;
+ const fuse=e.blueFlameFuse>0,frame=Math.floor(gameClock*8+e.blueFlamePhase*2)%4;
+ const bob=Math.sin(gameClock*4+e.blueFlamePhase)*1.7;
+ const alpha=dying?Math.max(0,1-progress):1;
+ ctx.save();ctx.globalAlpha=alpha;
+ ctx.fillStyle="#001b35";ctx.globalAlpha*=.28;ctx.beginPath();ctx.ellipse(px,groundY+12,13,5,0,0,Math.PI*2);ctx.fill();
+ ctx.globalAlpha=alpha;ctx.drawImage(blueFlameFrames[frame],px-38,groundY-59+bob,76,76);
+ // Olhos e boca ficam no corpo da chama, usando os mesmos traços dos demais inimigos.
+ ctx.translate(px,groundY-22+bob);ctx.scale(1.08,1.08);
+ const hurt=(e.hurtTimer||0)>0||fuse;
+ if(fuse){
+  ctx.strokeStyle="#06213b";ctx.lineWidth=2.5;ctx.lineCap="round";
+  for(const x of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(x-2.3,-2.5);ctx.lineTo(x+2.3,2);ctx.moveTo(x+2.3,-2.5);ctx.lineTo(x-2.3,2);ctx.stroke()}
+  ctx.fillStyle="#05223a";ctx.beginPath();ctx.roundRect(-7,5,14,8,2);ctx.fill();
+  ctx.fillStyle="#f4ffff";ctx.beginPath();ctx.moveTo(-6,5.5);ctx.lineTo(6,5.5);ctx.lineTo(4.5,9);ctx.lineTo(-4.5,9);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="#087ab5";ctx.lineWidth=.8;ctx.stroke();
+ }else{
+  const blink=Math.sin(gameClock*2.1+e.blueFlamePhase)>0.985;
+  if(blink){ctx.strokeStyle="#06213b";ctx.lineWidth=2.2;for(const x of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(x-3,-1);ctx.quadraticCurveTo(x,1.8,x+3,-1);ctx.stroke()}}
+  else{ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5,-1,3.1,4,0,0,Math.PI*2);ctx.ellipse(5.5,-1,3.1,4,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#06213b";ctx.beginPath();ctx.arc(-5.5+(e.facingX||0)*1.2,-1+(e.facingY||0)*1.2,1.8,0,Math.PI*2);ctx.arc(5.5+(e.facingX||0)*1.2,-1+(e.facingY||0)*1.2,1.8,0,Math.PI*2);ctx.fill()}
+  ctx.strokeStyle="#06213b";ctx.lineWidth=2.2;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-4.5,7);ctx.quadraticCurveTo(0,10,4.5,7);ctx.stroke();
+ }
+ ctx.restore();
+ if(!dying){
+  const bw=34,bx=px-bw/2,by=groundY-65;
+  ctx.fillStyle="#06182b";ctx.fillRect(bx-1,by-1,bw+2,6);ctx.fillStyle="#17364a";ctx.fillRect(bx,by,bw,4);
+  ctx.fillStyle=e.hp===3?"#43eaff":e.hp===2?"#42baff":"#2684ff";ctx.fillRect(bx,by,bw*Math.max(0,e.hp/3),4);
+  if(fuse){ctx.globalAlpha=.45+.35*Math.sin(gameClock*18);ctx.strokeStyle="#8ffaff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,groundY-23,25,0,Math.PI*2);ctx.stroke()}
+ }
+ ctx.restore();
+}
+const drawEnemyBeforeBlueFlame=drawEnemy;
+drawEnemy=function(e){if(e.isBlueFlame){drawBlueFlameEnemy(e);return}drawEnemyBeforeBlueFlame(e)};
+
 updateHUD();
 
 })();
