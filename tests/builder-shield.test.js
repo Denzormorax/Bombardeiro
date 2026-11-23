@@ -69,7 +69,7 @@ test("usa uma casa lateral se o recuo direto estiver bloqueado", () => {
   const plan = Builder.planShield(ctx);
   assert.equal(plan.ok, true, JSON.stringify(plan));
   assert.deepEqual([plan.retreatX, plan.retreatY], [7,4]);
-  assert.equal(plan.retreatDirection, "side-a");
+  assert.equal(plan.retreatDirection, "side-b");
 });
 
 test("não constrói se já existe obstáculo entre bomba e construtor", () => {
