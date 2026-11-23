@@ -76,17 +76,17 @@
  <path d="M181 453Q208 435 235 459M425 456Q451 439 479 463M670 455Q696 438 724 462"/>
  <path d="M180 689Q208 673 235 697M425 691Q452 674 480 699M668 692Q695 676 724 700"/>
 </g>
-<!-- Same small vivid green shoots as the approved Forest reference, growing from the joints. -->
+<!-- Oversized lush foliage clusters intentionally overlap broad portions of the stones to close visual gaps. -->
 <g filter="url(#rockShadow)">
- <use href="#sprout" transform="translate(176 211) rotate(-18) scale(.8)"/>
- <use href="#sprout" transform="translate(410 222) rotate(14) scale(.78)"/>
- <use href="#sprout" transform="translate(650 218) rotate(-14) scale(.8)"/>
- <use href="#sprout" transform="translate(206 458) rotate(17) scale(.78)"/>
- <use href="#sprout" transform="translate(447 460) rotate(-16) scale(.82)"/>
- <use href="#sprout" transform="translate(690 460) rotate(15) scale(.78)"/>
- <use href="#sprout" transform="translate(205 694) rotate(-15) scale(.75)"/>
- <use href="#sprout" transform="translate(450 696) rotate(17) scale(.8)"/>
- <use href="#sprout" transform="translate(692 696) rotate(-14) scale(.76)"/>
+ <use href="#sprout" transform="translate(176 211) rotate(-18) scale(1.55)"/>
+ <use href="#sprout" transform="translate(410 222) rotate(14) scale(1.50)"/>
+ <use href="#sprout" transform="translate(650 218) rotate(-14) scale(1.55)"/>
+ <use href="#sprout" transform="translate(206 458) rotate(17) scale(1.50)"/>
+ <use href="#sprout" transform="translate(447 460) rotate(-16) scale(1.58)"/>
+ <use href="#sprout" transform="translate(690 460) rotate(15) scale(1.50)"/>
+ <use href="#sprout" transform="translate(205 694) rotate(-15) scale(1.45)"/>
+ <use href="#sprout" transform="translate(450 696) rotate(17) scale(1.55)"/>
+ <use href="#sprout" transform="translate(692 696) rotate(-14) scale(1.48)"/>
 </g>
 <!-- Natural cracks and restrained highlights matching the approved stacked-stone texture. -->
 <g fill="none" stroke-linecap="round">
