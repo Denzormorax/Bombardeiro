@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 320 320">
+<title>Bombardeiro — sprite transparente de pirâmide dourada com cascata de areia</title>
+<desc>Somente a pirâmide, sem fundo de bloco. Pirâmide tridimensional de areia dourada, com duas faces em amarelo e laranja, filetes e partículas descendo pelas encostas em três correntes animadas. Fundo externo totalmente transparente.</desc>
+<defs>
+ <linearGradient id="leftFace" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff4b2"/><stop offset=".22" stop-color="#ffdc72"/><stop offset=".58" stop-color="#e9a43b"/><stop offset="1" stop-color="#a95725"/></linearGradient>
+ <linearGradient id="rightFace" x1="1" y1="0" x2="0" y2="1"><stop stop-color="#fff0a0"/><stop offset=".26" stop-color="#ffc34e"/><stop offset=".62" stop-color="#e8872c"/><stop offset="1" stop-color="#8f431f"/></linearGradient>
+ <linearGradient id="leftFall" x1="0" y1="0" x2="1" y2=".2"><stop stop-color="#fff7c6"/><stop offset=".35" stop-color="#ffd95d"/><stop offset=".72" stop-color="#f3a12f"/><stop offset="1" stop-color="#c96524"/></linearGradient>
+ <linearGradient id="rightFall" x1="1" y1="0" x2="0" y2=".2"><stop stop-color="#fff0a1"/><stop offset=".32" stop-color="#ffca50"/><stop offset=".7" stop-color="#e9872b"/><stop offset="1" stop-color="#a84d20"/></linearGradient>
+ <linearGradient id="base" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe38b"/><stop offset=".55" stop-color="#d9822c"/><stop offset="1" stop-color="#88421f"/></linearGradient>
+ <radialGradient id="apexGlow"><stop stop-color="#fffbd5" stop-opacity=".95"/><stop offset=".45" stop-color="#ffe17b" stop-opacity=".48"/><stop offset="1" stop-color="#ffb52f" stop-opacity="0"/></radialGradient>
+ <filter id="shadow" x="-40%" y="-30%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
+ <filter id="shine" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.2"/></filter>
+ <clipPath id="leftClip"><path d="M160 24 L37 257 Q88 278 160 294Z"/></clipPath>
+ <clipPath id="rightClip"><path d="M160 24 L283 257 Q230 280 160 294Z"/></clipPath>
+</defs>
+<!-- sombra projetada discreta; o restante do canvas permanece transparente -->
+<ellipse cx="160" cy="286" rx="130" ry="19" fill="#5b321c" opacity=".22" filter="url(#shadow)"/>
+<!-- volume da pirâmide -->
+<path d="M160 22 L286 260 Q228 285 160 300 Q88 282 34 260Z" fill="#8e471f" stroke="#8b451e" stroke-width="3" stroke-linejoin="round"/>
+<path d="M160 24 L37 257 Q89 279 160 294Z" fill="url(#leftFace)" stroke="#f9ca61" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M160 24 L283 257 Q231 280 160 294Z" fill="url(#rightFace)" stroke="#d77a2b" stroke-width="2.5" stroke-linejoin="round"/>
+<!-- aresta central e brilho no ápice -->
+<path d="M160 25 L160 293" stroke="#fff4b0" stroke-width="3" opacity=".65"/>
+<ellipse cx="160" cy="42" rx="38" ry="31" fill="url(#apexGlow)"/>
+<path d="M160 25 L145 53" stroke="#fffbd5" stroke-width="4" stroke-linecap="round" opacity=".85" filter="url(#shine)"/>
+<!-- faixas de areia descendo pelas duas encostas -->
+<g clip-path="url(#leftClip)">
+ <path d="M151 35 Q119 99 94 150 T37 260 L58 271 Q98 197 119 143 T166 39Z" fill="url(#leftFall)" opacity=".93"/>
+ <path d="M158 38 Q133 111 116 164 T75 276 L91 282 Q125 208 137 153 T171 42Z" fill="#ffe17a" opacity=".74"/>
+ <path d="M149 45 Q125 112 99 171 T48 259" fill="none" stroke="#fff8c9" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+ <path d="M158 55 Q137 123 122 177 T84 267" fill="none" stroke="#fff0a1" stroke-width="2.5" stroke-dasharray="9 7" opacity=".9">
+  <animate attributeName="stroke-dashoffset" values="0;32" dur="1.3s" repeatCount="indefinite"/>
+ </path>
+ <path d="M133 75 Q112 137 90 192 T51 254" fill="none" stroke="#c86b25" stroke-width="5" opacity=".32"/>
+</g>
+<g clip-path="url(#rightClip)">
+ <path d="M169 36 Q196 102 221 157 T284 260 L262 272 Q218 198 195 143 T154 40Z" fill="url(#rightFall)" opacity=".96"/>
+ <path d="M163 42 Q187 115 205 170 T246 278 L228 284 Q194 210 181 155 T151 46Z" fill="#ffd45c" opacity=".72"/>
+ <path d="M170 44 Q196 113 224 177 T273 258" fill="none" stroke="#fff0a2" stroke-width="4" stroke-linecap="round" opacity=".78"/>
+ <path d="M164 58 Q187 125 207 184 T242 270" fill="none" stroke="#fff4b7" stroke-width="2.5" stroke-dasharray="8 7" opacity=".9">
+  <animate attributeName="stroke-dashoffset" values="0;30" dur="1.2s" repeatCount="indefinite"/>
+ </path>
+ <path d="M188 78 Q212 142 238 197 T276 254" fill="none" stroke="#9d4b20" stroke-width="5" opacity=".28"/>
+</g>
+<!-- linhas de blocos de pedra/areia na estrutura, sem perder a leitura da pirâmide -->
+<g fill="none" stroke-linecap="round">
+ <path d="M137 72 L183 72 M119 109 L201 109 M98 151 L222 151 M75 194 L245 194 M54 235 L266 235" stroke="#fff0a4" stroke-width="2.2" opacity=".45"/>
+ <path d="M160 73 L135 110 M160 112 L117 153 M160 154 L96 196 M160 195 L74 238" stroke="#a95824" stroke-width="2" opacity=".2"/>
+ <path d="M160 73 L185 110 M160 112 L203 153 M160 154 L224 196 M160 195 L246 238" stroke="#8f431f" stroke-width="2" opacity=".22"/>
+</g>
+<!-- três correntes de partículas em cada face: 18 partículas, agrupadas em três animações -->
+<g fill="#fff4b4">
+ <g>
+  <circle cx="145" cy="65" r="2.2"/><circle cx="132" cy="91" r="1.6"/><circle cx="120" cy="119" r="2.1"/><circle cx="105" cy="148" r="1.5"/><circle cx="91" cy="179" r="2"/><circle cx="73" cy="211" r="1.6"/>
+  <animateTransform attributeName="transform" type="translate" values="0 -13;-4 14;-9 43" dur="1.55s" repeatCount="indefinite"/>
+ </g>
+ <g fill="#ffe078">
+  <circle cx="155" cy="61" r="1.8"/><circle cx="146" cy="91" r="2.1"/><circle cx="133" cy="122" r="1.5"/><circle cx="121" cy="151" r="2"/><circle cx="107" cy="183" r="1.6"/><circle cx="94" cy="214" r="2.1"/>
+  <animateTransform attributeName="transform" type="translate" values="0 -25;-3 4;-7 34" dur="1.35s" begin="-.5s" repeatCount="indefinite"/>
+ </g>
+ <g fill="#ffc04a">
+  <circle cx="175" cy="64" r="1.8"/><circle cx="188" cy="94" r="2.1"/><circle cx="201" cy="124" r="1.5"/><circle cx="215" cy="154" r="2"/><circle cx="229" cy="185" r="1.6"/><circle cx="247" cy="215" r="2"/>
+  <animateTransform attributeName="transform" type="translate" values="0 -18;3 10;8 39" dur="1.48s" begin="-.85s" repeatCount="indefinite"/>
+ </g>
+</g>
+<!-- grãos soltos e pequenos sopros de areia junto à base -->
+<g fill="#ffe9a0" opacity=".9">
+ <circle cx="51" cy="249" r="2.2"/><circle cx="64" cy="267" r="1.5"/><circle cx="82" cy="276" r="1.8"/>
+ <circle cx="269" cy="248" r="2.1"/><circle cx="254" cy="267" r="1.5"/><circle cx="237" cy="278" r="1.8"/>
+ <circle cx="139" cy="285" r="1.5"/><circle cx="181" cy="286" r="1.6"/>
+</g>
+<!-- base facetada da pirâmide -->
+<path d="M37 257 Q94 279 160 294 Q230 278 283 257 L286 264 Q227 291 160 304 Q91 291 34 264Z" fill="url(#base)" stroke="#a95725" stroke-width="2"/>
+<path d="M48 260 Q103 282 160 292 Q218 281 272 260" fill="none" stroke="#fff0a4" stroke-width="3" opacity=".75"/>
+<path d="M76 273 Q119 290 160 296 Q205 289 245 273" fill="none" stroke="#ffd15c" stroke-width="2" opacity=".75"/>
+<!-- contorno limpo do sprite; transparência fora da silhueta -->
+<path d="M160 22 L286 260 Q228 285 160 300 Q88 282 34 260Z" fill="none" stroke="#fff0ad" stroke-width="2.4" stroke-linejoin="round" opacity=".72"/>
+</svg>
