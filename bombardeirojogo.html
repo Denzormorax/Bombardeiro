@@ -16401,6 +16401,7 @@ function drawBuilderBuildAnimations(){
   drawTileTo(ctx,animation.x,animation.y,0);
   ctx.save();ctx.translate(px+TILE/2,py+TILE);ctx.scale(.94+.06*eased,eased);
   ctx.translate(-px-TILE/2,-py-TILE);drawTileTo(ctx,animation.x,animation.y,2);ctx.restore();
+ }
 }
 function reactToNewBomb(newBomb=null){
  const danger=getAllBombDangerCells();
