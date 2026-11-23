@@ -16179,6 +16179,8 @@ function createEnemySpawnPositions(count){
  }
  return selected;
 }
+let currentWorld="forest",desertDetails=[];
+
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
  makeMap();createForestPuddles();rebuildStaticMapCache();bombs=[];flames=[];burningCrates.length=0;coinsOnMap=[];enemies=[];dirtParticles=[];waterParticles=[];
@@ -17228,7 +17230,7 @@ running=false;paused=true;$("hud").style.display="none";$("controls").style.disp
 requestAnimationFrame(function loop(t){const dt=Math.min(.035,(t-lastTime)/1000||0);lastTime=t;update(dt);draw();requestAnimationFrame(loop)});
 
 /* MUNDO 2 — DESERTO: mantém as mesmas regras e IA da Floresta. */
-let currentWorld="forest",desertDetails=[];
+
 const desertThemes=[
 {name:"Dunas do Alvorecer",sky:["#f8d69a","#d99a5d","#8e5737"],floor:"rgba(190,139,73,.80)",floor2:"rgba(244,204,133,.42)",wall:["#9b6237","#d39a58","#633d27"],far:"#b87945",near:"#75452e",glow:"#ffe3a4",accent:"#e6b56c",style:"dunes"},
 {name:"Cânion de Arenito",sky:["#f2c28c","#c9784e","#743d31"],floor:"rgba(165,105,64,.82)",floor2:"rgba(226,157,95,.42)",wall:["#8b4e32","#c27b4d","#573326"],far:"#8b4b36",near:"#59352b",glow:"#ffd39a",accent:"#d99459",style:"canyon"},
