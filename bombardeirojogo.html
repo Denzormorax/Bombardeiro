@@ -17838,12 +17838,12 @@ function drawBlueFlameEnemy(e){
  ctx.save();ctx.globalAlpha=alpha;
  ctx.fillStyle="#001b35";ctx.globalAlpha*=.28;ctx.beginPath();ctx.ellipse(px,groundY+12,13,5,0,0,Math.PI*2);ctx.fill();
  const fuseProgress=fuse?Math.max(0,Math.min(1,1-e.blueFlameFuse/.42)):0;
- const squash=fuse?1-.48*Math.sin(fuseProgress*Math.PI):1;
+ const squash=fuse?1-.45*fuseProgress:1;
  const flameHeight=76*squash;
  ctx.globalAlpha=alpha;ctx.drawImage(blueFlameFrames[frame],px-38,groundY-59+bob+(76-flameHeight),76,flameHeight);
  // Estado de desenho isolado para não contaminar o contexto do restante do jogo.
  ctx.save();
- ctx.translate(px,groundY-22+bob+(fuse?4*Math.sin(fuseProgress*Math.PI):0));ctx.scale(1.08,1.08);
+ ctx.translate(px,groundY-22+bob+(fuse?14*fuseProgress:0));ctx.scale(1.08,1.08);
  if(fuse){
   ctx.strokeStyle="#06213b";ctx.lineWidth=2.5;ctx.lineCap="round";
   for(const x of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(x-2.3,-2.5);ctx.lineTo(x+2.3,2);ctx.moveTo(x+2.3,-2.5);ctx.lineTo(x-2.3,2);ctx.stroke()}
