@@ -17774,7 +17774,7 @@ function detonateBlueFlame(e){
  e.blueFlameDetonating=true;e.blueFlameFuse=0;e.blueFlameCooldown=1.15;
  e.mode="chase";e.speed=e.baseSpeed;e.path=[];e.repath=0;e.lastSeen={x:player.x,y:player.y};
  // Explosão visual independente: não mata o inimigo nem consome bombas do jogador.
- const bx=Math.floor(e.x),by=Math.floor(e.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]],range=2;
+ const bx=Math.floor(e.x),by=Math.floor(e.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]],range=1;
  for(const [dx,dy] of dirs)for(let i=1;i<=range;i++){
   const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);
   if(tile===1)break;
