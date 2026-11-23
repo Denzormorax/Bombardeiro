@@ -37,12 +37,27 @@ function makeContext({ enemyCell, bombCell, range = 4, blocked = [], playerCell 
     if (tileAt(tx, ty) !== 0 || bombAt(tx, ty) || (danger && danger.has(key(tx, ty)))) return [];
     return [{ x: tx, y: ty }];
   };
-  return {
+  const context = {
     enemy, bomb, cols, rows, map, player, enemies, bombs,
     exit: { found: false, x: -1, y: -1 },
     waterPuddleCells: new Set(),
-    tileAt, bombAt, cellKey: key, findGridPath, getBombDangerCells
+    tileAt, bombAt, cellKey: key, findGridPath, getBombDangerCells,
+    distance: (x, y, a, b) => Math.hypot(x - a, y - b),
+    builderBuildAnimations: [],
+    followEnemyPath: (target) => {
+      const next = target.path[0];
+      if (next) {
+        target.x = next.x + .5;
+        target.y = next.y + .5;
+        target.path.shift();
+      }
+    },
+    rebuildStaticMapCache: () => { context.cacheRebuilt = (context.cacheRebuilt || 0) + 1; },
+    spawnSandBuildParticles: () => { context.particleBursts = (context.particleBursts || 0) + 1; }
   };
+  context.beginShieldBuild = (target, activeBomb) =>
+    Builder.beginShieldBuild({ ...context, enemy: target, bomb: activeBomb });
+  return context;
 }
 
 test("constrói escudo nos quatro sentidos cardeais", () => {
@@ -98,4 +113,36 @@ test("inicia a retirada e limpa a fuga genérica da bomba", () => {
   assert.equal(ctx.enemy.buildPhase, "retreat");
   assert.deepEqual(ctx.enemy.path, [{ x: 8, y: 5 }]);
   assert.equal(ctx.enemy.bombEscapePending, false);
+});
+
+test("a máquina de estados recua, ergue o bloco destrutível e conclui a animação", () => {
+  const ctx = makeContext({ enemyCell: [7,5], bombCell: [5,5] });
+  assert.equal(Builder.beginShieldBuild(ctx), true);
+  assert.equal(Builder.updateEnemy(ctx.enemy, .05, ctx), true);
+  assert.equal(ctx.map[5][6], 2);
+  assert.equal(ctx.builderBuildAnimations.length, 1);
+  assert.equal(ctx.cacheRebuilt, 1);
+  assert.equal(ctx.particleBursts, 1);
+  assert.equal(ctx.enemy.buildPhase, "raise");
+  assert.equal(Builder.updateEnemy(ctx.enemy, .24, ctx), false);
+  assert.equal(ctx.enemy.building, false);
+  assert.equal(ctx.enemy.buildDebugReason, "shield-complete");
+});
+
+test("cancela sem colocar bloco se a bomba for movida durante a retirada", () => {
+  const ctx = makeContext({ enemyCell: [7,5], bombCell: [5,5] });
+  assert.equal(Builder.beginShieldBuild(ctx), true);
+  ctx.bomb.x = 4;
+  assert.equal(Builder.updateEnemy(ctx.enemy, .05, ctx), false);
+  assert.equal(ctx.map[5][6], 0);
+  assert.equal(ctx.enemy.building, false);
+});
+
+test("cancela com segurança se a casa do escudo ficar ocupada durante a retirada", () => {
+  const ctx = makeContext({ enemyCell: [7,5], bombCell: [5,5] });
+  assert.equal(Builder.beginShieldBuild(ctx), true);
+  ctx.map[5][6] = 1;
+  assert.equal(Builder.updateEnemy(ctx.enemy, .05, ctx), false);
+  assert.equal(ctx.map[5][6], 1);
+  assert.equal(ctx.enemy.building, false);
 });
