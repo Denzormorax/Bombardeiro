@@ -38,3 +38,28 @@ test("flocos da bola de neve caem dentro da bola e desaparecem no montinho", () 
   assert.ok(game.includes('currentWorld==="ice")spawnDestroyedBlockEffect'));
   assert.ok(!snowball.includes("<animate"));
 });
+
+
+test("poças congeladas usam reflexo azul cristalino e brilho diagonal em cache", () => {
+  assert.ok(game.includes("iceWaterPuddleFrames=[]"));
+  assert.ok(game.includes('if(currentWorld==="ice")drawIcePuddleShimmer(p,px,py)'));
+  assert.ok(game.includes('["#061b46","#0b3d82","#2879bd","#8fdcff","#f7fdff"]'));
+  assert.ok(game.includes("function drawIcePuddleShimmer(p,px,py)"));
+  assert.ok(game.includes("ctx.drawImage(pillarShimmerCanvas,-20,-28,40,56)"));
+});
+
+test("bombas colocadas nas poças do gelo deslizam na direção atual do personagem", () => {
+  assert.ok(game.includes('if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y)))'));
+  assert.ok(game.includes("const directionX=player.facingX||0,directionY=player.facingY||(directionX===0?1:0)"));
+  assert.ok(game.includes("bomb.slide={dx:directionX,dy:directionY,icePuddle:true}"));
+  assert.ok(game.includes("function updateSlidingBombs(dt)"));
+  assert.ok(game.includes("if(nextTile!==0||otherBomb)"));
+  assert.ok(game.includes("if(b.slide.icePuddle){b.slide=null;b.t=Math.min(b.t,dt);continue}"));
+  assert.ok(game.includes("const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny)"));
+});
+
+test("poças continuam sendo sorteadas apenas em piso livre, de 10 a 15 por mapa", () => {
+  assert.ok(game.includes("if(map[y][x]!==0||isStartSafeCell(x,y))continue"));
+  assert.ok(game.includes("const amount=10+Math.floor(Math.random()*6)"));
+  assert.ok(game.includes("waterPuddleCells.add(key)"));
+});
