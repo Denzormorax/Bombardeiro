@@ -99,8 +99,8 @@ test("teletransporte periódico dos fantasminhas também continua durante a pers
 test("fantasma escolhe somente um dos quatro quadrados ortogonais livres ao surgir perto do jogador", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   const target = html.slice(html.indexOf("function swampGhostChaseSpawnTarget"), html.indexOf("function swampGhostTarget"));
-  assert.match(target, /for\(const d of \[\[0,-1\],\[1,0\],\[0,1\],\[-1,0\]\]\)/);
-  assert.match(target, /tileAt\(x,y\)!==0/);
+  assert.match(target, /for\(const d of \[\[0,-2\],\[2,0\],\[0,2\],\[-2,0\]\]\)/);
+  assert.match(target, /tileAt\(x,y\)!==0/);\n   assert.match(target, /distance\(tx,ty,player\.x,player\.y\)<1\.5/);
   assert.match(target, /waterPuddleCells\.has\(key\)/);
   assert.match(target, /danger\.has\(key\)/);
   assert.match(html, /swampGhostStartTeleport\(g,target,false,false,false,"chase"\)/);
@@ -110,7 +110,7 @@ test("aparição de perseguição usa espiral lenta e não coloca o fantasma sob
   assert.match(html, /style==="chase"\?2\.2:style==="bomb"\?1\.8/);
   assert.match(html, /g\.teleportStyle==="chase"&&g\.teleportSwapped/);
   assert.match(html, /g\.spiralEmitClock/);
-  assert.match(html, /ctx\.rotate\(\(1-revealProgress\)\*Math\.PI\*3\.2\)/);
+  assert.match(html, /ctx\.rotate\(\(1-revealProgress\)\*Math\.PI\*3\.2\)/);\n   assert.match(html, /const showingSpiral=\(g\.teleportStyle==="chase"&&g\.teleportSwapped\)\|\|\(g\.teleportStyle==="bomb"&&g\.teleportSwapped\)/);\n   assert.match(html, /const spiralPulse=Math\.sin\(revealProgress\*Math\.PI\)/);\n   assert.match(html, /ctx\.strokeStyle=arm===0\?"#a8f7ff":"#d2c0ff"/);
 });
 
 test("fantasmas do Pântano patrulham e perseguem mais devagar", () => {
