@@ -32,17 +32,17 @@ test("bomba na água da floresta apaga, fica parada e libera outra colocação i
 test("bomba apagada fica imóvel e recebe gotas de água brilhantes com atualização leve", () => {
   const placeStart = game.indexOf("function placeBomb");
   const place = game.slice(placeStart, game.indexOf('$("bombBtn")', placeStart));
-  assert.match(place, /bomb\.waterDrips=Array\.from\(\{length:6\}/);
+  assert.match(place, /bomb\.waterDrips=Array\.from\(\{length:5\}/);
   const updateStart = game.indexOf("function update(dt)");
   const update = game.slice(updateStart, game.indexOf("/* DESENHO DO CENÁRIO */", updateStart));
   assert.match(update, /if\(b\.extinguished\)\{for\(const drop of b\.waterDrips\|\|\[\]\)/);
   assert.match(update, /drop\.y\+=drop\.speed\*dt/);
+  assert.match(update, /if\(drop\.y>12\)\{drop\.y=-16/);
   const drawStart = game.indexOf("function drawBomb(b)");
   const draw = game.slice(drawStart, game.indexOf("function drawFlame", drawStart));
   assert.match(draw, /pulse=b\.extinguished\?1:/);
-  assert.match(draw, /globalCompositeOperation="lighter"/);
-  assert.match(draw, /#d9ffff|#62eaff|#299fff/);
-  assert.match(draw, /shadowBlur=8/);
+  assert.match(draw, /drawImage\(waterDropSprite/);
+  assert.doesNotMatch(draw, /globalCompositeOperation="lighter"|shadowBlur=8/);
 });
 
 test("bomba apagada pode ser detonada por uma explosão próxima", () => {
