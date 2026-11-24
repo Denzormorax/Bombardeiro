@@ -82,7 +82,7 @@ test("inimigos comuns percebem bombas próximas e descartam rotas bloqueadas qua
 
 test("fantasminha volta à patrulha após receber dano e persegue mais rápido quando detecta o jogador", () => {
   assert.match(game, /enemy\.alerted=false;enemy\.mode="patrol";enemy\.lastSeen=null;enemy\.path=\[\]/);
-  assert.match(game, /enemy\.patrolTeleportTimer=1\+Math\.random\(\)\*1\.5/);
+  assert.match(game, /enemy\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
   assert.match(game, /enemy\.bombEvading=false;enemy\.bombEvadeRepath=0/);
   assert.match(game, /g\.speed=\(g\.baseSpeed\|\|g\.speed\|\|1\.12\)\*1\.45/);
 });
@@ -109,7 +109,7 @@ test("fantasma aparece rapidamente, patrulha com teletransportes e desvia de bom
   assert.match(game, /const duration=fast\?\.48:escape\?\.42:\.48/);
   assert.match(game, /function swampGhostBombEscapePath/);
   assert.match(game, /g\.bombEvading/);
-  assert.match(game, /patrolTeleportTimer:4\+Math\.random\(\)\*4/);
+  assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);
   assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
 });
 test("fantasma exibe três segmentos brancos desde o início e deixa cada segmento transparente ao perder vida", () => {
@@ -142,7 +142,7 @@ test("após sofrer dano o fantasma limpa o estado de fuga e reinicia patrulha e 
   assert.match(damage, /enemy\.alerted=false;enemy\.mode="patrol"/);
   assert.match(damage, /enemy\.bombEvading=false;enemy\.bombEvadeRepath=0/);
   assert.match(damage, /enemy\.patrolWait=0/);
-  assert.match(damage, /enemy\.patrolTeleportTimer=1\+Math\.random\(\)\*1\.5/);
+  assert.match(damage, /enemy\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
   assert.match(damage, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
 });
 test("explosões reutilizam sprites de chama e colisões espaciais", () => {
@@ -151,4 +151,26 @@ test("explosões reutilizam sprites de chama e colisões espaciais", () => {
   assert.match(game, /const flameBuckets=new Map\(\)/);
   assert.match(game, /flameBuckets\.clear\(\)/);
   assert.match(game, /flameBuckets\.get\(cellKey\(ex\+dx,ey\+dy\)\)/);
+});
+
+
+test("fantasmas têm colisão entre si e recalculam a rota ao encontrar outro", () => {
+  assert.match(game, /function swampGhostBlockedByOther\(ghost,x,y,radius=\.445\)/);
+  assert.match(game, /function swampGhostCanOccupy\(ghost,x,y\)/);
+  const move = game.slice(game.indexOf("function swampGhostMove"), game.indexOf("function swampGhostSees"));
+  assert.match(move, /swampGhostCanOccupy\(ghost,nx,ghost\.y\)/);
+  assert.match(move, /swampGhostCanOccupy\(ghost,ghost\.x,ny\)/);
+  assert.match(move, /ghost\.path=\[\];ghost\.patrolWait=0;ghost\.chaseRepath=0;ghost\.bombEvadeRepath=0/);
+  const patrol = game.slice(game.indexOf("function swampGhostPath"), game.indexOf("function swampGhostChasePath"));
+  const chase = game.slice(game.indexOf("function swampGhostChasePath"), game.indexOf("function swampGhostBombEscapePath"));
+  assert.match(patrol, /swampGhostBlockedByOther\(ghost,x\+\.5,y\+\.5,\.72\)/);
+  assert.match(chase, /swampGhostBlockedByOther\(ghost,x\+\.5,y\+\.5,\.72\)/);
+  assert.match(game, /swampGhostBlockedByOther\(ghost,x,y,\.72\)/);
+});
+
+test("teleporte aleatório de patrulha acontece em intervalo variável de dois a quatro segundos", () => {
+  assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);
+  assert.match(game, /g\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
+  assert.match(game, /enemy\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
+  assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
 });

@@ -19320,9 +19320,11 @@ getDestroyedBlockParticleSprite=function(world,p){if(world!=="swamp")return swam
 const swampGhostParticles=[];
 function swampGhostOpen(x,y){const t=tileAt(x,y);return(t===0||t===2)&&x>0&&y>0&&x<COLS-1&&y<ROWS-1&&!bombAt(x,y)}
 function swampGhostStand(x,y){const r=.22;for(let ty=Math.floor(y-r);ty<=Math.floor(y+r);ty++)for(let tx=Math.floor(x-r);tx<=Math.floor(x+r);tx++)if(tileAt(tx,ty)===1&&circleRectCollision(x,y,r,tx,ty,1,1))return false;for(const b of bombs)if(circleRectCollision(x,y,r,b.x+.12,b.y+.12,.76,.76))return false;return x>.22&&y>.22&&x<COLS-.22&&y<ROWS-.22}
+function swampGhostBlockedByOther(ghost,x,y,radius=.445){for(const other of enemies){if(other===ghost||!other.isSwampGhost||!other.alive)continue;const reserved=other.teleporting>0&&other.teleportDestination?other.teleportDestination:null,ox=reserved?reserved.x:other.x,oy=reserved?reserved.y:other.y;if(distance(x,y,ox,oy)<radius)return true;if(other.path&&other.path.length&&distance(x,y,other.path[0].x+.5,other.path[0].y+.5)<radius)return true}return false}
+function swampGhostCanOccupy(ghost,x,y){return swampGhostStand(x,y)&&!swampGhostBlockedByOther(ghost,x,y,.445)}
 function swampGhostBurst(x,y,n){const ghost=enemies.find(e=>e.isSwampGhost&&distance(e.x,e.y,x,y)<.35);for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,life=.48+Math.random()*.32,rad=.025+Math.random()*.12,p={x:x+Math.cos(a)*rad,y:y+Math.sin(a)*rad,vx:0,vy:0,cx:x,cy:y,angle:a,radius:rad,spin:(Math.random()<.5?-1:1)*(2.8+Math.random()*3.4),radialSpeed:.28+Math.random()*.42,t:life,life,size:2.8+Math.random()*4.8,swirl:true};swampGhostParticles.push(p);if(ghost)ghost.particles.push({...p})}if(swampGhostParticles.length>150)swampGhostParticles.splice(0,swampGhostParticles.length-150);if(ghost&&ghost.particles.length>64)ghost.particles.splice(0,ghost.particles.length-64)}
-function spawnSwampGhosts(){const count=2+Math.floor(Math.random()*2),spots=[];for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){if(!swampGhostOpen(x,y)||waterPuddleCells.has(cellKey(x,y))||distance(x+.5,y+.5,player.x,player.y)<4.5)continue;if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.25))continue;spots.push({x,y})}for(let i=0;i<count&&spots.length;i++){const p=spots.splice(Math.floor(Math.random()*spots.length),1)[0],speed=1.12+Math.min(level*.025,.18);enemies.push({isSwampGhost:true,x:p.x+.5,y:p.y+.5,speed,baseSpeed:speed,hp:3,maxHp:3,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],patrolWait:.3+Math.random()*.7,phase:Math.random()*6.28,trailClock:.04,particles:[],teleportCooldown:.2,patrolTeleportTimer:4+Math.random()*4,teleporting:0,teleportSwapAt:0,teleportDestination:null,teleportSwapped:false,alerted:false,chaseRepath:0,bombEvading:false,bombEvadeRepath:0,burrowing:false})}}
-function swampGhostPath(ghost,danger){const sx=Math.floor(ghost.x),sy=Math.floor(ghost.y),queue=[{x:sx,y:sy,path:[]}],seen=new Set([cellKey(sx,sy)]),found=[];let head=0;while(head<queue.length&&head<180){const p=queue[head++];if(p.path.length)found.push(p);if(p.path.length>=8)continue;for(const d of [[0,-1],[1,0],[0,1],[-1,0]]){const x=p.x+d[0],y=p.y+d[1],k=cellKey(x,y);if(seen.has(k)||!swampGhostOpen(x,y)||(danger&&danger.has(k)))continue;seen.add(k);queue.push({x,y,path:p.path.concat([{x,y}])})}}if(!found.length){ghost.patrolWait=.5;return}const opts=found.filter(p=>p.path.length>=2),pool=opts.length?opts:found,target=pool[Math.floor(Math.random()*pool.length)];ghost.path=target.path.slice();ghost.patrolWait=.15}
+function spawnSwampGhosts(){const count=2+Math.floor(Math.random()*2),spots=[];for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){if(!swampGhostOpen(x,y)||waterPuddleCells.has(cellKey(x,y))||distance(x+.5,y+.5,player.x,player.y)<4.5)continue;if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.25))continue;spots.push({x,y})}for(let i=0;i<count&&spots.length;i++){const p=spots.splice(Math.floor(Math.random()*spots.length),1)[0],speed=1.12+Math.min(level*.025,.18);enemies.push({isSwampGhost:true,x:p.x+.5,y:p.y+.5,speed,baseSpeed:speed,hp:3,maxHp:3,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],patrolWait:.3+Math.random()*.7,phase:Math.random()*6.28,trailClock:.04,particles:[],teleportCooldown:.2,patrolTeleportTimer:2+Math.random()*2,teleporting:0,teleportSwapAt:0,teleportDestination:null,teleportSwapped:false,alerted:false,chaseRepath:0,bombEvading:false,bombEvadeRepath:0,burrowing:false})}}
+function swampGhostPath(ghost,danger){const sx=Math.floor(ghost.x),sy=Math.floor(ghost.y),queue=[{x:sx,y:sy,path:[]}],seen=new Set([cellKey(sx,sy)]),found=[];let head=0;while(head<queue.length&&head<180){const p=queue[head++];if(p.path.length)found.push(p);if(p.path.length>=8)continue;for(const d of [[0,-1],[1,0],[0,1],[-1,0]]){const x=p.x+d[0],y=p.y+d[1],k=cellKey(x,y);if(seen.has(k)||!swampGhostOpen(x,y)||(danger&&danger.has(k))||swampGhostBlockedByOther(ghost,x+.5,y+.5,.72))continue;seen.add(k);queue.push({x,y,path:p.path.concat([{x,y}])})}}if(!found.length){ghost.patrolWait=.5;return}const opts=found.filter(p=>p.path.length>=2),pool=opts.length?opts:found,target=pool[Math.floor(Math.random()*pool.length)];ghost.path=target.path.slice();ghost.patrolWait=.15}
 function swampGhostChasePath(ghost,danger){
  const sx=Math.floor(ghost.x),sy=Math.floor(ghost.y),px=Math.floor(player.x),py=Math.floor(player.y);
  const goals=new Set([cellKey(px+1,py),cellKey(px-1,py),cellKey(px,py+1),cellKey(px,py-1),cellKey(px+1,py+1),cellKey(px-1,py+1),cellKey(px+1,py-1),cellKey(px-1,py-1)]);
@@ -19332,7 +19334,7 @@ function swampGhostChasePath(ghost,danger){
   if(head>0&&goals.has(key)&&!(danger&&danger.has(key))){goal=head;break}
   for(const d of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+d[0],y=p.y+d[1],next=cellKey(x,y);
-   if(seen.has(next)||!swampGhostOpen(x,y)||(danger&&danger.has(next)))continue;
+   if(seen.has(next)||!swampGhostOpen(x,y)||(danger&&danger.has(next))||swampGhostBlockedByOther(ghost,x+.5,y+.5,.72))continue;
    seen.add(next);queue.push({x,y,parent:head});
   }
   head++;
@@ -19356,7 +19358,7 @@ function swampGhostBombEscapePath(ghost,danger){
   if(p.path.length>=5)continue;
   for(const d of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+d[0],y=p.y+d[1],k=cellKey(x,y);
-   if(seen.has(k)||!swampGhostOpen(x,y)||bombAt(x,y)||danger.has(k))continue;
+   if(seen.has(k)||!swampGhostOpen(x,y)||bombAt(x,y)||danger.has(k)||swampGhostBlockedByOther(ghost,x+.5,y+.5,.72))continue;
    seen.add(k);queue.push({x,y,path:p.path.concat([{x,y}])});
   }
  }
@@ -19366,7 +19368,7 @@ function swampGhostBombEscapePath(ghost,danger){
 function swampGhostMove(ghost,dt){
  const p=ghost.path[0];if(!p)return;
  const tx=p.x+.5,ty=p.y+.5,dx=tx-ghost.x,dy=ty-ghost.y,dist=Math.hypot(dx,dy);
- if(dist<.055){if(swampGhostStand(tx,ty)){ghost.x=tx;ghost.y=ty;ghost.path.shift()}return}
+ if(dist<.055){if(swampGhostCanOccupy(ghost,tx,ty)){ghost.x=tx;ghost.y=ty;ghost.path.shift()}else if(swampGhostBlockedByOther(ghost,tx,ty)){ghost.path=[];ghost.patrolWait=0;ghost.chaseRepath=0;ghost.bombEvadeRepath=0}return}
  const step=Math.min(dist,ghost.speed*dt),steps=Math.max(1,Math.ceil(step/.012)),micro=step/steps;
  const offsets=[.015,.03,.045,.06,.075,.09,.105,.12,.135,.15,.165,.18,.195,.21,.225,.24];
  for(let i=0;i<steps;i++){
@@ -19374,29 +19376,29 @@ function swampGhostMove(ghost,dt){
   if(Math.abs(remainX)<.000001&&Math.abs(remainY)<.000001)break;
   if(Math.abs(remainX)>=Math.abs(remainY)){
    const sx=Math.sign(remainX)*Math.min(micro,Math.abs(remainX)),nx=ghost.x+sx;
-   if(swampGhostStand(nx,ghost.y)){ghost.x=nx;ghost.facingX=Math.sign(sx);ghost.facingY=0;continue}
+   if(swampGhostCanOccupy(ghost,nx,ghost.y)){ghost.x=nx;ghost.facingX=Math.sign(sx);ghost.facingY=0;continue}
    let slid=false;
    for(const offset of offsets){for(const sign of [-1,1]){
     const sideY=ghost.y+sign*offset;
-    if(!swampGhostStand(ghost.x,sideY)||!swampGhostStand(nx,sideY))continue;
+    if(!swampGhostCanOccupy(ghost,ghost.x,sideY)||!swampGhostCanOccupy(ghost,nx,sideY))continue;
     ghost.y=sideY;ghost.x=nx;ghost.facingX=Math.sign(sx);ghost.facingY=0;slid=true;break;
    }if(slid)break}
-   if(!slid){ghost.path=[];return}
+   if(!slid){ghost.path=[];ghost.patrolWait=0;ghost.chaseRepath=0;ghost.bombEvadeRepath=0;return}
   }else{
    const sy=Math.sign(remainY)*Math.min(micro,Math.abs(remainY)),ny=ghost.y+sy;
-   if(swampGhostStand(ghost.x,ny)){ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(sy);continue}
+   if(swampGhostCanOccupy(ghost,ghost.x,ny)){ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(sy);continue}
    let slid=false;
    for(const offset of offsets){for(const sign of [-1,1]){
     const sideX=ghost.x+sign*offset;
-    if(!swampGhostStand(sideX,ghost.y)||!swampGhostStand(sideX,ny))continue;
+    if(!swampGhostCanOccupy(ghost,sideX,ghost.y)||!swampGhostCanOccupy(ghost,sideX,ny))continue;
     ghost.x=sideX;ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(sy);slid=true;break;
    }if(slid)break}
-   if(!slid){ghost.path=[];return}
+   if(!slid){ghost.path=[];ghost.patrolWait=0;ghost.chaseRepath=0;ghost.bombEvadeRepath=0;return}
   }
  }
 }
 function swampGhostSees(ghost){const dx=player.x-ghost.x,dy=player.y-ghost.y,dist=Math.hypot(dx,dy);if(dist>5)return false;for(let i=1,n=Math.ceil(dist*16);i<n;i++){const t=i/n;if(tileAt(Math.floor(ghost.x+dx*t),Math.floor(ghost.y+dy*t))===1)return false}return true}
-function swampGhostTarget(ghost,escape,danger){const out=[];if(!escape){for(const d of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){const x=player.x+d[0]*.64,y=player.y+d[1]*.64,k=cellKey(Math.floor(x),Math.floor(y));if((danger&&danger.has(k))||!swampGhostStand(x,y)||distance(x,y,player.x,player.y)<.5)continue;out.push({x,y})}}else{for(let i=0;i<110;i++){const x=1.5+Math.floor(Math.random()*(COLS-2)),y=1.5+Math.floor(Math.random()*(ROWS-2)),k=cellKey(Math.floor(x),Math.floor(y));if(!swampGhostOpen(Math.floor(x),Math.floor(y))||waterPuddleCells.has(k)||(danger&&danger.has(k))||distance(x,y,player.x,player.y)<4.6)continue;out.push({x,y});if(out.length>=10)break}}return out.length?out[Math.floor(Math.random()*out.length)]:null}
+function swampGhostTarget(ghost,escape,danger){const out=[];if(!escape){for(const d of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){const x=player.x+d[0]*.64,y=player.y+d[1]*.64,k=cellKey(Math.floor(x),Math.floor(y));if((danger&&danger.has(k))||!swampGhostCanOccupy(ghost,x,y)||distance(x,y,player.x,player.y)<.5)continue;out.push({x,y})}}else{for(let i=0;i<110;i++){const x=1.5+Math.floor(Math.random()*(COLS-2)),y=1.5+Math.floor(Math.random()*(ROWS-2)),k=cellKey(Math.floor(x),Math.floor(y));if(!swampGhostOpen(Math.floor(x),Math.floor(y))||waterPuddleCells.has(k)||(danger&&danger.has(k))||swampGhostBlockedByOther(ghost,x,y,.72)||distance(x,y,player.x,player.y)<4.6)continue;out.push({x,y});if(out.length>=10)break}}return out.length?out[Math.floor(Math.random()*out.length)]:null}
 function swampGhostStartTeleport(g,target,escape,fast=false){if(!target)return false;const duration=fast?.48:escape?.42:.48;swampGhostBurst(g.x,g.y,fast?14:22);g.teleportDuration=duration;g.teleporting=duration;g.teleportSwapAt=duration*.5;g.teleportDestination=target;g.teleportSwapped=false;g.path=[];g.teleportCooldown=escape?.65:2.1;return true}
 function updateSwampGhost(g,dt,danger){
  if(!g.alive){g.deathTimer=Math.max(0,(g.deathTimer||0)-dt);return}
@@ -19407,7 +19409,7 @@ function updateSwampGhost(g,dt,danger){
  if(g.teleporting>0){
   g.teleporting=Math.max(0,g.teleporting-dt);
   if(!g.teleportSwapped&&g.teleporting<=g.teleportSwapAt){if(g.teleportDestination){g.x=g.teleportDestination.x;g.y=g.teleportDestination.y;swampGhostBurst(g.x,g.y,22)}g.teleportSwapped=true}
-  if(g.teleporting<=0){g.teleportDestination=null;g.teleportSwapped=false;g.patrolWait=.12;g.chaseRepath=0;if(!g.alerted)g.patrolTeleportTimer=4+Math.random()*4}
+  if(g.teleporting<=0){g.teleportDestination=null;g.teleportSwapped=false;g.patrolWait=.12;g.chaseRepath=0;if(!g.alerted)g.patrolTeleportTimer=2+Math.random()*2}
   return;
  }
  g.teleportCooldown=Math.max(0,(g.teleportCooldown||0)-dt);
@@ -19444,8 +19446,8 @@ function updateSwampGhost(g,dt,danger){
  g.patrolTeleportTimer=Math.max(0,(g.patrolTeleportTimer??4)-dt);
  if(g.patrolTeleportTimer<=0&&!nearbyBomb&&!currentDanger){
   const target=swampGhostTarget(g,true,danger);
-  if(target){g.patrolTeleportTimer=4+Math.random()*4;swampGhostStartTeleport(g,target,true,true);return}
-  g.patrolTeleportTimer=1.2;
+  if(target){g.patrolTeleportTimer=2+Math.random()*2;swampGhostStartTeleport(g,target,true,true);return}
+  g.patrolTeleportTimer=2+Math.random()*2;
  }
  if(g.path.length)swampGhostMove(g,dt);else{g.patrolWait-=dt;if(g.patrolWait<=0)swampGhostPath(g,danger)}
 }
@@ -19470,7 +19472,7 @@ damageEnemy=function(enemy){
  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp??3)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;
  if(enemy.hp<=0){swampGhostBurst(enemy.x,enemy.y,30);killEnemy(enemy);return}
  const danger=getAllBombDangerCells(),destination=swampGhostTarget(enemy,true,danger);
- enemy.alerted=false;enemy.mode="patrol";enemy.lastSeen=null;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=0;enemy.chaseRepath=0;enemy.speed=enemy.baseSpeed||enemy.speed;enemy.bombEvading=false;enemy.bombEvadeRepath=0;enemy.patrolTeleportTimer=1+Math.random()*1.5;
+ enemy.alerted=false;enemy.mode="patrol";enemy.lastSeen=null;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=0;enemy.chaseRepath=0;enemy.speed=enemy.baseSpeed||enemy.speed;enemy.bombEvading=false;enemy.bombEvadeRepath=0;enemy.patrolTeleportTimer=2+Math.random()*2;
  if(destination){swampGhostStartTeleport(enemy,destination,true,true)}
  else{swampGhostBurst(enemy.x,enemy.y,22)}
 };
