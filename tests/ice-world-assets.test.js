@@ -132,7 +132,8 @@ test("Boneco de Neve só congela bombas adjacentes nos quatro lados cardeais e l
   assert.ok(game.includes('function startSnowmanFreeze(enemy,bomb)'));
   assert.ok(game.includes('bomb.freezeDuration=1.15'));
   assert.ok(game.includes('activeBombs=Math.max(0,activeBombs-1);bomb.activeSlotReleased=true'));
-  assert.ok(game.includes('if((b.freezing||b.frozen||b.extinguished)&&!b.chainTriggered)'));
+  assert.ok(game.includes('if((b.freezing||b.frozen)&&!b.chainTriggered){'));
+  assert.ok(game.includes('if(b.extinguished){'));
   assert.ok(game.includes('const top=16-progress*32'));
   assert.ok(game.includes('ctx.fillRect(-17,top,34,32*progress)'));
 });
