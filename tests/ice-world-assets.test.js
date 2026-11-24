@@ -54,8 +54,8 @@ test("poças de gelo usam paleta azul cristalina e brilho diagonal em cache", ()
   assert.ok(game.includes('["#061b46","#0b3d82","#2879bd","#8fdcff","#f7fdff"]'));
   assert.ok(game.includes('if(currentWorld==="ice")drawIcePuddleShimmer(p,px,py)'));
   assert.ok(game.includes("function drawIcePuddleShimmer(p,px,py)"));
-  assert.ok(game.includes("ctx.drawImage(pillarShimmerCanvas,-31,-28,40,56)"));
-  assert.ok(game.includes("ctx.drawImage(pillarShimmerCanvas,-9,-28,40,56)"));
+  assert.ok(game.includes("ctx.drawImage(icePuddleShimmerCanvas,-31,-28,40,56)"));
+  assert.ok(game.includes("ctx.drawImage(icePuddleShimmerCanvas,-9,-28,40,56)"));
 });
 
 test("poças congeladas mantêm a textura parada e usam duas linhas nítidas em movimento mais rápido", () => {
@@ -63,10 +63,10 @@ test("poças congeladas mantêm a textura parada e usam duas linhas nítidas em 
   assert.ok(game.includes("const phase=(gameClock*.55+((p.x*7+p.y*13)%23)/23)%1"));
   assert.ok(game.includes("ctx.globalAlpha=.94"));
   assert.ok(game.includes("const travel=(phase-.5)*(TILE+40)"));
-  const shimmer=game.slice(game.indexOf("const pillarShimmerCanvas"),game.indexOf("const $=id"));
+  const shimmer=game.slice(game.indexOf("const icePuddleShimmerCanvas"),game.indexOf("const $=id"));
   assert.ok(shimmer.includes('c.fillStyle="#ffffff";c.fillRect(18,0,4,56)'));
-  assert.ok(!shimmer.includes("createRadialGradient"));
-  assert.ok(!shimmer.includes("createLinearGradient"));
+  assert.ok(!shimmer.slice(0,shimmer.indexOf("function createPillarShimmerCanvas")).includes("createRadialGradient"));
+  assert.ok(!shimmer.slice(0,shimmer.indexOf("function createPillarShimmerCanvas")).includes("createLinearGradient"));
 });
 
 test("inimigos do Gelo fogem da bomba recém-colocada e o Caçador acelera na fuga", () => {
@@ -83,4 +83,16 @@ test("bombas nas poças congeladas deslizam na direção para a qual o jogador o
   assert.ok(game.includes("bomb.slide={dx:directionX,dy:directionY,icePuddle:true}"));
   assert.ok(game.includes("if(b.slide.icePuddle){b.slide=null;b.t=Math.min(b.t,dt);continue}"));
   assert.ok(game.includes("function updateSlidingBombs(dt)"));
+});
+
+test("blocos indestrutíveis recuperam o brilho difuso com cores temáticas por mundo", () => {
+  assert.ok(game.includes('forest:createPillarShimmerCanvas("rgb(70,220,105)"'));
+  assert.ok(game.includes('desert:createPillarShimmerCanvas("rgb(255,151,48)"'));
+  assert.ok(game.includes('volcano:createPillarShimmerCanvas("rgb(235,48,35)"'));
+  assert.ok(game.includes('ice:createPillarShimmerCanvas("rgb(75,170,255)"'));
+  const draw = game.slice(game.indexOf("function drawIndestructibleShimmer"),game.indexOf("function draw(){"));
+  assert.ok(draw.includes("const shimmerCanvas=pillarShimmerCanvases[currentWorld]||pillarShimmerCanvases.forest"));
+  assert.ok(draw.includes("ctx.drawImage(shimmerCanvas,-20,-28,40,56)"));
+  assert.ok(game.includes("cloud.addColorStop(0,highlight)"));
+  assert.ok(game.includes("cloud.addColorStop(.45,color.replace"));
 });

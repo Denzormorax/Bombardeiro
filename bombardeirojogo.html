@@ -15610,9 +15610,33 @@ const BURNING_CRATE_FRAMES=8;const burningCrateCanvases=Array.from({length:10},(
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
 const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=96;portalAuraCanvas.height=96;const portalAuraCtx=portalAuraCanvas.getContext("2d");
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
-// Duas linhas brancas de brilho, nítidas e sem bloom ou difusão.
-const pillarShimmerCanvas=document.createElement("canvas");pillarShimmerCanvas.width=40;pillarShimmerCanvas.height=56;
-(()=>{const c=pillarShimmerCanvas.getContext("2d");c.fillStyle="#ffffff";c.fillRect(18,0,4,56)})();
+// As poças congeladas usam somente duas linhas brancas nítidas.
+const icePuddleShimmerCanvas=document.createElement("canvas");icePuddleShimmerCanvas.width=40;icePuddleShimmerCanvas.height=56;
+(()=>{const c=icePuddleShimmerCanvas.getContext("2d");c.fillStyle="#ffffff";c.fillRect(18,0,4,56)})();
+// Brilho difuso dos blocos indestrutíveis: uma textura leve pré-renderizada por tema.
+function createPillarShimmerCanvas(color,highlight){
+ const canvas=document.createElement("canvas");canvas.width=40;canvas.height=56;
+ const c=canvas.getContext("2d");
+ const band=c.createLinearGradient(0,0,40,0);
+ band.addColorStop(0,"rgba(255,255,255,0)");
+ band.addColorStop(.28,color.replace(")",",.10)").replace("rgb","rgba"));
+ band.addColorStop(.5,highlight);
+ band.addColorStop(.72,color.replace(")",",.10)").replace("rgb","rgba"));
+ band.addColorStop(1,"rgba(255,255,255,0)");
+ c.fillStyle=band;c.fillRect(0,0,40,56);
+ const cloud=c.createRadialGradient(20,28,1,20,28,20);
+ cloud.addColorStop(0,highlight);
+ cloud.addColorStop(.45,color.replace(")",",.22)").replace("rgb","rgba"));
+ cloud.addColorStop(1,"rgba(255,255,255,0)");
+ c.fillStyle=cloud;c.fillRect(0,8,40,40);
+ return canvas;
+}
+const pillarShimmerCanvases={
+ forest:createPillarShimmerCanvas("rgb(70,220,105)","rgba(190,255,190,.72)"),
+ desert:createPillarShimmerCanvas("rgb(255,151,48)","rgba(255,224,155,.78)"),
+ volcano:createPillarShimmerCanvas("rgb(235,48,35)","rgba(255,170,115,.76)"),
+ ice:createPillarShimmerCanvas("rgb(75,170,255)","rgba(235,250,255,.86)")
+};
 const $=id=>document.getElementById(id);
 const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpriteSheets();buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_themes.svg";
 
@@ -17146,8 +17170,8 @@ function drawIcePuddleShimmer(p,px,py){
  ctx.globalAlpha=.94;
  ctx.translate(px+TILE*.5+travel,py+TILE*.5+travel);
  ctx.rotate(Math.PI/4);
- ctx.drawImage(pillarShimmerCanvas,-31,-28,40,56);
- ctx.drawImage(pillarShimmerCanvas,-9,-28,40,56);
+ ctx.drawImage(icePuddleShimmerCanvas,-31,-28,40,56);
+ ctx.drawImage(icePuddleShimmerCanvas,-9,-28,40,56);
  ctx.restore();
 }
 function buildThemedSpriteSheets(){
@@ -17430,7 +17454,8 @@ function drawVolcanoCraterAnimation(){
 }
 function drawIndestructibleShimmer(){
  if(!indestructibleTilePositions.length)return;
- // Faixa branca inclinada atravessa cada bloco na diagonal, com bloom suave.
+ // A faixa diagonal recupera o brilho difuso e assume a cor temática de cada mundo.
+ const shimmerCanvas=pillarShimmerCanvases[currentWorld]||pillarShimmerCanvases.forest;
  const phaseBase=gameClock*.32;ctx.save();
  for(const tile of indestructibleTilePositions){
   const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
@@ -17440,7 +17465,7 @@ function drawIndestructibleShimmer(){
   ctx.globalAlpha=pulse;
   ctx.translate(px+TILE*.5+travel,py+TILE*.5+travel);
   ctx.rotate(Math.PI/4);
-  ctx.drawImage(pillarShimmerCanvas,-20,-28,40,56);
+  ctx.drawImage(shimmerCanvas,-20,-28,40,56);
   ctx.restore();
  }
  ctx.restore();
