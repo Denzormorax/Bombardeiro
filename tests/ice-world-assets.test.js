@@ -143,3 +143,9 @@ test("bomba congelada funciona como bloco destrutível e entra na detonação em
   assert.ok(game.includes('if(other.freezing||other.frozen){other.chainTriggered=true;other.t=0}'));
   assert.ok(game.includes('if(!b.activeSlotReleased)activeBombs=Math.max(0,activeBombs-1)'));
 });
+
+
+test("Boneco de Neve mantém a perseguição após terminar o sopro de gelo", () => {
+  assert.ok(game.includes('enemy.alert=3.2;enemy.lastSeen={x:player.x,y:player.y}'));
+  assert.ok(game.includes("if(player.passBomb===bomb)player.passBomb=null")===false);
+});
