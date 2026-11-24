@@ -1,0 +1,161 @@
+{
+  "world": 5,
+  "id": "swamp",
+  "name": "Pântano Assombrado",
+  "phaseCount": 10,
+  "enemyChanges": "Nenhum inimigo novo nesta etapa; fantasma e monstro de lama ficam reservados para etapa futura.",
+  "tileAtlas": "game-assets/sprites/swamp_themes.svg",
+  "columns": [
+    "ground",
+    "terrainDetail",
+    "indestructibleBlock",
+    "destructibleLog"
+  ],
+  "destructibleBlock": {
+    "type": "weathered_swamp_log",
+    "description": "Tronco de madeira envelhecida com casca em relevo, rachaduras profundas, musgo, fibras e sombra projetada",
+    "sameGameplayAsExistingDestructibleBlocks": true
+  },
+  "phases": [
+    {
+      "number": 1,
+      "name": "Entrada do Brejo",
+      "mood": "Crepúsculo esverdeado",
+      "environment": "Trilha de lama entre raízes grossas, juncos e lanternas antigas",
+      "palette": {
+        "ground": "#263f32",
+        "light": "#718b57",
+        "water": "#254d4a",
+        "wood": "#68452f",
+        "accent": "#b2c477"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 2,
+      "name": "Vilarejo Afundado",
+      "mood": "Noite azulada",
+      "environment": "Casas tortas parcialmente submersas, tábuas e cercas quebradas",
+      "palette": {
+        "ground": "#263b3d",
+        "light": "#647c70",
+        "water": "#244b55",
+        "wood": "#634936",
+        "accent": "#a6b9a0"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 3,
+      "name": "Cemitério das Raízes",
+      "mood": "Névoa fria",
+      "environment": "Lápides antigas inclinadas, raízes envolvendo túmulos e flores pálidas",
+      "palette": {
+        "ground": "#30363a",
+        "light": "#78817a",
+        "water": "#334b4b",
+        "wood": "#594334",
+        "accent": "#b3c0a0"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 4,
+      "name": "Cabana do Enforcado",
+      "mood": "Chuva e sombras",
+      "environment": "Cabana de madeira apodrecida, cordas, varanda caída e poças profundas",
+      "palette": {
+        "ground": "#302e2b",
+        "light": "#76634d",
+        "water": "#354b46",
+        "wood": "#70472d",
+        "accent": "#c0a16c"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 5,
+      "name": "Lagoa dos Sussurros",
+      "mood": "Luar prateado",
+      "environment": "Lago escuro, vitórias-régias, nenúfares e troncos flutuantes",
+      "palette": {
+        "ground": "#25383c",
+        "light": "#627f79",
+        "water": "#1b5360",
+        "wood": "#584a39",
+        "accent": "#a4d0bd"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 6,
+      "name": "Bosque das Árvores Mortas",
+      "mood": "Bruma cinzenta",
+      "environment": "Árvores retorcidas sem folhas, raízes expostas e fungos luminosos",
+      "palette": {
+        "ground": "#343b35",
+        "light": "#7a8270",
+        "water": "#3a5148",
+        "wood": "#594333",
+        "accent": "#c0c4a0"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 7,
+      "name": "Mansão da Névoa",
+      "mood": "Noite violeta",
+      "environment": "Mansão abandonada ao fundo, janelas partidas, grades e jardim morto",
+      "palette": {
+        "ground": "#302b3a",
+        "light": "#777083",
+        "water": "#3c4055",
+        "wood": "#55404a",
+        "accent": "#c1a8ce"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 8,
+      "name": "Ruínas Submersas",
+      "mood": "Verde profundo",
+      "environment": "Arcos de pedra cobertos por musgo, pilares quebrados e água turva",
+      "palette": {
+        "ground": "#253b38",
+        "light": "#668578",
+        "water": "#1d5652",
+        "wood": "#594b36",
+        "accent": "#9ac7a8"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 9,
+      "name": "Pântano da Lua Sangrenta",
+      "mood": "Lua vermelha",
+      "environment": "Reflexos rubros, árvores negras, raízes como garras e névoa carmesim",
+      "palette": {
+        "ground": "#382d31",
+        "light": "#87605c",
+        "water": "#4b303b",
+        "wood": "#644039",
+        "accent": "#d18a78"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 10,
+      "name": "Casa do Guardião",
+      "mood": "Madrugada assombrada",
+      "environment": "Casa ancestral isolada, passarela de madeira e pântano quase negro",
+      "palette": {
+        "ground": "#252a31",
+        "light": "#68727c",
+        "water": "#293e4b",
+        "wood": "#57423a",
+        "accent": "#a9bac5"
+      },
+      "bossPhase": true
+    }
+  ]
+}
