@@ -16258,7 +16258,7 @@ function circleRectCollision(cx,cy,r,rx,ry,rw,rh){
 function canOccupy(x,y,r,entity,ignoredBomb=null){
  const minX=Math.floor(x-r),maxX=Math.floor(x+r),minY=Math.floor(y-r),maxY=Math.floor(y+r);
  for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++)if(tileAt(tx,ty)!==0&&circleRectCollision(x,y,r,tx,ty,1,1))return false;
- for(const chest of treasureChests)if(circleRectCollision(x,y,r,chest.x+.5,chest.y+.5,.82,.72))return false;
+ for(const chest of treasureChests)if(circleRectCollision(x,y,r,chest.x,chest.y,1,1))return false;
  for(const b of bombs)if(b!==ignoredBomb&&circleRectCollision(x,y,r,b.x+.12,b.y+.12,.76,.76))return false;return true;
 }
 function moveEntity(entity,dx,dy,r,type){
@@ -16532,7 +16532,7 @@ function reactToNewBomb(newBomb=null){
    continue;
   }
   const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
-  const nearbyBomb=bombs.some(b=>{const range=Math.max(1,Number(b.range)||1),baseRadius=enemy.isMushroom?4.8:enemy.isHorned?5.2:3.8,perceptionRadius=Math.max(baseRadius,range+2.2);return distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=perceptionRadius});
+  const nearbyBomb=bombs.some(b=>{const range=Math.max(1,Number(b.range)||1),baseRadius=enemy.isMushroom?4.8:enemy.isHorned?5.2:4.8,perceptionRadius=Math.max(baseRadius,range+2.2);return distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=perceptionRadius});
   const desertHunterThreat=currentWorld==="desert"&&enemy.isHunter&&nearbyBomb;
   // No Gelo, todos os inimigos reconhecem a zona de risco assim que a bomba é colocada.
   const iceBombThreat=currentWorld==="ice"&&bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=Math.max(4.8,(Number(b.range)||1)+1.4));
@@ -16617,6 +16617,7 @@ function updateEnemies(dt){
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentInDanger=danger.has(currentKey);
   const routeInDanger=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
+  const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
 
   // Reação à bomba recém-colocada: pequena pausa para avaliar e então uma rota segura.
   if(enemy.bombEscapePending){
@@ -16630,7 +16631,7 @@ function updateEnemies(dt){
     enemy.speed=currentWorld==="ice"?(enemy.isHunter?enemy.huntSpeed*1.3:enemy.isHorned?enemy.huntSpeed*1.2:enemy.baseSpeed*1.24):enemy.isHorned&&!enemy.isEnraged?enemy.baseSpeed:enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
     followEnemyPath(enemy,dt);continue;
    }
-   if(routeInDanger){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
+   if(routeInDanger||routeBlockedByBomb){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
   }
 
   // Prioridade máxima: sair de uma explosão que realmente ameaça a posição atual.
@@ -16646,7 +16647,7 @@ function updateEnemies(dt){
    continue;
   }
 
-  if(routeInDanger&&enemy.mode!=="evade"){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
+  if((routeInDanger||routeBlockedByBomb)&&enemy.mode!=="evade"){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
   if(enemy.mode==="evade"){
    if(enemy.path.length){enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter||enemy.isBuilder?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;followEnemyPath(enemy,dt);continue}
    if(enemy.evadeTimer>0){
@@ -19322,6 +19323,7 @@ function updateSwampGhost(g,dt,danger){
  if(danger.has(currentKey)||(g.path.length&&danger.has(cellKey(g.path[0].x,g.path[0].y)))){g.path=[];g.chaseRepath=0;g.patrolWait=0}
  if(!g.alerted&&g.teleportCooldown<=0&&swampGhostSees(g)){const target=swampGhostTarget(g,false,danger);if(target){g.alerted=true;g.chaseRepath=0;swampGhostStartTeleport(g,target,false);return}}
  if(g.alerted){
+  g.speed=(g.baseSpeed||g.speed||1.12)*1.45;
   g.chaseRepath=Math.max(0,(g.chaseRepath||0)-dt);
   if(!g.path.length||g.chaseRepath<=0){swampGhostChasePath(g,danger);g.chaseRepath=.28}
   if(g.path.length)swampGhostMove(g,dt);
@@ -19337,8 +19339,9 @@ damageEnemy=function(enemy){
  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp??3)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;
  if(enemy.hp<=0){swampGhostBurst(enemy.x,enemy.y,30);killEnemy(enemy);return}
  const danger=getAllBombDangerCells(),destination=swampGhostTarget(enemy,true,danger);
- if(destination){swampGhostStartTeleport(enemy,destination,true,true);enemy.teleportCooldown=1.35}
- else{swampGhostBurst(enemy.x,enemy.y,22);enemy.teleportCooldown=.8}
+ enemy.alerted=false;enemy.mode="patrol";enemy.lastSeen=null;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.12;enemy.chaseRepath=0;enemy.speed=enemy.baseSpeed||enemy.speed;
+ if(destination){swampGhostStartTeleport(enemy,destination,true,true);enemy.teleportCooldown=.2}
+ else{swampGhostBurst(enemy.x,enemy.y,22);enemy.teleportCooldown=.2}
 };
 const swampNewLevelBase=newLevel;
 newLevel=function(preservePowerUps=false){swampNewLevelBase(preservePowerUps);if(currentWorld==="swamp"&&level>=3&&level<=6)spawnSwampGhosts()};
