@@ -16602,7 +16602,7 @@ function placeBomb(){
  const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};
  if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y))){
   const directionX=player.facingX||0,directionY=player.facingY||(directionX===0?1:0);
-  bomb.slide={dx:directionX,dy:directionY};bomb.slideClock=0;
+  bomb.slide={dx:directionX,dy:directionY,icePuddle:true};bomb.slideClock=0;
  }
  if(currentWorld==="desert"&&waterPuddleCells.has(cellKey(x,y))){const exits=waterPuddles.filter(p=>(p.x!==x||p.y!==y)&&!bombAt(p.x,p.y)&&map[p.y]?.[p.x]===0);if(exits.length){const destination=exits[Math.floor(Math.random()*exits.length)];bomb.whirlwind={toX:destination.x,toY:destination.y,t:0,duration:.82,moved:false}}}
  bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
@@ -16617,7 +16617,12 @@ function tryPushBomb(dx,dy){
 function updateSlidingBombs(dt){
  for(const b of bombs){if(!b.slide)continue;b.slideClock-=dt;if(b.slideClock>0)continue;b.slideClock=.105;const nx=b.x+b.slide.dx,ny=b.y+b.slide.dy,nextTile=tileAt(nx,ny),otherBomb=bombs.some(other=>other!==b&&Math.floor(other.x)===nx&&Math.floor(other.y)===ny);
   if(nextTile!==0||otherBomb){b.slide=null;b.t=Math.min(b.t,.12);continue}
-  const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);if(enemy){b.x=nx;b.y=ny;b.slide=null;b.t=Math.min(b.t,.12);continue}b.x=nx;b.y=ny;
+  const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);
+  if(enemy){
+   if(b.slide.icePuddle){b.slide=null;b.t=Math.min(b.t,dt);continue}
+   b.x=nx;b.y=ny;b.slide=null;b.t=Math.min(b.t,.12);continue
+  }
+  b.x=nx;b.y=ny;
  }
 }
 function isInsideFlameDamage(entity,cell){

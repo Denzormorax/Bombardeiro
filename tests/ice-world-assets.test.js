@@ -51,9 +51,10 @@ test("poças congeladas usam reflexo azul cristalino e brilho diagonal em cache"
 test("bombas colocadas nas poças do gelo deslizam na direção atual do personagem", () => {
   assert.ok(game.includes('if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y)))'));
   assert.ok(game.includes("const directionX=player.facingX||0,directionY=player.facingY||(directionX===0?1:0)"));
-  assert.ok(game.includes("bomb.slide={dx:directionX,dy:directionY}"));
+  assert.ok(game.includes("bomb.slide={dx:directionX,dy:directionY,icePuddle:true}"));
   assert.ok(game.includes("function updateSlidingBombs(dt)"));
   assert.ok(game.includes("if(nextTile!==0||otherBomb)"));
+  assert.ok(game.includes("if(b.slide.icePuddle){b.slide=null;b.t=Math.min(b.t,dt);continue}"));
   assert.ok(game.includes("const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny)"));
 });
 
