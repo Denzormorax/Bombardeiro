@@ -15836,7 +15836,7 @@ let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLeve
 let dirtParticles=[],waterPuddles=[],waterParticles=[],builderBuildAnimations=[];
 const destroyedBlockEffects=[];
 const treasureChests=[],treasureEffects=[];let treasureSpawnedThisLevel=false,treasureSpawnedThisWorld=false,treasureSpawnWorld=null,treasureVisualsReady=false;
-let treasureChestBodyCanvas=null,treasureChestLidCanvas=null,treasureAuraCanvas=null,treasureGoldSparkCanvas=null,treasureBlueFlameCanvas=null,treasureBlueCoinCanvas=null;
+let treasureChestBodyCanvas=null,treasureChestLidCanvas=null,treasureAuraCanvas=null,treasureGoldSparkCanvas=null,treasureBlueFlameCanvas=null,treasureBlueCoinCanvas=null,treasureRedCoinCanvas=null;
 const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[],iceWaterPuddleFrames=[];let waterPuddleFramesReady=false;
 let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
@@ -16140,8 +16140,8 @@ function findFreeCoinPosition(x,y){
  for(const p of candidates)if(tileAt(Math.floor(p.x),Math.floor(p.y))===0&&canOccupy(p.x,p.y,COIN_RADIUS,null,null))return p;
  return null;
 }
-function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position){const value=coinValue(type);coinsOnMap.push({x:position.x,y:position.y,type:type==="blue"?"blue":"yellow",value,phase:Math.random()*Math.PI*2,life:0})}}
-function coinValue(type){return type==="blue"?100:type==="yellow"?2:type==="green"?4:6}
+function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position){const value=coinValue(type);coinsOnMap.push({x:position.x,y:position.y,type:type==="blue"?"blue":type==="treasureRed"?"treasureRed":"yellow",value,phase:Math.random()*Math.PI*2,life:0})}}
+function coinValue(type){return type==="blue"?100:type==="treasureRed"?50:type==="yellow"?2:type==="green"?4:6}
 function updateHUD(){
  $("level").textContent=level;$("forestThemeName").textContent=currentForestTheme().name;const hearts=$("lifeHearts").children;
  for(let i=0;i<hearts.length;i++)hearts[i].classList.toggle("empty",i>=lives);
@@ -16388,7 +16388,8 @@ function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
    const desertHunter=currentWorld==="desert"&&enemy.isHunter;
    const coverBonus=preferCover&&isBehindBombCover(p.x,p.y)?(desertHunter?7.5:2.4):0;
-   const score=desertHunter?p.path.length*.62-nearestBomb*.42-coverBonus:p.path.length-nearestBomb*.12-coverBonus;
+   const maxBlastRange=bombs.reduce((max,b)=>Math.max(max,Number(b.range)||1),1),distanceWeight=.28+Math.min(6,maxBlastRange)*.035;
+   const score=desertHunter?p.path.length*.62-nearestBomb*.42-coverBonus:p.path.length-nearestBomb*distanceWeight-coverBonus;
    safe.push({path:p.path,score});
   }
   if(p.path.length>=maxSteps)continue;
@@ -16513,7 +16514,7 @@ function reactToNewBomb(newBomb=null){
   if(!enemy.alive||enemy.burrowing)continue;
   if(enemy.isBuilder){
    const targetBomb=newBomb||bombs.reduce((best,b)=>!best||distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<distance(enemy.x,enemy.y,best.x+.5,best.y+.5)?b:best,null);
-   if(targetBomb&&distance(enemy.x,enemy.y,targetBomb.x+.5,targetBomb.y+.5)<=5.2&&buildBuilderSandShield(enemy,targetBomb))continue;
+   if(targetBomb&&distance(enemy.x,enemy.y,targetBomb.x+.5,targetBomb.y+.5)<=Math.max(5.2,(Number(targetBomb.range)||1)+2.2)&&buildBuilderSandShield(enemy,targetBomb))continue;
   }
   if(enemy.isSnowman&&currentWorld==="ice"&&newBomb&&!enemy.freezingBomb&&(enemy.freezeCooldown||0)<=0&&startSnowmanFreeze(enemy,newBomb))continue;
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
@@ -16526,12 +16527,12 @@ function reactToNewBomb(newBomb=null){
    continue;
   }
   const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
-  const nearbyBomb=bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<(enemy.isMushroom?4.8:enemy.isHorned?5.2:3.8));
+  const nearbyBomb=bombs.some(b=>{const range=Math.max(1,Number(b.range)||1),baseRadius=enemy.isMushroom?4.8:enemy.isHorned?5.2:3.8,perceptionRadius=Math.max(baseRadius,range+2.2);return distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=perceptionRadius});
   const desertHunterThreat=currentWorld==="desert"&&enemy.isHunter&&nearbyBomb;
   // No Gelo, todos os inimigos reconhecem a zona de risco assim que a bomba é colocada.
   const iceBombThreat=currentWorld==="ice"&&bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=Math.max(4.8,(Number(b.range)||1)+1.4));
   enemy.repath=0;
-  if(currentThreatened||routeThreatened||desertHunterThreat||iceBombThreat){
+  if(currentThreatened||routeThreatened||nearbyBomb||desertHunterThreat||iceBombThreat){
    // No Gelo, Caçador e Boneco de Neve recuam apenas o necessário para sair da zona de risco.
    if(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)&&newBomb)enemy.evadeTimer=Math.max(enemy.evadeTimer||0,Math.max(0,newBomb.t||0)+.18);
    enemy.bombEscapePending=true;
@@ -16748,7 +16749,7 @@ function explode(b){
   }
  }
  if(brokeBlock){rebuildStaticMapCache();}
- for(let i=treasureChests.length-1;i>=0;i--){const chest=treasureChests[i];if(!cells.some(cell=>cell.x===chest.x&&cell.y===chest.y))continue;chest.hp--;chest.hitFlash=.24;spawnTreasureEffect(chest.x+.5,chest.y+.5,"hit");if(chest.hp<=0){treasureChests.splice(i,1);spawnTreasureEffect(chest.x+.5,chest.y+.5,"burst");coinsOnMap.push({x:chest.x+.5,y:chest.y+.5,type:"blue",value:100,phase:Math.random()*Math.PI*2,life:0})}}
+ for(let i=treasureChests.length-1;i>=0;i--){const chest=treasureChests[i];if(!cells.some(cell=>cell.x===chest.x&&cell.y===chest.y))continue;chest.hp--;chest.hitFlash=.24;spawnTreasureEffect(chest.x+.5,chest.y+.5,"hit");if(chest.hp<=0){treasureChests.splice(i,1);spawnTreasureEffect(chest.x+.5,chest.y+.5,"burst");const reward=Math.random()<.15?"blue":"treasureRed";coinsOnMap.push({x:chest.x+.5,y:chest.y+.5,type:reward,value:coinValue(reward),phase:Math.random()*Math.PI*2,life:0})}}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if((e.isHunter||e.isBuilder)&&canSeePlayer(e)){e.mode="chase";e.alert=1.25;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.alert=0;e.lastSeen=null;e.patrolWait=.2}}updateHUD();
@@ -17488,7 +17489,13 @@ function buildTreasureVisualCache(){
  c.strokeStyle="#c5fbff";c.lineWidth=3;c.beginPath();c.ellipse(44,42,28,30,0,0,Math.PI*2);c.stroke();
  c.strokeStyle="#4ccfff";c.lineWidth=2;c.beginPath();c.ellipse(44,42,22,24,0,0,Math.PI*2);c.stroke();
  c.fillStyle="#f0ffff";c.font="bold 19px Arial";c.textAlign="center";c.textBaseline="middle";c.fillText("100",44,43);
- treasureChestBodyCanvas=body;treasureChestLidCanvas=lid;treasureAuraCanvas=aura;treasureGoldSparkCanvas=spark;treasureBlueFlameCanvas=flame;treasureBlueCoinCanvas=coin;treasureVisualsReady=true;
+ const redCoin=document.createElement("canvas");redCoin.width=88;redCoin.height=88;c=redCoin.getContext("2d");
+ g=c.createRadialGradient(29,22,3,44,44,48);g.addColorStop(0,"#fff1df");g.addColorStop(.2,"#ff9a80");g.addColorStop(.52,"#e83c35");g.addColorStop(.82,"#a40f24");g.addColorStop(1,"#430817");
+ c.fillStyle="#4a0b17";c.beginPath();c.ellipse(44,44,37,39,0,0,Math.PI*2);c.fill();c.fillStyle=g;c.beginPath();c.ellipse(44,42,33,35,0,0,Math.PI*2);c.fill();
+ c.strokeStyle="#ffe2a0";c.lineWidth=3;c.beginPath();c.ellipse(44,42,28,30,0,0,Math.PI*2);c.stroke();
+ c.strokeStyle="#ffb54f";c.lineWidth=2;c.beginPath();c.ellipse(44,42,22,24,0,0,Math.PI*2);c.stroke();
+ c.fillStyle="#fff4d6";c.font="bold 22px Arial";c.textAlign="center";c.textBaseline="middle";c.fillText("50",44,43);
+ treasureChestBodyCanvas=body;treasureChestLidCanvas=lid;treasureAuraCanvas=aura;treasureGoldSparkCanvas=spark;treasureBlueFlameCanvas=flame;treasureBlueCoinCanvas=coin;treasureRedCoinCanvas=redCoin;treasureVisualsReady=true;
 }
 function spawnTreasureEffect(x,y,kind){
  const count=kind==="reveal"?24:kind==="burst"?30:7,particles=[];
@@ -17542,7 +17549,7 @@ function drawTreasureChest(chest){
 
 function drawCoin(c){
  const px=ox+c.x*TILE,py=oy+c.y*TILE,spin=Math.abs(Math.cos(c.life*5+c.phase));
- if(c.type==="blue"){if(!treasureVisualsReady)buildTreasureVisualCache();ctx.save();ctx.translate(px,py);ctx.rotate(Math.sin(c.life*2+c.phase)*.1);ctx.scale(.2+.8*spin,1);ctx.drawImage(treasureBlueCoinCanvas,-24,-24,48,48);ctx.restore();return}
+ if(c.type==="blue"||c.type==="treasureRed"){if(!treasureVisualsReady)buildTreasureVisualCache();const sprite=c.type==="blue"?treasureBlueCoinCanvas:treasureRedCoinCanvas;ctx.save();ctx.translate(px,py);ctx.rotate(Math.sin(c.life*2+c.phase)*.1);ctx.scale(.2+.8*spin,1);ctx.drawImage(sprite,-24,-24,48,48);ctx.restore();return}
  const radius=18,color="#ffd928",dark="#a96d00";
  ctx.save();ctx.translate(px,py);ctx.rotate(Math.sin(c.life*2+c.phase)*.12);ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillStyle=dark;ctx.beginPath();ctx.ellipse(0,0,Math.max(4,radius*spin),radius,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,Math.max(3,(radius-2)*spin),radius-2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff4b0";ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(0,0,Math.max(3,(radius-4)*spin),radius-4,0,0,Math.PI*2);ctx.stroke();if(spin>.3){ctx.fillStyle="#fff8d2";ctx.font="bold 17px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("$",0,1)}ctx.restore();
 }
@@ -18345,7 +18352,7 @@ function updateBlueFlameEnemies(dt){
   const routeInDanger=!!(e.path&&e.path.some(p=>danger.has(cellKey(p.x,p.y))));
   // Memória das bombas próximas: percebe uma bomba nova mesmo quando ela
   // ainda não cobre a casa atual, e não esquece uma ameaça durante a fuga.
-  const nearbyBombs=bombs.filter(b=>distance(e.x,e.y,b.x+.5,b.y+.5)<6.2||
+  const nearbyBombs=bombs.filter(b=>distance(e.x,e.y,b.x+.5,b.y+.5)<Math.max(6.2,(Number(b.range)||1)+2.4)||
    getBombDangerCells(b).has(currentKey)||(e.path&&e.path.some(p=>getBombDangerCells(b).has(cellKey(p.x,p.y)))));
   const newNearbyBomb=nearbyBombs.some(b=>!(e.blueFlameTrackedBombs||[]).includes(b));
   if(currentInDanger||routeInDanger||newNearbyBomb||
@@ -18370,7 +18377,7 @@ function updateBlueFlameEnemies(dt){
   // Durante a fuga, recalcula o melhor abrigo/rota quando surgem bombas novas,
   // a rota fica perigosa ou o caminho termina antes de a ameaça desaparecer.
   if(e.mode==="evade"){
-   const localBombs=bombs.filter(b=>distance(e.x,e.y,b.x+.5,b.y+.5)<5.6||
+   const localBombs=bombs.filter(b=>distance(e.x,e.y,b.x+.5,b.y+.5)<Math.max(5.6,(Number(b.range)||1)+1.8)||
     getBombDangerCells(b).has(currentKey));
    for(const bomb of localBombs)e.evadeTimer=Math.max(e.evadeTimer||0,(bomb.t||0)+.68);
    const cellStillFlaming=flames.some(f=>f.t>0&&distance(e.x,e.y,f.x+.5,f.y+.5)<1.05);

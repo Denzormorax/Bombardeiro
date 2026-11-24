@@ -7,7 +7,7 @@ const game = fs.readFileSync(path.join(__dirname, "..", "bombardeirojogo.html"),
 test("drops de inimigos aparecem amarelos e preservam os valores verde e vermelho", () => {
   const create = game.slice(game.indexOf("function createCoin"), game.indexOf("function updateHUD"));
   assert.match(create, /const value=coinValue\(type\)/);
-  assert.match(create, /type:type==="blue"\?"blue":"yellow",value/);
+  assert.match(create, /type:type==="blue"\?"blue":type==="treasureRed"\?"treasureRed":"yellow",value/);
   assert.match(create, /type==="green"\?4:6/);
   const collect = game.slice(game.indexOf("function collectCoins"), game.indexOf("/* LOJINHA */"));
   assert.match(collect, /Number\.isFinite\(c\.value\)\?c\.value:coinValue\(c\.type\)/);

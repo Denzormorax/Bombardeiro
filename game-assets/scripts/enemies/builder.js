@@ -233,7 +233,7 @@
     // Tenta construir em cada atualização enquanto houver bomba ativa.
     // A rotina é isolada deste módulo e não depende da fuga genérica dos demais inimigos.
     for (const activeBomb of ctx.bombs) {
-      if (ctx.distance(enemy.x, enemy.y, activeBomb.x + .5, activeBomb.y + .5) > 5.2) continue;
+      if (ctx.distance(enemy.x, enemy.y, activeBomb.x + .5, activeBomb.y + .5) > Math.max(5.2, (Number(activeBomb.range) || 1) + 2.2)) continue;
       if (ctx.beginShieldBuild(enemy, activeBomb)) return true;
     }
     return false;

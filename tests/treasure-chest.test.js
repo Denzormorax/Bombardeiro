@@ -13,14 +13,16 @@ test("baú é raro: no máximo um por mundo, somente nas fases 1 a 9", () => {
   assert.match(game, /treasureSpawnWorld=null/);
 });
 
-test("baú exige quatro explosões e solta moeda azul de 100 moedas", () => {
+test("baú exige quatro explosões e sorteia moeda azul de 100 ou vermelha de 50, favorecendo a vermelha", () => {
   const explode = game.slice(game.indexOf("function explode(b)"), game.indexOf("function hurtPlayer"));
   assert.match(explode, /chest\.hp--;chest\.hitFlash=\.24/);
   assert.match(explode, /if\(chest\.hp<=0\)\{treasureChests\.splice\(i,1\)/);
   assert.match(explode, /spawnTreasureEffect\(chest\.x\+\.5,chest\.y\+\.5,"burst"\)/);
-  assert.match(explode, /type:"blue",value:100/);
+  assert.match(explode, /Math\.random\(\)<\.15\?"blue":"treasureRed"/);
+  assert.match(explode, /value:coinValue\(reward\)/);
+  assert.match(explode, /coinsOnMap\.push\(\{x:chest\.x\+\.5,y:chest\.y\+\.5,type:reward/);
   const coin = game.slice(game.indexOf("function createCoin"), game.indexOf("function updateHUD"));
-  assert.match(coin, /type==="blue"\?100/);
+  assert.match(coin, /type==="blue"\?100:type==="treasureRed"\?50/);
   const collect = game.slice(game.indexOf("function collectCoins"), game.indexOf("/* LOJINHA */"));
   assert.match(collect, /coins\+=value/);
 });
@@ -34,6 +36,8 @@ test("baú é sólido, tem contornos e maçaneta dourados, animação e partícu
   assert.match(visual, /treasureGoldSparkCanvas=spark/);
   assert.match(visual, /treasureBlueFlameCanvas=flame/);
   assert.match(visual, /treasureBlueCoinCanvas=coin/);
+  assert.match(visual, /treasureRedCoinCanvas=redCoin/);
+  assert.match(visual, /fillText\("50",44,43\)/);
   assert.match(visual, /Math\.abs\(Math\.sin\(t\*4\.15\+chest\.phase\)\)\*3\.2/);
   assert.match(visual, /ctx\.rotate\(-lidOpen\)/);
   assert.match(visual, /drawImage\(treasureAuraCanvas/);

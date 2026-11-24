@@ -13,6 +13,18 @@ test("todos os inimigos usam percepção máxima de quatro blocos com linha de v
   assert.doesNotMatch(vision, /vision=11|vision=9|vision=6\.5/);
 });
 
+test("percepção de bombas aumenta junto com a potência sem substituir os estados atuais", () => {
+  const reaction = game.slice(game.indexOf("function reactToNewBomb"), game.indexOf("function followEnemyPath"));
+  assert.match(reaction, /range= Math\.max\(1,Number\(b\.range\)\)\|\|1/);
+  assert.match(reaction, /perceptionRadius=Math\.max\(baseRadius,range\+2\.2\)/);
+  assert.match(reaction, /if\(currentThreatened\|\|routeThreatened\|\|nearbyBomb/);
+  const escape = game.slice(game.indexOf("function findBombEscapePath"), game.indexOf("function findBlueFlameEscapePath"));
+  assert.match(escape, /distanceWeight=\.28\+Math\.min\(6,maxBlastRange\)\*\.035/);
+  assert.match(escape, /nearestBomb\*distanceWeight/);
+  assert.match(game, /Math\.max\(6\.2,\(Number\(b\.range\)\|\|1\)\+2\.4\)/);
+  assert.match(game, /Math\.max\(5\.2,\(Number\(activeBomb\.range\)\|\|1\)\+2\.2\)/);
+});
+
 test("caçador e boneco de neve patrulham durante a espera da explosão", () => {
   const update = game.slice(game.indexOf("function updateEnemies(dt)"), game.indexOf("/* BOMBAS E COMBATE */"));
   assert.match(update, /if\(enemy\.evadeTimer>0\)\{[\s\S]{0,280}choosePatrolPath\(enemy,danger\)/);
