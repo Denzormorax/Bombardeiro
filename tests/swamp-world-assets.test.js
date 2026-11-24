@@ -56,5 +56,14 @@ test("troncos do pântano soltam lascas, cipós e folhas com sprites em cache", 
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /swampDebrisCache/);
   assert.match(html, /i<36/);
-  assert.match(html, /world==="swamp"\)spawnDestroyedBlockEffect/);
+  assert.match(html, /currentWorld==="swamp"\)spawnDestroyedBlockEffect/);
+});
+
+test("fantasminha suporta três danos de bomba e foge após cada acerto", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  assert.match(html, /hp:3,maxHp:3/);
+  assert.match(html, /enemy\.hp=Math\.max\(0,\(enemy\.hp\?\?3\)-1\)/);
+  assert.match(html, /swampGhostTarget\(enemy,true,danger\)/);
+  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true\)/);
+  assert.match(html, /if\(enemy\.hp<=0\).*?killEnemy\(enemy\)/s);
 });
