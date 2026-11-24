@@ -72,7 +72,9 @@ test("baú ocupa exatamente a célula inteira do bloco destrutível", () => {
 
 test("inimigos comuns percebem bombas próximas e descartam rotas bloqueadas quando a fuga não encontra saída", () => {
   const reaction = game.slice(game.indexOf("function reactToNewBomb"), game.indexOf("function followEnemyPath"));
-  assert.match(reaction, /nearbyBomb=bombs\.some\(b=>distance\(enemy\.x,enemy\.y,b\.x\+\.5,b\.y\+\.5\)<=5\.2\)/);
+  assert.match(reaction, /const baseRadius=enemy\.isMushroom\?4\.8:enemy\.isHorned\?5\.2:4\.8/);
+  assert.match(reaction, /<=Math\.max\(baseRadius,range\+2\.2\)/);
+  assert.match(reaction, /if\(isStandardBombEvader\(enemy\)\)/);
   const update = game.slice(game.indexOf("function updateEnemies(dt)"), game.indexOf("/* BOMBAS E COMBATE */"));
   assert.match(update, /const routeBlockedByBomb=!!\(enemy\.path&&enemy\.path\.some\(p=>bombAt\(p\.x,p\.y\)\)\)/);
   assert.match(update, /if\(routeInDanger\|\|routeBlockedByBomb\)/);
