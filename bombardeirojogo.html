@@ -17135,14 +17135,14 @@ function drawWaterPuddle(p){
   if(!volcanoWaterPuddleFrames.length)buildWorldPuddleFrames(volcanoWaterPuddleFrames,["#70251b","#b9361d","#ed5a25","#ff9b39","#ffe078"],[[[8,8],[28,16],[36,32]],[[12,12],[32,8],[20,32]],[[24,8],[8,28],[36,24]],[[32,12],[16,32],[8,8]]]);
   frames=volcanoWaterPuddleFrames;
  }else if(!waterPuddleFramesReady)buildWaterPuddleFrames();
- const frame=Math.floor(gameClock*5.5+p.phase)%frames.length;
+ const frame=currentWorld==="ice"?0:Math.floor(gameClock*5.5+p.phase)%frames.length;
  const px=ox+p.x*TILE,py=oy+p.y*TILE;
  ctx.save();ctx.globalAlpha=.96;ctx.drawImage(frames[frame],px,py,TILE,TILE);ctx.restore();
  if(currentWorld==="ice")drawIcePuddleShimmer(p,px,py);
  if(currentWorld==="volcano")drawLavaPoolSmoke(p,px,py);
 }
 function drawIcePuddleShimmer(p,px,py){
- // Reflexo diagonal cintilante, usando o brilho pré-renderizado dos blocos indestrutíveis.
+ // Duas listras brancas paralelas atravessam a poça na diagonal; a água permanece estática.
  const phase=(gameClock*.32+((p.x*7+p.y*13)%23)/23)%1;
  const pulse=.58+.42*Math.sin(phase*Math.PI*2);
  const travel=(phase-.5)*(TILE+40);
@@ -17150,7 +17150,8 @@ function drawIcePuddleShimmer(p,px,py){
  ctx.globalAlpha=pulse;
  ctx.translate(px+TILE*.5+travel,py+TILE*.5+travel);
  ctx.rotate(Math.PI/4);
- ctx.drawImage(pillarShimmerCanvas,-20,-28,40,56);
+ ctx.drawImage(pillarShimmerCanvas,-31,-28,40,56);
+ ctx.drawImage(pillarShimmerCanvas,-9,-28,40,56);
  ctx.restore();
 }
 function buildThemedSpriteSheets(){
