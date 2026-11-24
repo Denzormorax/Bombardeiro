@@ -82,14 +82,14 @@ test("brilho diagonal dos blocos indestrutíveis do Pântano usa verde escuro ma
 
 test("fantasminhas do pântano não bloqueiam a rota uns dos outros e se afastam suavemente", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /function swampGhostSpread\\(ghost,dt\\)/);
-  assert.match(html, /function swampGhostCanOccupy\\(ghost,x,y\\)\\{return swampGhostStand\\(x,y\\)\\}/);
-  assert.match(html, /swampGhostSpread\\(ghost,dt\\);/);
+  assert.match(html, /function swampGhostSpread\(ghost,dt\)/);
+  assert.match(html, /function swampGhostCanOccupy\(ghost,x,y\)\{return swampGhostStand\(x,y\)\}/);
+  assert.match(html, /swampGhostSpread\(ghost,dt\);/);
   assert.match(html, /let head=0,goal=-1,bestScore=-Infinity/);
 });
 test("teletransporte periódico dos fantasminhas também continua durante a perseguição", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /g\\.patrolTeleportTimer=Math\\.max\\(0,\\(g\\.patrolTeleportTimer\\?\\?4\\)-dt\\)/);
-  assert.match(html, /swampGhostStartTeleport\\(g,target,!g\\.alerted,true\\)/);
-  assert.match(html, /ctx\\.drawImage\\(swampGhostBody,-33,-39,66,77\\)/);
+  assert.match(html, /g\.patrolTeleportTimer=Math\.max\(0,\(g\.patrolTeleportTimer\?\?4\)-dt\)/);
+  assert.match(html, /swampGhostStartTeleport\(g,target,!g\.alerted,true\)/);
+  assert.match(html, /ctx\.drawImage\(swampGhostBody,-33,-39,66,77\)/);
 });
