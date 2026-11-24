@@ -110,7 +110,7 @@ test("aparição de perseguição usa espiral lenta e não coloca o fantasma sob
   assert.match(html, /style==="chase"\?2\.2:style==="bomb"\?1\.8/);
   assert.match(html, /g\.teleportStyle==="chase"&&g\.teleportSwapped/);
   assert.match(html, /g\.spiralEmitClock/);
-  assert.match(html, /ctx\.rotate\(\(1-revealProgress\)\*Math\.PI\*2\.15\)/);
+  assert.match(html, /ctx\.rotate\(\(1-revealProgress\)\*Math\.PI\*3\.2\)/);
 });
 
 test("fantasmas do Pântano patrulham e perseguem mais devagar", () => {
