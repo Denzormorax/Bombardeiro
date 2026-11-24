@@ -15798,7 +15798,7 @@ let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
 let dirtParticles=[],waterPuddles=[],waterParticles=[],builderBuildAnimations=[];
 const destroyedBlockEffects=[];
-const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[],iceWaterPuddleFrames=[];let waterPuddleFramesReady=false;
+const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[];let waterPuddleFramesReady=false;
 let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
 let basePlayerSpeed=4.0,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
@@ -16600,10 +16600,6 @@ function updateEnemies(dt){
 function placeBomb(){
  if(!running||paused||customizing||bombCooldown>0||activeBombs>=maxBombs)return;const x=Math.floor(player.x),y=Math.floor(player.y);if(bombAt(x,y))return;
  const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};
- if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y))){
-  const directionX=player.facingX||0,directionY=player.facingY||(directionX===0?1:0);
-  bomb.slide={dx:directionX,dy:directionY,icePuddle:true};bomb.slideClock=0;
- }
  if(currentWorld==="desert"&&waterPuddleCells.has(cellKey(x,y))){const exits=waterPuddles.filter(p=>(p.x!==x||p.y!==y)&&!bombAt(p.x,p.y)&&map[p.y]?.[p.x]===0);if(exits.length){const destination=exits[Math.floor(Math.random()*exits.length)];bomb.whirlwind={toX:destination.x,toY:destination.y,t:0,duration:.82,moved:false}}}
  bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
 }
@@ -16617,12 +16613,7 @@ function tryPushBomb(dx,dy){
 function updateSlidingBombs(dt){
  for(const b of bombs){if(!b.slide)continue;b.slideClock-=dt;if(b.slideClock>0)continue;b.slideClock=.105;const nx=b.x+b.slide.dx,ny=b.y+b.slide.dy,nextTile=tileAt(nx,ny),otherBomb=bombs.some(other=>other!==b&&Math.floor(other.x)===nx&&Math.floor(other.y)===ny);
   if(nextTile!==0||otherBomb){b.slide=null;b.t=Math.min(b.t,.12);continue}
-  const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);
-  if(enemy){
-   if(b.slide.icePuddle){b.slide=null;b.t=Math.min(b.t,dt);continue}
-   b.x=nx;b.y=ny;b.slide=null;b.t=Math.min(b.t,.12);continue
-  }
-  b.x=nx;b.y=ny;
+  const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);if(enemy){b.x=nx;b.y=ny;b.slide=null;b.t=Math.min(b.t,.12);continue}b.x=nx;b.y=ny;
  }
 }
 function isInsideFlameDamage(entity,cell){
@@ -17125,10 +17116,7 @@ function drawLavaPoolSmoke(p,px,py){
 }
 function drawWaterPuddle(p){
  let frames=waterPuddleFrames;
- if(currentWorld==="ice"){
-  if(!iceWaterPuddleFrames.length)buildWorldPuddleFrames(iceWaterPuddleFrames,["#061b46","#0b3d82","#2879bd","#8fdcff","#f7fdff"],[[[8,8],[28,16],[36,32]],[[12,12],[32,8],[20,32]],[[24,8],[8,28],[36,24]],[[32,12],[16,32],[8,8]]]);
-  frames=iceWaterPuddleFrames;
- }else if(currentWorld==="desert"){
+ if(currentWorld==="desert"){
   if(!desertWaterPuddleFrames.length)buildDesertQuicksandFrames(desertWaterPuddleFrames);
   frames=desertWaterPuddleFrames;
  }else if(currentWorld==="volcano"){
@@ -17138,20 +17126,7 @@ function drawWaterPuddle(p){
  const frame=Math.floor(gameClock*5.5+p.phase)%frames.length;
  const px=ox+p.x*TILE,py=oy+p.y*TILE;
  ctx.save();ctx.globalAlpha=.96;ctx.drawImage(frames[frame],px,py,TILE,TILE);ctx.restore();
- if(currentWorld==="ice")drawIcePuddleShimmer(p,px,py);
  if(currentWorld==="volcano")drawLavaPoolSmoke(p,px,py);
-}
-function drawIcePuddleShimmer(p,px,py){
- // Mesmo reflexo diagonal dos blocos indestrutíveis, usando o canvas pré-renderizado.
- const phase=(gameClock*.32+((p.x*7+p.y*13)%23)/23)%1;
- const pulse=.58+.42*Math.sin(phase*Math.PI*2);
- const travel=(phase-.5)*(TILE+40);
- ctx.save();ctx.beginPath();ctx.rect(px+1,py+1,TILE-2,TILE-2);ctx.clip();
- ctx.globalAlpha=pulse;
- ctx.translate(px+TILE*.5+travel,py+TILE*.5+travel);
- ctx.rotate(Math.PI/4);
- ctx.drawImage(pillarShimmerCanvas,-20,-28,40,56);
- ctx.restore();
 }
 function buildThemedSpriteSheets(){
  // Cada faixa da folha contém arte própria de uma fase; pré-renderização feita uma única vez.
