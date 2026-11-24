@@ -16478,7 +16478,7 @@ function startSnowmanFreeze(enemy,bomb){
  if(!bomb.activeSlotReleased){activeBombs=Math.max(0,activeBombs-1);bomb.activeSlotReleased=true}
  bomb.ownerPass=false;
  // Mantém a permissão temporária de atravessar a própria bomba até o jogador sair dela.
- enemy.freezingBomb=bomb;enemy.freezeCooldown=2.05;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;enemy.mode="chase";
+ enemy.freezingBomb=bomb;enemy.freezeCooldown=2.05;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;enemy.mode="chase";enemy.alert=3.2;enemy.lastSeen={x:player.x,y:player.y};
  const dx=bomb.x+.5-enemy.x,dy=bomb.y+.5-enemy.y;
  if(Math.abs(dx)>=Math.abs(dy)){enemy.facingX=Math.sign(dx);enemy.facingY=0}else{enemy.facingX=0;enemy.facingY=Math.sign(dy)}
  return true;
