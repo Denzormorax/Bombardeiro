@@ -71,11 +71,12 @@ test("poças congeladas mantêm a textura parada e usam duas linhas nítidas em 
 
 test("inimigos do Gelo fogem da bomba recém-colocada e o Caçador acelera na fuga", () => {
   const reaction=game.slice(game.indexOf("function reactToNewBomb"),game.indexOf("function followEnemyPath"));
-  assert.ok(reaction.includes('currentWorld==="ice"&&bombs.some'));
-  assert.ok(reaction.includes('enemy.bombReactionTimer=currentWorld==="ice"?(enemy.isHunter ? .01 : .025)'));
+  assert.ok(reaction.includes("if(isStandardBombEvader(enemy)){"));
+  assert.ok(reaction.includes("enemy.bombReactionTimer=0"));
+  assert.ok(reaction.includes("enemy.speed=Math.max(enemy.speed||0,(enemy.baseSpeed||1)*1.08)"));
   const update=game.slice(game.indexOf("function updateEnemies(dt)"),game.indexOf("/* BOMBAS E COMBATE */"));
   assert.ok(update.includes("currentWorld==="+'"'+"ice"+'"'+"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath"));
-  assert.ok(update.includes("enemy.isHunter?enemy.huntSpeed*1.3"));
+  assert.ok(update.includes("enemy.isHunter?enemy.huntSpeed*1.35"));
 });
 
 test("bombas nas poças congeladas param em obstáculos sem detonar antes do temporizador", () => {
@@ -155,7 +156,8 @@ test("Boneco de Neve só retoma a perseguição após o sopro quando vê o jogad
 test("Caçador e Boneco de Neve limitam a fuga a dois blocos quando há rota segura", () => {
   const escape=game.slice(game.indexOf("function findBombEscapePath"),game.indexOf("function findBlueFlameEscapePath"));
   assert.ok(escape.includes('currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)'));
-  assert.ok(escape.includes("maxSteps=shortFlee?2:COLS*ROWS"));
+  assert.ok(escape.includes("maxSteps=preferCover?5:(shortFlee?2:COLS*ROWS)"));
+  assert.ok(escape.includes('const shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)'));
   assert.ok(escape.includes("if(!safe.length&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true)"));
   const blue=game.slice(game.indexOf("function findBlueFlameEscapePath"),game.indexOf("function spawnSandBuildParticles"));
   assert.ok(blue.includes("((enemy.isHunter||enemy.isSnowman)?2:COLS*ROWS)"));
