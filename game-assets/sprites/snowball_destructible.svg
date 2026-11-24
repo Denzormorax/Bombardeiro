@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-<title>Bola de neve apoiada no chão — Mundo 4</title>
-<desc>Bola de neve tridimensional branca e azul-gelo, com base levemente achatada e neve compactada no contato com o chão, pequenas saliências de neve derretendo e sombra curta.</desc>
+<title>Bola de neve em contato com o chão, com neve começando a derreter — Mundo 4</title>
+<desc>Bola de neve tridimensional branca e azul-gelo, com base levemente achatada tocando o chão e pequenas poças e gotas de neve derretida; sem sombra projetada.</desc>
 <defs>
  <radialGradient id="snow" cx="31%" cy="20%" r="78%">
   <stop offset="0" stop-color="#fff"/><stop offset=".28" stop-color="#fbfeff"/><stop offset=".58" stop-color="#e9f7ff"/><stop offset=".82" stop-color="#c6e4f4"/><stop offset="1" stop-color="#78a9c9"/>
@@ -26,12 +26,9 @@
   <path d="M20 17l3-1" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".75"/>
  </pattern>
 </defs>
-<!-- Sombra curta: a base toca o piso, sem halo de flutuação -->
-<ellipse cx="256" cy="418" rx="91" ry="7" fill="#315f80" opacity=".26"/>
-<ellipse cx="256" cy="417" rx="66" ry="3.5" fill="#274e70" opacity=".2"/>
-<!-- Pequena borda de neve comprimida/derretendo no contato -->
-<path d="M158 390 C177 397 195 400 215 399 C230 398 238 405 253 404 C270 403 282 398 298 400 C321 402 341 396 354 389 C350 404 333 411 311 412 C291 414 278 411 257 413 C233 415 214 411 193 412 C175 412 163 404 158 390Z" fill="url(#melt)" stroke="#b7e0f4" stroke-width="2"/>
-<path d="M181 402c9 3 16 3 24 1m73 3c9 1 17-1 25-4m-112 2c4 4 9 5 15 5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+<!-- Pequena poça translúcida de neve derretida, diretamente sob a base; sem sombra -->
+<path d="M145 408 C163 402 180 404 197 408 C216 412 230 409 248 408 C270 407 285 412 304 408 C326 403 345 404 367 410 C354 418 335 420 314 418 C294 416 279 421 256 420 C231 421 213 417 192 419 C171 420 155 416 145 408Z" fill="#bcecff" opacity=".58" stroke="#e9faff" stroke-width="2"/>
+<path d="M169 411c12 3 20 3 31 1m102 2c13 1 23-1 34-4" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".82"/>
 <!-- Silhueta compactada e discretamente achatada na base -->
 <path d="M256 88 C337 88 402 135 426 207 C451 281 428 344 391 379 C360 408 314 414 256 414 C198 414 152 408 121 379 C84 344 61 281 86 207 C110 135 175 88 256 88Z" fill="url(#snow)" stroke="#d8effb" stroke-width="3"/>
 <g clip-path="url(#ballClip)">
@@ -42,6 +39,10 @@
  <path d="M148 321c29 23 61 31 94 27M282 343c25-5 46-17 61-36" fill="none" stroke="#78a9c8" stroke-width="5" stroke-linecap="round" opacity=".2"/>
  <ellipse cx="207" cy="157" rx="72" ry="35" fill="#fff" opacity=".2" transform="rotate(-28 207 157)"/>
 </g>
+<!-- Pequenas gotas escorrendo da neve na linha de contato com o piso -->
+<path d="M178 397c-2 5-3 8-1 11 2 2 5 1 6-2 1-3-2-6-5-9Z" fill="#dff7ff" stroke="#b8e6fa" stroke-width="1.5" opacity=".95"/>
+<path d="M329 396c-2 4-3 7-1 9 2 2 5 1 6-2 1-3-2-5-5-7Z" fill="#dff7ff" stroke="#b8e6fa" stroke-width="1.5" opacity=".9"/>
+<path d="M250 405c-1.5 3-2 5-.5 7 1.5 1.5 4 .5 4.5-1.5.5-2-2-4-4-5.5Z" fill="#f4fdff" opacity=".9"/>
 <ellipse cx="211" cy="151" rx="47" ry="22" fill="#fff" opacity=".38" transform="rotate(-32 211 151)"/>
 <path d="M145 207c12-48 47-83 91-96" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".65"/>
 <path d="M358 303c-15 43-49 71-91 82" fill="none" stroke="#6f9fbd" stroke-width="5" stroke-linecap="round" opacity=".22"/>
