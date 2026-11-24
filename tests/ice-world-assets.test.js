@@ -146,9 +146,9 @@ test("bomba congelada funciona como bloco destrutível e entra na detonação em
 });
 
 
-test("Boneco de Neve mantém a perseguição após terminar o sopro de gelo", () => {
-  assert.ok(game.includes('enemy.alert=3.2;enemy.lastSeen={x:player.x,y:player.y}'));
-  assert.ok(game.includes("if(player.passBomb===bomb)player.passBomb=null")===false);
+test("Boneco de Neve só retoma a perseguição após o sopro quando vê o jogador a até quatro blocos", () => {
+  assert.ok(game.includes('const visible=canSeePlayer(enemy)'));
+  assert.ok(game.includes('enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null'));
 });
 
 test("Caçador e Boneco de Neve limitam a fuga a dois blocos quando há rota segura", () => {
@@ -174,10 +174,12 @@ test("Boneco de Neve não inicia congelamento simultâneo de várias bombas", ()
   assert.ok(game.includes('!enemy.freezingBomb&&(enemy.freezeCooldown||0)<=0&&startSnowmanFreeze(enemy,newBomb)'));
 });
 
-test("Caçador e Boneco de Neve aguardam a explosão após a fuga curta", () => {
+test("Caçador e Boneco de Neve patrulham após a fuga curta enquanto monitoram a bomba", () => {
   const reaction=game.slice(game.indexOf("function reactToNewBomb"),game.indexOf("function followEnemyPath"));
   assert.ok(reaction.includes("enemy.evadeTimer=Math.max(enemy.evadeTimer||0,Math.max(0,newBomb.t||0)+.18)"));
   const update=game.slice(game.indexOf("function updateEnemies(dt)"),game.indexOf("/* BOMBAS E COMBATE */"));
   assert.ok(update.includes('if(!(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)))enemy.evadeTimer=0'));
-  assert.ok(update.includes("if(enemy.evadeTimer>0)continue"));
+  assert.ok(update.includes("if(enemy.evadeTimer>0){"));
+  assert.ok(update.includes("choosePatrolPath(enemy,danger)"));
+  assert.ok(update.includes('enemy.mode="evade"'));
 });
