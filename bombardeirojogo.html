@@ -15637,14 +15637,17 @@ function createPillarShimmerCanvas(color,highlight,intensity=1){
  const tint=alpha=>`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
  const band=c.createLinearGradient(0,0,40,0);
  band.addColorStop(0,"rgba(255,255,255,0)");
- band.addColorStop(.28,tint(.22*intensity));
+ if(intensity===1)band.addColorStop(.28,color.replace(")",",.22)").replace("rgb","rgba"));
+ else band.addColorStop(.28,tint(.22*intensity));
  band.addColorStop(.5,highlight);
- band.addColorStop(.72,tint(.22*intensity));
+ if(intensity===1)band.addColorStop(.72,color.replace(")",",.22)").replace("rgb","rgba"));
+ else band.addColorStop(.72,tint(.22*intensity));
  band.addColorStop(1,"rgba(255,255,255,0)");
  c.fillStyle=band;c.fillRect(0,0,40,56);
  const cloud=c.createRadialGradient(20,28,1,20,28,20);
  cloud.addColorStop(0,highlight);
- cloud.addColorStop(.45,tint(.40*intensity));
+ if(intensity===1)cloud.addColorStop(.45,color.replace(")",",.40)").replace("rgb","rgba"));
+ else cloud.addColorStop(.45,tint(.40*intensity));
  cloud.addColorStop(1,"rgba(255,255,255,0)");
  c.fillStyle=cloud;c.fillRect(0,8,40,40);
  return canvas;
@@ -19315,6 +19318,8 @@ function updateSwampGhost(g,dt,danger){
  if(g.trailClock<=0&&!g.teleporting){g.trailClock=.085;for(let n=0;n<3;n++){const a=Math.random()*6.28,s=.06+Math.random()*.28,life=.42+Math.random()*.34;g.particles.push({x:g.x+(Math.random()-.5)*.16,y:g.y+.17+(Math.random()-.5)*.12,vx:Math.cos(a)*s,vy:Math.sin(a)*s-.1,t:life,life,size:2.7+Math.random()*4.3})}if(g.particles.length>48)g.particles.splice(0,g.particles.length-48)}
  if(g.teleporting>0){g.teleporting=Math.max(0,g.teleporting-dt);if(!g.teleportSwapped&&g.teleporting<=g.teleportSwapAt){if(g.teleportDestination){g.x=g.teleportDestination.x;g.y=g.teleportDestination.y;swampGhostBurst(g.x,g.y,22)}g.teleportSwapped=true}if(g.teleporting<=0){g.teleportDestination=null;g.teleportSwapped=false;g.patrolWait=.12;g.chaseRepath=0}return}
  g.teleportCooldown=Math.max(0,g.teleportCooldown-dt);
+ const currentKey=cellKey(Math.floor(g.x),Math.floor(g.y));
+ if(danger.has(currentKey)||(g.path.length&&danger.has(cellKey(g.path[0].x,g.path[0].y)))){g.path=[];g.chaseRepath=0;g.patrolWait=0}
  if(!g.alerted&&g.teleportCooldown<=0&&swampGhostSees(g)){const target=swampGhostTarget(g,false,danger);if(target){g.alerted=true;g.chaseRepath=0;swampGhostStartTeleport(g,target,false);return}}
  if(g.alerted){
   g.chaseRepath=Math.max(0,(g.chaseRepath||0)-dt);
