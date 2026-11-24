@@ -89,7 +89,8 @@ test("fuga de bombas é limitada a cinco casas, prioriza abrigo e reage sem paus
   assert.match(escape, /const maxSteps=5/);
   assert.match(escape, /isBehindBombCover/);
   const iceEscape = game.slice(game.indexOf("function findBlueFlameEscapePath"), game.indexOf("function spawnSandBuildParticles"));
-  assert.match(iceEscape, /if\(p\.path\.length>=5\)continue/);
+  assert.match(iceEscape, /p\.path\.length>=\(\(enemy\.isHunter\|\|enemy\.isSnowman\)\?2:COLS\*ROWS\)/);
+  assert.match(iceEscape, /return findBombEscapePath\(enemy,danger,false,true\)/);
   const update = game.slice(game.indexOf("function updateEnemies(dt)"), game.indexOf("/* BOMBAS E COMBATE */"));
   assert.match(update, /findBombEscapePath\(enemy,danger,true\)/);
   assert.match(update, /enemy\.baseSpeed\*1\.45/);
