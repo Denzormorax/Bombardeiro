@@ -36,5 +36,5 @@ test("flocos da bola de neve caem dentro da bola e desaparecem no montinho", () 
   assert.ok(game.includes("buildSnowballParticleSpecs();"));
   assert.ok(game.includes("drawSnowballParticles();"));
   assert.ok(game.includes('currentWorld==="ice")spawnDestroyedBlockEffect'));
-  assert.doesNotMatch(snowball, /<animate\\b/i);
+  assert.ok(!snowball.includes("<animate"));
 });
