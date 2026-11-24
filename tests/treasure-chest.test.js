@@ -155,18 +155,18 @@ test("explosões reutilizam sprites de chama e colisões espaciais", () => {
 
 
 test("fantasmas se afastam suavemente sem bloquear as rotas uns dos outros", () => {
-  assert.match(game, /function swampGhostBlockedByOther\(ghost,x,y,radius=\.445\)\{return false\}/);
-  assert.match(game, /function swampGhostCanOccupy\(ghost,x,y\)\{return swampGhostStand\(x,y)\}/);
-  assert.match(game, /function swampGhostSpread\(ghost,dt\)/);
+  assert.ok(game.includes("function swampGhostBlockedByOther(ghost,x,y,radius=.445){return false}"));
+  assert.ok(game.includes("function swampGhostCanOccupy(ghost,x,y){return swampGhostStand(x,y)}"));
+  assert.ok(game.includes("function swampGhostSpread(ghost,dt)"));
   const move = game.slice(game.indexOf("function swampGhostMove"), game.indexOf("function swampGhostSees"));
-  assert.match(move, /swampGhostCanOccupy\(ghost,nx,ghost\.y\)/);
-  assert.match(move, /swampGhostCanOccupy\(ghost,ghost\.x,ny\)/);
-  assert.match(move, /swampGhostSpread\(ghost,dt\)/);
+  assert.ok(move.includes("swampGhostCanOccupy(ghost,nx,ghost.y)"));
+  assert.ok(move.includes("swampGhostCanOccupy(ghost,ghost.x,ny)"));
+  assert.ok(move.includes("swampGhostSpread(ghost,dt)"));
   const patrol = game.slice(game.indexOf("function swampGhostPath"), game.indexOf("function swampGhostChasePath"));
   const chase = game.slice(game.indexOf("function swampGhostChasePath"), game.indexOf("function swampGhostBombEscapePath"));
-  assert.match(patrol, /swampGhostBlockedByOther\(ghost,x\+\.5,y\+\.5,\.72\)/);
-  assert.match(chase, /const score=Math\.min\(nearest,3\)\*2\.2/);
-  assert.match(game, /swampGhostSpread\(ghost,dt\);/);
+  assert.ok(patrol.includes("swampGhostBlockedByOther(ghost,x+.5,y+.5,.72)"));
+  assert.ok(chase.includes("const score=Math.min(nearest,3)*2.2"));
+  assert.ok(game.includes("swampGhostSpread(ghost,dt);"));
 });
 test("teleporte aleatório de patrulha acontece em intervalo variável de dois a quatro segundos", () => {
   assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);
