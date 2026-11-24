@@ -83,3 +83,32 @@ test("fantasminha volta à patrulha após receber dano e persegue mais rápido q
   assert.match(game, /enemy\.teleportCooldown=\.2/);
   assert.match(game, /g\.speed=\(g\.baseSpeed\|\|g\.speed\|\|1\.12\)\*1\.45/);
 });
+
+test("fuga de bombas é limitada a cinco casas, prioriza abrigo e reage sem pausa", () => {
+  const escape = game.slice(game.indexOf("function findBombEscapePath"), game.indexOf("function findBlueFlameEscapePath"));
+  assert.match(escape, /const maxSteps=5/);
+  assert.match(escape, /isBehindBombCover/);
+  const reaction = game.slice(game.indexOf("function reactToNewBomb"), game.indexOf("function followEnemyPath"));
+  assert.match(reaction, /routeBlockedByBomb\|\|nearbyBomb/);
+  assert.match(reaction, /enemy\.bombReactionTimer=0/);
+});
+test("fantasma aparece rapidamente, patrulha com teletransportes e desvia de bombas", () => {
+  assert.match(game, /const duration=fast\?\.48:escape\?\.42:\.48/);
+  assert.match(game, /function swampGhostBombEscapePath/);
+  assert.match(game, /g\.bombEvading/);
+  assert.match(game, /patrolTeleportTimer:4\+Math\.random\(\)\*4/);
+  assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
+});
+test("fantasma mostra três segmentos de vida após o primeiro dano", () => {
+  const draw = game.slice(game.indexOf("function drawSwampGhost"), game.indexOf("const swampDamageEnemyBase"));
+  assert.match(draw, /if\(g\.hp<g\.maxHp\)/);
+  assert.match(draw, /for\(let i=0;i<3;i\+\+\)/);
+  assert.match(draw, /g\.hurtTimer>0/);
+});
+test("explosões reutilizam sprites de chama e colisões espaciais", () => {
+  assert.match(game, /function buildFlameSpriteVariant/);
+  assert.match(game, /flameSpriteCache\.push\(buildFlameSpriteVariant\(i\)\)/);
+  assert.match(game, /const flameBuckets=new Map\(\)/);
+  assert.match(game, /flameBuckets\.clear\(\)/);
+  assert.match(game, /flameBuckets\.get\(cellKey\(ex\+dx,ey\+dy\)\)/);
+});
