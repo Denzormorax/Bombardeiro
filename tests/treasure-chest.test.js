@@ -111,11 +111,26 @@ test("fantasma aparece rapidamente, patrulha com teletransportes e desvia de bom
   assert.match(game, /patrolTeleportTimer:4\+Math\.random\(\)\*4/);
   assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
 });
-test("fantasma mostra três segmentos de vida após o primeiro dano", () => {
+test("fantasma exibe três segmentos brancos desde o início e deixa cada segmento transparente ao perder vida", () => {
   const draw = game.slice(game.indexOf("function drawSwampGhost"), game.indexOf("const swampDamageEnemyBase"));
-  assert.match(draw, /if\(g\.hp<g\.maxHp\)/);
+  assert.doesNotMatch(draw, /if\(g\.hp<g\.maxHp\)/);
   assert.match(draw, /for\(let i=0;i<3;i\+\+\)/);
+  assert.match(draw, /active\?"#ffffff":"rgba\(255,255,255,\.10\)"/);
+  assert.match(draw, /active\?"#ffffff":"rgba\(255,255,255,\.48\)"/);
   assert.match(draw, /g\.hurtTimer>0/);
+});
+test("fantasma detecta o jogador em raio circular de três blocos", () => {
+  const vision = game.slice(game.indexOf("function swampGhostSees"), game.indexOf("function swampGhostTarget"));
+  assert.match(vision, /dist>3\)return false/);
+  assert.match(vision, /Math\.hypot\(dx,dy\)/);
+});
+test("após sofrer dano o fantasma limpa o estado de fuga e reinicia patrulha e teleporte", () => {
+  const damage = game.slice(game.indexOf("const swampDamageEnemyBase"), game.indexOf("const swampNewLevelBase"));
+  assert.match(damage, /enemy\.alerted=false;enemy\.mode="patrol"/);
+  assert.match(damage, /enemy\.bombEvading=false;enemy\.bombEvadeRepath=0/);
+  assert.match(damage, /enemy\.patrolWait=0/);
+  assert.match(damage, /enemy\.patrolTeleportTimer=1\+Math\.random\(\)\*1\.5/);
+  assert.match(damage, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
 });
 test("explosões reutilizam sprites de chama e colisões espaciais", () => {
   assert.match(game, /function buildFlameSpriteVariant/);

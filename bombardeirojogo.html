@@ -19364,7 +19364,7 @@ function swampGhostBombEscapePath(ghost,danger){
  return candidates.length?candidates[0].path:[];
 }
 function swampGhostMove(ghost,dt){const p=ghost.path[0];if(!p)return;const tx=p.x+.5,ty=p.y+.5,dx=tx-ghost.x,dy=ty-ghost.y,dist=Math.hypot(dx,dy);if(dist<.055){ghost.x=tx;ghost.y=ty;ghost.path.shift();return}const step=Math.min(dist,ghost.speed*dt);if(Math.abs(dx)>=Math.abs(dy)){const nx=ghost.x+Math.sign(dx)*step;if(swampGhostStand(nx,ghost.y)){ghost.x=nx;ghost.facingX=Math.sign(dx);ghost.facingY=0}else ghost.path=[]}else{const ny=ghost.y+Math.sign(dy)*step;if(swampGhostStand(ghost.x,ny)){ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(dy)}else ghost.path=[]}}
-function swampGhostSees(ghost){const dx=player.x-ghost.x,dy=player.y-ghost.y,dist=Math.hypot(dx,dy);if(dist>4)return false;for(let i=1,n=Math.ceil(dist*16);i<n;i++){const t=i/n;if(tileAt(Math.floor(ghost.x+dx*t),Math.floor(ghost.y+dy*t))===1)return false}return true}
+function swampGhostSees(ghost){const dx=player.x-ghost.x,dy=player.y-ghost.y,dist=Math.hypot(dx,dy);if(dist>3)return false;for(let i=1,n=Math.ceil(dist*16);i<n;i++){const t=i/n;if(tileAt(Math.floor(ghost.x+dx*t),Math.floor(ghost.y+dy*t))===1)return false}return true}
 function swampGhostTarget(ghost,escape,danger){const out=[];if(!escape){for(const d of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){const x=player.x+d[0]*.64,y=player.y+d[1]*.64,k=cellKey(Math.floor(x),Math.floor(y));if((danger&&danger.has(k))||!swampGhostStand(x,y)||distance(x,y,player.x,player.y)<.5)continue;out.push({x,y})}}else{for(let i=0;i<110;i++){const x=1.5+Math.floor(Math.random()*(COLS-2)),y=1.5+Math.floor(Math.random()*(ROWS-2)),k=cellKey(Math.floor(x),Math.floor(y));if(!swampGhostOpen(Math.floor(x),Math.floor(y))||waterPuddleCells.has(k)||(danger&&danger.has(k))||distance(x,y,player.x,player.y)<4.6)continue;out.push({x,y});if(out.length>=10)break}}return out.length?out[Math.floor(Math.random()*out.length)]:null}
 function swampGhostStartTeleport(g,target,escape,fast=false){if(!target)return false;const duration=fast?.48:escape?.42:.48;swampGhostBurst(g.x,g.y,fast?14:22);g.teleportDuration=duration;g.teleporting=duration;g.teleportSwapAt=duration*.5;g.teleportDestination=target;g.teleportSwapped=false;g.path=[];g.teleportCooldown=escape?.65:2.1;return true}
 function updateSwampGhost(g,dt,danger){
@@ -19427,12 +19427,10 @@ function drawSwampGhost(g){
  ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=alpha;
  if(g.hurtTimer>0){ctx.shadowColor="#ff526b";ctx.shadowBlur=17}
  ctx.translate(x,y-bob-2);ctx.scale(1+Math.sin(g.phase*.65)*.025,1+Math.sin(g.phase*.65)*.025);ctx.drawImage(swampGhostBody,-36,-43,72,84);ctx.restore();
- if(g.hp<g.maxHp){
-  const barW=38,barH=7,gap=2,segmentW=(barW-gap*2)/3,barX=x-barW/2,barY=y-56;
-  ctx.save();ctx.fillStyle="#101820dd";ctx.fillRect(barX-3,barY-4,barW+6,barH+8);
-  for(let i=0;i<3;i++){const sx=barX+i*(segmentW+gap);ctx.fillStyle=i<g.hp?(g.hp===3?"#70ef8a":g.hp===2?"#ffd45d":"#ff6262"):"#4b3038";ctx.fillRect(sx,barY,segmentW,barH);ctx.strokeStyle="#f5ffff";ctx.lineWidth=1;ctx.strokeRect(sx-.5,barY-.5,segmentW+1,barH+1)}
-  ctx.restore();
- }
+ const barW=38,barH=7,gap=2,segmentW=(barW-gap*2)/3,barX=x-barW/2,barY=y-56;
+ ctx.save();ctx.fillStyle="#101820aa";ctx.fillRect(barX-3,barY-4,barW+6,barH+8);
+ for(let i=0;i<3;i++){const sx=barX+i*(segmentW+gap),active=i<g.hp;ctx.fillStyle=active?"#ffffff":"rgba(255,255,255,.10)";ctx.fillRect(sx,barY,segmentW,barH);ctx.strokeStyle=active?"#ffffff":"rgba(255,255,255,.48)";ctx.lineWidth=1;ctx.strokeRect(sx-.5,barY-.5,segmentW+1,barH+1)}
+ ctx.restore();
 }
 const swampDamageEnemyBase=damageEnemy;
 damageEnemy=function(enemy){
@@ -19441,9 +19439,9 @@ damageEnemy=function(enemy){
  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp??3)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;
  if(enemy.hp<=0){swampGhostBurst(enemy.x,enemy.y,30);killEnemy(enemy);return}
  const danger=getAllBombDangerCells(),destination=swampGhostTarget(enemy,true,danger);
- enemy.alerted=false;enemy.mode="patrol";enemy.lastSeen=null;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.12;enemy.chaseRepath=0;enemy.speed=enemy.baseSpeed||enemy.speed;
- if(destination){swampGhostStartTeleport(enemy,destination,true,true);enemy.teleportCooldown=.2}
- else{swampGhostBurst(enemy.x,enemy.y,22);enemy.teleportCooldown=.2}
+ enemy.alerted=false;enemy.mode="patrol";enemy.lastSeen=null;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=0;enemy.chaseRepath=0;enemy.speed=enemy.baseSpeed||enemy.speed;enemy.bombEvading=false;enemy.bombEvadeRepath=0;enemy.patrolTeleportTimer=1+Math.random()*1.5;
+ if(destination){swampGhostStartTeleport(enemy,destination,true,true)}
+ else{swampGhostBurst(enemy.x,enemy.y,22)}
 };
 const swampNewLevelBase=newLevel;
 newLevel=function(preservePowerUps=false){swampNewLevelBase(preservePowerUps);if(currentWorld==="swamp"&&level>=3&&level<=6)spawnSwampGhosts()};
