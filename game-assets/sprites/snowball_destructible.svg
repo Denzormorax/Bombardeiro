@@ -26,12 +26,7 @@
   <path d="M20 17l3-1" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".75"/>
  </pattern>
 </defs>
-<!-- Monte irregular de neve sob a bola: pequenos montinhos nas laterais e neve úmida na base; sem sombra -->
-<path d="M78 414 C83 405 94 404 103 409 C108 395 122 390 136 399 C145 388 160 390 169 402 C184 397 194 404 199 414 L199 429 L78 429Z" fill="#dff5ff" stroke="#b6e2f6" stroke-width="3"/>
-<path d="M313 414 C320 402 333 397 345 404 C352 391 370 389 380 402 C392 394 408 402 411 413 C422 409 433 414 438 423 L438 430 L313 430Z" fill="#dff5ff" stroke="#b6e2f6" stroke-width="3"/>
-<path d="M89 416c8-8 16-8 23-2m20-8c7-7 15-6 21 1m197 7c8-8 17-8 24-1m22-6c8-6 15-4 20 3" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".9"/>
-<path d="M115 424 C151 418 176 423 203 425 C238 428 272 423 303 424 C340 425 367 418 401 424 C387 434 361 435 337 433 C300 431 276 437 244 434 C209 432 182 437 151 433 C134 432 122 429 115 424Z" fill="#b9e7fa" opacity=".8" stroke="#e8faff" stroke-width="2"/>
-<path d="M143 426c11 3 21 2 31 0m141 2c13 2 25 0 37-3" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+<!-- Bola principal; o monte de neve será desenhado depois dela, em primeiro plano. -->
 <!-- Silhueta compactada e discretamente achatada na base -->
 <path d="M256 88 C337 88 402 135 426 207 C451 281 428 344 391 379 C360 408 314 414 256 414 C198 414 152 408 121 379 C84 344 61 281 86 207 C110 135 175 88 256 88Z" fill="url(#snow)" stroke="#d8effb" stroke-width="3"/>
 <g clip-path="url(#ballClip)">
@@ -56,4 +51,20 @@
  <path d="M178 361l2-5 2 5 5 2-5 2-2 5-2-5-5-2Z" opacity=".85"/>
  <circle cx="337" cy="128" r="2.6"/><circle cx="300" cy="186" r="1.8"/><circle cx="151" cy="286" r="1.7"/>
 </g>
+
+<!-- Monte de neve em PRIMEIRO PLANO: cobre a borda inferior da bola e preenche o centro, sem sombra projetada. -->
+<path d="M78 414 C82 404 91 400 103 405 C108 393 121 388 134 399 C144 388 158 389 169 401 C182 394 197 398 205 408 C219 401 232 405 242 411 C253 403 266 403 278 411 C289 404 304 402 316 408 C326 397 340 394 351 402 C362 389 378 390 388 402 C401 394 416 400 420 411 C432 407 442 414 445 424 L445 441 C416 445 391 439 365 442 C337 446 310 439 282 443 C252 447 225 440 198 443 C168 446 142 440 116 443 C99 444 86 439 78 434Z" fill="#dff5ff" stroke="#a9d9f0" stroke-width="3"/>
+<path d="M86 418 C98 407 108 407 119 414 C128 403 141 400 151 410 C163 400 176 402 185 412 C197 405 210 407 219 416 C232 409 244 411 254 419 C267 410 280 411 291 419 C303 410 317 410 327 418 C339 407 352 405 363 414 C375 403 389 404 399 414 C410 407 423 411 435 421" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".96"/>
+<path d="M94 427 C126 419 151 428 181 425 C210 422 230 430 257 427 C286 423 311 431 339 426 C371 421 398 430 430 425 L426 438 C398 442 373 435 345 440 C314 445 288 437 258 442 C226 446 204 437 177 441 C145 445 119 436 96 438Z" fill="#b8e7fa" opacity=".94" stroke="#eafaff" stroke-width="2"/>
+<path d="M111 420c9-6 17-5 24 1m24-5c8-6 16-5 22 2m35-1c8-5 16-4 22 2m44-1c9-6 17-5 24 2m29-4c8-6 17-5 23 2m30-4c8-5 15-4 21 2" fill="none" stroke="#8fc9e7" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+<!-- Pequenos cristais e flocos na neve frontal. -->
+<g filter="url(#spark)">
+ <path d="M137 410l2.5-6 2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5Z" fill="#fff"/>
+ <path d="M207 426l2-5 2 5 5 2-5 2-2 5-2-5-5-2Z" fill="#fff"/>
+ <path d="M303 416l2.5-6 2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5Z" fill="#fff"/>
+ <path d="M379 424l2-5 2 5 5 2-5 2-2 5-2-5-5-2Z" fill="#fff"/>
+ <circle cx="170" cy="430" r="2.4" fill="#fff"/><circle cx="264" cy="435" r="2.8" fill="#fff"/><circle cx="350" cy="431" r="2.2" fill="#fff"/>
+</g>
+
+
 </svg>
