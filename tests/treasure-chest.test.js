@@ -80,37 +80,19 @@ test("inimigos comuns percebem bombas próximas e descartam rotas bloqueadas qua
   assert.match(update, /if\(routeInDanger\|\|routeBlockedByBomb\)/);
 });
 
-test("fantasminha volta à patrulha após receber dano e persegue mais rápido quando detecta o jogador", () => {
-  assert.match(game, /enemy\.alerted=false;enemy\.mode="patrol";enemy\.lastSeen=null;enemy\.path=\[\]/);
-  assert.match(game, /enemy\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
+test("fantasma preserva a perseguição após reaparecer e acelera ao detectar o jogador", () => {
   assert.match(game, /enemy\.bombEvading=false;enemy\.bombEvadeRepath=0/);
+  assert.match(game, /enemy\.bombTeleportCooldown=1\.1/);
   assert.match(game, /g\.speed=\(g\.baseSpeed\|\|g\.speed\|\|1\.12\)\*1\.45/);
+  assert.match(game, /if\(g\.alerted\)/);
 });
-
-test("fuga de bombas é limitada a cinco casas, prioriza abrigo e reage sem pausa", () => {
+test("a fuga por caminhos permanece apenas nos inimigos comuns, não nos fantasmas do pântano", () => {
   const escape = game.slice(game.indexOf("function findBombEscapePath"), game.indexOf("function findBlueFlameEscapePath"));
   assert.match(escape, /const maxSteps=preferCover\?5:\(shortFlee\?2:COLS\*ROWS\)/);
-  assert.match(escape, /const desertHunter=currentWorld==="desert"&&enemy\.isHunter/);
-  assert.match(escape, /isBehindBombCover/);
-  const iceEscape = game.slice(game.indexOf("function findBlueFlameEscapePath"), game.indexOf("function spawnSandBuildParticles"));
-  assert.match(iceEscape, /p\.path\.length>=\(\(enemy\.isHunter\|\|enemy\.isSnowman\)\?2:COLS\*ROWS\)/);
-  assert.match(iceEscape, /return findBombEscapePath\(enemy,danger,false,true\)/);
   const update = game.slice(game.indexOf("function updateEnemies(dt)"), game.indexOf("/* BOMBAS E COMBATE */"));
   assert.match(update, /findBombEscapePath\(enemy,danger,true\)/);
-  assert.match(update, /enemy\.baseSpeed\*1\.45/);
-  const reaction = game.slice(game.indexOf("function reactToNewBomb"), game.indexOf("function followEnemyPath"));
-  assert.match(game, /function isStandardBombEvader\(enemy\)/);
   assert.match(game, /!enemy\.isBuilder&&!enemy\.isMushroom&&!enemy\.isHorned&&!enemy\.isSnowman&&!enemy\.isBlueFlame&&!enemy\.isSwampGhost/);
-  assert.match(reaction, /isStandardBombEvader\(enemy\)/);
-  assert.match(reaction, /routeBlockedByBomb\|\|bombs\.some/);
-  assert.match(reaction, /enemy\.bombReactionTimer=0/);
-});
-test("fantasma aparece rapidamente, patrulha com teletransportes e desvia de bombas", () => {
-  assert.match(game, /const duration=fast\?\.48:escape\?\.42:\.48/);
-  assert.match(game, /function swampGhostBombEscapePath/);
-  assert.match(game, /g\.bombEvading/);
-  assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);
-  assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
+  assert.doesNotMatch(game, /function swampGhostBombEscapePath\(/);
 });
 test("fantasma exibe três segmentos brancos desde o início e deixa cada segmento transparente ao perder vida", () => {
   const draw = game.slice(game.indexOf("function drawSwampGhost"), game.indexOf("const swampDamageEnemyBase"));
@@ -137,13 +119,12 @@ test("fantasma detecta o jogador em raio circular ampliado de cinco blocos", () 
   assert.match(vision, /dist>5\)return false/);
   assert.match(vision, /Math\.hypot\(dx,dy\)/);
 });
-test("após sofrer dano o fantasma limpa o estado de fuga e reinicia patrulha e teleporte", () => {
+test("após sofrer dano o fantasma escolhe novo ponto aleatório sem apagar a perseguição", () => {
   const damage = game.slice(game.indexOf("const swampDamageEnemyBase"), game.indexOf("const swampNewLevelBase"));
-  assert.match(damage, /enemy\.alerted=false;enemy\.mode="patrol"/);
-  assert.match(damage, /enemy\.bombEvading=false;enemy\.bombEvadeRepath=0/);
-  assert.match(damage, /enemy\.patrolWait=0/);
-  assert.match(damage, /enemy\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
+  assert.match(damage, /swampGhostRandomDestination\(enemy,danger\)/);
+  assert.match(damage, /enemy\.bombTeleportCooldown=1\.1/);
   assert.match(damage, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
+  assert.doesNotMatch(damage, /enemy\.alerted=false/);
 });
 test("explosões reutilizam sprites de chama e colisões espaciais", () => {
   assert.match(game, /function buildFlameSpriteVariant/);
@@ -154,19 +135,14 @@ test("explosões reutilizam sprites de chama e colisões espaciais", () => {
 });
 
 
-test("fantasmas se afastam suavemente sem bloquear as rotas uns dos outros", () => {
-  assert.ok(game.includes("function swampGhostBlockedByOther(ghost,x,y,radius=.445){return false}"));
-  assert.ok(game.includes("function swampGhostCanOccupy(ghost,x,y){return swampGhostStand(x,y)}"));
-  assert.ok(game.includes("function swampGhostSpread(ghost,dt)"));
-  const move = game.slice(game.indexOf("function swampGhostMove"), game.indexOf("function swampGhostSees"));
-  assert.ok(move.includes("swampGhostCanOccupy(ghost,nx,ghost.y)"));
-  assert.ok(move.includes("swampGhostCanOccupy(ghost,ghost.x,ny)"));
-  assert.ok(move.includes("swampGhostSpread(ghost,dt)"));
-  const patrol = game.slice(game.indexOf("function swampGhostPath"), game.indexOf("function swampGhostChasePath"));
-  const chase = game.slice(game.indexOf("function swampGhostChasePath"), game.indexOf("function swampGhostBombEscapePath"));
-  assert.ok(patrol.includes("swampGhostBlockedByOther(ghost,x+.5,y+.5,.72)"));
-  assert.ok(chase.includes("const score=Math.min(nearest,3)*2.2"));
-  assert.ok(game.includes("swampGhostSpread(ghost,dt);"));
+test("colisão entre fantasmas causa teleporte simultâneo para casas aleatórias diferentes", () => {
+  assert.match(game, /function swampGhostResolveTouchCollisions\(danger\)/);
+  assert.match(game, /Math\.hypot\(a\.x-b\.x,a\.y-b\.y\)>.48/);
+  assert.match(game, /swampGhostStartTeleport\(a,destinationA,true,true,true\)/);
+  assert.match(game, /swampGhostStartTeleport\(b,destinationB,true,true,true\)/);
+  assert.match(game, /for\(let y=1;y<ROWS-1;y\+\+\)for\(let x=1;x<COLS-1;x\+\+\)/);
+  assert.match(game, /reserved\)if\(distance\(px,py,point\.x,point\.y\)<1\.8\)/);
+  assert.doesNotMatch(game, /function swampGhostSpread\(/);
 });
 test("teleporte aleatório de patrulha acontece em intervalo variável de dois a quatro segundos", () => {
   assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);

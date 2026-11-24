@@ -62,15 +62,13 @@ test("troncos do pântano soltam lascas, cipós e folhas com sprites em cache", 
   assert.match(html, /currentWorld==="swamp"\)spawnDestroyedBlockEffect/);
 });
 
-test("fantasminha suporta três danos de bomba e foge após cada acerto", () => {
+test("fantasminha suporta três danos e reaparece em posição aleatória após ser atingido", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /hp:3,maxHp:3/);
   assert.match(html, /enemy\.hp=Math\.max\(0,\(enemy\.hp\?\?3\)-1\)/);
-  assert.match(html, /swampGhostTarget\(enemy,true,danger\)/);
-  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true(?:,true)?\)/);
+  assert.match(html, /swampGhostRandomDestination\(enemy,danger\)/);
+  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
   assert.match(html, /if\(enemy\.hp<=0\).*?killEnemy\(enemy\)/s);
 });
-
 test("bombas empurradas no Pântano param em poças de lama e mantêm o temporizador", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /currentWorld==="swamp"&&waterPuddleCells\.has\(cellKey\(nx,ny\)\)\)\{b\.x=nx;b\.y=ny;b\.slide=null;continue\}/);
@@ -80,12 +78,16 @@ test("brilho diagonal dos blocos indestrutíveis do Pântano usa verde escuro ma
   assert.match(html, /swamp:createPillarShimmerCanvas\("rgb\(13,104,39\)","rgba\(211,255,190,1\)",1\.65\)/);
 });
 
-test("fantasminhas do pântano não bloqueiam a rota uns dos outros e se afastam suavemente", () => {
+test("fantasmas que se tocam desaparecem rapidamente e recebem destinos aleatórios distintos", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /function swampGhostSpread\(ghost,dt\)/);
-  assert.match(html, /function swampGhostCanOccupy\(ghost,x,y\)\{return swampGhostStand\(x,y\)\}/);
-  assert.match(html, /swampGhostSpread\(ghost,dt\);/);
-  assert.match(html, /let head=0,goal=-1,bestScore=-Infinity/);
+  assert.match(html, /function swampGhostRandomDestination\(ghost,danger,reserved=\[\]\)/);
+  assert.match(html, /function swampGhostResolveTouchCollisions\(danger\)/);
+  assert.match(html, /Math\.hypot\(a\.x-b\.x,a\.y-b\.y\)>.48/);
+  assert.match(html, /swampGhostStartTeleport\(a,destinationA,true,true,true\)/);
+  assert.match(html, /swampGhostStartTeleport\(b,destinationB,true,true,true\)/);
+  assert.match(html, /collision\?\.30/);
+  assert.match(html, /swampGhostResolveTouchCollisions\(danger\)/);
+  assert.doesNotMatch(html, /function swampGhostSpread\(/);
 });
 test("teletransporte periódico dos fantasminhas também continua durante a perseguição", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
