@@ -16410,23 +16410,21 @@ function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
  return safe.length?safe[0].path:[];
 }
 function findBlueFlameEscapePath(enemy,danger){
- const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y);
- const queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),candidates=[];
+ const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),candidates=[];
  let head=0;
  while(head<queue.length){
   const p=queue[head++],key=cellKey(p.x,p.y);
   if(p.path.length>0&&!danger.has(key)){
    let nearestBomb=99;
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
-   const cover=isBehindBombCover(p.x,p.y);
+   const cover=isBehindBombCover(p.x,p.y)&&nearestBomb>=3.4;
    const playerDistance=distance(p.x+.5,p.y+.5,player.x,player.y);
-   const separation=Math.min(nearestBomb,8);
-   const coverBonus=cover?5.2:0;
+   const separation=Math.min(nearestBomb,5);
    const exposedPenalty=Math.max(0,2.8-playerDistance)*.45;
-   const score=p.path.length*.78-separation*1.35-coverBonus+exposedPenalty;
+   const score=Math.abs(4.5-separation)*1.65+Math.abs(4.5-p.path.length)*.42-(cover?3.4:0)+exposedPenalty;
    candidates.push({path:p.path,score});
   }
-  if(p.path.length>=((enemy.isHunter||enemy.isSnowman)?2:COLS*ROWS))continue;
+  if(p.path.length>=5)continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+dx,y=p.y+dy,k=cellKey(x,y);
    if(visited.has(k)||tileAt(x,y)!==0||bombAt(x,y)||danger.has(k))continue;
@@ -16434,7 +16432,6 @@ function findBlueFlameEscapePath(enemy,danger){
   }
  }
  candidates.sort((a,b)=>a.score-b.score);
- if(!candidates.length&&(enemy.isHunter||enemy.isSnowman))return findBombEscapePath(enemy,danger,false,true);
  return candidates.length?candidates[0].path:[];
 }
 function spawnSandBuildParticles(x,y){
@@ -17064,11 +17061,11 @@ function update(dt){
  }
  for(const enemy of enemies){
   if(!enemy.alive||enemy.burrowing)continue;
-  const ex=Math.floor(enemy.x),ey=Math.floor(enemy.y);let enemyHit=false;
-  for(let dy=-1;dy<=1&&!enemyHit;dy++)for(let dx=-1;dx<=1&&!enemyHit;dx++){
+  const ex=Math.floor(enemy.x),ey=Math.floor(enemy.y);
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
    const bucket=flameBuckets.get(cellKey(ex+dx,ey+dy));if(!bucket)continue;
    for(const f of bucket)if(!f.hitEnemies.has(enemy)&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,f.x,f.y,1,1)){
-    f.hitEnemies.add(enemy);damageEnemy(enemy);enemyHit=true;break;
+    f.hitEnemies.add(enemy);damageEnemy(enemy);
    }
   }
  }
