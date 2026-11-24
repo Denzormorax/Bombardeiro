@@ -16138,7 +16138,7 @@ function findFreeCoinPosition(x,y){
  for(const p of candidates)if(tileAt(Math.floor(p.x),Math.floor(p.y))===0&&canOccupy(p.x,p.y,COIN_RADIUS,null,null))return p;
  return null;
 }
-function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position)coinsOnMap.push({x:position.x,y:position.y,type,phase:Math.random()*Math.PI*2,life:0})}
+function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position){const value=coinValue(type);coinsOnMap.push({x:position.x,y:position.y,type:"yellow",value,phase:Math.random()*Math.PI*2,life:0)}}}
 function coinValue(type){return type==="yellow"?2:type==="green"?4:6}
 function updateHUD(){
  $("level").textContent=level;$("forestThemeName").textContent=currentForestTheme().name;const hearts=$("lifeHearts").children;
@@ -16276,7 +16276,7 @@ function moveEntity(entity,dx,dy,r,type){
 
 /* INTELIGÊNCIA DOS INIMIGOS */
 function getBombDangerCells(bomb){
- if(bomb.freezing||bomb.frozen)return new Set();
+ if(bomb.freezing||bomb.frozen||bomb.extinguished)return new Set();
  const bx=Math.floor(bomb.x),by=Math.floor(bomb.y),danger=new Set([cellKey(bx,by)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
  for(const [dx,dy] of dirs)for(let n=1;n<=bomb.range;n++){
   const x=bx+dx*n,y=by+dy*n,tile=tileAt(x,y);
@@ -16697,19 +16697,23 @@ function updateEnemies(dt){
 function placeBomb(){
  if(!running||paused||customizing||bombCooldown>0||activeBombs>=maxBombs)return;const x=Math.floor(player.x),y=Math.floor(player.y);if(bombAt(x,y))return;
  const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};
+ const forestWater=currentWorld==="forest"&&waterPuddleCells.has(cellKey(x,y));
+ const volcanoLava=currentWorld==="volcano"&&waterPuddleCells.has(cellKey(x,y));
+ if(forestWater){bomb.extinguished=true;bomb.t=999999;bomb.activeSlotReleased=true;activeBombs=Math.max(0,activeBombs-1)}
  if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y))){
   const directionX=player.facingX||0,directionY=player.facingY||(directionX===0?1:0);
   bomb.slide={dx:directionX,dy:directionY,icePuddle:true};bomb.slideClock=0;
  }
  if(currentWorld==="desert"&&waterPuddleCells.has(cellKey(x,y))){const exits=waterPuddles.filter(p=>(p.x!==x||p.y!==y)&&!bombAt(p.x,p.y)&&map[p.y]?.[p.x]===0);if(exits.length){const destination=exits[Math.floor(Math.random()*exits.length)];bomb.whirlwind={toX:destination.x,toY:destination.y,t:0,duration:.82,moved:false}}}
- bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
+ bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=forestWater?0:.25;reactToNewBomb(bomb);playSfx("bomb");
+ if(volcanoLava){bombs.splice(bombs.indexOf(bomb),1);explode(bomb);}
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
 function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
 function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;const visible=canSeePlayer(enemy);enemy.mode=visible?"chase":"patrol";enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null;enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
- for(const b of bombs){if(b.ownerPass||b.slide||b.freezing||b.frozen)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
+ for(const b of bombs){if(b.ownerPass||b.slide||b.freezing||b.frozen||b.extinguished)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
 }
 function updateSlidingBombs(dt){
  for(const b of bombs){if(!b.slide||b.freezing||b.frozen)continue;b.slideClock-=dt;if(b.slideClock>0)continue;b.slideClock=.105;const nx=b.x+b.slide.dx,ny=b.y+b.slide.dy,nextTile=tileAt(nx,ny),otherBomb=bombs.some(other=>other!==b&&Math.floor(other.x)===nx&&Math.floor(other.y)===ny);
@@ -16733,14 +16737,14 @@ function explode(b){
  for(const [dx,dy] of dirs){
   for(let i=1;i<=b.range;i++){
    const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});
-   const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen)&&Math.floor(other.x)===x&&Math.floor(other.y)===y);
+   const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen||other.extinguished)&&Math.floor(other.x)===x&&Math.floor(other.y)===y);
    if(frozenBomb){frozenBomb.chainTriggered=true;frozenBomb.t=0;break}
    if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
   }
  }
  if(brokeBlock){rebuildStaticMapCache();}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if((e.isHunter||e.isBuilder)&&canSeePlayer(e)){e.mode="chase";e.alert=1.25;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.alert=0;e.lastSeen=null;e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
@@ -16752,7 +16756,7 @@ function collectCoins(){
   // O efeito sonoro é disparado no primeiro ponto da detecção da coleta,
   // antes de atualizar o saldo ou exibir qualquer aviso visual.
   playSfx("coin");
-  const value=coinValue(c.type);coins+=value;
+  const value=Number.isFinite(c.value)?c.value:coinValue(c.type);coins+=value;
   updateHUD();message("+"+value+" MOEDAS!");
   return false;
  });
@@ -17034,7 +17038,7 @@ function update(dt){
  gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);for(let i=0;i<enemies.length;i++){const e=enemies[i],p=previousPositions.enemies[i];if(e&&e.isBuilder)e._builderMoving=!!(e.alive&&!e.burrowing&&p&&Math.hypot(e.x-p.x,e.y-p.y)>.00025)}updateWaterWalkers(dt,previousPositions);updateSlidingBombs(dt);
  for(const b of bombs){
   b.animTime+=dt;
-  if((b.freezing||b.frozen)&&!b.chainTriggered){
+  if((b.freezing||b.frozen||b.extinguished)&&!b.chainTriggered){
    if(b.freezing){b.freezeProgress=Math.min(1,(b.freezeProgress||0)+dt/(b.freezeDuration||1.15));if(b.freezeProgress>=1){b.freezeProgress=1;b.freezing=false;b.frozen=true}}
    continue;
   }
@@ -17443,7 +17447,7 @@ function drawEnemy(e){
 }
 
 function drawCoin(c){
- const px=ox+c.x*TILE,py=oy+c.y*TILE,spin=Math.abs(Math.cos(c.life*5+c.phase)),radius=18,color=c.type==="yellow"?"#ffd928":c.type==="green"?"#36e477":"#fa4545",dark=c.type==="yellow"?"#a96d00":c.type==="green"?"#087d36":"#9c1717";
+ const px=ox+c.x*TILE,py=oy+c.y*TILE,spin=Math.abs(Math.cos(c.life*5+c.phase)),radius=18,color="#ffd928",dark="#a96d00";
  ctx.save();ctx.translate(px,py);ctx.rotate(Math.sin(c.life*2+c.phase)*.12);ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillStyle=dark;ctx.beginPath();ctx.ellipse(0,0,Math.max(4,radius*spin),radius,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,Math.max(3,(radius-2)*spin),radius-2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff4b0";ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(0,0,Math.max(3,(radius-4)*spin),radius-4,0,0,Math.PI*2);ctx.stroke();if(spin>.3){ctx.fillStyle="#fff8d2";ctx.font="bold 17px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("$",0,1)}ctx.restore();
 }
 function buildPortalVisualCache(){
@@ -17527,7 +17531,8 @@ function drawBomb(b){
  ctx.fillStyle="#a9bac2";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-6,-7,5,3,-.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
  ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();
  ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
- if(b.freezing||b.frozen)drawFrozenBombOverlay(b,px,py);
+ if(b.extinguished){ctx.save();ctx.globalAlpha=.72;ctx.fillStyle="#aeb9bd";ctx.shadowColor="#d7e0e2";ctx.shadowBlur=5;ctx.beginPath();ctx.arc(px+13,py-27,3.2,0,Math.PI*2);ctx.arc(px+17,py-32,2.3,0,Math.PI*2);ctx.fill();ctx.restore()}
+ else if(b.freezing||b.frozen)drawFrozenBombOverlay(b,px,py);
  else{
   const flicker=Math.sin(b.animTime*23+b.sparkPhase),flicker2=Math.cos(b.animTime*17+b.sparkPhase),sx=px+14+flicker*1.5,sy=py-21+flicker2*1.2;
   ctx.save();ctx.shadowColor="#ff6b18";ctx.shadowBlur=12;ctx.fillStyle="#ff6b18";ctx.beginPath();ctx.moveTo(sx,sy+5);ctx.quadraticCurveTo(sx-7,sy-2-flicker,sx,sy-9-Math.abs(flicker)*2);ctx.quadraticCurveTo(sx+7,sy-2+flicker,sx,sy+5);ctx.fill();
