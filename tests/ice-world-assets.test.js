@@ -161,8 +161,10 @@ test("Caçador e Boneco de Neve limitam a fuga a dois blocos quando há rota seg
 });
 test("pétalas de sopro e bombas congeladas usam sprites com brilho pré-renderizado", () => {
   assert.ok(game.includes("const ICE_PETAL_COLORS=[\"#168fff\",\"#75d9ff\",\"#f4fdff\"]"));
-  assert.ok(game.includes("const icePetalCanvases=ICE_PETAL_COLORS.map"));
-  assert.ok(game.includes("ctx.drawImage(sprite,-diameter/2,-diameter/2,diameter,diameter)"));
+  assert.ok(game.includes("const icePetalSpriteCache=new Map()"));
+  assert.ok(game.includes('c.shadowBlur=frozen?6:7'));
+  assert.ok(game.includes("ctx.drawImage(sprite,-24,-24,48,48)"));
+  assert.ok(game.includes("drawIcePetal(x,y,size,angle+time*1.4,i%3,.88+.12*Math.sin(time*11+i),true)"));
   const breath=game.slice(game.indexOf("function drawSnowmanBreath"),game.indexOf("function drawEnemy(e)"));
   const frozen=game.slice(game.indexOf("function drawFrozenBombOverlay"),game.indexOf("function drawBomb(b)"));
   assert.ok(!breath.includes("shadowBlur")&&!frozen.includes("shadowBlur"));

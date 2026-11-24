@@ -15612,16 +15612,21 @@ const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=9
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
 // As poças congeladas usam somente duas linhas brancas nítidas.
 const ICE_PETAL_COLORS=["#168fff","#75d9ff","#f4fdff"];
-const icePetalCanvases=ICE_PETAL_COLORS.map(color=>{
- const canvas=document.createElement("canvas");canvas.width=24;canvas.height=24;
- const c=canvas.getContext("2d");c.save();c.translate(12,12);c.shadowColor=color;c.shadowBlur=7;c.fillStyle=color;
- c.beginPath();c.moveTo(-4.5,0);c.quadraticCurveTo(-1.35,-3.75,0,-1.65);c.quadraticCurveTo(1.35,-3.75,4.5,0);c.quadraticCurveTo(1.35,3.75,0,1.65);c.quadraticCurveTo(-1.35,3.75,-4.5,0);c.fill();
- c.shadowBlur=0;c.globalAlpha=.5;c.fillStyle="#ffffff";c.beginPath();c.ellipse(-.7,-.35,1.1,.55,-.35,0,Math.PI*2);c.fill();c.restore();return canvas;
-});
-function drawIcePetal(x,y,size,angle,colorIndex,alpha=1){
- ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalAlpha=alpha;
- const sprite=icePetalCanvases[colorIndex%icePetalCanvases.length],diameter=size*4;
- ctx.drawImage(sprite,-diameter/2,-diameter/2,diameter,diameter);ctx.restore();
+const icePetalSpriteCache=new Map();
+function drawIcePetal(x,y,size,angle,colorIndex,alpha=1,frozen=false){
+ const color=ICE_PETAL_COLORS[colorIndex%ICE_PETAL_COLORS.length],key=(frozen?"f":"b")+":"+size.toFixed(3)+":"+colorIndex;
+ let sprite=icePetalSpriteCache.get(key);
+ if(!sprite){
+  sprite=document.createElement("canvas");sprite.width=48;sprite.height=48;
+  const c=sprite.getContext("2d");c.save();c.translate(24,24);c.shadowColor=color;c.shadowBlur=frozen?6:7;c.fillStyle=color;
+  if(frozen){
+   c.beginPath();c.moveTo(-size*1.4,0);c.quadraticCurveTo(-size*.4,-size,0,-size*.45);c.quadraticCurveTo(size*.4,-size,size*1.4,0);c.quadraticCurveTo(size*.4,size,0,size*.45);c.quadraticCurveTo(-size*.4,size,-size*1.4,0);c.fill();
+  }else{
+   c.beginPath();c.moveTo(-size*1.5,0);c.quadraticCurveTo(-size*.45,-size*1.25,0,-size*.55);c.quadraticCurveTo(size*.45,-size*1.25,size*1.5,0);c.quadraticCurveTo(size*.45,size*1.25,0,size*.55);c.quadraticCurveTo(-size*.45,size*1.25,-size*1.5,0);c.fill();
+  }
+  c.restore();icePetalSpriteCache.set(key,sprite);
+ }
+ ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalAlpha=alpha;ctx.drawImage(sprite,-24,-24,48,48);ctx.restore();
 }
 const icePuddleShimmerCanvas=document.createElement("canvas");icePuddleShimmerCanvas.width=40;icePuddleShimmerCanvas.height=56;
 (()=>{const c=icePuddleShimmerCanvas.getContext("2d");c.fillStyle="#ffffff";c.fillRect(18,0,4,56)})();
@@ -17497,7 +17502,7 @@ function drawFrozenBombOverlay(b,px,py){
   for(let i=0;i<9;i++){
    const angle=i*2.399963+time*(i%2?.72:-.48),radius=4+(i%3)*3.1+Math.sin(time*7+i)*1.2;
    const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*1.05,size=1.25+(i%3)*.42;
-   drawIcePetal(x,y,size,angle+time*1.4,i%3,.88+.12*Math.sin(time*11+i));
+   drawIcePetal(x,y,size,angle+time*1.4,i%3,.88+.12*Math.sin(time*11+i),true);
   }
  }
  ctx.restore();
