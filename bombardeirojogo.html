@@ -15838,6 +15838,7 @@ document.addEventListener("click",e=>{if(e.detail===0&&isUiButtonTarget(e.target
 const PLAYER_RADIUS=.422,ENEMY_RADIUS=.22,COIN_RADIUS=.25,ENEMY_HURT_TIME=.48,ENEMY_DEATH_TIME=.48,TOTAL_LEVELS=10;
 let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
+const flameBuckets=new Map();
 let dirtParticles=[],waterPuddles=[],waterParticles=[],builderBuildAnimations=[];
 const destroyedBlockEffects=[];
 const treasureChests=[],treasureEffects=[];let treasureSpawnedThisLevel=false,treasureSpawnedThisWorld=false,treasureSpawnWorld=null,treasureVisualsReady=false;
@@ -16384,18 +16385,19 @@ function isBehindBombCover(x,y){
 }
 function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
  const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),safe=[];
- const shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman),maxSteps=shortFlee?2:COLS*ROWS;
+ // A fuga é curta: no máximo cinco casas, sem atravessar a chama.
+ const maxSteps=5;
  let head=0;
  while(head<queue.length){
   const p=queue[head++],key=cellKey(p.x,p.y);
   if(p.path.length>0&&!danger.has(key)){
    let nearestBomb=99;
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
-   const desertHunter=currentWorld==="desert"&&enemy.isHunter;
-   const coverBonus=preferCover&&isBehindBombCover(p.x,p.y)?(desertHunter?7.5:2.4):0;
-   const maxBlastRange=bombs.reduce((max,b)=>Math.max(max,Number(b.range)||1),1),distanceWeight=.28+Math.min(6,maxBlastRange)*.035;
-   const score=desertHunter?p.path.length*.62-nearestBomb*.42-coverBonus:p.path.length-nearestBomb*distanceWeight-coverBonus;
-   safe.push({path:p.path,score});
+   const protectedByBlock=preferCover&&nearestBomb>=3.4&&isBehindBombCover(p.x,p.y);
+   const distanceScore=Math.abs(4.5-Math.min(5,nearestBomb))*1.65;
+   const stepScore=Math.abs(4.5-p.path.length)*.42;
+   const coverBonus=protectedByBlock?3.4:0;
+   safe.push({path:p.path,score:distanceScore+stepScore-coverBonus});
   }
   if(p.path.length>=maxSteps)continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
@@ -16405,7 +16407,6 @@ function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
   }
  }
  safe.sort((a,b)=>a.score-b.score);
- if(!safe.length&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true);
  return safe.length?safe[0].path:[];
 }
 function findBlueFlameEscapePath(enemy,danger){
@@ -16525,28 +16526,17 @@ function reactToNewBomb(newBomb=null){
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentThreatened=danger.has(currentKey);
   const routeThreatened=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
-  // Se só a rota de perseguição cruza a chama, o construtor recalcula por fora
-  // da área perigosa; não abandona a tentativa de erguer o escudo fugindo sem necessidade.
-  if(enemy.isBuilder&&routeThreatened&&!currentThreatened){
-   enemy.path=[];enemy.patrolTarget=null;enemy.repath=0;enemy.bombEscapePending=false;
-   continue;
-  }
   const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
-  const nearbyBomb=bombs.some(b=>{const range=Math.max(1,Number(b.range)||1),baseRadius=enemy.isMushroom?4.8:enemy.isHorned?5.2:4.8,perceptionRadius=Math.max(baseRadius,range+2.2);return distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=perceptionRadius});
+  const nearbyBomb=bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=5.2);
   const desertHunterThreat=currentWorld==="desert"&&enemy.isHunter&&nearbyBomb;
-  // No Gelo, todos os inimigos reconhecem a zona de risco assim que a bomba é colocada.
-  const iceBombThreat=currentWorld==="ice"&&bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=Math.max(4.8,(Number(b.range)||1)+1.4));
+  const iceBombThreat=currentWorld==="ice"&&nearbyBomb;
   enemy.repath=0;
-  if(currentThreatened||routeThreatened||nearbyBomb||desertHunterThreat||iceBombThreat){
-   // No Gelo, Caçador e Boneco de Neve recuam apenas o necessário para sair da zona de risco.
+  // Inclui a rota bloqueada no ramo principal. A reação começa sem pausa que zere a velocidade.
+  if(currentThreatened||routeThreatened||routeBlockedByBomb||nearbyBomb||desertHunterThreat||iceBombThreat){
    if(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)&&newBomb)enemy.evadeTimer=Math.max(enemy.evadeTimer||0,Math.max(0,newBomb.t||0)+.18);
    enemy.bombEscapePending=true;
-   enemy.bombReactionTimer=currentWorld==="ice"?(enemy.isHunter ? .01 : .025):desertHunterThreat?.02:enemy.isMushroom ? .02 : enemy.isHorned ? .04 : (enemy.isHunter||enemy.isBuilder) ? .07 : .08;
-  }else if(routeBlockedByBomb||nearbyBomb){
-   // Se a bomba apenas bloqueia a perseguição, recalcula o caminho para contorná-la.
-   enemy.path=[];
-   enemy.patrolTarget=null;
-   enemy.repath=0;
+   enemy.bombReactionTimer=0;
+   enemy.speed=Math.max(enemy.speed||0,(enemy.baseSpeed||1)*1.08);
   }
  }
 }
@@ -17063,10 +17053,24 @@ function update(dt){
  const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
  for(const f of flames){f.t-=dt;f.age=(f.age||0)+dt}flames=flames.filter(f=>f.t>0);
   for(const c of burningCrates)c.t-=dt;for(let i=burningCrates.length-1;i>=0;i--)if(burningCrates[i].t<=0)burningCrates.splice(i,1);
- for(const f of flames){
-  const flameCell={x:f.x,y:f.y};
-  if(player.inv<=0&&isInsideFlameDamage(player,flameCell)){hurtPlayer();break}
-  for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,flameCell.x,flameCell.y,1,1)&&!f.hitEnemies.has(enemy)){f.hitEnemies.add(enemy);damageEnemy(enemy)}
+ flameBuckets.clear();
+ for(const f of flames){const key=cellKey(f.x,f.y);let bucket=flameBuckets.get(key);if(!bucket){bucket=[];flameBuckets.set(key,bucket)}bucket.push(f)}
+ if(player.inv<=0){
+  const px=Math.floor(player.x),py=Math.floor(player.y);let playerHit=false;
+  for(let dy=-1;dy<=1&&!playerHit;dy++)for(let dx=-1;dx<=1&&!playerHit;dx++){
+   const bucket=flameBuckets.get(cellKey(px+dx,py+dy));if(!bucket)continue;
+   for(const f of bucket)if(isInsideFlameDamage(player,{x:f.x,y:f.y})){hurtPlayer();playerHit=true;break}
+  }
+ }
+ for(const enemy of enemies){
+  if(!enemy.alive||enemy.burrowing)continue;
+  const ex=Math.floor(enemy.x),ey=Math.floor(enemy.y);let enemyHit=false;
+  for(let dy=-1;dy<=1&&!enemyHit;dy++)for(let dx=-1;dx<=1&&!enemyHit;dx++){
+   const bucket=flameBuckets.get(cellKey(ex+dx,ey+dy));if(!bucket)continue;
+   for(const f of bucket)if(!f.hitEnemies.has(enemy)&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,f.x,f.y,1,1)){
+    f.hitEnemies.add(enemy);damageEnemy(enemy);enemyHit=true;break;
+   }
+  }
  }
  for(const c of coinsOnMap)c.life+=dt;
  for(const chest of treasureChests){chest.animTime+=dt;chest.hitFlash=Math.max(0,chest.hitFlash-dt)}
@@ -17671,34 +17675,35 @@ function drawBomb(b){
  ctx.restore();
 }
 
- function drawFlame(f){
- const px=ox+f.x*TILE,py=oy+f.y*TILE,age=f.age||0,phase=f.phase||0;
- const fade=Math.min(1,f.t*2.4),flicker=Math.sin(age*25+phase),flicker2=Math.cos(age*19+phase*1.7);
- const cx=px+TILE/2,baseY=py+TILE-3;
- ctx.save();
- ctx.globalAlpha=fade;
- // Halo suave: bloom local em volta da chama, sem filtros pesados.
- const glow=ctx.createRadialGradient(cx,py+TILE*.56,3,cx,py+TILE*.56,TILE*.78);
+ const flameSpriteCache=[];
+function buildFlameSpriteVariant(variant){
+ const sprite=document.createElement("canvas"),scale=2,size=TILE;
+ sprite.width=Math.ceil(size*1.36*scale);sprite.height=Math.ceil(size*1.24*scale);
+ const c=sprite.getContext("2d"),px=0,py=0;
+ const flicker=[-1.5,0,1.5][variant],flicker2=[1.2,-1.2,0][variant],cx=px+size/2,baseY=py+size-3;
+ c.scale(scale,scale);c.translate(size*.18,size*.12);
+ const glow=c.createRadialGradient(cx,py+size*.56,3,cx,py+size*.56,size*.78);
  glow.addColorStop(0,"#fff5a0aa");glow.addColorStop(.28,"#ff9a27a0");glow.addColorStop(.68,"#ff4b1b45");glow.addColorStop(1,"#ff351000");
- ctx.fillStyle=glow;ctx.fillRect(px-TILE*.18,py-TILE*.12,TILE*1.36,TILE*1.24);
- // Camada externa laranja, com pontas irregulares e movimento.
- ctx.shadowColor="#ff5a16";ctx.shadowBlur=10;
- ctx.fillStyle="#e93612";ctx.beginPath();
- ctx.moveTo(px+7,baseY);ctx.bezierCurveTo(px+2,py+TILE*.67,px+13+flicker*2,py+TILE*.43,px+TILE*.27,py+TILE*.22);
- ctx.bezierCurveTo(px+TILE*.22,py+TILE*.47,px+TILE*.43,py+TILE*.43,px+TILE*.48,py+TILE*.08+flicker*2);
- ctx.bezierCurveTo(px+TILE*.59,py+TILE*.37,px+TILE*.78,py+TILE*.43,px+TILE*.76,py+TILE*.2+flicker2*2);
- ctx.bezierCurveTo(px+TILE*.99,py+TILE*.53,px+TILE-2,py+TILE*.76,px+TILE-7,baseY);
- ctx.closePath();ctx.fill();
- // Línguas secundárias de fogo nas laterais.
- ctx.shadowBlur=8;ctx.fillStyle="#ff8a1e";
- ctx.beginPath();ctx.moveTo(px+10,baseY);ctx.quadraticCurveTo(px+TILE*.12,py+TILE*.58,px+TILE*.3,py+TILE*.42+flicker*2);ctx.quadraticCurveTo(px+TILE*.38,py+TILE*.73,px+TILE*.42,baseY);ctx.closePath();ctx.fill();
- ctx.beginPath();ctx.moveTo(px+TILE*.57,baseY);ctx.quadraticCurveTo(px+TILE*.7,py+TILE*.62,px+TILE*.78,py+TILE*.39+flicker2*2);ctx.quadraticCurveTo(px+TILE*.9,py+TILE*.72,px+TILE-10,baseY);ctx.closePath();ctx.fill();
- // Núcleo amarelo e branco, mais quente no centro.
- ctx.shadowColor="#ffd84a";ctx.shadowBlur=8;ctx.fillStyle="#ffd044";
- ctx.beginPath();ctx.moveTo(px+TILE*.22,baseY);ctx.bezierCurveTo(px+TILE*.25,py+TILE*.66,px+TILE*.38,py+TILE*.48,px+TILE*.49,py+TILE*.31+flicker*1.5);ctx.bezierCurveTo(px+TILE*.55,py+TILE*.52,px+TILE*.76,py+TILE*.65,px+TILE*.78,baseY);ctx.closePath();ctx.fill();
- ctx.shadowBlur=4;ctx.fillStyle="#fff4a0";
- ctx.beginPath();ctx.moveTo(px+TILE*.39,baseY);ctx.quadraticCurveTo(px+TILE*.4,py+TILE*.62,cx+flicker2*2,py+TILE*.48);ctx.quadraticCurveTo(px+TILE*.62,py+TILE*.68,px+TILE*.61,baseY);ctx.closePath();ctx.fill();
- ctx.restore();
+ c.fillStyle=glow;c.fillRect(px-size*.18,py-size*.12,size*1.36,size*1.24);
+ c.shadowColor="#ff5a16";c.shadowBlur=10;c.fillStyle="#e93612";c.beginPath();
+ c.moveTo(px+7,baseY);c.bezierCurveTo(px+2,py+size*.67,px+13+flicker*2,py+size*.43,px+size*.27,py+size*.22);
+ c.bezierCurveTo(px+size*.22,py+size*.47,px+size*.43,py+size*.43,px+size*.48,py+size*.08+flicker*2);
+ c.bezierCurveTo(px+size*.59,py+size*.37,px+size*.78,py+size*.43,px+size*.76,py+size*.2+flicker2*2);
+ c.bezierCurveTo(px+size*.99,py+size*.53,px+size-2,py+size*.76,px+size-7,baseY);c.closePath();c.fill();
+ c.shadowBlur=8;c.fillStyle="#ff8a1e";c.beginPath();c.moveTo(px+10,baseY);c.quadraticCurveTo(px+size*.12,py+size*.58,px+size*.3,py+size*.42+flicker*2);c.quadraticCurveTo(px+size*.38,py+size*.73,px+size*.42,baseY);c.closePath();c.fill();
+ c.beginPath();c.moveTo(px+size*.57,baseY);c.quadraticCurveTo(px+size*.7,py+size*.62,px+size*.78,py+size*.39+flicker2*2);c.quadraticCurveTo(px+size*.9,py+size*.72,px+size-10,baseY);c.closePath();c.fill();
+ c.shadowColor="#ffd84a";c.shadowBlur=8;c.fillStyle="#ffd044";c.beginPath();
+ c.moveTo(px+size*.22,baseY);c.bezierCurveTo(px+size*.25,py+size*.66,px+size*.38,py+size*.48,px+size*.49,py+size*.31+flicker*1.5);
+ c.bezierCurveTo(px+size*.55,py+size*.52,px+size*.76,py+size*.65,px+size*.78,baseY);c.closePath();c.fill();
+ c.shadowBlur=4;c.fillStyle="#fff4a0";c.beginPath();c.moveTo(px+size*.39,baseY);
+ c.quadraticCurveTo(px+size*.4,py+size*.62,cx+flicker2*2,py+size*.48);c.quadraticCurveTo(px+size*.62,py+size*.68,px+size*.61,baseY);c.closePath();c.fill();
+ return sprite;
+}
+function drawFlame(f){
+ if(!flameSpriteCache.length)for(let i=0;i<3;i++)flameSpriteCache.push(buildFlameSpriteVariant(i));
+ const px=ox+f.x*TILE,py=oy+f.y*TILE,age=f.age||0,phase=f.phase||0;
+ const frame=Math.floor(age*17+phase*1.7)%flameSpriteCache.length,fade=Math.min(1,f.t*2.4),pulse=1+Math.sin(age*19+phase)*.025;
+ ctx.save();ctx.globalAlpha=fade;ctx.drawImage(flameSpriteCache[frame],px-TILE*.18,py-TILE*.12,TILE*1.36*pulse,TILE*1.24*pulse);ctx.restore();
 }
 function drawWaterParticles(){
  if(!waterParticles.length)return;ctx.save();
@@ -19287,7 +19292,7 @@ const swampGhostParticles=[];
 function swampGhostOpen(x,y){const t=tileAt(x,y);return(t===0||t===2)&&x>0&&y>0&&x<COLS-1&&y<ROWS-1&&!bombAt(x,y)}
 function swampGhostStand(x,y){const r=.22;for(let ty=Math.floor(y-r);ty<=Math.floor(y+r);ty++)for(let tx=Math.floor(x-r);tx<=Math.floor(x+r);tx++)if(tileAt(tx,ty)===1&&circleRectCollision(x,y,r,tx,ty,1,1))return false;for(const b of bombs)if(circleRectCollision(x,y,r,b.x+.12,b.y+.12,.76,.76))return false;return x>.22&&y>.22&&x<COLS-.22&&y<ROWS-.22}
 function swampGhostBurst(x,y,n){const ghost=enemies.find(e=>e.isSwampGhost&&distance(e.x,e.y,x,y)<.35);for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,life=.48+Math.random()*.32,rad=.025+Math.random()*.12,p={x:x+Math.cos(a)*rad,y:y+Math.sin(a)*rad,vx:0,vy:0,cx:x,cy:y,angle:a,radius:rad,spin:(Math.random()<.5?-1:1)*(2.8+Math.random()*3.4),radialSpeed:.28+Math.random()*.42,t:life,life,size:2.8+Math.random()*4.8,swirl:true};swampGhostParticles.push(p);if(ghost)ghost.particles.push({...p})}if(swampGhostParticles.length>150)swampGhostParticles.splice(0,swampGhostParticles.length-150);if(ghost&&ghost.particles.length>64)ghost.particles.splice(0,ghost.particles.length-64)}
-function spawnSwampGhosts(){const count=2+Math.floor(Math.random()*2),spots=[];for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){if(!swampGhostOpen(x,y)||waterPuddleCells.has(cellKey(x,y))||distance(x+.5,y+.5,player.x,player.y)<4.5)continue;if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.25))continue;spots.push({x,y})}for(let i=0;i<count&&spots.length;i++){const p=spots.splice(Math.floor(Math.random()*spots.length),1)[0],speed=1.12+Math.min(level*.025,.18);enemies.push({isSwampGhost:true,x:p.x+.5,y:p.y+.5,speed,baseSpeed:speed,hp:3,maxHp:3,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],patrolWait:.3+Math.random()*.7,phase:Math.random()*6.28,trailClock:.04,particles:[],teleportCooldown:1.4+Math.random()*.9,teleporting:0,teleportSwapAt:0,teleportDestination:null,teleportSwapped:false,alerted:false,chaseRepath:0,burrowing:false})}}
+function spawnSwampGhosts(){const count=2+Math.floor(Math.random()*2),spots=[];for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){if(!swampGhostOpen(x,y)||waterPuddleCells.has(cellKey(x,y))||distance(x+.5,y+.5,player.x,player.y)<4.5)continue;if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.25))continue;spots.push({x,y})}for(let i=0;i<count&&spots.length;i++){const p=spots.splice(Math.floor(Math.random()*spots.length),1)[0],speed=1.12+Math.min(level*.025,.18);enemies.push({isSwampGhost:true,x:p.x+.5,y:p.y+.5,speed,baseSpeed:speed,hp:3,maxHp:3,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],patrolWait:.3+Math.random()*.7,phase:Math.random()*6.28,trailClock:.04,particles:[],teleportCooldown:.2,patrolTeleportTimer:4+Math.random()*4,teleporting:0,teleportSwapAt:0,teleportDestination:null,teleportSwapped:false,alerted:false,chaseRepath:0,bombEvading:false,bombEvadeRepath:0,burrowing:false})}}
 function swampGhostPath(ghost,danger){const sx=Math.floor(ghost.x),sy=Math.floor(ghost.y),queue=[{x:sx,y:sy,path:[]}],seen=new Set([cellKey(sx,sy)]),found=[];let head=0;while(head<queue.length&&head<180){const p=queue[head++];if(p.path.length)found.push(p);if(p.path.length>=8)continue;for(const d of [[0,-1],[1,0],[0,1],[-1,0]]){const x=p.x+d[0],y=p.y+d[1],k=cellKey(x,y);if(seen.has(k)||!swampGhostOpen(x,y)||(danger&&danger.has(k)))continue;seen.add(k);queue.push({x,y,path:p.path.concat([{x,y}])})}}if(!found.length){ghost.patrolWait=.5;return}const opts=found.filter(p=>p.path.length>=2),pool=opts.length?opts:found,target=pool[Math.floor(Math.random()*pool.length)];ghost.path=target.path.slice();ghost.patrolWait=.15}
 function swampGhostChasePath(ghost,danger){
  const sx=Math.floor(ghost.x),sy=Math.floor(ghost.y),px=Math.floor(player.x),py=Math.floor(player.y);
@@ -19307,31 +19312,99 @@ function swampGhostChasePath(ghost,danger){
  const path=[];for(let i=goal;i>0;i=queue[i].parent)path.push({x:queue[i].x,y:queue[i].y});
  path.reverse();ghost.path=path;return path.length>0;
 }
-function swampGhostMove(ghost,dt){if(!ghost.path.length)return;const p=ghost.path[0],tx=p.x+.5,ty=p.y+.5,dx=tx-ghost.x,dy=ty-ghost.y,dist=Math.hypot(dx,dy);if(dist<.055){ghost.x=tx;ghost.y=ty;ghost.path.shift();return}const step=Math.min(dist,ghost.speed*dt);if(Math.abs(dx)>=Math.abs(dy)){const nx=ghost.x+Math.sign(dx)*step;if(swampGhostStand(nx,ghost.y)){ghost.x=nx;ghost.facingX=Math.sign(dx);ghost.facingY=0}else ghost.path=[]}else{const ny=ghost.y+Math.sign(dy)*step;if(swampGhostStand(ghost.x,ny)){ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(dy)}else ghost.path=[]}}
+function swampGhostBombEscapePath(ghost,danger){
+ const sx=Math.floor(ghost.x),sy=Math.floor(ghost.y),queue=[{x:sx,y:sy,path:[]}],seen=new Set([cellKey(sx,sy)]),candidates=[];
+ let head=0;
+ while(head<queue.length){
+  const p=queue[head++],key=cellKey(p.x,p.y);
+  if(p.path.length>0&&!danger.has(key)){
+   let nearestBomb=99;
+   for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,bomb.x+.5,bomb.y+.5));
+   const covered=nearestBomb>=3.4&&isBehindBombCover(p.x,p.y);
+   const score=Math.abs(4.5-Math.min(5,nearestBomb))*1.65+Math.abs(4.5-p.path.length)*.42-(covered?3.4:0);
+   candidates.push({path:p.path,score});
+  }
+  if(p.path.length>=5)continue;
+  for(const d of [[0,-1],[1,0],[0,1],[-1,0]]){
+   const x=p.x+d[0],y=p.y+d[1],k=cellKey(x,y);
+   if(seen.has(k)||!swampGhostOpen(x,y)||bombAt(x,y)||danger.has(k))continue;
+   seen.add(k);queue.push({x,y,path:p.path.concat([{x,y}])});
+  }
+ }
+ candidates.sort((a,b)=>a.score-b.score);
+ return candidates.length?candidates[0].path:[];
+}
+function swampGhostMove(ghost,dt){const p=ghost.path[0];if(!p)return;const tx=p.x+.5,ty=p.y+.5,dx=tx-ghost.x,dy=ty-ghost.y,dist=Math.hypot(dx,dy);if(dist<.055){ghost.x=tx;ghost.y=ty;ghost.path.shift();return}const step=Math.min(dist,ghost.speed*dt);if(Math.abs(dx)>=Math.abs(dy)){const nx=ghost.x+Math.sign(dx)*step;if(swampGhostStand(nx,ghost.y)){ghost.x=nx;ghost.facingX=Math.sign(dx);ghost.facingY=0}else ghost.path=[]}else{const ny=ghost.y+Math.sign(dy)*step;if(swampGhostStand(ghost.x,ny)){ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(dy)}else ghost.path=[]}}
 function swampGhostSees(ghost){const dx=player.x-ghost.x,dy=player.y-ghost.y,dist=Math.hypot(dx,dy);if(dist>4)return false;for(let i=1,n=Math.ceil(dist*16);i<n;i++){const t=i/n;if(tileAt(Math.floor(ghost.x+dx*t),Math.floor(ghost.y+dy*t))===1)return false}return true}
 function swampGhostTarget(ghost,escape,danger){const out=[];if(!escape){for(const d of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){const x=player.x+d[0]*.64,y=player.y+d[1]*.64,k=cellKey(Math.floor(x),Math.floor(y));if((danger&&danger.has(k))||!swampGhostStand(x,y)||distance(x,y,player.x,player.y)<.5)continue;out.push({x,y})}}else{for(let i=0;i<110;i++){const x=1.5+Math.floor(Math.random()*(COLS-2)),y=1.5+Math.floor(Math.random()*(ROWS-2)),k=cellKey(Math.floor(x),Math.floor(y));if(!swampGhostOpen(Math.floor(x),Math.floor(y))||waterPuddleCells.has(k)||(danger&&danger.has(k))||distance(x,y,player.x,player.y)<4.6)continue;out.push({x,y});if(out.length>=10)break}}return out.length?out[Math.floor(Math.random()*out.length)]:null}
-function swampGhostStartTeleport(g,target,escape,fast=false){if(!target)return false;const duration=fast?.48:escape?.42:1.4;swampGhostBurst(g.x,g.y,fast?14:22);g.teleportDuration=duration;g.teleporting=duration;g.teleportSwapAt=duration*.5;g.teleportDestination=target;g.teleportSwapped=false;g.path=[];g.teleportCooldown=escape?.65:2.1;return true}
+function swampGhostStartTeleport(g,target,escape,fast=false){if(!target)return false;const duration=fast?.48:escape?.42:.48;swampGhostBurst(g.x,g.y,fast?14:22);g.teleportDuration=duration;g.teleporting=duration;g.teleportSwapAt=duration*.5;g.teleportDestination=target;g.teleportSwapped=false;g.path=[];g.teleportCooldown=escape?.65:2.1;return true}
 function updateSwampGhost(g,dt,danger){
  if(!g.alive){g.deathTimer=Math.max(0,(g.deathTimer||0)-dt);return}
  g.phase+=dt*3.2;g.hitFlash=Math.max(0,g.hitFlash-dt);g.hurtTimer=Math.max(0,g.hurtTimer-dt);
  for(let i=g.particles.length-1;i>=0;i--){const p=g.particles[i];p.t-=dt;if(p.swirl){p.angle+=p.spin*dt;p.radius+=p.radialSpeed*dt;p.x=p.cx+Math.cos(p.angle)*p.radius;p.y=p.cy+Math.sin(p.angle)*p.radius*.78}else{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-1.7*dt);p.vy*=Math.max(0,1-1.3*dt)}if(p.t<=0)g.particles.splice(i,1)}
  g.trailClock-=dt;
  if(g.trailClock<=0&&!g.teleporting){g.trailClock=.085;for(let n=0;n<3;n++){const a=Math.random()*6.28,s=.06+Math.random()*.28,life=.42+Math.random()*.34;g.particles.push({x:g.x+(Math.random()-.5)*.16,y:g.y+.17+(Math.random()-.5)*.12,vx:Math.cos(a)*s,vy:Math.sin(a)*s-.1,t:life,life,size:2.7+Math.random()*4.3})}if(g.particles.length>48)g.particles.splice(0,g.particles.length-48)}
- if(g.teleporting>0){g.teleporting=Math.max(0,g.teleporting-dt);if(!g.teleportSwapped&&g.teleporting<=g.teleportSwapAt){if(g.teleportDestination){g.x=g.teleportDestination.x;g.y=g.teleportDestination.y;swampGhostBurst(g.x,g.y,22)}g.teleportSwapped=true}if(g.teleporting<=0){g.teleportDestination=null;g.teleportSwapped=false;g.patrolWait=.12;g.chaseRepath=0}return}
- g.teleportCooldown=Math.max(0,g.teleportCooldown-dt);
+ if(g.teleporting>0){
+  g.teleporting=Math.max(0,g.teleporting-dt);
+  if(!g.teleportSwapped&&g.teleporting<=g.teleportSwapAt){if(g.teleportDestination){g.x=g.teleportDestination.x;g.y=g.teleportDestination.y;swampGhostBurst(g.x,g.y,22)}g.teleportSwapped=true}
+  if(g.teleporting<=0){g.teleportDestination=null;g.teleportSwapped=false;g.patrolWait=.12;g.chaseRepath=0;if(!g.alerted)g.patrolTeleportTimer=4+Math.random()*4}
+  return;
+ }
+ g.teleportCooldown=Math.max(0,(g.teleportCooldown||0)-dt);
  const currentKey=cellKey(Math.floor(g.x),Math.floor(g.y));
- if(danger.has(currentKey)||(g.path.length&&danger.has(cellKey(g.path[0].x,g.path[0].y)))){g.path=[];g.chaseRepath=0;g.patrolWait=0}
- if(!g.alerted&&g.teleportCooldown<=0&&swampGhostSees(g)){const target=swampGhostTarget(g,false,danger);if(target){g.alerted=true;g.chaseRepath=0;swampGhostStartTeleport(g,target,false);return}}
+ const currentDanger=danger.has(currentKey),routeDanger=!!(g.path&&g.path.some(p=>danger.has(cellKey(p.x,p.y))));
+ const routeBlocked=!!(g.path&&g.path.some(p=>bombAt(p.x,p.y)));
+ const nearbyBomb=bombs.some(b=>distance(g.x,g.y,b.x+.5,b.y+.5)<=5.2);
+ if(g.bombEvading){
+  g.bombEvadeRepath=Math.max(0,(g.bombEvadeRepath||0)-dt);
+  if(!g.path.length||g.bombEvadeRepath<=0||routeDanger||routeBlocked){
+   const escape=swampGhostBombEscapePath(g,danger);
+   if(escape.length){g.path=escape;g.bombEvadeRepath=.22}
+   else{g.path=[];const nearest=bombs.reduce((m,b)=>Math.min(m,distance(g.x,g.y,b.x+.5,b.y+.5)),99);if(nearest>=3.8)g.bombEvading=false;else g.bombEvadeRepath=.18}
+  }
+  if(g.bombEvading&&g.path.length){g.speed=(g.baseSpeed||1.12)*1.35;swampGhostMove(g,dt);return}
+  if(g.bombEvading&&!nearbyBomb&&!currentDanger){g.bombEvading=false;g.path=[]}
+ }
+ if(!g.bombEvading&&(currentDanger||routeDanger||routeBlocked||nearbyBomb)){
+  const escape=swampGhostBombEscapePath(g,danger);
+  if(escape.length){g.bombEvading=true;g.path=escape;g.bombEvadeRepath=.22;g.speed=(g.baseSpeed||1.12)*1.35;swampGhostMove(g,dt);return}
+  if(currentDanger||routeDanger||routeBlocked){g.path=[];g.chaseRepath=0}
+ }
+ if(!g.alerted&&swampGhostSees(g)){
+  const target=swampGhostTarget(g,false,danger);
+  if(target){g.alerted=true;g.chaseRepath=0;swampGhostStartTeleport(g,target,false);return}
+ }
  if(g.alerted){
   g.speed=(g.baseSpeed||g.speed||1.12)*1.45;
   g.chaseRepath=Math.max(0,(g.chaseRepath||0)-dt);
-  if(!g.path.length||g.chaseRepath<=0){swampGhostChasePath(g,danger);g.chaseRepath=.28}
+  if(!g.path.length||g.chaseRepath<=0){swampGhostChasePath(g,danger);g.chaseRepath=.18}
   if(g.path.length)swampGhostMove(g,dt);
   return;
  }
+ g.patrolTeleportTimer=Math.max(0,(g.patrolTeleportTimer??4)-dt);
+ if(g.patrolTeleportTimer<=0&&!nearbyBomb&&!currentDanger){
+  const target=swampGhostTarget(g,true,danger);
+  if(target){g.patrolTeleportTimer=4+Math.random()*4;swampGhostStartTeleport(g,target,true,true);return}
+  g.patrolTeleportTimer=1.2;
+ }
  if(g.path.length)swampGhostMove(g,dt);else{g.patrolWait-=dt;if(g.patrolWait<=0)swampGhostPath(g,danger)}
 }
-function drawSwampGhost(g){const x=ox+g.x*TILE,y=oy+g.y*TILE,bob=Math.sin(g.phase)*3.1;let alpha=1;if(g.teleporting>0){const half=(g.teleportDuration||.48)*.5;alpha=g.teleportSwapped?Math.min(1,1-g.teleporting/half):Math.max(0,(g.teleporting-half)/half)}ctx.save();ctx.globalAlpha=.22;ctx.fillStyle="#eaffff";ctx.beginPath();ctx.ellipse(x,y+12,13,4,0,0,Math.PI*2);ctx.fill();ctx.restore();for(const p of g.particles){const f=Math.max(0,p.t/p.life),s=p.size*(.65+f*.5);ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=f*.82;ctx.drawImage(swampMist,ox+p.x*TILE-s,oy+p.y*TILE-s,s*2,s*2);ctx.restore()}ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=alpha;ctx.translate(x,y-bob-2);ctx.scale(1+Math.sin(g.phase*.65)*.025,1+Math.sin(g.phase*.65)*.025);ctx.drawImage(swampGhostBody,-36,-43,72,84);ctx.restore()}
+function drawSwampGhost(g){
+ const x=ox+g.x*TILE,y=oy+g.y*TILE,bob=Math.sin(g.phase)*3.1;
+ let alpha=1;
+ if(g.teleporting>0){const half=(g.teleportDuration||.48)*.5;alpha=g.teleportSwapped?Math.min(1,1-g.teleporting/half):Math.max(0,(g.teleporting-half)/half)}
+ ctx.save();ctx.globalAlpha=.22;ctx.fillStyle="#eaffff";ctx.beginPath();ctx.ellipse(x,y+12,13,4,0,0,Math.PI*2);ctx.fill();ctx.restore();
+ for(const p of g.particles){const f=Math.max(0,p.t/p.life),s=p.size*(.65+f*.5);ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=f*.82;ctx.drawImage(swampMist,ox+p.x*TILE-s,oy+p.y*TILE-s,s*2,s*2);ctx.restore()}
+ ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=alpha;
+ if(g.hurtTimer>0){ctx.shadowColor="#ff526b";ctx.shadowBlur=17}
+ ctx.translate(x,y-bob-2);ctx.scale(1+Math.sin(g.phase*.65)*.025,1+Math.sin(g.phase*.65)*.025);ctx.drawImage(swampGhostBody,-36,-43,72,84);ctx.restore();
+ if(g.hp<g.maxHp){
+  const barW=38,barH=7,gap=2,segmentW=(barW-gap*2)/3,barX=x-barW/2,barY=y-56;
+  ctx.save();ctx.fillStyle="#101820dd";ctx.fillRect(barX-3,barY-4,barW+6,barH+8);
+  for(let i=0;i<3;i++){const sx=barX+i*(segmentW+gap);ctx.fillStyle=i<g.hp?(g.hp===3?"#70ef8a":g.hp===2?"#ffd45d":"#ff6262"):"#4b3038";ctx.fillRect(sx,barY,segmentW,barH);ctx.strokeStyle="#f5ffff";ctx.lineWidth=1;ctx.strokeRect(sx-.5,barY-.5,segmentW+1,barH+1)}
+  ctx.restore();
+ }
+}
 const swampDamageEnemyBase=damageEnemy;
 damageEnemy=function(enemy){
  if(!enemy.isSwampGhost)return swampDamageEnemyBase(enemy);
