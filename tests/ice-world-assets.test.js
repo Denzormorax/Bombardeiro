@@ -58,9 +58,24 @@ test("poças de gelo usam paleta azul cristalina e brilho diagonal em cache", ()
   assert.ok(game.includes("ctx.drawImage(pillarShimmerCanvas,-9,-28,40,56)"));
 });
 
-test("poças congeladas mantêm a textura parada enquanto só o brilho diagonal se move", () => {
+test("poças congeladas mantêm a textura parada e usam duas linhas nítidas em movimento mais rápido", () => {
   assert.ok(game.includes('const frame=currentWorld==="ice"?0:Math.floor(gameClock*5.5+p.phase)%frames.length;'));
+  assert.ok(game.includes("const phase=(gameClock*.55+((p.x*7+p.y*13)%23)/23)%1"));
+  assert.ok(game.includes("ctx.globalAlpha=.94"));
   assert.ok(game.includes("const travel=(phase-.5)*(TILE+40)"));
+  const shimmer=game.slice(game.indexOf("const pillarShimmerCanvas"),game.indexOf("const $=id"));
+  assert.ok(shimmer.includes('c.fillStyle="#ffffff";c.fillRect(18,0,4,56)'));
+  assert.ok(!shimmer.includes("createRadialGradient"));
+  assert.ok(!shimmer.includes("createLinearGradient"));
+});
+
+test("inimigos do Gelo fogem da bomba recém-colocada e o Caçador acelera na fuga", () => {
+  const reaction=game.slice(game.indexOf("function reactToNewBomb"),game.indexOf("function followEnemyPath"));
+  assert.ok(reaction.includes('currentWorld==="ice"&&bombs.some'));
+  assert.ok(reaction.includes('enemy.bombReactionTimer=currentWorld==="ice"?(enemy.isHunter ? .01 : .025)'));
+  const update=game.slice(game.indexOf("function updateEnemies(dt)"),game.indexOf("/* BOMBAS E COMBATE */"));
+  assert.ok(update.includes("currentWorld==="+'"'+"ice"+'"'+"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath"));
+  assert.ok(update.includes("enemy.isHunter?enemy.huntSpeed*1.3"));
 });
 
 test("bombas nas poças congeladas deslizam na direção para a qual o jogador olha", () => {
