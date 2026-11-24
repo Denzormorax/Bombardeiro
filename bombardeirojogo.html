@@ -17603,7 +17603,22 @@ rebuildStaticMapCache=function(){rebuildCacheOriginal();if(currentWorld==="deser
 buildBurningCrateSprite=function(){
  if(currentWorld!=="desert")return buildCrateOriginal();
  if(!desertSpriteSheet.complete||!desertSpriteSheet.naturalWidth)return;
- for(let i=0;i<10;i++){const c=burningCrateCanvases[i].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(desertThemedSpriteSheets[i]||desertSpriteSheet,288,0,96,96,4,5,56,56);c.save();c.globalCompositeOperation="lighter";const g=c.createRadialGradient(32,39,3,32,39,29);g.addColorStop(0,"#ffe3a0cc");g.addColorStop(.5,"#e77a2766");g.addColorStop(1,"#b94b1200");c.fillStyle=g;c.fillRect(2,8,60,56);c.shadowColor="#ff9a38";c.shadowBlur=7;c.fillStyle="#e77a20";c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();c.restore()}
+ // Cada tema possui oito quadros: nunca tratar a linha de quadros como um canvas.
+ for(let i=0;i<10;i++)for(let frame=0;frame<BURNING_CRATE_FRAMES;frame++){
+  const c=burningCrateCanvases[i][frame].getContext("2d");
+  c.clearRect(0,0,64,64);
+  c.drawImage(desertThemedSpriteSheets[i]||desertSpriteSheet,288,0,96,96,4,5,56,56);
+  c.save();c.globalCompositeOperation="lighter";
+  const g=c.createRadialGradient(32,39,3,32,39,29);
+  g.addColorStop(0,"#ffe3a0cc");g.addColorStop(.5,"#e77a2766");g.addColorStop(1,"#b94b1200");
+  c.fillStyle=g;c.fillRect(2,8,60,56);
+  c.translate(Math.sin(frame/BURNING_CRATE_FRAMES*Math.PI*2)*.7,0);
+  c.shadowColor="#ff9a38";c.shadowBlur=7;c.fillStyle="#e77a20";c.beginPath();
+  c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);
+  c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);
+  c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);
+  c.closePath();c.fill();c.restore();
+ }
  burningCrateReady=true;
 };
 const drawEnemyFaceOriginal=drawEnemyFace;
@@ -17911,11 +17926,22 @@ buildBurningCrateSprite=function(){
  if(currentWorld!=="volcano")return crateWithDesert();
  if(!volcanoSpriteSheet.complete||!volcanoSpriteSheet.naturalWidth)return;
  const colors=["#ff5a20","#ff8c3b","#d85b28","#c45cff","#ff7b24","#c9d84d","#f07835","#4ccfff","#ffd45c","#ff9b6b"];
- for(let i=0;i<10;i++){
-  const c=burningCrateCanvases[i].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(volcanoThemedSpriteSheets[i]||volcanoSpriteSheet,288,0,96,96,4,5,56,56);
-  c.save();c.globalCompositeOperation="lighter";const g=c.createRadialGradient(32,39,3,32,39,29);g.addColorStop(0,colors[i]+"cc");g.addColorStop(.5,colors[i]+"66");g.addColorStop(1,colors[i]+"00");c.fillStyle=g;c.fillRect(2,8,60,56);
-  c.shadowColor=colors[i];c.shadowBlur=8;c.fillStyle=colors[i];c.beginPath();c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();
-  c.fillStyle="#fff0c2";c.beginPath();c.moveTo(23,52);c.quadraticCurveTo(19,39,29,30);c.quadraticCurveTo(30,43,35,39);c.quadraticCurveTo(37,29,40,25);c.quadraticCurveTo(46,42,46,52);c.closePath();c.fill();c.restore();
+ // Renderiza os dez temas em todos os oito quadros esperados pelo sistema de animação.
+ for(let i=0;i<10;i++)for(let frame=0;frame<BURNING_CRATE_FRAMES;frame++){
+  const c=burningCrateCanvases[i][frame].getContext("2d");
+  c.clearRect(0,0,64,64);c.drawImage(volcanoThemedSpriteSheets[i]||volcanoSpriteSheet,288,0,96,96,4,5,56,56);
+  c.save();c.globalCompositeOperation="lighter";
+  const g=c.createRadialGradient(32,39,3,32,39,29);
+  g.addColorStop(0,colors[i]+"cc");g.addColorStop(.5,colors[i]+"66");g.addColorStop(1,colors[i]+"00");
+  c.fillStyle=g;c.fillRect(2,8,60,56);
+  c.translate(Math.sin(frame/BURNING_CRATE_FRAMES*Math.PI*2)*.7,0);
+  c.shadowColor=colors[i];c.shadowBlur=8;c.fillStyle=colors[i];c.beginPath();
+  c.moveTo(11,53);c.quadraticCurveTo(5,34,18,23);c.quadraticCurveTo(17,38,25,34);
+  c.quadraticCurveTo(22,17,33,7);c.quadraticCurveTo(34,27,42,30);
+  c.quadraticCurveTo(45,17,52,20);c.quadraticCurveTo(60,39,53,53);c.closePath();c.fill();
+  c.fillStyle="#fff0c2";c.beginPath();c.moveTo(23,52);c.quadraticCurveTo(19,39,29,30);
+  c.quadraticCurveTo(30,43,35,39);c.quadraticCurveTo(37,29,40,25);
+  c.quadraticCurveTo(46,42,46,52);c.closePath();c.fill();c.restore();
  }
  burningCrateReady=true;
 };
