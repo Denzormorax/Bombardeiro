@@ -16385,19 +16385,27 @@ function isBehindBombCover(x,y){
 }
 function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
  const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),safe=[];
- // A fuga é curta: no máximo cinco casas, sem atravessar a chama.
- const maxSteps=5;
+ const shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman);
+ const maxSteps=preferCover?5:(shortFlee?2:COLS*ROWS);
  let head=0;
  while(head<queue.length){
   const p=queue[head++],key=cellKey(p.x,p.y);
   if(p.path.length>0&&!danger.has(key)){
    let nearestBomb=99;
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
-   const protectedByBlock=preferCover&&nearestBomb>=3.4&&isBehindBombCover(p.x,p.y);
-   const distanceScore=Math.abs(4.5-Math.min(5,nearestBomb))*1.65;
-   const stepScore=Math.abs(4.5-p.path.length)*.42;
-   const coverBonus=protectedByBlock?3.4:0;
-   safe.push({path:p.path,score:distanceScore+stepScore-coverBonus});
+   let score;
+   if(preferCover){
+    const protectedByBlock=nearestBomb>=3.4&&isBehindBombCover(p.x,p.y);
+    const distanceScore=Math.abs(4.5-Math.min(5,nearestBomb))*1.65;
+    const stepScore=Math.abs(4.5-p.path.length)*.42;
+    score=distanceScore+stepScore-(protectedByBlock?3.4:0);
+   }else{
+    const desertHunter=currentWorld==="desert"&&enemy.isHunter;
+    const coverBonus=isBehindBombCover(p.x,p.y)?(desertHunter?7.5:2.4):0;
+    const maxBlastRange=bombs.reduce((max,b)=>Math.max(max,Number(b.range)||1),1),distanceWeight=.28+Math.min(6,maxBlastRange)*.035;
+    score=desertHunter?p.path.length*.62-nearestBomb*.42-coverBonus:p.path.length-nearestBomb*distanceWeight-coverBonus;
+   }
+   safe.push({path:p.path,score});
   }
   if(p.path.length>=maxSteps)continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
@@ -16407,6 +16415,7 @@ function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
   }
  }
  safe.sort((a,b)=>a.score-b.score);
+ if(!safe.length&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true);
  return safe.length?safe[0].path:[];
 }
 function findBlueFlameEscapePath(enemy,danger){
