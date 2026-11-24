@@ -16698,7 +16698,7 @@ function placeBomb(){
  if(!running||paused||customizing||bombCooldown>0||activeBombs>=maxBombs)return;const x=Math.floor(player.x),y=Math.floor(player.y);if(bombAt(x,y))return;
  const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};
  const forestWater=currentWorld==="forest"&&waterPuddleCells.has(cellKey(x,y));
- if(forestWater)bomb.waterDrips=Array.from({length:6},()=>({x:(Math.random()-.5)*25,y:-8-Math.random()*31,speed:24+Math.random()*22,size:1.7+Math.random()*1.25,phase:Math.random()*Math.PI*2}));
+ if(forestWater)bomb.waterDrips=Array.from({length:5},(_,i)=>({x:8+(Math.random()-.5)*12,y:-16+i*5.5,speed:34+Math.random()*12,size:2.2+Math.random()*.8}));
  const volcanoLava=currentWorld==="volcano"&&waterPuddleCells.has(cellKey(x,y));
  if(forestWater){bomb.extinguished=true;bomb.t=999999;bomb.activeSlotReleased=true}
  if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y))){
@@ -17038,7 +17038,7 @@ function update(dt){
  const previousPositions={player:{x:player.x,y:player.y},enemies:enemies.map(e=>({x:e.x,y:e.y}))};
  gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);for(let i=0;i<enemies.length;i++){const e=enemies[i],p=previousPositions.enemies[i];if(e&&e.isBuilder)e._builderMoving=!!(e.alive&&!e.burrowing&&p&&Math.hypot(e.x-p.x,e.y-p.y)>.00025)}updateWaterWalkers(dt,previousPositions);updateSlidingBombs(dt);
  for(const b of bombs){
-  if(b.extinguished){for(const drop of b.waterDrips||[]){drop.y+=drop.speed*dt;if(drop.y>10){drop.y=-38-Math.random()*5;drop.x=(Math.random()-.5)*25;drop.speed=24+Math.random()*22;drop.size=1.7+Math.random()*1.25;drop.phase=Math.random()*Math.PI*2}}continue}
+  if(b.extinguished){for(const drop of b.waterDrips||[]){drop.y+=drop.speed*dt;if(drop.y>12){drop.y=-16;drop.x=8+(Math.random()-.5)*12}}continue}
   b.animTime+=dt;
   if((b.freezing||b.frozen)&&!b.chainTriggered){
    if(b.freezing){b.freezeProgress=Math.min(1,(b.freezeProgress||0)+dt/(b.freezeDuration||1.15));if(b.freezeProgress>=1){b.freezeProgress=1;b.freezing=false;b.frozen=true}}
@@ -17524,6 +17524,7 @@ function drawFrozenBombOverlay(b,px,py){
  }
  ctx.restore();
 }
+const waterDropSprite=(()=>{const c=document.createElement("canvas");c.width=10;c.height=14;const q=c.getContext("2d"),g=q.createLinearGradient(2,1,8,13);g.addColorStop(0,"#eaffff");g.addColorStop(.42,"#62eaff");g.addColorStop(1,"#168ed0");q.fillStyle=g;q.beginPath();q.moveTo(5,0);q.bezierCurveTo(7,3,10,7,9,10);q.bezierCurveTo(8,14,2,14,1,10);q.bezierCurveTo(0,7,3,3,5,0);q.fill();q.fillStyle="rgba(255,255,255,.9)";q.beginPath();q.ellipse(3.4,7,1.1,2.1,-.35,0,Math.PI*2);q.fill();return c})();
 function drawBomb(b){
  const warp=b.whirlwind,progress=warp?Math.min(1,warp.t/warp.duration):0,warpScale=warp?Math.max(.08,Math.abs(1-progress*2)):1;
  const px=ox+b.x*TILE+24,py=oy+b.y*TILE+24-(warp?Math.sin(progress*Math.PI)*12:0),pulse=b.extinguished?1:1+Math.sin(b.animTime*4.2)*.075;
@@ -17534,8 +17535,8 @@ function drawBomb(b){
  ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();
  ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
  if(b.extinguished){ctx.save();ctx.globalAlpha=.72;ctx.fillStyle="#aeb9bd";ctx.shadowColor="#d7e0e2";ctx.shadowBlur=5;ctx.beginPath();ctx.arc(px+13,py-27,3.2,0,Math.PI*2);ctx.arc(px+17,py-32,2.3,0,Math.PI*2);ctx.fill();ctx.restore();
-  const drops=b.waterDrips||[];ctx.save();ctx.globalCompositeOperation="lighter";
-  for(let i=0;i<drops.length;i++){const d=drops[i],dx=px+d.x+Math.sin(b.animTime*1.8+d.phase)*1.4,dy=py+d.y,tail=d.size*2.2;ctx.globalAlpha=.68+.25*Math.sin(b.animTime*3+d.phase);ctx.shadowColor=i%3===0?"#b9ffff":"#39cfff";ctx.shadowBlur=8;ctx.fillStyle=i%3===0?"#d9ffff":i%3===1?"#62eaff":"#299fff";ctx.beginPath();ctx.moveTo(dx,dy-tail);ctx.quadraticCurveTo(dx+d.size*1.1,dy-tail*.15,dx,dy+d.size*1.2);ctx.quadraticCurveTo(dx-d.size*1.1,dy-tail*.15,dx,dy-tail);ctx.fill();ctx.fillStyle="#ffffff";ctx.globalAlpha*=.8;ctx.beginPath();ctx.arc(dx-d.size*.25,dy-tail*.35,d.size*.28,0,Math.PI*2);ctx.fill()}
+  const drops=b.waterDrips||[];ctx.save();ctx.globalAlpha=.9;
+  for(const d of drops){const w=d.size*2.2,h=d.size*3;ctx.drawImage(waterDropSprite,px+d.x-w*.5,py+d.y-h*.5,w,h)}
   ctx.restore()}
  else if(b.freezing||b.frozen)drawFrozenBombOverlay(b,px,py);
  else{
