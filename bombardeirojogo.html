@@ -19065,6 +19065,81 @@ window.handleAndroidBack=function(){
  return handleBackBeforeIce();
 };
 
+
+/* MUNDO 5 — PÂNTANO ASSOMBRADO */
+const swampThemes=[
+{name:"Entrada do Brejo",sky:["#718b57","#3e6048","#182f2b"],floor:"rgba(38,63,50,.92)",floor2:"rgba(113,139,87,.28)",wall:["#68452f","#9b7650","#35291f"],far:"#425c3d",near:"#182f2b",glow:"#b2c477",accent:"#b2c477",style:"swamp"},
+{name:"Vilarejo Afundado",sky:["#647c70","#38545a","#172a31"],floor:"rgba(38,59,61,.92)",floor2:"rgba(100,124,112,.26)",wall:["#634936","#92765a","#302821"],far:"#354d50",near:"#172a31",glow:"#a6b9a0",accent:"#a6b9a0",style:"swamp"},
+{name:"Cemitério das Raízes",sky:["#78817a","#454c4c","#20272b"],floor:"rgba(48,54,58,.93)",floor2:"rgba(120,129,122,.25)",wall:["#594334","#88745d","#292522"],far:"#41494a",near:"#20272b",glow:"#b3c0a0",accent:"#b3c0a0",style:"swamp"},
+{name:"Cabana do Enforcado",sky:["#76634d","#4a4840","#211f20"],floor:"rgba(48,46,43,.94)",floor2:"rgba(118,99,77,.25)",wall:["#70472d","#a2764d","#35271f"],far:"#494237",near:"#211f20",glow:"#c0a16c",accent:"#c0a16c",style:"swamp"},
+{name:"Lagoa dos Sussurros",sky:["#627f79","#355c61","#142d35"],floor:"rgba(37,56,60,.93)",floor2:"rgba(98,127,121,.25)",wall:["#584a39","#8a7659","#29261f"],far:"#294b50",near:"#142d35",glow:"#a4d0bd",accent:"#a4d0bd",style:"swamp"},
+{name:"Bosque das Árvores Mortas",sky:["#7a8270","#48564c","#202923"],floor:"rgba(52,59,53,.93)",floor2:"rgba(122,130,112,.24)",wall:["#594333","#897052","#2b2921"],far:"#465044",near:"#202923",glow:"#c0c4a0",accent:"#c0c4a0",style:"swamp"},
+{name:"Mansão da Névoa",sky:["#777083","#494354","#211d2b"],floor:"rgba(48,43,58,.94)",floor2:"rgba(119,112,131,.24)",wall:["#55404a","#806273","#2c202b"],far:"#44394f",near:"#211d2b",glow:"#c1a8ce",accent:"#c1a8ce",style:"swamp"},
+{name:"Ruínas Submersas",sky:["#668578","#365d56","#152d2a"],floor:"rgba(37,59,56,.93)",floor2:"rgba(102,133,120,.25)",wall:["#594b36","#8b7955","#29271e"],far:"#315249",near:"#152d2a",glow:"#9ac7a8",accent:"#9ac7a8",style:"swamp"},
+{name:"Pântano da Lua Sangrenta",sky:["#87605c","#51343e","#211a25"],floor:"rgba(56,45,49,.94)",floor2:"rgba(135,96,92,.24)",wall:["#644039","#956252","#321e25"],far:"#4d3039",near:"#211a25",glow:"#d18a78",accent:"#d18a78",style:"swamp"},
+{name:"Casa do Guardião",sky:["#68727c","#3c4653","#171d27"],floor:"rgba(37,42,49,.95)",floor2:"rgba(104,114,124,.24)",wall:["#57423a","#887064","#292322"],far:"#343e49",near:"#171d27",glow:"#a9bac5",accent:"#a9bac5",style:"swamp"}
+];
+const swampSpriteSheet=new Image(),swampSheets=Array(10).fill(null),swampProgressKey="bomberquest-swamp-unlocked";
+function buildSwampSheets(){
+ if(!swampSpriteSheet.complete||!swampSpriteSheet.naturalWidth)return;
+ for(let i=0;i<10;i++){const c=document.createElement("canvas");c.width=384;c.height=96;const q=c.getContext("2d");q.imageSmoothingEnabled=false;q.drawImage(swampSpriteSheet,0,i*96,384,96,0,0,384,96);swampSheets[i]=c}
+}
+swampSpriteSheet.onload=()=>{buildSwampSheets();if(currentWorld==="swamp"){buildBurningCrateSprite();rebuildStaticMapCache()}};
+swampSpriteSheet.src="game-assets/sprites/swamp_themes.svg";
+const loadProgressBeforeSwamp=loadProgress,saveProgressBeforeSwamp=saveProgress,worldLevelBeforeSwamp=worldLevelNumber;
+const updateHudBeforeSwamp=updateHUD,gameOverBeforeSwamp=gameOver,showMenuBeforeSwamp=showMenuScreen,startGameBeforeSwamp=startGame;
+const buildMapBeforeSwamp=buildForestMap,selectMapBeforeSwamp=selectMapLevel,themeBeforeSwamp=currentForestTheme;
+const backgroundBeforeSwamp=drawForestBackground,tileBeforeSwamp=drawTileTo,crateBeforeSwamp=buildBurningCrateSprite,syncBackdropBeforeSwamp=syncThemedBackdrop;
+function swampIndex(){return Math.max(0,Math.min(9,level-1))}
+currentForestTheme=function(){return currentWorld==="swamp"?swampThemes[swampIndex()]:themeBeforeSwamp()};
+loadProgress=function(){if(currentWorld==="swamp"){try{const n=Number(localStorage.getItem(swampProgressKey)||1);unlockedLevel=Math.max(1,Math.min(TOTAL_LEVELS,n||1))}catch(e){unlockedLevel=1}}else loadProgressBeforeSwamp()};
+saveProgress=function(){if(currentWorld==="swamp"){try{localStorage.setItem(swampProgressKey,String(unlockedLevel))}catch(e){}}else saveProgressBeforeSwamp()};
+worldLevelNumber=function(){return currentWorld==="swamp"?level+40:worldLevelBeforeSwamp()};
+syncThemedBackdrop=function(){syncBackdropBeforeSwamp();if(currentWorld==="swamp"){$("game").dataset.world="swamp"}};
+drawForestBackground=function(target){
+ if(currentWorld!=="swamp")return backgroundBeforeSwamp(target);
+ const c=target||ctx,t=currentForestTheme(),g=c.createLinearGradient(0,0,0,H);syncThemedBackdrop();
+ g.addColorStop(0,t.sky[0]);g.addColorStop(.48,t.sky[1]);g.addColorStop(1,t.sky[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
+ const halo=c.createRadialGradient(W*.52,H*.25,8,W*.52,H*.25,Math.max(W,H)*.72);halo.addColorStop(0,t.glow+"42");halo.addColorStop(1,"#00000000");c.fillStyle=halo;c.fillRect(0,0,W,H);
+ for(let i=0;i<12;i++){const x=i*91-24,base=H*(.43+(i%3)*.035),h=105+(i%4)*24,w=24+(i%3)*13;c.fillStyle=t.far;c.fillRect(x+w*.43,base-h*.12,w*.16,h*.72);c.beginPath();c.moveTo(x,base-h*.12);c.lineTo(x+w*.48,base-h);c.lineTo(x+w,base-h*.12);c.closePath();c.fill();if(i%3===1){c.fillStyle=t.near;c.fillRect(x-9,base-54,48,48);c.beginPath();c.moveTo(x-14,base-54);c.lineTo(x+15,base-78);c.lineTo(x+54,base-54);c.closePath();c.fill()}}
+};
+drawTileTo=function(target,x,y,type,offsetY=0){
+ if(currentWorld!=="swamp")return tileBeforeSwamp(target,x,y,type,offsetY);
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY,tile=swampSheets[swampIndex()];
+ if(tile){const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);target.imageSmoothingEnabled=false;target.drawImage(tile,col*96,0,96,96,px,py,TILE,TILE);return}
+ const t=currentForestTheme();target.fillStyle=type===1?t.wall[2]:type===2?t.wall[0]:t.floor;target.fillRect(px,py,TILE,TILE)
+};
+buildBurningCrateSprite=function(){
+ if(currentWorld!=="swamp")return crateBeforeSwamp();if(!swampSheets[0])return;
+ for(let theme=0;theme<10;theme++)for(let frame=0;frame<BURNING_CRATE_FRAMES;frame++){const c=burningCrateCanvases[theme][frame],q=c.getContext("2d");q.clearRect(0,0,64,64);q.drawImage(swampSheets[theme],288,0,96,96,4,5,56,56);q.save();q.globalCompositeOperation="screen";q.globalAlpha=.52;q.strokeStyle=swampThemes[theme].glow;q.lineWidth=2;q.beginPath();q.moveTo(13,15);q.lineTo(26,27+frame%3);q.lineTo(20,40);q.lineTo(34,51);q.stroke();q.restore()}
+ burningCrateReady=true;
+};
+function placeSwampMascot(i,animate=true){const p=mapPoint(i),m=$("swampMapMascot");if(!m)return;if(!animate)m.style.transition="none";m.style.left=p.x+"%";m.style.top=p.y+"%";if(!animate)requestAnimationFrame(()=>m.style.transition="left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1)")}
+function buildSwampMap(){
+ const nodes=$("swampLevelNodes");if(!nodes)return;nodes.innerHTML="";
+ for(let i=1;i<=TOTAL_LEVELS;i++){const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.style.pointerEvents="auto";n.style.touchAction="manipulation";n.textContent=i;
+ if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
+ n.addEventListener("click",()=>selectMapLevel(i));nodes.appendChild(n)}
+ placeSwampMascot(Math.min(Math.max(1,selectedMapLevel),unlockedLevel),false);$("swampProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
+}
+function addSwampWorldUI(){
+ if(!$("swampBtn")){const card=$("iceBtn").cloneNode(true);card.id="swampBtn";card.className="worldCard swampWorldCard";card.querySelector(".worldName").textContent="🌿 PÂNTANO ASSOMBRADO";const art=card.querySelector(".iceArt");art.className="swampArt";art.style.cssText="position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 52% 58%,#c0d18b 0 3%,#687e55 4% 12%,transparent 13%),linear-gradient(180deg,#778b70 0%,#354f48 48%,#142b2b 100%)";art.innerHTML='<span style="position:absolute;left:0;right:0;bottom:0;height:65%;background:#253d34;clip-path:polygon(0 100%,12% 44%,25% 73%,42% 12%,57% 66%,72% 28%,88% 69%,100% 24%,100% 100%)"></span><span style="position:absolute;left:0;right:0;top:18px;font-size:30px;text-align:center">🌫️ 🌳 🏚️</span>';card.style.borderColor="#b4c98b";card.style.background="linear-gradient(#9eaa79 0%,#455b45 48%,#182d2b 100%)";card.style.boxShadow="0 7px 0 #263b2d,0 12px 18px #0008";$("iceBtn").parentNode.appendChild(card);card.addEventListener("click",()=>showMenuScreen("swamp"))}
+ if(!$("swampPanel")){const panel=$("icePanel").cloneNode(true);panel.id="swampPanel";const ids={"iceBackArrowBtn":"swampBackArrowBtn","iceMap":"swampMap","icePath":"swampPath","iceLevelNodes":"swampLevelNodes","iceMapMascot":"swampMapMascot","iceProgressText":"swampProgressText"};panel.querySelectorAll("[id]").forEach(el=>{if(ids[el.id])el.id=ids[el.id]});panel.querySelector(".menuTitle").textContent="🌿 PÂNTANO ASSOMBRADO";panel.querySelector("#swampProgressText").textContent="FASES CONCLUÍDAS: 0/10";panel.style.cssText="";$("icePanel").parentNode.appendChild(panel);$("swampBackArrowBtn").onclick=()=>showMenuScreen("worlds")}
+}
+const swampStyle=document.createElement("style");swampStyle.textContent="#swampPanel{position:fixed;inset:0;z-index:12;width:100%;height:100dvh;margin:0;padding:clamp(12px,2vh,18px) clamp(12px,3vw,35px);border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;background:linear-gradient(180deg,rgba(24,39,32,.18),rgba(8,18,20,.34)),radial-gradient(ellipse at 50% 82%,#425b43,#263c37 52%,#111d23)}#swampPanel>*{position:relative;z-index:1}#swampPanel .menuTitle{margin:3px 0 8px;color:#dce9b2;text-shadow:0 3px 0 #263b2d,0 0 15px #b4c98b}#swampBackArrowBtn{position:absolute;top:12px;left:12px;z-index:10;width:43px;height:43px;border:2px solid #b4c98b;border-radius:12px;background:linear-gradient(145deg,#536b4c,#243c35);color:#efffdc;font-size:29px}#swampMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;overflow:hidden}#swampPath{position:absolute;inset:0;width:100%;height:100%}#swampPath .pathShadow{fill:none;stroke:#14251f;stroke-width:24;stroke-linecap:round}#swampPath .pathBase{fill:none;stroke:#71865a;stroke-width:15;stroke-linecap:round}#swampPath .pathCenter{fill:none;stroke:#d4dfaa;stroke-width:3;stroke-dasharray:5 10}#swampLevelNodes{position:absolute;inset:0}#swampMapMascot{position:absolute;width:clamp(43px,7vw,65px);height:clamp(43px,7vw,65px);left:0;top:0;transform:translate(-50%,-112%);z-index:8;pointer-events:none;transition:left .38s,top .38s;filter:drop-shadow(0 5px 3px #101d18)}#swampMapMascot .miniBody{position:absolute;inset:7px;border-radius:50%;background:radial-gradient(circle at 32% 25%,#fff,#e8eddb 52%,#b5c2a0);border:4px solid #a8bd7e}#swampMapMascot .miniHelmet{position:absolute;z-index:2;left:20%;right:20%;top:12%;height:32%;border-radius:50% 50% 10px 10px;background:linear-gradient(#dce7ad,#687d52)}#swampMapMascot .miniEyes{position:absolute;z-index:3;left:29%;right:29%;top:42%;display:flex;justify-content:space-between}#swampMapMascot .miniEyes i{width:6px;height:9px;border-radius:50%;background:#fff}#swampMapMascot .miniMouth{position:absolute;z-index:3;left:40%;top:68%;width:20%;height:8%;border-bottom:2px solid #17231b;border-radius:50%}#swampLevelNodes .mapNode{border-color:#d4dfaa;background:radial-gradient(circle at 32% 25%,#d9e9a5,#728e4b 58%,#344e32);box-shadow:0 4px 0 #263b2d,0 0 13px #b4c98b;color:#fff}#swampLevelNodes .mapNode.available{animation:swampPulse 1.8s ease-in-out infinite}#swampLevelNodes .mapNode.completed{background:linear-gradient(145deg,#e3e8a5,#a1a94e);border-color:#f4f2c7}#swampLevelNodes .mapNode.locked{background:linear-gradient(145deg,#777d70,#41483f);border-color:#a4ad98}@keyframes swampPulse{50%{box-shadow:0 4px 0 #263b2d,0 0 22px #b4c98b}}#swampProgressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);text-align:center;font-size:12px;color:#e0e9c6}@media(max-width:600px){#swampPanel{padding:10px 8px}#swampMap{width:100%;height:min(48vh,250px);min-height:160px}#swampPanel .menuTitle{font-size:24px}}";document.head.appendChild(swampStyle);
+addSwampWorldUI();let swampLaunching=false;
+function launchSwampLevel(i){const panel=$("swampPanel");if(swampLaunching||running||!panel||panel.classList.contains("hidden")||panel.style.display==="none"||!Number.isInteger(i)||i<1||i>unlockedLevel||i>TOTAL_LEVELS)return;swampLaunching=true;if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}selectedMapLevel=i;panel.style.display="none";panel.classList.add("hidden");$("hud").style.display="flex";$("controls").style.display="block";startGameBeforeSwamp(i)}
+buildForestMap=function(){if(currentWorld==="swamp")buildSwampMap();else buildMapBeforeSwamp()};
+selectMapLevel=function(i){if(currentWorld!=="swamp")return selectMapBeforeSwamp(i);if(i>unlockedLevel||i<1||i>TOTAL_LEVELS)return;if(mapMoveTimer)clearTimeout(mapMoveTimer);selectedMapLevel=i;$("swampLevelNodes").querySelectorAll(".mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));placeSwampMascot(i,true);mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;launchSwampLevel(i)},430)};
+showMenuScreen=function(which){
+ if(which==="swamp"){swampLaunching=false;$("overlay").style.display="none";$("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");$("desertPanel").classList.add("hidden");$("volcanoPanel").classList.add("hidden");$("icePanel").style.display="none";$("icePanel").classList.add("hidden");$("swampPanel").classList.remove("hidden");$("swampPanel").style.display="flex";$("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");currentWorld="swamp";loadProgress();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildSwampMap();buildBurningCrateSprite();menuReturn="swamp";return}
+ $("swampPanel").style.display="none";$("swampPanel").classList.add("hidden");if(which==="worlds"){swampLaunching=false;if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}}return showMenuBeforeSwamp(which)
+};
+startGame=function(n=1){$("swampPanel").style.display="none";$("swampPanel").classList.add("hidden");return startGameBeforeSwamp(n)};
+updateHUD=function(){updateHudBeforeSwamp();$("level").textContent=worldLevelNumber();$("forestThemeName").textContent=currentForestTheme().name};
+gameOver=function(win){gameOverBeforeSwamp(win);if(currentWorld==="swamp")$("endText").textContent=win?"Parabéns! Você completou as 10 fases do Pântano Assombrado! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins};
+window.handleAndroidBack=function(){if($("swampPanel")&&!$("swampPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return handleBackBeforeSwamp()};
+
 updateHUD();
 
 })();
