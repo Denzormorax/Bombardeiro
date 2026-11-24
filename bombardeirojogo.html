@@ -17237,7 +17237,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   ctx.restore();
  }
  if(e.isHorned){ctx.fillStyle=currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
- if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
+ if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
  else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(e.isBuilder){ctx.fillStyle="#000000";for(const pebble of [[-10,4,2.1],[-6,11,1.7],[8,5,2.2],[10,-3,1.6],[1,12,1.8],[-12,-4,1.5]]){ctx.beginPath();ctx.arc(pebble[0],pebble[1],pebble[2],0,Math.PI*2);ctx.fill()}ctx.fillStyle=helmetColor;ctx.beginPath();ctx.moveTo(-14,-5);ctx.lineTo(-11,-13);ctx.quadraticCurveTo(0,-20,11,-13);ctx.lineTo(14,-5);ctx.closePath();ctx.fill();ctx.fillRect(-16,-5,32,3);ctx.fillStyle="#ffe39a";ctx.fillRect(-5,-13,10,2)}else if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
  if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5);ctx.lineTo(eyeX+2.2,1.8);ctx.moveTo(eyeX+2.2,-2.5);ctx.lineTo(eyeX-2.2,1.8);ctx.stroke()}}
  else{const eyeShiftX=facingX*2,eyeShiftY=facingY*2;ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#24101b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.fill()}
@@ -18342,6 +18342,258 @@ rebuildStaticMapCache=function(){
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y][x]===2)desertDunePositions.push({x,y,phase:((x*17+y*29+level*11)%31)/31*6});
  }
 };;
+
+
+/* MUNDO 4 — REINO DO GELO: dez fases próprias, reaproveitando física, colisões e IA existentes. */
+const iceThemes=[
+ {name:"Floresta Congelada",sky:["#b8e8f4","#75b9d4","#244f70"],floor:"rgba(176,224,239,.84)",floor2:"rgba(226,249,255,.34)",wall:["#477c9a","#a9ddec","#244c68"],far:"#6daecb",near:"#315c78",glow:"#d8ffff",accent:"#9de5f2",style:"frozenForest"},
+ {name:"Lago Congelado",sky:["#9af1e8","#3eafbd","#174d70"],floor:"rgba(79,183,193,.82)",floor2:"rgba(192,255,246,.36)",wall:["#246e91","#8de4e4","#17445f"],far:"#398eaa",near:"#174d70",glow:"#c9fff7",accent:"#a2f6e9",style:"frozenLake"},
+ {name:"Grutas de Cristal",sky:["#c7c4ff","#6c78bd","#29275f"],floor:"rgba(91,100,173,.84)",floor2:"rgba(216,205,255,.34)",wall:["#414b91","#c4b5ff","#28285d"],far:"#5c75c9",near:"#392e78",glow:"#f2e7ff",accent:"#c6a9ff",style:"crystalCaves"},
+ {name:"Montanhas Nevadas",sky:["#f5fcff","#b6d4e8","#536e8c"],floor:"rgba(207,228,241,.86)",floor2:"rgba(255,255,255,.4)",wall:["#718da8","#f1fbff","#405b78"],far:"#8daec4",near:"#536e8c",glow:"#ffffff",accent:"#b8d9ed",style:"snowMountains"},
+ {name:"Vale da Nevasca",sky:["#d8e5ed","#879fb2","#354c65"],floor:"rgba(155,178,194,.84)",floor2:"rgba(232,243,249,.3)",wall:["#536d85","#c8d9e5","#30475f"],far:"#728da3",near:"#354c65",glow:"#e9f4fb",accent:"#d6e4ed",style:"blizzard"},
+ {name:"Pinheiros Congelados",sky:["#b5c9f4","#697bb8","#302f70"],floor:"rgba(113,137,190,.84)",floor2:"rgba(218,225,255,.34)",wall:["#435a91","#b5caff","#292c64"],far:"#526fae",near:"#302f70",glow:"#e1e8ff",accent:"#b8caff",style:"frozenPines"},
+ {name:"Palácio de Gelo",sky:["#e7f6ff","#8eafd5","#344d83"],floor:"rgba(167,202,228,.84)",floor2:"rgba(255,255,255,.4)",wall:["#547ca8","#e4f4ff","#2d4778"],far:"#789fc4",near:"#344d83",glow:"#fff4ff",accent:"#e0d5ff",style:"icePalace"},
+ {name:"Geleira Profunda",sky:["#5bc4e8","#17618d","#103452"],floor:"rgba(28,105,147,.88)",floor2:"rgba(115,224,244,.28)",wall:["#164f78","#73d8ee","#0d2b49"],far:"#17618d",near:"#103452",glow:"#b6fbff",accent:"#5dd9ef",style:"deepGlacier"},
+ {name:"Tempestade Polar",sky:["#8990d0","#414a8c","#211e55"],floor:"rgba(65,70,133,.88)",floor2:"rgba(194,179,255,.25)",wall:["#343d79","#a9a0e8","#1b1c4c"],far:"#3c478e",near:"#211e55",glow:"#e3d8ff",accent:"#a58bff",style:"polarStorm"},
+ {name:"Reino do Gelo",sky:["#334b91","#1b285d","#101333"],floor:"rgba(29,43,94,.9)",floor2:"rgba(112,205,255,.28)",wall:["#202e68","#91e9ff","#101333"],far:"#283f83",near:"#11163e",glow:"#c7ffff",accent:"#a68aff",style:"auroraKingdom"}
+];
+const themeBeforeIce=currentForestTheme,bgBeforeIce=drawForestBackground,tileBeforeIce=drawTileTo;
+const puddlesBeforeIce=createForestPuddles,cacheBeforeIce=rebuildStaticMapCache;
+const crateBeforeIce=buildBurningCrateSprite,enemyFaceBeforeIce=drawEnemyFace;
+const loadProgressBeforeIce=loadProgress,saveProgressBeforeIce=saveProgress;
+const worldLevelBeforeIce=worldLevelNumber,updateHudBeforeIce=updateHUD,gameOverBeforeIce=gameOver;
+const showMenuBeforeIce=showMenuScreen,startGameBeforeIce=startGame;
+const buildMapBeforeIce=buildForestMap,selectMapBeforeIce=selectMapLevel;
+const syncBackdropBeforeIce=syncThemedBackdrop,handleBackBeforeIce=window.handleAndroidBack;
+let iceDetails=[];
+const iceSpriteSheet=new Image(),iceThemedSpriteSheets=Array(10).fill(null);
+function buildIceThemedSpriteSheets(){
+ if(!iceSpriteSheet.complete||!iceSpriteSheet.naturalWidth)return;
+ for(let i=0;i<10;i++){
+  const c=document.createElement("canvas");c.width=384;c.height=96;
+  const q=c.getContext("2d");q.imageSmoothingEnabled=false;
+  q.drawImage(iceSpriteSheet,0,i*96,384,96,0,0,384,96);
+  iceThemedSpriteSheets[i]=c;
+ }
+}
+iceSpriteSheet.onload=()=>{
+ buildIceThemedSpriteSheets();
+ if(currentWorld==="ice"){buildBurningCrateSprite();rebuildStaticMapCache()}
+};
+iceSpriteSheet.src="game-assets/sprites/ice_themes.svg";
+function iceThemeIndex(){return Math.max(0,Math.min(9,level-1))}
+currentForestTheme=function(){return currentWorld==="ice"?iceThemes[iceThemeIndex()]:themeBeforeIce()};
+loadProgress=function(){
+ if(currentWorld==="ice"){try{const n=Number(localStorage.getItem("bomberquest-ice-unlocked")||1);unlockedLevel=Math.max(1,Math.min(TOTAL_LEVELS,n||1))}catch(e){unlockedLevel=1}}
+ else loadProgressBeforeIce();
+};
+saveProgress=function(){
+ if(currentWorld==="ice"){try{localStorage.setItem("bomberquest-ice-unlocked",String(unlockedLevel))}catch(e){}}
+ else saveProgressBeforeIce();
+};
+worldLevelNumber=function(){return currentWorld==="ice"?level+30:worldLevelBeforeIce()};
+syncThemedBackdrop=function(){
+ syncBackdropBeforeIce();
+ if(currentWorld==="ice"){const el=$("game");if(el)el.dataset.world="ice"}
+};
+drawForestBackground=function(target){
+ if(currentWorld!=="ice")return bgBeforeIce(target);
+ syncThemedBackdrop();
+ const c=target||ctx,t=currentForestTheme(),g=c.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,t.sky[0]);g.addColorStop(.48,t.sky[1]);g.addColorStop(1,t.sky[2]);
+ c.fillStyle=g;c.fillRect(0,0,W,H);
+ const night=level>=8,moon=level===10||level===9;
+ if(moon){
+  c.fillStyle="#e8f8ff";c.globalAlpha=.72;c.beginPath();c.arc(W*.79,H*.18,level===10?31:22,0,Math.PI*2);c.fill();c.globalAlpha=1;
+  for(let i=0;i<58;i++){const x=(i*113+31)%W,y=(i*67+17)%(H*.48);c.fillStyle=i%3===0?"#ffffff":"#bcecff";c.globalAlpha=.35+(i%4)*.12;c.fillRect(x,y,2,2)}c.globalAlpha=1;
+ }
+ if(level===10){
+  c.save();c.globalCompositeOperation="screen";c.lineWidth=19;
+  const aurora=["#43f0d4","#6b8cff","#b68cff"];
+  for(let i=0;i<3;i++){
+   c.globalAlpha=.18+i*.035;c.strokeStyle=aurora[i];c.beginPath();
+   c.moveTo(-30,H*(.17+i*.065));
+   c.bezierCurveTo(W*.2,H*(.02+i*.07),W*.35,H*(.34+i*.055),W*.57,H*(.12+i*.08));
+   c.bezierCurveTo(W*.73,H*(.02+i*.05),W*.84,H*(.26+i*.06),W+30,H*(.1+i*.07));c.stroke();
+  }
+  c.restore();
+ }else if(level===9||level===5){
+  c.save();c.globalAlpha=.22;c.strokeStyle=t.glow;c.lineWidth=2;
+  for(let i=0;i<28;i++){const x=(i*137+gameClock*0)%W,y=(i*71+19)%H;c.beginPath();c.moveTo(x,y);c.lineTo(x-13,y+10);c.stroke()}c.restore();
+ }
+ // Montanhas distantes e camadas de pinheiros; todas pertencem ao fundo estático.
+ c.fillStyle=t.far;c.beginPath();c.moveTo(0,H*.65);
+ for(let i=0;i<=8;i++){const x=i*W/8;c.lineTo(x+W/16,H*(.43+(i%3)*.07));c.lineTo(x+W/8,H*(.65+((i+1)%3)*.025))}
+ c.lineTo(W,H);c.lineTo(0,H);c.fill();
+ c.fillStyle=t.near;c.beginPath();c.moveTo(0,H*.79);
+ for(let i=0;i<=7;i++){const x=i*W/7;c.lineTo(x+W/14,H*(.57+(i%2)*.08));c.lineTo(x+W/7,H*(.79+((i+1)%2)*.025))}
+ c.lineTo(W,H);c.lineTo(0,H);c.fill();
+ for(let i=0;i<11;i++){
+  const x=i*103-22,base=H*(.77+(i%3)*.025),h=90+(i%4)*20,w=38+(i%3)*9;
+  c.fillStyle=t.near;c.fillRect(x+w*.43,base-h*.12,w*.14,h*.6);
+  c.beginPath();c.moveTo(x,base-h*.12);c.lineTo(x+w*.5,base-h);c.lineTo(x+w,base-h*.12);c.closePath();c.fill();
+  c.beginPath();c.moveTo(x-5,base-h*.38);c.lineTo(x+w*.5,base-h*.91);c.lineTo(x+w+5,base-h*.38);c.closePath();c.fill();
+  c.strokeStyle=t.glow;c.globalAlpha=.72;c.lineWidth=3;c.beginPath();c.moveTo(x+5,base-h*.28);c.lineTo(x+w*.5,base-h*.86);c.lineTo(x+w-5,base-h*.28);c.stroke();c.globalAlpha=1;
+ }
+ // Cristais panorâmicos nas laterais, variando com a identidade de cada fase.
+ c.save();c.globalAlpha=.78;c.fillStyle=t.accent;c.strokeStyle=t.glow;c.lineWidth=2;
+ for(let i=0;i<7;i++){const x=25+i*145,y=H*(.79+(i%2)*.035),h=25+(i%3)*12;c.beginPath();c.moveTo(x,y);c.lineTo(x+8,y-h);c.lineTo(x+16,y);c.closePath();c.fill();c.stroke();c.beginPath();c.moveTo(x+13,y);c.lineTo(x+20,y-h*.72);c.lineTo(x+27,y);c.closePath();c.fill()}
+ c.restore();
+ // Neve distante: quantidade e inclinação maiores nas fases de nevasca.
+ if(level===5||level===9||level===10){c.save();c.fillStyle="#ffffff";c.globalAlpha=.48;
+  for(let i=0;i<90;i++){const x=(i*83+17)%W,y=(i*47+11)%H;c.fillRect(x,y,level===9?3:2,2)}
+  c.restore();
+ }
+};
+drawTileTo=function(target,x,y,type,offsetY=0){
+ if(currentWorld!=="ice")return tileBeforeIce(target,x,y,type,offsetY);
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY,tiles=iceThemedSpriteSheets;
+ const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);
+ const tile=tiles[iceThemeIndex()];
+ if(tile){target.imageSmoothingEnabled=false;target.drawImage(tile,col*96,0,96,96,px,py,TILE,TILE);return}
+ const t=currentForestTheme();
+ target.fillStyle=type===1?t.wall[2]:type===2?t.wall[0]:t.floor;target.fillRect(px,py,TILE,TILE);
+ target.fillStyle=t.accent;target.fillRect(px+8,py+12,5,3);target.fillRect(px+27,py+32,7,3);
+};
+createForestPuddles=function(){
+ if(currentWorld!=="ice")return puddlesBeforeIce();
+ waterPuddles=[];waterPuddleCells.clear();iceDetails=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(map[y][x]!==0||isStartSafeCell(x,y)||x<=3&&y<=3)continue;
+  const seed=(x*17+y*29+level*11)%13;
+  if(seed<4)iceDetails.push({x,y,seed});
+ }
+};
+rebuildStaticMapCache=function(){
+ cacheBeforeIce();
+ if(currentWorld!=="ice")return;
+ for(const p of iceDetails){
+  const x=ox+p.x*TILE,y=oy+p.y*TILE;
+  staticFloorCtx.save();staticFloorCtx.globalAlpha=.72;
+  staticFloorCtx.strokeStyle=p.seed%2?"#e8fbff":"#83dff5";staticFloorCtx.lineWidth=2;
+  staticFloorCtx.beginPath();staticFloorCtx.moveTo(x+7,y+14);staticFloorCtx.lineTo(x+17,y+20);staticFloorCtx.lineTo(x+13,y+29);staticFloorCtx.lineTo(x+29,y+37);staticFloorCtx.stroke();
+  staticFloorCtx.fillStyle="#ffffff";staticFloorCtx.fillRect(x+30,y+12,3,3);staticFloorCtx.fillRect(x+10,y+34,2,2);
+  staticFloorCtx.restore();
+ }
+};
+buildBurningCrateSprite=function(){
+ if(currentWorld!=="ice")return crateBeforeIce();
+ if(!iceThemedSpriteSheets[0])return;
+ for(let theme=0;theme<10;theme++)for(let frame=0;frame<BURNING_CRATE_FRAMES;frame++){
+  const c=burningCrateCanvases[theme][frame],q=c.getContext("2d");q.clearRect(0,0,64,64);
+  q.drawImage(iceThemedSpriteSheets[theme],288,0,96,96,4,5,56,56);
+  q.save();q.globalCompositeOperation="screen";q.globalAlpha=.62;
+  q.strokeStyle=iceThemes[theme].glow;q.lineWidth=2;
+  q.beginPath();q.moveTo(13,15);q.lineTo(26,27+frame%3);q.lineTo(20,40);q.lineTo(34,51);q.stroke();
+  q.beginPath();q.moveTo(43,11);q.lineTo(37,25);q.lineTo(49,35);q.stroke();
+  for(let k=0;k<4;k++){const xx=12+((k*13+frame*3)%40),yy=10+((k*9+frame*5)%42);q.fillStyle="#ffffff";q.fillRect(xx,yy,2,2)}
+  q.restore();
+ }
+ burningCrateReady=true;
+};
+const iceMapPoint=mapPoint;
+function placeIceMascot(i,animate=true){
+ const p=iceMapPoint(i),m=$("iceMapMascot");if(!m)return;
+ if(!animate)m.style.transition="none";m.style.left=p.x+"%";m.style.top=p.y+"%";
+ if(!animate)requestAnimationFrame(()=>m.style.transition="left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1)");
+}
+function buildIceMap(){
+ const nodes=$("iceLevelNodes");if(!nodes)return;nodes.innerHTML="";
+ for(let i=1;i<=TOTAL_LEVELS;i++){
+  const p=iceMapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);
+  n.style.left=p.x+"%";n.style.top=p.y+"%";n.style.pointerEvents="auto";n.style.touchAction="manipulation";n.textContent=i;
+  if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}
+  else if(i===unlockedLevel)n.classList.add("available");
+  else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
+  n.addEventListener("click",()=>selectMapLevel(i));nodes.appendChild(n);
+ }
+ const chosen=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);placeIceMascot(chosen,false);
+ $("iceProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
+}
+buildForestMap=function(){if(currentWorld==="ice")buildIceMap();else buildMapBeforeIce()};
+selectMapLevel=function(i){
+ if(currentWorld!=="ice")return selectMapBeforeIce(i);
+ if(i>unlockedLevel||i<1||i>TOTAL_LEVELS)return;
+ if(mapMoveTimer)clearTimeout(mapMoveTimer);selectedMapLevel=i;
+ $("iceLevelNodes").querySelectorAll(".mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));
+ placeIceMascot(i,true);mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;launchIceLevel(i)},430);
+};
+const iceCardStyle=document.createElement("style");
+iceCardStyle.textContent='#game[data-world="ice"]::before{background:linear-gradient(180deg,var(--world-far),var(--world-near));clip-path:polygon(0 72%,12% 42%,23% 62%,36% 18%,48% 57%,61% 28%,74% 63%,87% 20%,100% 55%,100% 100%,0 100%)}.iceWorldCard{border-color:#a8eaff!important;box-shadow:0 7px 0 #234b70,0 12px 18px #0008!important}';
+document.head.appendChild(iceCardStyle);
+function addIceWorldUI(){
+ if(!$("iceBtn")){
+  const card=$("volcanoBtn").cloneNode(true);card.id="iceBtn";card.className="worldCard iceWorldCard";
+  card.querySelector(".worldName").textContent="❄️ REINO DO GELO";
+  const art=card.querySelector(".volcanoArt");art.className="iceArt";
+  card.style.borderColor="#a8eaff";card.style.background="linear-gradient(#d9f8ff 0%,#5799c4 48%,#152d58 100%)";
+  card.style.boxShadow="0 7px 0 #234b70,0 12px 18px #0008";
+  art.style.cssText="position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 55% 56%,#dfffff 0 3%,#77dff2 4% 10%,transparent 11%),linear-gradient(180deg,#b9efff 0%,#5b9bc4 48%,#152d58 100%)";
+  art.innerHTML='<span style="position:absolute;left:0;right:0;bottom:0;height:65%;background:#315b83;clip-path:polygon(0 100%,13% 42%,25% 69%,43% 8%,57% 62%,72% 25%,88% 65%,100% 18%,100% 100%)"></span><span style="position:absolute;left:0;right:0;top:18px;font-size:31px;text-align:center">❄️ 💎 ❄️</span>';
+  $("volcanoBtn").parentNode.appendChild(card);card.addEventListener("click",()=>showMenuScreen("ice"));
+ }
+ if(!$("icePanel")){
+  const panel=$("volcanoPanel").cloneNode(true);panel.id="icePanel";
+  const ids={"volcanoBackArrowBtn":"iceBackArrowBtn","volcanoMap":"iceMap","volcanoPath":"icePath","volcanoLevelNodes":"iceLevelNodes","volcanoMapMascot":"iceMapMascot","volcanoProgressText":"iceProgressText"};
+  panel.querySelectorAll("[id]").forEach(el=>{if(ids[el.id])el.id=ids[el.id]});
+  panel.querySelector(".menuTitle").textContent="❄️ REINO DO GELO";
+  panel.querySelector("#iceProgressText").textContent="FASES CONCLUÍDAS: 0/10";
+  panel.style.cssText="";$("volcanoPanel").parentNode.appendChild(panel);
+  $("iceBackArrowBtn").onclick=()=>showMenuScreen("worlds");
+ }
+}
+addIceWorldUI();
+let iceLaunching=false;
+function launchIceLevel(i){
+ const panel=$("icePanel");
+ if(iceLaunching||running||!panel||panel.classList.contains("hidden")||panel.style.display==="none")return;
+ if(!Number.isInteger(i)||i<1||i>unlockedLevel||i>TOTAL_LEVELS)return;
+ iceLaunching=true;if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}
+ selectedMapLevel=i;panel.style.display="none";panel.classList.add("hidden");
+ startGameBeforeIce(i);
+}
+showMenuScreen=function(which){
+ if(which==="ice"){
+  iceLaunching=false;
+  $("overlay").style.display="none";$("worldsPanel").classList.add("hidden");
+  $("forestPanel").classList.add("hidden");$("desertPanel").classList.add("hidden");$("volcanoPanel").classList.add("hidden");
+  $("icePanel").classList.remove("hidden");$("icePanel").style.display="flex";
+  $("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
+  currentWorld="ice";loadProgress();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);
+  buildIceMap();buildBurningCrateSprite();menuReturn="ice";return;
+ }
+ $("icePanel").style.display="none";$("icePanel").classList.add("hidden");
+ if(which==="worlds"){iceLaunching=false;if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}}
+ return showMenuBeforeIce(which);
+};
+startGame=function(n=1){$("icePanel").style.display="none";$("icePanel").classList.add("hidden");return startGameBeforeIce(n)};
+updateHUD=function(){updateHudBeforeIce();$("level").textContent=worldLevelNumber();$("forestThemeName").textContent=currentForestTheme().name};
+gameOver=function(win){
+ gameOverBeforeIce(win);
+ if(currentWorld==="ice")$("endText").textContent=win?"Parabéns! Você completou as 10 fases do Reino do Gelo! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins;
+};
+drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
+ if(currentWorld!=="ice")return enemyFaceBeforeIce(e,color,helmetColor,deathProgress);
+ if(e.isMushroom){color="#7cc9df";helmetColor="#d7f7ff"}
+ else if(e.isHorned){color=e.isEnraged?"#4b83c8":"#59b9e2";helmetColor="#235b89"}
+ else if(e.isHunter){color="#4f88b8";helmetColor="#243d68"}
+ else if(e.isBuilder){color="#a5e8f3";helmetColor="#447e9c"}
+ else{color="#80cde8";helmetColor="#376f99"}
+ enemyFaceBeforeIce(e,color,helmetColor,deathProgress);
+ // Cristais pequenos nos ombros e atrás da cabeça; rosto, colisões e animação permanecem intactos.
+ const px=ox+e.x*TILE,gy=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7;
+ ctx.save();ctx.globalAlpha=(e.alive?1:Math.max(0,1-(deathProgress||0)))*.9;
+ for(const side of [-1,1]){
+  const x=px+side*13,y=gy-bob-17;
+  ctx.fillStyle=side<0?"#b9f5ff":"#79d9f2";ctx.strokeStyle="#eaffff";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x-3,y+5);ctx.lineTo(x,y-5);ctx.lineTo(x+3,y+5);ctx.closePath();ctx.fill();ctx.stroke();
+ }
+ ctx.restore();
+};
+window.handleAndroidBack=function(){
+ if($("icePanel")&&!$("icePanel").classList.contains("hidden")){showMenuScreen("worlds");return true}
+ return handleBackBeforeIce();
+};
 
 updateHUD();
 
