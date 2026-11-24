@@ -4,12 +4,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 const game = fs.readFileSync(path.join(__dirname, "..", "bombardeirojogo.html"), "utf8");
 
-test("baú azul raro pode surgir ao destruir blocos em qualquer mundo, no máximo uma vez por fase", () => {
+test("baú é raro: no máximo um por mundo, somente nas fases 1 a 9", () => {
   const explode = game.slice(game.indexOf("function explode(b)"), game.indexOf("function hurtPlayer"));
-  assert.match(explode, /!treasureSpawnedThisLevel&&Math\.random\(\)<\.025/);
-  assert.match(explode, /treasureSpawnedThisLevel=true;treasureChests\.push\(\{x,y,hp:4,maxHp:4/);
+  assert.match(explode, /level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math\.random\(\)<\.006/);
+  assert.match(explode, /treasureSpawnedThisWorld=true;treasureChests\.push\(\{x,y,hp:4,maxHp:4/);
   assert.match(explode, /spawnTreasureEffect\(x\+\.5,y\+\.5,"reveal"\)/);
-  assert.doesNotMatch(explode.slice(explode.indexOf("Math.random()<.025")-80, explode.indexOf("Math.random()<.025")+260), /currentWorld===/);
+  assert.match(game, /treasureSpawnWorld=currentWorld;treasureSpawnedThisWorld=false/);
+  assert.match(game, /treasureSpawnWorld=null/);
 });
 
 test("baú exige quatro explosões e solta moeda azul de 100 moedas", () => {
@@ -24,7 +25,7 @@ test("baú exige quatro explosões e solta moeda azul de 100 moedas", () => {
   assert.match(collect, /coins\+=value/);
 });
 
-test("baú é sólido, anima tampa e salto, com partículas douradas e fogo azul em cache", () => {
+test("baú é sólido, tem contornos e maçaneta dourados, animação e partículas douradas contínuas", () => {
   const collision = game.slice(game.indexOf("function canOccupy"), game.indexOf("function moveEntity"));
   assert.match(collision, /for\(const chest of treasureChests\)/);
   const visual = game.slice(game.indexOf("function buildTreasureVisualCache"), game.indexOf("function drawCoin(c)"));
@@ -38,6 +39,10 @@ test("baú é sólido, anima tampa e salto, com partículas douradas e fogo azul
   assert.match(visual, /drawImage\(treasureAuraCanvas/);
   assert.match(visual, /drawImage\(treasureGoldSparkCanvas/);
   assert.match(visual, /drawImage\(treasureBlueFlameCanvas/);
+  assert.match(visual, /#ffe16a/);
+  assert.match(visual, /ctx\.arc\(48,41,7/);
+  assert.match(visual, /ambientParticles/);
+  assert.match(visual, /sparkTimer>=\.055/);
 });
 
 test("efeitos do tesouro reutilizam sprites pré-renderizados e respeitam dt", () => {
