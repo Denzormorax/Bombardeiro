@@ -33,7 +33,28 @@ test("blocos destrutíveis do novo mundo são troncos de madeira em relevo", () 
   assert.match(atlas, /filter id="shadow"/);
 });
 
-test("fantasma e monstro de lama continuam fora desta etapa", () => {
-  assert.match(world.enemyChanges, /Nenhum inimigo novo/);
-  assert.match(world.enemyChanges, /etapa futura/);
+test("fantasminhas aparecem somente nas fases 3 a 6 do Pântano", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  assert.match(html, /currentWorld==="swamp"&&level>=3&&level<=6\)spawnSwampGhosts\(\)/);
+  assert.match(html, /const count=2\+Math\.floor\(Math\.random\(\)\*2\)/);
+  assert.match(html, /dist>4\)return false/);
+});
+test("fantasminhas flutuam, deixam partículas brancas e escapam de bombas", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  assert.match(html, /swampGhostMistCanvas|swampMist/);
+  assert.match(html, /Math\.sin\(g\.phase\)\*3\.1/);
+  assert.match(html, /swampGhostStartTeleport/);
+  assert.match(html, /!entity\.isSwampGhost/);
+});
+test("lama reduz movimento e desloca apenas alguns pixels os pés", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  assert.match(html, /dx\*=\.72;dy\*=\.72/);
+  assert.match(html, /player\.y\+=\.045/);
+  assert.match(html, /e\.y\+=\.045/);
+});
+test("troncos do pântano soltam lascas, cipós e folhas com sprites em cache", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  assert.match(html, /swampDebrisCache/);
+  assert.match(html, /i<36/);
+  assert.match(html, /world==="swamp"\)spawnDestroyedBlockEffect/);
 });
