@@ -27,14 +27,14 @@ test("cada uma das dez fases do Reino do Gelo está declarada no jogo", () => {
 
 
 test("flocos da bola de neve caem dentro da bola e desaparecem no montinho", () => {
-  assert.match(game, /function snowballParticleSeed\(x,y,k,salt\)/);
-  assert.match(game, /for\(let k=0;k<4;k\+\+\)/);
-  assert.match(game, /const localY=\.12\+phase\*\.76/);
-  assert.match(game, /const fadeOut=Math\.min\(1,\(1-phase\)\/\.20\)/);
-  assert.match(game, /color:ICE_SNOWFALL_COLORS\\[Math\\.min\\(2,Math\\.floor\\(colorSeed\\*3\\)\\)\\]/);
-  assert.match(game, /if\\(currentWorld!==\\"ice\\"\\|\\|!snowballParticleSpecs\\.length\\)return/);
-  assert.match(game, /buildSnowballParticleSpecs\\(\\);/);
-  assert.match(game, /drawSnowballParticles\(\);/);
-  assert.match(game, /currentWorld===\"ice\"\)spawnDestroyedBlockEffect/);
-  assert.doesNotMatch(snowball, /<animate\b/i);
+  assert.ok(game.includes("function snowballParticleSeed(x,y,k,salt)"));
+  assert.ok(game.includes("for(let k=0;k<4;k++)"));
+  assert.ok(game.includes("const localY=.12+phase*.76"));
+  assert.ok(game.includes("const fadeOut=Math.min(1,(1-phase)/.20)"));
+  assert.ok(game.includes("color:ICE_SNOWFALL_COLORS[Math.min(2,Math.floor(colorSeed*3))]"));
+  assert.ok(game.includes('if(currentWorld!=="ice"||!snowballParticleSpecs.length)return'));
+  assert.ok(game.includes("buildSnowballParticleSpecs();"));
+  assert.ok(game.includes("drawSnowballParticles();"));
+  assert.ok(game.includes('currentWorld==="ice")spawnDestroyedBlockEffect'));
+  assert.doesNotMatch(snowball, /<animate\\b/i);
 });
