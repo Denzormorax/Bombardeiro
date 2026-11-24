@@ -149,3 +149,12 @@ test("teleporte aleatório de patrulha acontece em intervalo variável de dois a
   assert.match(game, /g\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
   assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
 });
+
+test("fantasma atingido por bomba abandona a perseguição e volta à patrulha", () => {
+  const damage = game.slice(game.indexOf("const swampDamageEnemyBase"), game.indexOf("const swampNewLevelBase"));
+  assert.match(damage, /enemy\.alerted=false;enemy\.ignorePlayerUntilOutOfSight=true/);
+  assert.match(damage, /swampGhostStartTeleport\(enemy,destination,true,true,false,"damage"\)/);
+  const update = game.slice(game.indexOf("function updateSwampGhost"), game.indexOf("function swampGhostResolveTouchCollisions"));
+  assert.match(update, /if\(g\.ignorePlayerUntilOutOfSight\)\{if\(!seesPlayer\)g\.ignorePlayerUntilOutOfSight=false\}/);
+  assert.match(update, /!g\.alerted&&!g\.ignorePlayerUntilOutOfSight&&seesPlayer/);
+});
