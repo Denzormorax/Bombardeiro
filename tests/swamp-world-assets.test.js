@@ -39,16 +39,19 @@ test("fantasminhas aparecem somente nas fases 3 a 6 do Pântano", () => {
   assert.match(html, /const count=2\+Math\.floor\(Math\.random\(\)\*2\)/);
   assert.match(html, /dist>4\)return false/);
 });
-test("fantasminhas flutuam, deixam partículas brancas e escapam de bombas", () => {
+test("fantasminhas flutuam, perseguem por caminhos e só teleportam ao receber dano", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /swampGhostMistCanvas|swampMist/);
   assert.match(html, /Math\.sin\(g\.phase\)\*3\.1/);
-  assert.match(html, /swampGhostStartTeleport/);
+  assert.match(html, /swampGhostChasePath/);
+  assert.match(html, /g\.alerted/);
+  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
+  assert.doesNotMatch(html, /danger\.has\(k\)&&swampGhostStartTeleport\(g,swampGhostTarget\(g,true,danger\),true\)/);
   assert.match(html, /!entity\.isSwampGhost/);
 });
 test("lama reduz movimento e desloca apenas alguns pixels os pés", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /dx\*=\.72;dy\*=\.72/);
+  assert.match(html, /dx\*=\.64;dy\*=\.64/);
   assert.match(html, /player\.y\+=\.045/);
   assert.match(html, /e\.y\+=\.045/);
 });
@@ -66,4 +69,13 @@ test("fantasminha suporta três danos de bomba e foge após cada acerto", () => 
   assert.match(html, /swampGhostTarget\(enemy,true,danger\)/);
   assert.match(html, /swampGhostStartTeleport\(enemy,destination,true(?:,true)?\)/);
   assert.match(html, /if\(enemy\.hp<=0\).*?killEnemy\(enemy\)/s);
+});
+
+test("bombas empurradas no Pântano param em poças de lama e mantêm o temporizador", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  assert.match(html, /currentWorld==="swamp"&&waterPuddleCells\.has\(cellKey\(nx,ny\)\)\)\{b\.x=nx;b\.y=ny;b\.slide=null;continue\}/);
+});
+test("brilho diagonal dos blocos indestrutíveis do Pântano usa verde escuro mais intenso", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  assert.match(html, /swamp:createPillarShimmerCanvas\("rgb\(13,104,39\)","rgba\(211,255,190,1\)",1\.65\)/);
 });
