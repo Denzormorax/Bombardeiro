@@ -31,8 +31,9 @@ test("flocos da bola de neve caem dentro da bola e desaparecem no montinho", () 
   assert.match(game, /for\(let k=0;k<4;k\+\+\)/);
   assert.match(game, /const localY=\.12\+phase\*\.76/);
   assert.match(game, /const fadeOut=Math\.min\(1,\(1-phase\)\/\.20\)/);
-  assert.match(game, /ICE_SNOWFALL_COLORS\[Math\.min\(2,Math\.floor\(colorSeed\*3\)\)\]/);
-  assert.match(game, /if\(currentWorld!==\"ice\"\|\|!map\|\|!map\.length\)return/);
+  assert.match(game, /color:ICE_SNOWFALL_COLORS\\[Math\\.min\\(2,Math\\.floor\\(colorSeed\\*3\\)\\)\\]/);
+  assert.match(game, /if\\(currentWorld!==\\"ice\\"\\|\\|!snowballParticleSpecs\\.length\\)return/);
+  assert.match(game, /buildSnowballParticleSpecs\\(\\);/);
   assert.match(game, /drawSnowballParticles\(\);/);
   assert.match(game, /currentWorld===\"ice\"\)spawnDestroyedBlockEffect/);
   assert.doesNotMatch(snowball, /<animate\b/i);
