@@ -120,9 +120,21 @@ test("fantasma exibe três segmentos brancos desde o início e deixa cada segmen
   assert.match(draw, /active\?"#ffffff":"rgba\(255,255,255,\.48\)"/);
   assert.match(draw, /g\.hurtTimer>0/);
 });
-test("fantasma detecta o jogador em raio circular de três blocos", () => {
+test("fantasma se move apenas na horizontal ou vertical e desliza pelas quinas dos blocos indestrutíveis", () => {
+  const move = game.slice(game.indexOf("function swampGhostMove"), game.indexOf("function swampGhostSees"));
+  assert.match(move, /Math\.abs\(remainX\)>=Math\.abs\(remainY\)/);
+  assert.match(move, /Math\.ceil\(step\/\.012\)/);
+  assert.match(move, /const offsets=\[\.015,\.03,\.045,\.06,\.075,\.09,\.105,\.12,\.135,\.15,\.165,\.18,\.195,\.21,\.225,\.24\]/);
+  assert.match(move, /swampGhostStand\(ghost\.x,sideY\)&&swampGhostStand\(nx,sideY\)/);
+  assert.match(move, /swampGhostStand\(sideX,ghost\.y\)&&swampGhostStand\(sideX,ny\)/);
+  assert.match(move, /ghost\.path=\[\]/);
+  const stand = game.slice(game.indexOf("function swampGhostStand"), game.indexOf("function swampGhostOpen"));
+  assert.match(stand, /tileAt\(tx,ty\)===1/);
+  assert.doesNotMatch(stand, /tileAt\(tx,ty\)===2/);
+});
+test("fantasma detecta o jogador em raio circular ampliado de cinco blocos", () => {
   const vision = game.slice(game.indexOf("function swampGhostSees"), game.indexOf("function swampGhostTarget"));
-  assert.match(vision, /dist>3\)return false/);
+  assert.match(vision, /dist>5\)return false/);
   assert.match(vision, /Math\.hypot\(dx,dy\)/);
 });
 test("após sofrer dano o fantasma limpa o estado de fuga e reinicia patrulha e teleporte", () => {

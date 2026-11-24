@@ -37,7 +37,7 @@ test("fantasminhas aparecem somente nas fases 3 a 6 do Pântano", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /currentWorld==="swamp"&&level>=3&&level<=6\)spawnSwampGhosts\(\)/);
   assert.match(html, /const count=2\+Math\.floor\(Math\.random\(\)\*2\)/);
-  assert.match(html, /dist>3\)return false/);
+  assert.match(html, /dist>5\)return false/);
 });
 test("fantasminhas flutuam, perseguem por caminhos e só teleportam ao receber dano", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");

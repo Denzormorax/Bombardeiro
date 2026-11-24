@@ -19363,8 +19363,39 @@ function swampGhostBombEscapePath(ghost,danger){
  candidates.sort((a,b)=>a.score-b.score);
  return candidates.length?candidates[0].path:[];
 }
-function swampGhostMove(ghost,dt){const p=ghost.path[0];if(!p)return;const tx=p.x+.5,ty=p.y+.5,dx=tx-ghost.x,dy=ty-ghost.y,dist=Math.hypot(dx,dy);if(dist<.055){ghost.x=tx;ghost.y=ty;ghost.path.shift();return}const step=Math.min(dist,ghost.speed*dt);if(Math.abs(dx)>=Math.abs(dy)){const nx=ghost.x+Math.sign(dx)*step;if(swampGhostStand(nx,ghost.y)){ghost.x=nx;ghost.facingX=Math.sign(dx);ghost.facingY=0}else ghost.path=[]}else{const ny=ghost.y+Math.sign(dy)*step;if(swampGhostStand(ghost.x,ny)){ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(dy)}else ghost.path=[]}}
-function swampGhostSees(ghost){const dx=player.x-ghost.x,dy=player.y-ghost.y,dist=Math.hypot(dx,dy);if(dist>3)return false;for(let i=1,n=Math.ceil(dist*16);i<n;i++){const t=i/n;if(tileAt(Math.floor(ghost.x+dx*t),Math.floor(ghost.y+dy*t))===1)return false}return true}
+function swampGhostMove(ghost,dt){
+ const p=ghost.path[0];if(!p)return;
+ const tx=p.x+.5,ty=p.y+.5,dx=tx-ghost.x,dy=ty-ghost.y,dist=Math.hypot(dx,dy);
+ if(dist<.055){if(swampGhostStand(tx,ty)){ghost.x=tx;ghost.y=ty;ghost.path.shift()}return}
+ const step=Math.min(dist,ghost.speed*dt),steps=Math.max(1,Math.ceil(step/.012)),micro=step/steps;
+ const offsets=[.015,.03,.045,.06,.075,.09,.105,.12,.135,.15,.165,.18,.195,.21,.225,.24];
+ for(let i=0;i<steps;i++){
+  const remainX=tx-ghost.x,remainY=ty-ghost.y;
+  if(Math.abs(remainX)<.000001&&Math.abs(remainY)<.000001)break;
+  if(Math.abs(remainX)>=Math.abs(remainY)){
+   const sx=Math.sign(remainX)*Math.min(micro,Math.abs(remainX)),nx=ghost.x+sx;
+   if(swampGhostStand(nx,ghost.y)){ghost.x=nx;ghost.facingX=Math.sign(sx);ghost.facingY=0;continue}
+   let slid=false;
+   for(const offset of offsets){for(const sign of [-1,1]){
+    const sideY=ghost.y+sign*offset;
+    if(!swampGhostStand(ghost.x,sideY)||!swampGhostStand(nx,sideY))continue;
+    ghost.y=sideY;ghost.x=nx;ghost.facingX=Math.sign(sx);ghost.facingY=0;slid=true;break;
+   }if(slid)break}
+   if(!slid){ghost.path=[];return}
+  }else{
+   const sy=Math.sign(remainY)*Math.min(micro,Math.abs(remainY)),ny=ghost.y+sy;
+   if(swampGhostStand(ghost.x,ny)){ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(sy);continue}
+   let slid=false;
+   for(const offset of offsets){for(const sign of [-1,1]){
+    const sideX=ghost.x+sign*offset;
+    if(!swampGhostStand(sideX,ghost.y)||!swampGhostStand(sideX,ny))continue;
+    ghost.x=sideX;ghost.y=ny;ghost.facingX=0;ghost.facingY=Math.sign(sy);slid=true;break;
+   }if(slid)break}
+   if(!slid){ghost.path=[];return}
+  }
+ }
+}
+function swampGhostSees(ghost){const dx=player.x-ghost.x,dy=player.y-ghost.y,dist=Math.hypot(dx,dy);if(dist>5)return false;for(let i=1,n=Math.ceil(dist*16);i<n;i++){const t=i/n;if(tileAt(Math.floor(ghost.x+dx*t),Math.floor(ghost.y+dy*t))===1)return false}return true}
 function swampGhostTarget(ghost,escape,danger){const out=[];if(!escape){for(const d of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){const x=player.x+d[0]*.64,y=player.y+d[1]*.64,k=cellKey(Math.floor(x),Math.floor(y));if((danger&&danger.has(k))||!swampGhostStand(x,y)||distance(x,y,player.x,player.y)<.5)continue;out.push({x,y})}}else{for(let i=0;i<110;i++){const x=1.5+Math.floor(Math.random()*(COLS-2)),y=1.5+Math.floor(Math.random()*(ROWS-2)),k=cellKey(Math.floor(x),Math.floor(y));if(!swampGhostOpen(Math.floor(x),Math.floor(y))||waterPuddleCells.has(k)||(danger&&danger.has(k))||distance(x,y,player.x,player.y)<4.6)continue;out.push({x,y});if(out.length>=10)break}}return out.length?out[Math.floor(Math.random()*out.length)]:null}
 function swampGhostStartTeleport(g,target,escape,fast=false){if(!target)return false;const duration=fast?.48:escape?.42:.48;swampGhostBurst(g.x,g.y,fast?14:22);g.teleportDuration=duration;g.teleporting=duration;g.teleportSwapAt=duration*.5;g.teleportDestination=target;g.teleportSwapped=false;g.path=[];g.teleportCooldown=escape?.65:2.1;return true}
 function updateSwampGhost(g,dt,danger){
