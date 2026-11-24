@@ -17422,6 +17422,8 @@ function draw(){
  // As poças ficam inteiramente atrás de todos os elementos móveis, sem cortes por ordenação de linhas.
  for(let y=0;y<ROWS;y++)ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
  for(const puddle of waterPuddles)drawWaterPuddle(puddle);
+ // Flocos discretos acompanham os blocos de neve sem recriar sprites ou alterar a física.
+ if(currentWorld==="ice")drawSnowballParticles();
  // A animação da lava é uma camada de cenário: sempre atrás de bombas e personagens.
  drawVolcanoCraterAnimation();
  drawDesertDuneAnimation();
@@ -18445,9 +18447,37 @@ drawForestBackground=function(target){
   c.restore();
  }
 };
+const snowballTextureImage=new Image();
+const snowballTileCanvas=document.createElement("canvas");
+snowballTileCanvas.width=TILE;snowballTileCanvas.height=TILE;
+let snowballTextureReady=false;
+snowballTextureImage.onload=()=>{
+ const q=snowballTileCanvas.getContext("2d");q.clearRect(0,0,TILE,TILE);q.imageSmoothingEnabled=true;
+ q.drawImage(snowballTextureImage,80,90,352,352,0,0,TILE,TILE);
+ snowballTextureReady=true;
+ if(currentWorld==="ice")rebuildStaticMapCache();
+};
+snowballTextureImage.src="game-assets/sprites/snowball_destructible.svg";
+function drawSnowballParticles(){
+ if(currentWorld!=="ice"||!map||!map.length)return;
+ ctx.save();ctx.fillStyle="#f5fdff";
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  if(map[y][x]!==2)continue;
+  const px=ox+x*TILE,py=oy+y*TILE;
+  for(let k=0;k<2;k++){
+   const phase=(gameClock*.42+x*7.13+y*3.71+k*.47)%1;
+   const fx=px+(k===0?8:36)+Math.sin(gameClock*1.7+x+y+k)*2.5;
+   const fy=py+5+phase*36;
+   ctx.globalAlpha=.35+.55*Math.sin(phase*Math.PI);
+   ctx.beginPath();ctx.arc(fx,fy,k===0?1.7:1.25,0,Math.PI*2);ctx.fill();
+  }
+ }
+ ctx.restore();
+}
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="ice")return tileBeforeIce(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,tiles=iceThemedSpriteSheets;
+ if(type===2&&snowballTextureReady){target.imageSmoothingEnabled=true;target.drawImage(snowballTileCanvas,px,py,TILE,TILE);return}
  const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);
  const tile=tiles[iceThemeIndex()];
  if(tile){target.imageSmoothingEnabled=false;target.drawImage(tile,col*96,0,96,96,px,py,TILE,TILE);return}
@@ -18519,7 +18549,35 @@ selectMapLevel=function(i){
  placeIceMascot(i,true);mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;launchIceLevel(i)},430);
 };
 const iceCardStyle=document.createElement("style");
-iceCardStyle.textContent='#game[data-world="ice"]::before{background:linear-gradient(180deg,var(--world-far),var(--world-near));clip-path:polygon(0 72%,12% 42%,23% 62%,36% 18%,48% 57%,61% 28%,74% 63%,87% 20%,100% 55%,100% 100%,0 100%)}.iceWorldCard{border-color:#a8eaff!important;box-shadow:0 7px 0 #234b70,0 12px 18px #0008!important}';
+iceCardStyle.textContent=`
+#game[data-world="ice"]::before{background:linear-gradient(180deg,var(--world-far),var(--world-near));clip-path:polygon(0 72%,12% 42%,23% 62%,36% 18%,48% 57%,61% 28%,74% 63%,87% 20%,100% 55%,100% 100%,0 100%)}
+.iceWorldCard{border-color:#a8eaff!important;box-shadow:0 7px 0 #234b70,0 12px 18px #0008!important}
+#icePanel{position:fixed;inset:0;z-index:12;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;padding:clamp(12px,2vh,18px) clamp(12px,3vw,35px);border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;background:linear-gradient(180deg,rgba(17,49,78,.12),rgba(5,14,35,.24)),radial-gradient(ellipse at 50% 82%,#245b83 0%,#142d55 52%,#080f27 100%)}
+#icePanel>*{position:relative;z-index:1}
+#icePanel .menuTitle{position:relative;align-self:center;margin:3px 0 8px;font-size:clamp(24px,4vw,36px);color:#dff8ff;text-shadow:0 3px 0 #23486b,0 0 15px #8ceaff}
+#iceBackArrowBtn{position:absolute;top:12px;left:12px;z-index:10;width:43px;height:43px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid #b9efff;border-radius:12px;background:linear-gradient(145deg,#397da5,#183b68);color:#f3fdff;font-size:29px;font-weight:bold;line-height:1;box-shadow:0 4px 12px #0009,0 0 12px #68dfff66;cursor:pointer}
+#iceBackArrowBtn:active{transform:scale(.94);filter:brightness(1.3)}
+#iceMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;margin:0;overflow:hidden}
+#icePath{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#icePath .pathShadow{fill:none;stroke:#081b38;stroke-width:24;stroke-linecap:round;stroke-linejoin:round;opacity:.78}
+#icePath .pathBase{fill:none;stroke:#4b9bc0;stroke-width:15;stroke-linecap:round;stroke-linejoin:round}
+#icePath .pathCenter{fill:none;stroke:#d8f8ff;stroke-width:3;stroke-dasharray:5 10;stroke-linecap:round;opacity:.92}
+#iceLevelNodes{position:absolute;inset:0;pointer-events:none}
+#iceMapMascot{position:absolute;width:clamp(43px,7vw,65px);height:clamp(43px,7vw,65px);left:0;top:0;transform:translate(-50%,-112%);z-index:8;pointer-events:none;transition:left .38s cubic-bezier(.2,.75,.25,1),top .38s cubic-bezier(.2,.75,.25,1);filter:drop-shadow(0 5px 3px #081b38)}
+#iceMapMascot .miniBody{position:absolute;inset:7px;z-index:1;border-radius:50%;background:radial-gradient(circle at 32% 25%,#fff 0%,#eafaff 52%,#9bcfe4 100%);opacity:1;border:4px solid #8fe6ff;box-shadow:0 4px 0 #285b7e}
+#iceMapMascot .miniHelmet{position:absolute;z-index:2;left:20%;right:20%;top:12%;height:32%;border-radius:50% 50% 10px 10px;background:linear-gradient(#f4fdff,#65b8dc);border-bottom:2px solid #397b9f}
+#iceMapMascot .miniEyes{position:absolute;z-index:3;left:29%;right:29%;top:42%;display:flex;justify-content:space-between}
+#iceMapMascot .miniEyes i{display:block;width:6px;height:9px;border-radius:50%;background:#fff;position:relative;box-shadow:inset 0 -1px 0 #c5e9f5}
+#iceMapMascot .miniEyes i:after{content:"";position:absolute;width:3px;height:5px;left:2px;top:3px;border-radius:50%;background:#19364e}
+#iceMapMascot .miniMouth{position:absolute;z-index:3;left:40%;top:68%;width:20%;height:8%;border-bottom:2px solid #19364e;border-radius:50%}
+#iceLevelNodes .mapNode{border-color:#c8f5ff;background:radial-gradient(circle at 32% 25%,#f4fdff,#6dc6e8 58%,#245a8c);color:#fff;text-shadow:0 2px 3px #17415f;box-shadow:0 4px 0 #173e68,0 0 13px #8deaff,0 0 25px #4bbbe988}
+#iceLevelNodes .mapNode.available{animation:icePulse 1.8s ease-in-out infinite}
+#iceLevelNodes .mapNode.completed{background:linear-gradient(145deg,#eaffff,#67b8d8);border-color:#fff;color:#fff;text-shadow:0 2px 2px #24516e;box-shadow:0 4px 0 #285a7c,0 0 8px #a8edff88;animation:none}
+#iceLevelNodes .mapNode.locked{background:linear-gradient(145deg,#687f91,#34475d);border-color:#a9bdc9;color:#dceaf0;box-shadow:0 4px 0 #1c2c42;filter:saturate(.55)}
+@keyframes icePulse{0%,100%{box-shadow:0 4px 0 #173e68,0 0 10px #8deaff,0 0 19px #4bbbe988}50%{box-shadow:0 4px 0 #173e68,0 0 19px #8deaff,0 0 34px #4bbbe9}}
+#iceProgressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);margin:0;text-align:center;font-size:12px;color:#e5faff;text-shadow:0 2px 5px #081b38}
+@media(max-width:600px){#icePanel{padding:10px 8px}#iceMap{width:100%;height:min(48vh,250px);min-height:160px}.mapNode{width:clamp(34px,7vw,49px);height:clamp(34px,7vw,49px);border-width:2px}#iceMapMascot{width:48px;height:48px}#icePanel .menuTitle{font-size:24px;margin-top:5px}#iceBackArrowBtn{top:9px;left:9px;width:39px;height:39px}}
+`;
 document.head.appendChild(iceCardStyle);
 function addIceWorldUI(){
  if(!$("iceBtn")){
