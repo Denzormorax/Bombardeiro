@@ -86,7 +86,8 @@ test("fantasminha volta à patrulha após receber dano e persegue mais rápido q
 
 test("fuga de bombas é limitada a cinco casas, prioriza abrigo e reage sem pausa", () => {
   const escape = game.slice(game.indexOf("function findBombEscapePath"), game.indexOf("function findBlueFlameEscapePath"));
-  assert.match(escape, /const maxSteps=5/);
+  assert.match(escape, /const maxSteps=preferCover\?5:\(shortFlee\?2:COLS\*ROWS\)/);
+  assert.match(escape, /const desertHunter=currentWorld==="desert"&&enemy\.isHunter/);
   assert.match(escape, /isBehindBombCover/);
   const iceEscape = game.slice(game.indexOf("function findBlueFlameEscapePath"), game.indexOf("function spawnSandBuildParticles"));
   assert.match(iceEscape, /p\.path\.length>=\(\(enemy\.isHunter\|\|enemy\.isSnowman\)\?2:COLS\*ROWS\)/);
