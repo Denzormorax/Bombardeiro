@@ -78,10 +78,11 @@ test("inimigos do Gelo fogem da bomba recém-colocada e o Caçador acelera na fu
   assert.ok(update.includes("enemy.isHunter?enemy.huntSpeed*1.3"));
 });
 
-test("bombas nas poças congeladas deslizam na direção para a qual o jogador olha", () => {
+test("bombas nas poças congeladas param em obstáculos sem detonar antes do temporizador", () => {
   assert.ok(game.includes('if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y)))'));
   assert.ok(game.includes("bomb.slide={dx:directionX,dy:directionY,icePuddle:true}"));
-  assert.ok(game.includes("if(b.slide.icePuddle){b.slide=null;b.t=Math.min(b.t,dt);continue}"));
+  assert.ok(game.includes("const icePuddleSlide=!!b.slide.icePuddle;b.slide=null;if(!icePuddleSlide)b.t=Math.min(b.t,.12);continue"));
+  assert.ok(game.includes("if(b.slide.icePuddle){b.slide=null;continue}"));
   assert.ok(game.includes("function updateSlidingBombs(dt)"));
 });
 
@@ -148,4 +149,33 @@ test("bomba congelada funciona como bloco destrutível e entra na detonação em
 test("Boneco de Neve mantém a perseguição após terminar o sopro de gelo", () => {
   assert.ok(game.includes('enemy.alert=3.2;enemy.lastSeen={x:player.x,y:player.y}'));
   assert.ok(game.includes("if(player.passBomb===bomb)player.passBomb=null")===false);
+});
+
+test("Caçador e Boneco de Neve limitam a fuga a dois blocos quando há rota segura", () => {
+  const escape=game.slice(game.indexOf("function findBombEscapePath"),game.indexOf("function findBlueFlameEscapePath"));
+  assert.ok(escape.includes('currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)'));
+  assert.ok(escape.includes("maxSteps=shortFlee?2:COLS*ROWS"));
+  assert.ok(escape.includes("if(!safe.length&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true)"));
+  const blue=game.slice(game.indexOf("function findBlueFlameEscapePath"),game.indexOf("function spawnSandBuildParticles"));
+  assert.ok(blue.includes("((enemy.isHunter||enemy.isSnowman)?2:COLS*ROWS)"));
+});
+test("pétalas de sopro e bombas congeladas usam sprites com brilho pré-renderizado", () => {
+  assert.ok(game.includes("const ICE_PETAL_COLORS=[\"#168fff\",\"#75d9ff\",\"#f4fdff\"]"));
+  assert.ok(game.includes("const icePetalCanvases=ICE_PETAL_COLORS.map"));
+  assert.ok(game.includes("ctx.drawImage(sprite,-diameter/2,-diameter/2,diameter,diameter)"));
+  const breath=game.slice(game.indexOf("function drawSnowmanBreath"),game.indexOf("function drawEnemy(e)"));
+  const frozen=game.slice(game.indexOf("function drawFrozenBombOverlay"),game.indexOf("function drawBomb(b)"));
+  assert.ok(!breath.includes("shadowBlur")&&!frozen.includes("shadowBlur"));
+  assert.ok(!breath.includes("quadraticCurveTo")&&!frozen.includes("quadraticCurveTo"));
+});
+test("Boneco de Neve não inicia congelamento simultâneo de várias bombas", () => {
+  assert.ok(game.includes('!enemy.freezingBomb&&(enemy.freezeCooldown||0)<=0&&startSnowmanFreeze(enemy,newBomb)'));
+});
+
+test("Caçador e Boneco de Neve aguardam a explosão após a fuga curta", () => {
+  const reaction=game.slice(game.indexOf("function reactToNewBomb"),game.indexOf("function followEnemyPath"));
+  assert.ok(reaction.includes("enemy.evadeTimer=Math.max(enemy.evadeTimer||0,Math.max(0,newBomb.t||0)+.18)"));
+  const update=game.slice(game.indexOf("function updateEnemies(dt)"),game.indexOf("/* BOMBAS E COMBATE */"));
+  assert.ok(update.includes('if(!(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)))enemy.evadeTimer=0'));
+  assert.ok(update.includes("if(enemy.evadeTimer>0)continue"));
 });

@@ -15611,6 +15611,18 @@ const BURNING_CRATE_FRAMES=8;const burningCrateCanvases=Array.from({length:10},(
 const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=96;portalAuraCanvas.height=96;const portalAuraCtx=portalAuraCanvas.getContext("2d");
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
 // As poças congeladas usam somente duas linhas brancas nítidas.
+const ICE_PETAL_COLORS=["#168fff","#75d9ff","#f4fdff"];
+const icePetalCanvases=ICE_PETAL_COLORS.map(color=>{
+ const canvas=document.createElement("canvas");canvas.width=24;canvas.height=24;
+ const c=canvas.getContext("2d");c.save();c.translate(12,12);c.shadowColor=color;c.shadowBlur=7;c.fillStyle=color;
+ c.beginPath();c.moveTo(-4.5,0);c.quadraticCurveTo(-1.35,-3.75,0,-1.65);c.quadraticCurveTo(1.35,-3.75,4.5,0);c.quadraticCurveTo(1.35,3.75,0,1.65);c.quadraticCurveTo(-1.35,3.75,-4.5,0);c.fill();
+ c.shadowBlur=0;c.globalAlpha=.5;c.fillStyle="#ffffff";c.beginPath();c.ellipse(-.7,-.35,1.1,.55,-.35,0,Math.PI*2);c.fill();c.restore();return canvas;
+});
+function drawIcePetal(x,y,size,angle,colorIndex,alpha=1){
+ ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalAlpha=alpha;
+ const sprite=icePetalCanvases[colorIndex%icePetalCanvases.length],diameter=size*4;
+ ctx.drawImage(sprite,-diameter/2,-diameter/2,diameter,diameter);ctx.restore();
+}
 const icePuddleShimmerCanvas=document.createElement("canvas");icePuddleShimmerCanvas.width=40;icePuddleShimmerCanvas.height=56;
 (()=>{const c=icePuddleShimmerCanvas.getContext("2d");c.fillStyle="#ffffff";c.fillRect(18,0,4,56)})();
 // Brilho difuso dos blocos indestrutíveis: uma textura leve pré-renderizada por tema.
@@ -16357,8 +16369,9 @@ function isBehindBombCover(x,y){
  }
  return false;
 }
-function findBombEscapePath(enemy,danger,preferCover=false){
+function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
  const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),safe=[];
+ const shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman),maxSteps=shortFlee?2:COLS*ROWS;
  let head=0;
  while(head<queue.length){
   const p=queue[head++],key=cellKey(p.x,p.y);
@@ -16370,7 +16383,7 @@ function findBombEscapePath(enemy,danger,preferCover=false){
    const score=desertHunter?p.path.length*.62-nearestBomb*.42-coverBonus:p.path.length-nearestBomb*.12-coverBonus;
    safe.push({path:p.path,score});
   }
-  if(p.path.length>=COLS*ROWS)continue;
+  if(p.path.length>=maxSteps)continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+dx,y=p.y+dy,k=cellKey(x,y);
    if(visited.has(k)||tileAt(x,y)!==0||bombAt(x,y)||danger.has(k))continue;
@@ -16378,6 +16391,7 @@ function findBombEscapePath(enemy,danger,preferCover=false){
   }
  }
  safe.sort((a,b)=>a.score-b.score);
+ if(!safe.length&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true);
  return safe.length?safe[0].path:[];
 }
 function findBlueFlameEscapePath(enemy,danger){
@@ -16397,7 +16411,7 @@ function findBlueFlameEscapePath(enemy,danger){
    const score=p.path.length*.78-separation*1.35-coverBonus+exposedPenalty;
    candidates.push({path:p.path,score});
   }
-  if(p.path.length>=COLS*ROWS)continue;
+  if(p.path.length>=((enemy.isHunter||enemy.isSnowman)?2:COLS*ROWS))continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+dx,y=p.y+dy,k=cellKey(x,y);
    if(visited.has(k)||tileAt(x,y)!==0||bombAt(x,y)||danger.has(k))continue;
@@ -16405,6 +16419,7 @@ function findBlueFlameEscapePath(enemy,danger){
   }
  }
  candidates.sort((a,b)=>a.score-b.score);
+ if(!candidates.length&&(enemy.isHunter||enemy.isSnowman))return findBombEscapePath(enemy,danger,false,true);
  return candidates.length?candidates[0].path:[];
 }
 function spawnSandBuildParticles(x,y){
@@ -16491,7 +16506,7 @@ function reactToNewBomb(newBomb=null){
    const targetBomb=newBomb||bombs.reduce((best,b)=>!best||distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<distance(enemy.x,enemy.y,best.x+.5,best.y+.5)?b:best,null);
    if(targetBomb&&distance(enemy.x,enemy.y,targetBomb.x+.5,targetBomb.y+.5)<=5.2&&buildBuilderSandShield(enemy,targetBomb))continue;
   }
-  if(enemy.isSnowman&&currentWorld==="ice"&&newBomb&&startSnowmanFreeze(enemy,newBomb))continue;
+  if(enemy.isSnowman&&currentWorld==="ice"&&newBomb&&!enemy.freezingBomb&&(enemy.freezeCooldown||0)<=0&&startSnowmanFreeze(enemy,newBomb))continue;
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentThreatened=danger.has(currentKey);
   const routeThreatened=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
@@ -16508,7 +16523,8 @@ function reactToNewBomb(newBomb=null){
   const iceBombThreat=currentWorld==="ice"&&bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=Math.max(4.8,(Number(b.range)||1)+1.4));
   enemy.repath=0;
   if(currentThreatened||routeThreatened||desertHunterThreat||iceBombThreat){
-   // O caçador do deserto mantém sua reação própria; no Gelo a fuga começa quase imediatamente.
+   // No Gelo, Caçador e Boneco de Neve recuam apenas o necessário para sair da zona de risco.
+   if(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)&&newBomb)enemy.evadeTimer=Math.max(enemy.evadeTimer||0,Math.max(0,newBomb.t||0)+.18);
    enemy.bombEscapePending=true;
    enemy.bombReactionTimer=currentWorld==="ice"?(enemy.isHunter ? .01 : .025):desertHunterThreat?.02:enemy.isMushroom ? .02 : enemy.isHorned ? .04 : (enemy.isHunter||enemy.isBuilder) ? .07 : .08;
   }else if(routeBlockedByBomb||nearbyBomb){
@@ -16594,7 +16610,7 @@ function updateEnemies(dt){
    const escape=currentWorld==="ice"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter||enemy.isMushroom));
    enemy.bombEscapePending=false;
    if(escape.length){
-    enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;enemy.evadeTimer=0;
+    enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;if(!(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)))enemy.evadeTimer=0;
     if(currentInDanger)for(const bomb of bombs)if(getBombDangerCells(bomb).has(currentKey))enemy.evadeTimer=Math.max(enemy.evadeTimer,bomb.t+.18);
     enemy.speed=currentWorld==="ice"?(enemy.isHunter?enemy.huntSpeed*1.3:enemy.isHorned?enemy.huntSpeed*1.2:enemy.baseSpeed*1.24):enemy.isHorned&&!enemy.isEnraged?enemy.baseSpeed:enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
     followEnemyPath(enemy,dt);continue;
@@ -16681,10 +16697,10 @@ function tryPushBomb(dx,dy){
 }
 function updateSlidingBombs(dt){
  for(const b of bombs){if(!b.slide||b.freezing||b.frozen)continue;b.slideClock-=dt;if(b.slideClock>0)continue;b.slideClock=.105;const nx=b.x+b.slide.dx,ny=b.y+b.slide.dy,nextTile=tileAt(nx,ny),otherBomb=bombs.some(other=>other!==b&&Math.floor(other.x)===nx&&Math.floor(other.y)===ny);
-  if(nextTile!==0||otherBomb){b.slide=null;b.t=Math.min(b.t,.12);continue}
+  if(nextTile!==0||otherBomb){const icePuddleSlide=!!b.slide.icePuddle;b.slide=null;if(!icePuddleSlide)b.t=Math.min(b.t,.12);continue}
   const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);
   if(enemy){
-   if(b.slide.icePuddle){b.slide=null;b.t=Math.min(b.t,dt);continue}
+   if(b.slide.icePuddle){b.slide=null;continue}
    b.x=nx;b.y=ny;b.slide=null;b.t=Math.min(b.t,.12);continue
   }
   b.x=nx;b.y=ny;
@@ -17384,16 +17400,13 @@ function drawSnowmanBreath(e){
  const bomb=e.freezingBomb;if(!bomb||!bomb.freezing||bomb.chainTriggered)return;
  const sx=ox+e.x*TILE,sy=oy+e.y*TILE-19,ux=e.facingX||0,uy=e.facingY||0;
  if(!ux&&!uy)return;
- const px=-uy,py=ux,phase=gameClock*8,colors=["#168fff","#75d9ff","#f4fdff"];
+ const px=-uy,py=ux,phase=gameClock*8;
  ctx.save();ctx.globalCompositeOperation="lighter";
  for(let i=0;i<11;i++){
   const travel=((gameClock*1.9+i*.091)%1),spread=Math.sin(gameClock*5+i*2.17)*3.8;
   const x=sx+ux*(10+travel*35)+px*spread,y=sy+uy*(10+travel*35)+py*spread;
   const size=1.8+(i%3)*.48,angle=Math.atan2(uy,ux)+Math.sin(phase+i*1.7)*.55;
-  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalAlpha=.9+.1*Math.sin(gameClock*13+i);
-  ctx.shadowColor=colors[i%3];ctx.shadowBlur=7;ctx.fillStyle=colors[i%3];
-  ctx.beginPath();ctx.moveTo(-size*1.5,0);ctx.quadraticCurveTo(-size*.45,-size*1.25,0,-size*.55);ctx.quadraticCurveTo(size*.45,-size*1.25,size*1.5,0);ctx.quadraticCurveTo(size*.45,size*1.25,0,size*.55);ctx.quadraticCurveTo(-size*.45,size*1.25,-size*1.5,0);ctx.fill();
-  ctx.restore();
+  drawIcePetal(x,y,size,angle,i%3,.9+.1*Math.sin(gameClock*13+i));
  }
  ctx.restore();
 }
@@ -17479,16 +17492,12 @@ function drawFrozenBombOverlay(b,px,py){
  const top=16-progress*32;
  ctx.fillStyle="rgba(65,171,235,.68)";ctx.fillRect(-17,top,34,32*progress);
  ctx.fillStyle="rgba(235,252,255,.25)";ctx.fillRect(-14,top,7,32*progress);
- // Pétalas cristalinas cintilam sobre a camada congelada, sem linhas de varredura.
  if(progress>.12){
-  const colors=["#168fff","#75d9ff","#f4fdff"],time=gameClock;
-  ctx.globalCompositeOperation="lighter";
+  const time=gameClock;ctx.globalCompositeOperation="lighter";
   for(let i=0;i<9;i++){
    const angle=i*2.399963+time*(i%2?.72:-.48),radius=4+(i%3)*3.1+Math.sin(time*7+i)*1.2;
    const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*1.05,size=1.25+(i%3)*.42;
-   ctx.save();ctx.translate(x,y);ctx.rotate(angle+time*1.4);ctx.globalAlpha=.88+.12*Math.sin(time*11+i);
-   ctx.shadowColor=colors[i%3];ctx.shadowBlur=6;ctx.fillStyle=colors[i%3];
-   ctx.beginPath();ctx.moveTo(-size*1.4,0);ctx.quadraticCurveTo(-size*.4,-size,0,-size*.45);ctx.quadraticCurveTo(size*.4,-size,size*1.4,0);ctx.quadraticCurveTo(size*.4,size,0,size*.45);ctx.quadraticCurveTo(-size*.4,size,-size*1.4,0);ctx.fill();ctx.restore();
+   drawIcePetal(x,y,size,angle+time*1.4,i%3,.88+.12*Math.sin(time*11+i));
   }
  }
  ctx.restore();
