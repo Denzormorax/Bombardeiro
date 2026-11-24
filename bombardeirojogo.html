@@ -16220,9 +16220,10 @@ function newLevel(preservePowerUps=false){
    builderCount=currentWorld==="desert"&&level>=1&&level<=9?2+Math.floor(Math.random()*2):0,
    mushroomCount=level>=5&&level<=9?Math.min(2,Math.max(1,Math.ceil(count/3)),count):level>=4&&level<=8?Math.min(2,Math.floor(Math.random()*3),count):0,
    hornedCount=level>=5&&level<=9?Math.min(count-mushroomCount,Math.max(2,Math.ceil(count*.45))):level>=6&&level<=10?Math.min(2,Math.floor(Math.random()*3),count-mushroomCount):0,
-   spawnPositions=createEnemySpawnPositions(count+builderCount);prepareCoinDrops();
-  const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),builderSlots=new Set(slots.splice(0,builderCount)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
- spawnPositions.forEach((p,index)=>{const isBuilder=builderSlots.has(index),isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isHunter=!isBuilder&&!isMushroom&&!isHorned&&(level>=5&&level<=9?true:hunterSlots.has(index)),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isBuilder?1.62:isHorned?1.72:isHunter?1.55:1.28),isBuilder,isHunter,isHorned,isMushroom,isEnraged:false,hp:isBuilder?3:isHunter||isHorned?2:1,maxHp:isBuilder?3:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0,building:false,buildTimer:0,buildCheckTimer:0})});
+   snowmanCount=currentWorld==="ice"&&level>=1&&level<=9?3+Math.floor(Math.random()*2):0,
+   spawnPositions=createEnemySpawnPositions(count+builderCount+snowmanCount);prepareCoinDrops();
+  const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),builderSlots=new Set(slots.splice(0,builderCount)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),snowmanSlots=new Set(slots.splice(0,snowmanCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
+ spawnPositions.forEach((p,index)=>{const isBuilder=builderSlots.has(index),isMushroom=mushroomSlots.has(index),isHorned=hornedSlots.has(index),isSnowman=snowmanSlots.has(index),isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned&&(level>=5&&level<=9?true:hunterSlots.has(index))),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isBuilder?1.62:isSnowman?1.55:isHorned?1.72:isHunter?1.55:1.28),isBuilder,isHunter,isHorned,isMushroom,isSnowman,isEnraged:false,hp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,maxHp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0,building:false,buildTimer:0,buildCheckTimer:0,freezingBomb:null,freezeCooldown:0})});
  updateHUD();
 }
 
@@ -16258,6 +16259,7 @@ function moveEntity(entity,dx,dy,r,type){
 
 /* INTELIGÊNCIA DOS INIMIGOS */
 function getBombDangerCells(bomb){
+ if(bomb.freezing||bomb.frozen)return new Set();
  const bx=Math.floor(bomb.x),by=Math.floor(bomb.y),danger=new Set([cellKey(bx,by)]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
  for(const [dx,dy] of dirs)for(let n=1;n<=bomb.range;n++){
   const x=bx+dx*n,y=by+dy*n,tile=tileAt(x,y);
@@ -16454,6 +16456,33 @@ function drawBuilderBuildAnimations(){
   ctx.translate(-px-TILE/2,-py-TILE);drawTileTo(ctx,animation.x,animation.y,2);ctx.restore();
  }
 }
+function canSnowmanFreezeBomb(enemy,bomb){
+ if(!enemy||!bomb||bomb.freezing||bomb.frozen||bomb.chainTriggered||bomb.slide||bomb.whirlwind)return false;
+ const dx=bomb.x+.5-enemy.x,dy=bomb.y+.5-enemy.y,dist=Math.hypot(dx,dy),px=player.x-enemy.x,py=player.y-enemy.y,playerDist=Math.hypot(px,py);
+ if(dist<.55||dist>3.35||playerDist<.1)return false;
+ const ux=px/playerDist,uy=py/playerDist,along=dx*ux+dy*uy,across=Math.abs(dx*uy-dy*ux);
+ return along>=.45&&along<=3.35&&across<=.68;
+}
+function findSnowmanFreezeTarget(enemy){
+ let best=null,bestDistance=Infinity;
+ for(const bomb of bombs){
+  if(!canSnowmanFreezeBomb(enemy,bomb))continue;
+  const d=distance(enemy.x,enemy.y,bomb.x+.5,bomb.y+.5);
+  if(d<bestDistance){best=bomb;bestDistance=d}
+ }
+ return best;
+}
+function startSnowmanFreeze(enemy,bomb){
+ if(currentWorld!=="ice"||!enemy||!enemy.alive||!enemy.isSnowman||!canSnowmanFreezeBomb(enemy,bomb))return false;
+ bomb.freezing=true;bomb.frozen=false;bomb.freezeProgress=0;bomb.freezeDuration=1.15;bomb.chainTriggered=false;
+ if(!bomb.activeSlotReleased){activeBombs=Math.max(0,activeBombs-1);bomb.activeSlotReleased=true}
+ bomb.ownerPass=false;
+ if(player.passBomb===bomb)player.passBomb=null;
+ enemy.freezingBomb=bomb;enemy.freezeCooldown=2.05;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;enemy.mode="chase";
+ const dx=bomb.x+.5-enemy.x,dy=bomb.y+.5-enemy.y;
+ if(Math.abs(dx)>=Math.abs(dy)){enemy.facingX=Math.sign(dx);enemy.facingY=0}else{enemy.facingX=0;enemy.facingY=Math.sign(dy)}
+ return true;
+}
 function reactToNewBomb(newBomb=null){
  const danger=getAllBombDangerCells();
  for(const enemy of enemies){
@@ -16462,6 +16491,7 @@ function reactToNewBomb(newBomb=null){
    const targetBomb=newBomb||bombs.reduce((best,b)=>!best||distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<distance(enemy.x,enemy.y,best.x+.5,best.y+.5)?b:best,null);
    if(targetBomb&&distance(enemy.x,enemy.y,targetBomb.x+.5,targetBomb.y+.5)<=5.2&&buildBuilderSandShield(enemy,targetBomb))continue;
   }
+  if(enemy.isSnowman&&currentWorld==="ice"&&newBomb&&startSnowmanFreeze(enemy,newBomb))continue;
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentThreatened=danger.has(currentKey);
   const routeThreatened=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
@@ -16510,6 +16540,20 @@ function updateEnemies(dt){
   if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);continue}
   enemy.hitFlash=Math.max(0,enemy.hitFlash-dt);
   enemy.hurtTimer=Math.max(0,(enemy.hurtTimer||0)-dt);
+  if(enemy.isSnowman){
+   enemy.freezeCooldown=Math.max(0,(enemy.freezeCooldown||0)-dt);
+   const targetBomb=enemy.freezingBomb;
+   if(targetBomb&&bombs.includes(targetBomb)&&targetBomb.freezing&&!targetBomb.chainTriggered){
+    const dx=targetBomb.x+.5-enemy.x,dy=targetBomb.y+.5-enemy.y;
+    if(Math.abs(dx)>=Math.abs(dy)){enemy.facingX=Math.sign(dx);enemy.facingY=0}else{enemy.facingX=0;enemy.facingY=Math.sign(dy)}
+    enemy.speed=0;enemy.path=[];continue;
+   }
+   enemy.freezingBomb=null;
+   if(enemy.freezeCooldown<=0){
+    const bomb=findSnowmanFreezeTarget(enemy);
+    if(bomb&&startSnowmanFreeze(enemy,bomb))continue;
+   }
+  }
   if(enemy.isBuilder&&updateBuilderEnemy(enemy,dt))continue;
   enemy.repath=(enemy.repath||0)-dt;
   enemy.evadeTimer=Math.max(0,(enemy.evadeTimer||0)-dt);
@@ -16629,14 +16673,14 @@ function placeBomb(){
  bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=.25;reactToNewBomb(bomb);playSfx("bomb");
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
-function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
+function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
+function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
- for(const b of bombs){if(b.ownerPass||b.slide)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
+ for(const b of bombs){if(b.ownerPass||b.slide||b.freezing||b.frozen)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
 }
 function updateSlidingBombs(dt){
- for(const b of bombs){if(!b.slide)continue;b.slideClock-=dt;if(b.slideClock>0)continue;b.slideClock=.105;const nx=b.x+b.slide.dx,ny=b.y+b.slide.dy,nextTile=tileAt(nx,ny),otherBomb=bombs.some(other=>other!==b&&Math.floor(other.x)===nx&&Math.floor(other.y)===ny);
+ for(const b of bombs){if(!b.slide||b.freezing||b.frozen)continue;b.slideClock-=dt;if(b.slideClock>0)continue;b.slideClock=.105;const nx=b.x+b.slide.dx,ny=b.y+b.slide.dy,nextTile=tileAt(nx,ny),otherBomb=bombs.some(other=>other!==b&&Math.floor(other.x)===nx&&Math.floor(other.y)===ny);
   if(nextTile!==0||otherBomb){b.slide=null;b.t=Math.min(b.t,.12);continue}
   const enemy=enemies.find(e=>e.alive&&!e.burrowing&&Math.floor(e.x)===nx&&Math.floor(e.y)===ny);
   if(enemy){
@@ -16653,10 +16697,18 @@ function isInsideFlameDamage(entity,cell){
  return entity.x>=cell.x+margin&&entity.x<=cell.x+1-margin&&entity.y>=cell.y+margin&&entity.y<=cell.y+1-margin;
 }
 function explode(b){
- playSfx("explosion");let brokeBlock=false;activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
- for(const [dx,dy] of dirs)for(let i=1;i<=b.range;i++){const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}}if(brokeBlock){rebuildStaticMapCache();}
+ playSfx("explosion");let brokeBlock=false;if(!b.activeSlotReleased)activeBombs=Math.max(0,activeBombs-1);const bx=Math.floor(b.x),by=Math.floor(b.y),cells=[{x:bx,y:by}],dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ for(const [dx,dy] of dirs){
+  for(let i=1;i<=b.range;i++){
+   const x=bx+dx*i,y=by+dy*i,tile=tileAt(x,y);if(tile===1)break;cells.push({x,y});
+   const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen)&&Math.floor(other.x)===x&&Math.floor(other.y)===y);
+   if(frozenBomb){frozenBomb.chainTriggered=true;frozenBomb.t=0;break}
+   if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
+  }
+ }
+ if(brokeBlock){rebuildStaticMapCache();}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y)other.t=Math.min(other.t,.05)})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter||e.isBuilder){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
@@ -16948,7 +17000,15 @@ function update(dt){
  if(!running||paused)return;
  const previousPositions={player:{x:player.x,y:player.y},enemies:enemies.map(e=>({x:e.x,y:e.y}))};
  gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);for(let i=0;i<enemies.length;i++){const e=enemies[i],p=previousPositions.enemies[i];if(e&&e.isBuilder)e._builderMoving=!!(e.alive&&!e.burrowing&&p&&Math.hypot(e.x-p.x,e.y-p.y)>.00025)}updateWaterWalkers(dt,previousPositions);updateSlidingBombs(dt);
- for(const b of bombs){b.animTime+=dt;if(b.whirlwind){const w=b.whirlwind;w.t+=dt;if(!w.moved&&w.t>=w.duration*.5){b.x=w.toX;b.y=w.toY;w.moved=true}if(w.t>=w.duration)delete b.whirlwind}else b.t-=dt}const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
+ for(const b of bombs){
+  b.animTime+=dt;
+  if((b.freezing||b.frozen)&&!b.chainTriggered){
+   if(b.freezing){b.freezeProgress=Math.min(1,(b.freezeProgress||0)+dt/(b.freezeDuration||1.15));if(b.freezeProgress>=1){b.freezeProgress=1;b.freezing=false;b.frozen=true}}
+   continue;
+  }
+  if(b.whirlwind){const w=b.whirlwind;w.t+=dt;if(!w.moved&&w.t>=w.duration*.5){b.x=w.toX;b.y=w.toY;w.moved=true}if(w.t>=w.duration)delete b.whirlwind}else b.t-=dt;
+ }
+ const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
  for(const f of flames){f.t-=dt;f.age=(f.age||0)+dt}flames=flames.filter(f=>f.t>0);
   for(const c of burningCrates)c.t-=dt;for(let i=burningCrates.length-1;i>=0;i--)if(burningCrates[i].t<=0)burningCrates.splice(i,1);
  for(const f of flames){
@@ -17275,7 +17335,7 @@ function drawPlayer(){
  ctx.restore();
 }
 function drawEnemyFace(e,color,helmetColor,deathProgress=0){
- const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob,hurt=(e.hurtTimer||0)>0||!e.alive,facingX=e.facingX||0,facingY=e.facingY||1;
+ const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob,hurt=(e.hurtTimer||0)>0||!e.alive,facingX=e.facingX||0,facingY=e.facingY||1,faceYOffset=e.isSnowman?-17:0;
  const deathScale=deathProgress>0?Math.max(.25,1-deathProgress*.45):1,deathAlpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
  ctx.save();ctx.globalAlpha=.34*deathAlpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+14,15*(1-bob*.025)*deathScale,6*(1-bob*.025)*deathScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  const tilt=hurt?Math.sin(gameClock*38)*.045:Math.sin(gameClock*2.8+e.x)*.018;ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.22*deathScale,1.22*deathScale);
@@ -17298,14 +17358,39 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   ctx.restore();
  }
  if(e.isHorned){ctx.fillStyle=currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
- if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
+ if(e.isSnowman){
+  ctx.fillStyle="#b8dce9";ctx.beginPath();ctx.arc(0,7,17,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#83b9ce";ctx.lineWidth=1.2;ctx.stroke();
+  ctx.fillStyle="#f0fbff";ctx.beginPath();ctx.arc(0,7,14.8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#c5e5ef";ctx.beginPath();ctx.ellipse(-5,1,5,3,-.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#b8dce9";ctx.beginPath();ctx.arc(0,-16,11.8,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#83b9ce";ctx.lineWidth=1.1;ctx.stroke();
+  ctx.fillStyle="#f8fdff";ctx.beginPath();ctx.arc(-1,-17,10.1,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#ffffff";ctx.beginPath();ctx.ellipse(-4,-23,4.2,2.1,-.45,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#547c8c";for(const buttonY of [3,10,16]){ctx.beginPath();ctx.arc(0,buttonY,1.8,0,Math.PI*2);ctx.fill()}
+  ctx.fillStyle="#eea044";ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(9,-14);ctx.lineTo(0,-12.5);ctx.closePath();ctx.fill();
+ }else if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
  else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(e.isBuilder){ctx.fillStyle="#000000";for(const pebble of [[-10,4,2.1],[-6,11,1.7],[8,5,2.2],[10,-3,1.6],[1,12,1.8],[-12,-4,1.5]]){ctx.beginPath();ctx.arc(pebble[0],pebble[1],pebble[2],0,Math.PI*2);ctx.fill()}ctx.fillStyle=helmetColor;ctx.beginPath();ctx.moveTo(-14,-5);ctx.lineTo(-11,-13);ctx.quadraticCurveTo(0,-20,11,-13);ctx.lineTo(14,-5);ctx.closePath();ctx.fill();ctx.fillRect(-16,-5,32,3);ctx.fillStyle="#ffe39a";ctx.fillRect(-5,-13,10,2)}else if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
- if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5);ctx.lineTo(eyeX+2.2,1.8);ctx.moveTo(eyeX+2.2,-2.5);ctx.lineTo(eyeX-2.2,1.8);ctx.stroke()}}
- else{const eyeShiftX=facingX*2,eyeShiftY=facingY*2;ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.3,4.1,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#24101b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.9,0,Math.PI*2);ctx.fill()}
+ if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5+faceYOffset);ctx.lineTo(eyeX+2.2,1.8+faceYOffset);ctx.moveTo(eyeX+2.2,-2.5+faceYOffset);ctx.lineTo(eyeX-2.2,1.8+faceYOffset);ctx.stroke()}}
+ else{const eyeShiftX=facingX*2,eyeShiftY=facingY*2;ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY+faceYOffset,3.3,4.1,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY+faceYOffset,3.3,4.1,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#24101b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8+faceYOffset,1.9,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8+faceYOffset,1.9,0,Math.PI*2);ctx.fill()}
  ctx.strokeStyle="#24101b";ctx.lineWidth=2.5;ctx.lineCap="round";
- if(e.isHorned){ctx.fillStyle="#291018";ctx.beginPath();ctx.ellipse(0,8,6.5,4.3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-4,5);ctx.lineTo(-1.5,8);ctx.lineTo(-5,8);ctx.moveTo(1.5,8);ctx.lineTo(4,5);ctx.lineTo(5,8);ctx.fill()}
+ if(e.isSnowman){ctx.beginPath();ctx.moveTo(-3,8+faceYOffset);ctx.quadraticCurveTo(0,10+faceYOffset,3,8+faceYOffset);ctx.stroke()}
+ else if(e.isHorned){ctx.fillStyle="#291018";ctx.beginPath();ctx.ellipse(0,8,6.5,4.3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-4,5);ctx.lineTo(-1.5,8);ctx.lineTo(-5,8);ctx.moveTo(1.5,8);ctx.lineTo(4,5);ctx.lineTo(5,8);ctx.fill()}
  else{ctx.beginPath();ctx.moveTo(-5.5,8);ctx.quadraticCurveTo(0,3.5,5.5,8);ctx.stroke()}
- if(!e.isMushroom){ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-9,-5);ctx.lineTo(-5,-3.5);ctx.moveTo(9,-5);ctx.lineTo(5,-3.5);ctx.stroke()}
+ if(!e.isMushroom&&!e.isSnowman){ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-9,-5);ctx.lineTo(-5,-3.5);ctx.moveTo(9,-5);ctx.lineTo(5,-3.5);ctx.stroke()}
+ ctx.restore();
+}
+function drawSnowmanBreath(e){
+ const bomb=e.freezingBomb;if(!bomb||!bomb.freezing||bomb.chainTriggered)return;
+ const sx=ox+e.x*TILE,sy=oy+e.y*TILE-19,tx=ox+(bomb.x+.5)*TILE,ty=oy+(bomb.y+.5)*TILE,dx=tx-sx,dy=ty-sy,length=Math.hypot(dx,dy);
+ if(length<2)return;
+ const ux=dx/length,uy=dy/length,px=-uy,py=ux,endX=tx-ux*18,endY=ty-uy*18,phase=gameClock*10;
+ ctx.save();ctx.globalAlpha=.48+.16*Math.sin(gameClock*12);ctx.strokeStyle="rgba(174,239,255,.78)";ctx.lineWidth=5;ctx.lineCap="round";
+ ctx.beginPath();ctx.moveTo(sx+ux*9,sy+uy*9);ctx.quadraticCurveTo((sx+endX)/2+px*Math.sin(phase)*5,(sy+endY)/2+py*Math.sin(phase)*5,endX,endY);ctx.stroke();
+ ctx.globalAlpha=.62;ctx.strokeStyle="rgba(226,250,255,.9)";ctx.lineWidth=1.5;
+ for(let i=0;i<3;i++){const offset=(i-1)*4;ctx.beginPath();ctx.moveTo(sx+ux*14+px*offset,sy+uy*14+py*offset);ctx.lineTo(endX+px*offset*.45,endY+py*offset*.45);ctx.stroke()}
+ ctx.fillStyle="rgba(235,252,255,.92)";
+ for(let i=0;i<6;i++){const t=((gameClock*1.8+i/6)%1),spread=Math.sin(gameClock*8+i*2)*4,x=sx+ux*(14+t*(length-30))+px*spread,y=sy+uy*(14+t*(length-30))+py*spread;ctx.beginPath();ctx.arc(x,y,1.1+(i%2)*.55,0,Math.PI*2);ctx.fill()}
  ctx.restore();
 }
 function drawEnemy(e){
@@ -17316,11 +17401,12 @@ function drawEnemy(e){
   ctx.save();ctx.globalAlpha=e.burrowing?Math.max(.2,1-progress*.8):Math.min(1,progress+.15);ctx.translate(px,py+13);ctx.scale(1,scaleY);ctx.translate(-px,-(py+13));
   drawEnemyFace(e,"#27c957","#126b31",0);ctx.restore();return;
  }
- let bodyColor=e.isBuilder?"#d9a04b":e.isMushroom?"#27c957":e.isHorned?(e.isEnraged?"#c82d38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":"#a94bd8"):(currentWorld==="volcano"?"#df6329":"#d64c4c"),helmetColor=e.isBuilder?"#805027":e.isMushroom?"#126b31":e.isHorned?(e.isEnraged?"#741923":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":"#542080"):(currentWorld==="volcano"?"#702b20":"#8c2020");
+ let bodyColor=e.isSnowman?"#eefaff":e.isBuilder?"#d9a04b":e.isMushroom?"#27c957":e.isHorned?(e.isEnraged?"#c82d38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":"#a94bd8"):(currentWorld==="volcano"?"#df6329":"#d64c4c"),helmetColor=e.isSnowman?"#8cc9dc":e.isBuilder?"#805027":e.isMushroom?"#126b31":e.isHorned?(e.isEnraged?"#741923":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":"#542080"):(currentWorld==="volcano"?"#702b20":"#8c2020");
  if(e.hitFlash>0&&Math.sin(gameClock*65)>.25){bodyColor=e.isHorned&&e.isEnraged?"#ff6262":"#ef7777";helmetColor="#a92727"}
- if((e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py,20,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
- if((e.isHunter||e.isHorned||e.isBuilder)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-31;ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
+ if(e.isSnowman&&!isDying)drawSnowmanBreath(e);
+ if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-(e.isSnowman?43:31);ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isSnowman?(ratio>.66?"#a5edff":ratio>.33?"#64c9f2":"#3c8dbf"):e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
 }
 
 function drawCoin(c){
@@ -17383,7 +17469,38 @@ function drawExit(){
  }
  ctx.restore();
 }
+function drawFrozenBombOverlay(b,px,py){
+ const progress=b.frozen?1:Math.max(0,Math.min(1,b.freezeProgress||0));
+ ctx.save();ctx.translate(px,py);ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.clip();
+ const top=16-progress*32;
+ ctx.fillStyle="rgba(65,171,235,.68)";ctx.fillRect(-17,top,34,32*progress);
+ ctx.fillStyle="rgba(198,244,255,.9)";ctx.fillRect(-16,top,32,1.7);
+ ctx.fillStyle="rgba(235,252,255,.25)";ctx.fillRect(-14,top,7,32*progress);
+ if(progress>.28){ctx.strokeStyle="rgba(224,249,255,.82)";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-8,top+5);ctx.lineTo(-2,top+10);ctx.lineTo(-5,top+16);ctx.moveTo(7,top+10);ctx.lineTo(2,top+15);ctx.lineTo(6,top+20);ctx.stroke()}
+ ctx.restore();
+ ctx.save();ctx.globalAlpha=.8;ctx.fillStyle="#e8fbff";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("✳",px+17,py-13);ctx.restore();
+}
 function drawBomb(b){
+ const warp=b.whirlwind,progress=warp?Math.min(1,warp.t/warp.duration):0,warpScale=warp?Math.max(.08,Math.abs(1-progress*2)):1;
+ const px=ox+b.x*TILE+24,py=oy+b.y*TILE+24-(warp?Math.sin(progress*Math.PI)*12:0),pulse=1+Math.sin(b.animTime*4.2)*.075;
+ ctx.save();if(warp){ctx.globalAlpha=Math.min(1,Math.abs(1-progress*2)*3);ctx.translate(px,py);ctx.scale(warpScale,warpScale);ctx.translate(-px,-py)}
+ ctx.translate(px,py);ctx.scale(pulse,pulse);ctx.fillStyle="#080d12";ctx.beginPath();ctx.ellipse(0,15,17,6,0,0,Math.PI*2);ctx.fill();
+ const bodyGradient=ctx.createRadialGradient(-6,-7,2,0,0,19);bodyGradient.addColorStop(0,"#71818b");bodyGradient.addColorStop(.35,"#364957");bodyGradient.addColorStop(1,"#101820");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#a9bac2";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-6,-7,5,3,-.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();
+ ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
+ if(b.freezing||b.frozen)drawFrozenBombOverlay(b,px,py);
+ else{
+  const flicker=Math.sin(b.animTime*23+b.sparkPhase),flicker2=Math.cos(b.animTime*17+b.sparkPhase),sx=px+14+flicker*1.5,sy=py-21+flicker2*1.2;
+  ctx.save();ctx.shadowColor="#ff6b18";ctx.shadowBlur=12;ctx.fillStyle="#ff6b18";ctx.beginPath();ctx.moveTo(sx,sy+5);ctx.quadraticCurveTo(sx-7,sy-2-flicker,sx,sy-9-Math.abs(flicker)*2);ctx.quadraticCurveTo(sx+7,sy-2+flicker,sx,sy+5);ctx.fill();
+  ctx.fillStyle="#ffe36b";ctx.beginPath();ctx.moveTo(sx,sy+3);ctx.quadraticCurveTo(sx-3,sy-1,sx,sy-6-Math.abs(flicker2)*2);ctx.quadraticCurveTo(sx+4,sy-1,sx,sy+3);ctx.fill();ctx.shadowBlur=0;
+  for(let i=0;i<3;i++){const phase=b.animTime*13+b.sparkPhase+i*2.1,particleX=sx+Math.sin(phase)*5,particleY=sy-5-Math.abs(Math.cos(phase))*7,particleSize=1+Math.abs(Math.sin(phase))*1.2;ctx.globalAlpha=.45+.5*Math.abs(Math.sin(phase));ctx.fillStyle=i%2===0?"#ffe36b":"#ff8a32";ctx.beginPath();ctx.arc(particleX,particleY,particleSize,0,Math.PI*2);ctx.fill()}
+  ctx.globalAlpha=1;ctx.restore();
+ }
+ if(b.slide){ctx.fillStyle="#ffe36b";ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText("➜",px,py-29)}
+ ctx.restore();
+}
+
  const warp=b.whirlwind,progress=warp?Math.min(1,warp.t/warp.duration):0,warpScale=warp?Math.max(.08,Math.abs(1-progress*2)):1;
  const px=ox+b.x*TILE+24,py=oy+b.y*TILE+24-(warp?Math.sin(progress*Math.PI)*12:0),pulse=1+Math.sin(b.animTime*4.2)*.075;ctx.save();if(warp){ctx.globalAlpha=Math.min(1,Math.abs(1-progress*2)*3);ctx.translate(px,py);ctx.scale(warpScale,warpScale);ctx.translate(-px,-py)}ctx.translate(px,py);ctx.scale(pulse,pulse);ctx.fillStyle="#080d12";ctx.beginPath();ctx.ellipse(0,15,17,6,0,0,Math.PI*2);ctx.fill();const bodyGradient=ctx.createRadialGradient(-6,-7,2,0,0,19);bodyGradient.addColorStop(0,"#71818b");bodyGradient.addColorStop(.35,"#364957");bodyGradient.addColorStop(1,"#101820");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a9bac2";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-6,-7,5,3,-.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
  const flicker=Math.sin(b.animTime*23+b.sparkPhase),flicker2=Math.cos(b.animTime*17+b.sparkPhase),sx=px+14+flicker*1.5,sy=py-21+flicker2*1.2;ctx.save();ctx.shadowColor="#ff6b18";ctx.shadowBlur=12;ctx.fillStyle="#ff6b18";ctx.beginPath();ctx.moveTo(sx,sy+5);ctx.quadraticCurveTo(sx-7,sy-2-flicker,sx,sy-9-Math.abs(flicker)*2);ctx.quadraticCurveTo(sx+7,sy-2+flicker,sx,sy+5);ctx.fill();ctx.fillStyle="#ffe36b";ctx.beginPath();ctx.moveTo(sx,sy+3);ctx.quadraticCurveTo(sx-3,sy-1,sx,sy-6-Math.abs(flicker2)*2);ctx.quadraticCurveTo(sx+4,sy-1,sx,sy+3);ctx.fill();ctx.shadowBlur=0;
