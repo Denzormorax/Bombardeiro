@@ -45,7 +45,7 @@ test("fantasminhas flutuam, perseguem por caminhos e só teleportam ao receber d
   assert.match(html, /Math\.sin\(g\.phase\)\*3\.1/);
   assert.match(html, /swampGhostChasePath/);
   assert.match(html, /g\.alerted/);
-  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
+  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true,true(?:,false,"damage")?\)/);
   assert.doesNotMatch(html, /danger\.has\(k\)&&swampGhostStartTeleport\(g,swampGhostTarget\(g,true,danger\),true\)/);
   assert.match(html, /!entity\.isSwampGhost/);
 });
@@ -66,7 +66,7 @@ test("fantasminha suporta três danos e reaparece em posição aleatória após 
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /enemy\.hp=Math\.max\(0,\(enemy\.hp\?\?3\)-1\)/);
   assert.match(html, /swampGhostRandomDestination\(enemy,danger\)/);
-  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
+  assert.match(html, /swampGhostStartTeleport\(enemy,destination,true,true(?:,false,"damage")?\)/);
   assert.match(html, /if\(enemy\.hp<=0\).*?killEnemy\(enemy\)/s);
 });
 test("bombas empurradas no Pântano param em poças de lama e mantêm o temporizador", () => {

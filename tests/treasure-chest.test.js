@@ -123,8 +123,8 @@ test("após sofrer dano o fantasma escolhe novo ponto aleatório sem apagar a pe
   const damage = game.slice(game.indexOf("const swampDamageEnemyBase"), game.indexOf("const swampNewLevelBase"));
   assert.match(damage, /swampGhostRandomDestination\(enemy,danger\)/);
   assert.match(damage, /enemy\.bombTeleportCooldown=1\.1/);
-  assert.match(damage, /swampGhostStartTeleport\(enemy,destination,true,true\)/);
-  assert.doesNotMatch(damage, /enemy\.alerted=false/);
+  assert.match(damage, /swampGhostStartTeleport\(enemy,destination,true,true,false,"damage"\)/);
+  assert.match(damage, /enemy\.alerted=false;enemy\.ignorePlayerUntilOutOfSight=true/);
 });
 test("explosões reutilizam sprites de chama e colisões espaciais", () => {
   assert.match(game, /function buildFlameSpriteVariant/);
@@ -147,7 +147,7 @@ test("colisão entre fantasmas causa teleporte simultâneo para casas aleatória
 test("teleporte aleatório de patrulha acontece em intervalo variável de dois a quatro segundos", () => {
   assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);
   assert.match(game, /g\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
-  assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
+  assert.match(game, /if\(!g\.alerted&&!g\.ignorePlayerUntilOutOfSight&&seesPlayer\)/);
 });
 
 test("fantasma atingido por bomba abandona a perseguição e volta à patrulha", () => {
