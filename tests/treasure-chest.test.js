@@ -64,3 +64,22 @@ test("tesouro e efeitos são limpos ao iniciar outra fase", () => {
   const level = game.slice(game.indexOf("function newLevel"), game.indexOf("function gameOver"));
   assert.match(level, /treasureChests\.length=0;treasureEffects\.length=0;treasureSpawnedThisLevel=false/);
 });
+
+test("baú ocupa exatamente a célula inteira do bloco destrutível", () => {
+  const collision = game.slice(game.indexOf("function canOccupy"), game.indexOf("function moveEntity"));
+  assert.match(collision, /circleRectCollision\\(x,y,r,chest\\.x,chest\\.y,1,1\\)/);
+});
+
+test("inimigos comuns percebem bombas próximas e descartam rotas bloqueadas quando a fuga não encontra saída", () => {
+  const reaction = game.slice(game.indexOf("function reactToNewBomb"), game.indexOf("function followEnemyPath"));
+  assert.match(reaction, /baseRadius=enemy\\.isMushroom\\?4\\.8:enemy\\.isHorned\\?5\\.2:4\\.8/);
+  const update = game.slice(game.indexOf("function updateEnemies(dt)"), game.indexOf("/* BOMBAS E COMBATE */"));
+  assert.match(update, /const routeBlockedByBomb=!!\\(enemy\\.path&&enemy\\.path\\.some\\(p=>bombAt\\(p\\.x,p\\.y\\)\\)\\)/);
+  assert.match(update, /if\\(routeInDanger\\|\\|routeBlockedByBomb\\)/);
+});
+
+test("fantasminha volta à patrulha após receber dano e persegue mais rápido quando detecta o jogador", () => {
+  assert.match(game, /enemy\\.alerted=false;enemy\\.mode="patrol";enemy\\.lastSeen=null;enemy\\.path=\\[\\]/);
+  assert.match(game, /enemy\\.teleportCooldown=\\.2/);
+  assert.match(game, /g\\.speed=\\(g\\.baseSpeed\\|\\|g\\.speed\\|\\|1\\.12\\)\\*1\\.45/);
+});
