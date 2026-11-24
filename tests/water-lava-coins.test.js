@@ -39,7 +39,7 @@ test("bomba apagada fica imóvel e recebe gotas de água brilhantes com atualiza
   assert.match(update, /drop\.y\+=drop\.speed\*dt/);
   assert.match(update, /if\(drop\.y>12\)\{drop\.y=-16/);
   const drawStart = game.indexOf("function drawBomb(b)");
-  const draw = game.slice(drawStart, game.indexOf("function drawFlame", drawStart));
+  const draw = game.slice(drawStart, game.indexOf("const flameSpriteCache=[]", drawStart));
   assert.match(draw, /pulse=b\.extinguished\?1:/);
   assert.match(draw, /drawImage\(waterDropSprite/);
   assert.doesNotMatch(draw, /globalCompositeOperation="lighter"|shadowBlur=8/);
