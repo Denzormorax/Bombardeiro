@@ -82,7 +82,8 @@ test("inimigos comuns percebem bombas próximas e descartam rotas bloqueadas qua
 
 test("fantasminha volta à patrulha após receber dano e persegue mais rápido quando detecta o jogador", () => {
   assert.match(game, /enemy\.alerted=false;enemy\.mode="patrol";enemy\.lastSeen=null;enemy\.path=\[\]/);
-  assert.match(game, /enemy\.teleportCooldown=\.2/);
+  assert.match(game, /enemy\.patrolTeleportTimer=1\+Math\.random\(\)\*1\.5/);
+  assert.match(game, /enemy\.bombEvading=false;enemy\.bombEvadeRepath=0/);
   assert.match(game, /g\.speed=\(g\.baseSpeed\|\|g\.speed\|\|1\.12\)\*1\.45/);
 });
 
