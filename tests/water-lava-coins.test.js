@@ -16,7 +16,8 @@ test("drops de inimigos aparecem amarelos e preservam os valores verde e vermelh
 });
 
 test("bomba na água da floresta apaga, fica parada e libera outra colocação imediatamente", () => {
-  const place = game.slice(game.indexOf("function placeBomb"), game.indexOf('$("bombBtn")'));
+  const placeStart = game.indexOf("function placeBomb");
+  const place = game.slice(placeStart, game.indexOf('$("bombBtn")', placeStart));
   assert.match(place, /currentWorld==="forest"&&waterPuddleCells\.has\(cellKey\(x,y\)\)/);
   assert.match(place, /bomb\.extinguished=true/);
   assert.match(place, /bomb\.activeSlotReleased=true/);
@@ -35,7 +36,8 @@ test("bomba apagada pode ser detonada por uma explosão próxima", () => {
 });
 
 test("bomba colocada sobre lava no mundo vulcânico explode no mesmo instante", () => {
-  const place = game.slice(game.indexOf("function placeBomb"), game.indexOf('$("bombBtn")'));
+  const placeStart = game.indexOf("function placeBomb");
+  const place = game.slice(placeStart, game.indexOf('$("bombBtn")', placeStart));
   assert.match(place, /currentWorld==="volcano"&&waterPuddleCells\.has\(cellKey\(x,y\)\)/);
   assert.match(place, /if\(volcanoLava\)\{bombs\.splice\(bombs\.indexOf\(bomb\),1\);explode\(bomb\);\}/);
 });
