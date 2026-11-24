@@ -15835,7 +15835,7 @@ let running=false,paused=true,customizing=false,level=1,score=0,lives=3,coins=0;
 let map=[],bombs=[],flames=[],enemies=[],coinsOnMap=[],coinDrops={},unlockedLevel=1;
 let dirtParticles=[],waterPuddles=[],waterParticles=[],builderBuildAnimations=[];
 const destroyedBlockEffects=[];
-const treasureChests=[],treasureEffects=[];let treasureSpawnedThisLevel=false,treasureVisualsReady=false;
+const treasureChests=[],treasureEffects=[];let treasureSpawnedThisLevel=false,treasureSpawnedThisWorld=false,treasureSpawnWorld=null,treasureVisualsReady=false;
 let treasureChestBodyCanvas=null,treasureChestLidCanvas=null,treasureAuraCanvas=null,treasureGoldSparkCanvas=null,treasureBlueFlameCanvas=null,treasureBlueCoinCanvas=null;
 const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[],iceWaterPuddleFrames=[];let waterPuddleFramesReady=false;
 let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
@@ -16744,7 +16744,7 @@ function explode(b){
    const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen||other.extinguished)&&Math.floor(other.x)===x&&Math.floor(other.y)===y);
    if(frozenBomb){frozenBomb.chainTriggered=true;frozenBomb.t=0;break}
    if(treasureChests.some(chest=>chest.x===x&&chest.y===y))break;
-   if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(!treasureSpawnedThisLevel&&Math.random()<.025){treasureSpawnedThisLevel=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
+   if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math.random()<.006){treasureSpawnedThisLevel=true;treasureSpawnedThisWorld=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0,sparkTimer:0,ambientParticles:[]});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
   }
  }
  if(brokeBlock){rebuildStaticMapCache();}
@@ -16839,6 +16839,7 @@ function gameOver(win){
  showPanel("endPanel");
 }
 function startGame(startLevel=1){
+ treasureSpawnWorld=currentWorld;treasureSpawnedThisWorld=false;treasureSpawnedThisLevel=false;
  if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}
  finishPositioning();level=startLevel;selectedMapLevel=startLevel;score=0;lives=3;coins=0;
  bombPowerUps=0;firePowerUps=0;speedPowerUps=0;pushBombOwned=false;heartPurchases=0;maxBombs=1;firePower=1;
@@ -17460,21 +17461,23 @@ function buildTreasureVisualCache(){
  const body=document.createElement("canvas");body.width=96;body.height=72;let c=body.getContext("2d");
  let g=c.createLinearGradient(8,18,88,68);g.addColorStop(0,"#9cf5ff");g.addColorStop(.18,"#287edc");g.addColorStop(.52,"#0751a8");g.addColorStop(1,"#031b56");
  c.fillStyle=g;c.beginPath();c.moveTo(12,20);c.lineTo(84,20);c.quadraticCurveTo(91,20,91,28);c.lineTo(87,65);c.quadraticCurveTo(86,70,80,70);c.lineTo(16,70);c.quadraticCurveTo(10,70,9,64);c.lineTo(5,29);c.quadraticCurveTo(5,20,12,20);c.fill();
- c.strokeStyle="#b9f8ff";c.lineWidth=3;c.stroke();
- c.strokeStyle="#36c8ff";c.lineWidth=5;c.beginPath();c.moveTo(12,25);c.lineTo(84,25);c.moveTo(13,62);c.lineTo(83,62);c.stroke();
+ const gold=c.createLinearGradient(0,18,0,70);gold.addColorStop(0,"#fff9bd");gold.addColorStop(.22,"#ffe45a");gold.addColorStop(.52,"#d99012");gold.addColorStop(.78,"#fff0a0");gold.addColorStop(1,"#a85b08");
+ c.strokeStyle=gold;c.lineWidth=4;c.stroke();c.strokeStyle="#fff4a8";c.lineWidth=1.5;c.stroke();
+ c.strokeStyle="#f8c83d";c.lineWidth=4;c.beginPath();c.moveTo(12,25);c.lineTo(84,25);c.moveTo(13,62);c.lineTo(83,62);c.stroke();
  const panel=c.createLinearGradient(0,28,0,62);panel.addColorStop(0,"#42bfff");panel.addColorStop(1,"#063779");c.fillStyle=panel;c.fillRect(18,29,60,30);
- c.strokeStyle="#a9f6ff";c.lineWidth=2;c.strokeRect(18,29,60,30);
- c.fillStyle="#d8fbff";for(const x of [13,82])for(const y of [31,59]){c.beginPath();c.arc(x,y,2.4,0,Math.PI*2);c.fill()}
- c.fillStyle="#061c50";c.fillRect(43,35,10,21);c.fillStyle="#9df4ff";c.fillRect(45,36,6,17);c.fillStyle="#e6fdff";c.beginPath();c.arc(48,46,3.2,0,Math.PI*2);c.fill();
+ c.strokeStyle="#ffe16a";c.lineWidth=3;c.strokeRect(18,29,60,30);c.strokeStyle="#fff4b0";c.lineWidth=1;c.strokeRect(21,32,54,24);
+ c.fillStyle="#fff0a0";for(const x of [13,82])for(const y of [31,59]){c.beginPath();c.arc(x,y,2.8,0,Math.PI*2);c.fill();c.strokeStyle="#9b5a0a";c.lineWidth=1;c.stroke()}
+ c.fillStyle="#8a4c08";c.fillRect(42,34,12,23);c.fillStyle=gold;c.fillRect(44,35,8,20);c.strokeStyle="#fff6b5";c.lineWidth=1.2;c.strokeRect(44,35,8,20);
+ c.strokeStyle="#ffe36b";c.lineWidth=3;c.beginPath();c.arc(48,41,7,Math.PI,0);c.stroke();c.fillStyle="#fff5b5";c.beginPath();c.arc(48,47,3.6,0,Math.PI*2);c.fill();c.strokeStyle="#b56a0a";c.lineWidth=1;c.stroke();
  const lid=document.createElement("canvas");lid.width=96;lid.height=48;c=lid.getContext("2d");
  g=c.createLinearGradient(4,4,90,43);g.addColorStop(0,"#c4fbff");g.addColorStop(.2,"#379de9");g.addColorStop(.55,"#0860bc");g.addColorStop(1,"#031b55");
  c.fillStyle=g;c.beginPath();c.moveTo(7,38);c.lineTo(9,19);c.quadraticCurveTo(12,3,48,3);c.quadraticCurveTo(84,3,87,19);c.lineTo(89,38);c.quadraticCurveTo(48,48,7,38);c.fill();
- c.strokeStyle="#c2faff";c.lineWidth=3;c.stroke();
- c.strokeStyle="#54dfff";c.lineWidth=4;c.beginPath();c.moveTo(13,34);c.quadraticCurveTo(48,43,83,34);c.stroke();
- c.strokeStyle="#e3fdff";c.lineWidth=2;c.beginPath();c.moveTo(21,14);c.quadraticCurveTo(48,4,75,14);c.stroke();
- c.fillStyle="#bdf8ff";c.fillRect(43,34,10,8);c.fillStyle="#eaffff";c.fillRect(46,35,4,6);
+ c.strokeStyle="#ffe16a";c.lineWidth=4;c.stroke();c.strokeStyle="#fff4b0";c.lineWidth=1.4;c.stroke();
+ c.strokeStyle="#f5c43b";c.lineWidth=4;c.beginPath();c.moveTo(13,34);c.quadraticCurveTo(48,43,83,34);c.stroke();
+ c.strokeStyle="#fff1a0";c.lineWidth=2.5;c.beginPath();c.moveTo(21,14);c.quadraticCurveTo(48,4,75,14);c.stroke();
+ c.fillStyle="#e9aa21";c.fillRect(42,33,12,10);c.fillStyle="#fff2a8";c.fillRect(45,34,6,7);
  const aura=document.createElement("canvas");aura.width=128;aura.height=128;c=aura.getContext("2d");
- g=c.createRadialGradient(64,64,5,64,64,62);g.addColorStop(0,"#55dfff66");g.addColorStop(.4,"#168bff35");g.addColorStop(1,"#087bff00");c.fillStyle=g;c.fillRect(0,0,128,128);
+ g=c.createRadialGradient(64,64,4,64,64,62);g.addColorStop(0,"#fff5b955");g.addColorStop(.22,"#ffd84b55");g.addColorStop(.48,"#35cfff42");g.addColorStop(.76,"#d99b1830");g.addColorStop(1,"#087bff00");c.fillStyle=g;c.fillRect(0,0,128,128);
  const spark=document.createElement("canvas");spark.width=28;spark.height=28;c=spark.getContext("2d");
  g=c.createRadialGradient(14,14,0,14,14,13);g.addColorStop(0,"#fffde0");g.addColorStop(.22,"#fff7a0");g.addColorStop(.5,"#ffc52d");g.addColorStop(1,"#ff9c0800");c.fillStyle=g;c.fillRect(0,0,28,28);c.save();c.translate(14,14);c.fillStyle="#fff7b5";c.beginPath();c.moveTo(0,-13);c.lineTo(2.4,-2.4);c.lineTo(13,0);c.lineTo(2.4,2.4);c.lineTo(0,13);c.lineTo(-2.4,2.4);c.lineTo(-13,0);c.lineTo(-2.4,-2.4);c.closePath();c.fill();c.restore();
  const flame=document.createElement("canvas");flame.width=36;flame.height=44;c=flame.getContext("2d");
@@ -17496,6 +17499,11 @@ function spawnTreasureEffect(x,y,kind){
  treasureEffects.push({x,y,kind,age:0,duration:kind==="reveal"?1.45:kind==="burst"?1.25:.5,particles});
 }
 function updateTreasureEffects(dt){
+ for(const chest of treasureChests){
+  chest.sparkTimer=(chest.sparkTimer||0)+dt;
+  while(chest.sparkTimer>=.055&&chest.ambientParticles.length<18){chest.sparkTimer-=.055;const a=Math.random()*Math.PI*2,r=17+Math.random()*17;chest.ambientParticles.push({x:Math.cos(a)*r,y:Math.sin(a)*r-3,vx:(Math.random()-.5)*12,vy:-16-Math.random()*24,size:2.2+Math.random()*3.2,life:.7+Math.random()*.65,t:0,white:Math.random()<.48})}
+  for(let i=chest.ambientParticles.length-1;i>=0;i--){const p=chest.ambientParticles[i];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy-=3*dt;p.vx*=Math.max(0,1-.7*dt);if(p.t>=p.life)chest.ambientParticles.splice(i,1)}
+ }
  for(let i=treasureEffects.length-1;i>=0;i--){
   const effect=treasureEffects[i];effect.age+=dt;
   for(let j=effect.particles.length-1;j>=0;j--){
@@ -17520,7 +17528,10 @@ function drawTreasureEffects(){
 function drawTreasureChest(chest){
  if(!treasureVisualsReady)buildTreasureVisualCache();
  const px=ox+(chest.x+.5)*TILE,py=oy+(chest.y+.5)*TILE,t=chest.animTime,bounce=Math.abs(Math.sin(t*4.15+chest.phase))*3.2,lidOpen=.08+.17*(.5+.5*Math.sin(t*4.15+chest.phase));
- ctx.save();ctx.globalAlpha=.86+.12*Math.sin(t*2.7);ctx.drawImage(treasureAuraCanvas,px-39,py-43-bounce,78,78);ctx.restore();
+ ctx.save();ctx.globalAlpha=.92+.08*Math.sin(t*2.7);ctx.drawImage(treasureAuraCanvas,px-45,py-49-bounce,90,90);ctx.restore();
+ ctx.save();ctx.globalCompositeOperation="lighter";
+ for(const p of chest.ambientParticles){const fade=Math.max(0,1-p.t/p.life),size=p.size*(.72+.28*Math.sin(p.t*17));ctx.globalAlpha=fade*(p.white?.95:.82);ctx.drawImage(treasureGoldSparkCanvas,px+p.x-size,py-bounce+p.y-size,size*2,size*2)}
+ ctx.restore();
  ctx.save();ctx.translate(px,py-bounce);
  ctx.drawImage(treasureChestBodyCanvas,-28,-20,56,42);
  ctx.save();ctx.translate(0,-15);ctx.rotate(-lidOpen);ctx.drawImage(treasureChestLidCanvas,-28,-19,56,28);ctx.restore();
