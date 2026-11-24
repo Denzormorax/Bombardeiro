@@ -15610,13 +15610,9 @@ const BURNING_CRATE_FRAMES=8;const burningCrateCanvases=Array.from({length:10},(
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
 const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=96;portalAuraCanvas.height=96;const portalAuraCtx=portalAuraCanvas.getContext("2d");
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
-// Reflexo branco em faixa vertical, com bloom suave pré-renderizado (sem shadow pesado).
+// Duas linhas brancas de brilho, nítidas e sem bloom ou difusão.
 const pillarShimmerCanvas=document.createElement("canvas");pillarShimmerCanvas.width=40;pillarShimmerCanvas.height=56;
-(()=>{const c=pillarShimmerCanvas.getContext("2d");
- const bloom=c.createLinearGradient(0,0,40,0);bloom.addColorStop(0,"rgba(255,255,255,0)");bloom.addColorStop(.38,"rgba(255,255,255,.10)");bloom.addColorStop(.5,"rgba(255,255,255,.34)");bloom.addColorStop(.62,"rgba(255,255,255,.10)");bloom.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=bloom;c.fillRect(0,0,40,56);
- const core=c.createLinearGradient(0,0,40,0);core.addColorStop(0,"rgba(255,255,255,0)");core.addColorStop(.43,"rgba(255,255,255,.72)");core.addColorStop(.5,"rgba(255,255,255,.98)");core.addColorStop(.57,"rgba(255,255,255,.72)");core.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=core;c.fillRect(0,0,40,56);
- const cloud=c.createRadialGradient(20,28,1,20,28,20);cloud.addColorStop(0,"rgba(255,255,255,.30)");cloud.addColorStop(.45,"rgba(255,255,255,.12)");cloud.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=cloud;c.fillRect(0,8,40,40);
-})();
+(()=>{const c=pillarShimmerCanvas.getContext("2d");c.fillStyle="#ffffff";c.fillRect(18,0,4,56)})();
 const $=id=>document.getElementById(id);
 const forestSpriteSheet=new Image();forestSpriteSheet.onload=()=>{buildThemedSpriteSheets();buildBurningCrateSprite();if(map&&map.length)rebuildStaticMapCache()};forestSpriteSheet.src="game-assets/sprites/forest_themes.svg";
 
@@ -16454,12 +16450,13 @@ function reactToNewBomb(newBomb=null){
   const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
   const nearbyBomb=bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<(enemy.isMushroom?4.8:enemy.isHorned?5.2:3.8));
   const desertHunterThreat=currentWorld==="desert"&&enemy.isHunter&&nearbyBomb;
+  // No Gelo, todos os inimigos reconhecem a zona de risco assim que a bomba é colocada.
+  const iceBombThreat=currentWorld==="ice"&&bombs.some(b=>distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<=Math.max(4.8,(Number(b.range)||1)+1.4));
   enemy.repath=0;
-  if(currentThreatened||routeThreatened||desertHunterThreat){
-   // O caçador do deserto reage também à proximidade da bomba: procura rota segura e cobertura,
-   // em vez de ficar parado diante dela aguardando a explosão.
+  if(currentThreatened||routeThreatened||desertHunterThreat||iceBombThreat){
+   // O caçador do deserto mantém sua reação própria; no Gelo a fuga começa quase imediatamente.
    enemy.bombEscapePending=true;
-   enemy.bombReactionTimer=desertHunterThreat?.02:enemy.isMushroom ? .02 : enemy.isHorned ? .04 : (enemy.isHunter||enemy.isBuilder) ? .07 : .08;
+   enemy.bombReactionTimer=currentWorld==="ice"?(enemy.isHunter ? .01 : .025):desertHunterThreat?.02:enemy.isMushroom ? .02 : enemy.isHorned ? .04 : (enemy.isHunter||enemy.isBuilder) ? .07 : .08;
   }else if(routeBlockedByBomb||nearbyBomb){
    // Se a bomba apenas bloqueia a perseguição, recalcula o caminho para contorná-la.
    enemy.path=[];
@@ -16526,12 +16523,12 @@ function updateEnemies(dt){
   if(enemy.bombEscapePending){
    enemy.bombReactionTimer=Math.max(0,(enemy.bombReactionTimer||0)-dt);
    if(enemy.bombReactionTimer>0){enemy.speed=0;continue}
-   const escape=findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter||enemy.isMushroom));
+   const escape=currentWorld==="ice"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter||enemy.isMushroom));
    enemy.bombEscapePending=false;
    if(escape.length){
     enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;enemy.evadeTimer=0;
     if(currentInDanger)for(const bomb of bombs)if(getBombDangerCells(bomb).has(currentKey))enemy.evadeTimer=Math.max(enemy.evadeTimer,bomb.t+.18);
-    enemy.speed=enemy.isHorned&&!enemy.isEnraged?enemy.baseSpeed:enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
+    enemy.speed=currentWorld==="ice"?(enemy.isHunter?enemy.huntSpeed*1.3:enemy.isHorned?enemy.huntSpeed*1.2:enemy.baseSpeed*1.24):enemy.isHorned&&!enemy.isEnraged?enemy.baseSpeed:enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
     followEnemyPath(enemy,dt);continue;
    }
    if(routeInDanger){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
@@ -17142,12 +17139,11 @@ function drawWaterPuddle(p){
  if(currentWorld==="volcano")drawLavaPoolSmoke(p,px,py);
 }
 function drawIcePuddleShimmer(p,px,py){
- // Duas listras brancas paralelas atravessam a poça na diagonal; a água permanece estática.
- const phase=(gameClock*.32+((p.x*7+p.y*13)%23)/23)%1;
- const pulse=.58+.42*Math.sin(phase*Math.PI*2);
+ // As duas linhas permanecem brancas e definidas; somente o deslocamento diagonal anima.
+ const phase=(gameClock*.55+((p.x*7+p.y*13)%23)/23)%1;
  const travel=(phase-.5)*(TILE+40);
  ctx.save();ctx.beginPath();ctx.rect(px+1,py+1,TILE-2,TILE-2);ctx.clip();
- ctx.globalAlpha=pulse;
+ ctx.globalAlpha=.94;
  ctx.translate(px+TILE*.5+travel,py+TILE*.5+travel);
  ctx.rotate(Math.PI/4);
  ctx.drawImage(pillarShimmerCanvas,-31,-28,40,56);
