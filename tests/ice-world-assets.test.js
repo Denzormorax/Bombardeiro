@@ -96,3 +96,15 @@ test("blocos indestrutíveis recuperam o brilho difuso com cores temáticas por 
   assert.ok(game.includes("cloud.addColorStop(0,highlight)"));
   assert.ok(game.includes("cloud.addColorStop(.45,color.replace"));
 });
+
+
+test("brilho dos blocos indestrutíveis tem maior intensidade sem perder o cache", () => {
+  assert.ok(game.includes('band.addColorStop(.28,color.replace(")",",.22)").replace("rgb","rgba"))'));
+  assert.ok(game.includes('band.addColorStop(.72,color.replace(")",",.22)").replace("rgb","rgba"))'));
+  assert.ok(game.includes('cloud.addColorStop(.45,color.replace(")",",.40)").replace("rgb","rgba"))'));
+  assert.ok(game.includes('"rgba(205,255,215,.94)"'));
+  assert.ok(game.includes('"rgba(255,232,185,.96)"'));
+  assert.ok(game.includes('"rgba(255,195,150,.95)"'));
+  assert.ok(game.includes('"rgba(245,253,255,1)"'));
+  assert.ok(game.includes("const pulse=.68+.32*Math.sin(phase*Math.PI*2)"));
+});
