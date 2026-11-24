@@ -1,1 +1,0 @@
-# Sprites\nColoque aqui spritesheets e animações de personagens, inimigos e objetos.\n

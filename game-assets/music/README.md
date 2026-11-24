@@ -1,1 +1,0 @@
-# Músicas\nColoque aqui trilhas musicais do jogo em formatos compatíveis com Android WebView.\n

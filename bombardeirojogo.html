@@ -16131,8 +16131,8 @@ function prepareCoinDrops(){
  for(let i=0;i<Math.min(amount,candidates.length);i++){const p=candidates[i];coinDrops[cellKey(p.x,p.y)]="yellow"}
 }
 function findFreeCoinPosition(x,y){
- const candidates=[{x,y}],centerX=Math.floor(x),centerY=Math.floor(y);
- for(let radius=0;radius<=5;radius++)for(let ty=centerY-radius;ty<=centerY+radius;ty++)for(let tx=centerX-radius;tx<=centerX+radius;tx++){
+ const centerX=Math.floor(x),centerY=Math.floor(y),candidates=[{x:centerX+.5,y:centerY+.5}];
+ for(let radius=1;radius<=5;radius++)for(let ty=centerY-radius;ty<=centerY+radius;ty++)for(let tx=centerX-radius;tx<=centerX+radius;tx++){
   if(Math.max(Math.abs(tx-centerX),Math.abs(ty-centerY))!==radius)continue;candidates.push({x:tx+.5,y:ty+.5});
  }
  for(const p of candidates)if(tileAt(Math.floor(p.x),Math.floor(p.y))===0&&canOccupy(p.x,p.y,COIN_RADIUS,null,null))return p;
@@ -16328,7 +16328,7 @@ function findEnemyRoute(enemy,targetX,targetY,blockedDanger=null){
  return goals.length?goals[0].path:[];
 }
 function canSeePlayer(enemy){
- const dx=player.x-enemy.x,dy=player.y-enemy.y,dist=Math.hypot(dx,dy),vision=enemy.isHunter||enemy.isHorned||enemy.isBuilder?11:enemy.isMushroom?9:6.5;
+ const dx=player.x-enemy.x,dy=player.y-enemy.y,dist=Math.hypot(dx,dy),vision=4;
  if(dist>vision)return false;
  if(dist<.01)return true;
  const steps=Math.ceil(dist*16);
@@ -16639,18 +16639,29 @@ function updateEnemies(dt){
   if(routeInDanger&&enemy.mode!=="evade"){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
   if(enemy.mode==="evade"){
    if(enemy.path.length){enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter||enemy.isBuilder?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;followEnemyPath(enemy,dt);continue}
-   if(enemy.evadeTimer>0)continue;
-   enemy.mode=enemy.isHunter||enemy.isHorned&&enemy.isEnraged||enemy.alert>0?"search":"patrol";
+   if(enemy.evadeTimer>0){
+    // Depois de alcançar uma casa segura, continua patrulhando enquanto monitora a bomba.
+    enemy.speed=enemy.baseSpeed*1.05;
+    enemy.mode="patrol";
+    if(!enemy.path.length)choosePatrolPath(enemy,danger);
+    if(enemy.path.length)followEnemyPath(enemy,dt);
+    enemy.mode="evade";
+    continue;
+   }
+   const playerVisibleAfterBomb=canSeePlayer(enemy);
+   enemy.mode=playerVisibleAfterBomb?"chase":"patrol";
+   if(playerVisibleAfterBomb){enemy.lastSeen={x:player.x,y:player.y};enemy.alert=1.25}
+   else{enemy.alert=0;enemy.lastSeen=null;enemy.path=[];enemy.patrolTarget=null}
    enemy.repath=0;
   }
 
   // Azul: antes de ser atingido patrulha; após o primeiro dano, persegue sem desistir.
   const blueDistance=enemy.isHorned?distance(enemy.x,enemy.y,player.x,player.y):Infinity;
   const seesPlayer=enemy.isHorned?(enemy.isEnraged||blueDistance<=4.6&&canSeePlayer(enemy)):enemy.isBuilder?(enemy.isEnraged||canSeePlayer(enemy)):canSeePlayer(enemy);
-  if(enemy.isBuilder&&enemy.isEnraged){
-   enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=999;
-  }else if(enemy.isHorned&&enemy.isEnraged){
-   enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=999;
+  if(enemy.isBuilder&&enemy.isEnraged&&canSeePlayer(enemy)){
+   enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=1.25;
+  }else if(enemy.isHorned&&enemy.isEnraged&&canSeePlayer(enemy)){
+   enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=1.25;
   }else if(seesPlayer){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};
    enemy.alert=enemy.isHunter||enemy.isBuilder?3.2:enemy.isMushroom?2.6:1.25;
@@ -16695,7 +16706,7 @@ function placeBomb(){
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
 function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
-function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;enemy.mode="chase";enemy.alert=999;enemy.lastSeen={x:player.x,y:player.y};enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
+function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;const visible=canSeePlayer(enemy);enemy.mode=visible?"chase":"patrol";enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null;enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
  for(const b of bombs){if(b.ownerPass||b.slide||b.freezing||b.frozen)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
@@ -16730,7 +16741,7 @@ function explode(b){
  if(brokeBlock){rebuildStaticMapCache();}
  const hitEnemies=new Set();
  for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
- for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if(e.isHunter||e.isBuilder){e.mode="chase";e.alert=2.5;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.patrolWait=.2}}updateHUD();
+ for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if((e.isHunter||e.isBuilder)&&canSeePlayer(e)){e.mode="chase";e.alert=1.25;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.alert=0;e.lastSeen=null;e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
  if(player.inv>0)return;playSfx("hurt");lives--;resetPowerUps();updateHUD();player.hurtTimer=.48;if(lives<=0){gameOver(false);return}player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;
@@ -18270,10 +18281,16 @@ function updateBlueFlameEnemies(dt){
    }
    e.evadeTimer=Math.max(0,(e.evadeTimer||0)-dt);
    if(localBombs.length||currentInDanger||cellStillFlaming||e.evadeTimer>0){
-    e.speed=0;e.blueFlameTrackedBombs=localBombs.slice();continue;
+    // Sem rota de fuga pendente, patrulha por casas seguras em vez de esperar imóvel.
+    e.speed=e.baseSpeed;
+    if(!e.path.length){e.mode="patrol";choosePatrolPath(e,danger);e.mode="evade"}
+    if(e.path.length)followEnemyPath(e,dt);
+    e.blueFlameTrackedBombs=localBombs.slice();continue;
    }
-   // A explosão terminou: volta a caçar e recalcula a rota até o jogador.
-   e.mode="chase";e.path=[];e.repath=0;e.lastSeen={x:player.x,y:player.y};
+   // A explosão terminou: só retoma a perseguição se o jogador estiver no raio de quatro blocos.
+   const playerVisibleAfterBomb=distance(e.x,e.y,player.x,player.y)<=4&&canSeePlayer(e);
+   e.mode=playerVisibleAfterBomb?"chase":"patrol";e.path=[];e.repath=0;
+   e.lastSeen=playerVisibleAfterBomb?{x:player.x,y:player.y}:null;
    e.blueFlameTrackedBombs=[];
   }
 
@@ -18284,8 +18301,9 @@ function updateBlueFlameEnemies(dt){
    continue;
   }
   const d=distance(e.x,e.y,player.x,player.y);
-  const sees=d<7.2&&canSeePlayer(e);
-  if(sees||e.mode==="chase"){
+  const sees=d<=4&&canSeePlayer(e);
+  if(!sees&&e.mode==="chase"){e.mode="patrol";e.path=[];e.repath=0}
+  if(sees){
    e.mode="chase";e.lastSeen={x:player.x,y:player.y};e.speed=e.huntSpeed*1.18;
    if(d<=.98&&e.blueFlameCooldown<=0){e.blueFlameFuse=.42;e.speed=0;e.path.length=0;e.mode="detonate";continue}
    if(e.repath<=0||!e.path.length){
