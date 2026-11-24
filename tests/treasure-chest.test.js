@@ -125,8 +125,8 @@ test("fantasma se move apenas na horizontal ou vertical e desliza pelas quinas d
   assert.match(move, /Math\.abs\(remainX\)>=Math\.abs\(remainY\)/);
   assert.match(move, /Math\.ceil\(step\/\.012\)/);
   assert.match(move, /const offsets=\[\.015,\.03,\.045,\.06,\.075,\.09,\.105,\.12,\.135,\.15,\.165,\.18,\.195,\.21,\.225,\.24\]/);
-  assert.match(move, /!swampGhostStand\(ghost\.x,sideY\)\|\|!swampGhostStand\(nx,sideY\)/);
-  assert.match(move, /!swampGhostStand\(sideX,ghost\.y\)\|\|!swampGhostStand\(sideX,ny\)/);
+  assert.match(move, /!swampGhostCanOccupy\(ghost,ghost\.x,sideY\)\|\|!swampGhostCanOccupy\(ghost,nx,sideY\)/);
+  assert.match(move, /!swampGhostCanOccupy\(ghost,sideX,ghost\.y\)\|\|!swampGhostCanOccupy\(ghost,sideX,ny\)/);
   assert.match(move, /ghost\.path=\[\]/);
   const stand = game.slice(game.indexOf("function swampGhostStand"), game.indexOf("function swampGhostPath"));
   assert.match(stand, /tileAt\(tx,ty\)===1/);
