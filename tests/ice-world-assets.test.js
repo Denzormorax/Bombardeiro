@@ -127,7 +127,7 @@ test("Boneco de Neve usa a perseguição do Caçador e precisa de três acertos"
   assert.ok(game.includes('function drawSnowmanBreath(e)'));
 });
 
-test("sopro congela a bomba de baixo para cima e libera imediatamente o limite de bombas", () => {
+test("Boneco de Neve só congela bombas adjacentes nos quatro lados cardeais e libera o limite", () => {
   assert.ok(game.includes('function startSnowmanFreeze(enemy,bomb)'));
   assert.ok(game.includes('bomb.freezeDuration=1.15'));
   assert.ok(game.includes('activeBombs=Math.max(0,activeBombs-1);bomb.activeSlotReleased=true'));
