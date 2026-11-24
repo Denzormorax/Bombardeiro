@@ -40,7 +40,7 @@ test("baú é sólido, tem contornos e maçaneta dourados, animação e partícu
   assert.match(visual, /drawImage\(treasureGoldSparkCanvas/);
   assert.match(visual, /drawImage\(treasureBlueFlameCanvas/);
   assert.match(visual, /#ffe16a/);
-  assert.match(visual, /ctx\.arc\(48,41,7/);
+  assert.match(visual, /c\\.arc\\(48,41,7/);
   assert.match(visual, /ambientParticles/);
   assert.match(visual, /sparkTimer>=\.055/);
 });
