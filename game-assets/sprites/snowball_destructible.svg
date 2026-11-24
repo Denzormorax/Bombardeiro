@@ -65,29 +65,6 @@
  <path d="M379 424l2-5 2 5 5 2-5 2-2 5-2-5-5-2Z" fill="#fff"/>
  <circle cx="170" cy="430" r="2.4" fill="#fff"/><circle cx="264" cy="435" r="2.8" fill="#fff"/><circle cx="350" cy="431" r="2.2" fill="#fff"/>
 </g>
-<!-- Neve caindo ao redor da bola: três tons frios, movimento leve e contínuo. -->
-<g stroke="none">
- <g fill="#fff" opacity=".95">
-  <circle cx="72" cy="150" r="4"><animate attributeName="cy" values="150;360;150" dur="4.8s" repeatCount="indefinite"/></circle>
-  <circle cx="438" cy="118" r="3.5"><animate attributeName="cy" values="118;340;118" dur="5.4s" repeatCount="indefinite"/></circle>
-  <circle cx="112" cy="280" r="2.8"><animate attributeName="cy" values="280;430;280" dur="4.1s" repeatCount="indefinite"/></circle>
-  <circle cx="399" cy="260" r="3.8"><animate attributeName="cy" values="260;430;260" dur="4.6s" repeatCount="indefinite"/></circle>
-  <circle cx="186" cy="70" r="2.8"><animate attributeName="cy" values="70;270;70" dur="5.1s" repeatCount="indefinite"/></circle>
-  <circle cx="326" cy="82" r="3"><animate attributeName="cy" values="82;290;82" dur="4.4s" repeatCount="indefinite"/></circle>
- </g>
- <g fill="#9feaff" opacity=".94">
-  <circle cx="48" cy="235" r="3.4"><animate attributeName="cy" values="235;430;235" dur="5.2s" repeatCount="indefinite"/></circle>
-  <circle cx="465" cy="205" r="3"><animate attributeName="cy" values="205;420;205" dur="4.7s" repeatCount="indefinite"/></circle>
-  <circle cx="151" cy="95" r="2.4"><animate attributeName="cy" values="95;310;95" dur="4.3s" repeatCount="indefinite"/></circle>
-  <circle cx="365" cy="155" r="2.8"><animate attributeName="cy" values="155;370;155" dur="5.6s" repeatCount="indefinite"/></circle>
-  <circle cx="91" cy="355" r="2.5"><animate attributeName="cy" values="355;450;355" dur="3.9s" repeatCount="indefinite"/></circle>
- </g>
- <g fill="#397fc5" opacity=".9">
-  <circle cx="27" cy="180" r="2.8"><animate attributeName="cy" values="180;390;180" dur="5.7s" repeatCount="indefinite"/></circle>
-  <circle cx="482" cy="310" r="3.2"><animate attributeName="cy" values="310;450;310" dur="4.9s" repeatCount="indefinite"/></circle>
-  <circle cx="224" cy="48" r="2.2"><animate attributeName="cy" values="48;250;48" dur="4.6s" repeatCount="indefinite"/></circle>
-  <circle cx="292" cy="330" r="2.4"><animate attributeName="cy" values="330;455;330" dur="4.2s" repeatCount="indefinite"/></circle>
- </g>
-</g>
+
 
 </svg>
