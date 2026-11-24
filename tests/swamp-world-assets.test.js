@@ -96,6 +96,11 @@ test("teletransporte periódico dos fantasminhas também continua durante a pers
   assert.match(html, /ctx\.drawImage\(swampGhostBody,-33,-39,66,77\)/);
 });
 
+test("patrulha do fantasma mantém o deslocamento original entre blocos", () => {
+  const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
+  const patrol = html.slice(html.indexOf("function swampGhostPath"), html.indexOf("function swampGhostChasePath"));
+  assert.match(patrol, /for\(const d of \[\[0,-2\],\[2,0\],\[0,2\],\[-2,0\]\]\)/);
+});
 test("fantasma escolhe um dos quatro destinos a dois quadrados do jogador", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   const target = html.slice(html.indexOf("function swampGhostChaseSpawnTarget"), html.indexOf("function swampGhostTarget"));
