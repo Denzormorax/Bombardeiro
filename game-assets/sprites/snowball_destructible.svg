@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" viewBox="0 0 512 512">
+<title>Bola de neve — textura do Mundo 4</title>
+<desc>Bola de neve compactada tridimensional, branca com sombreamento azul-gelo, sombra de contato mais definida e partículas de neve animadas ao redor.</desc>
+<defs>
+ <radialGradient id="snow" cx="32%" cy="24%" r="76%">
+  <stop offset="0" stop-color="#fff"/><stop offset=".34" stop-color="#f8fdff"/><stop offset=".68" stop-color="#e5f4fb"/><stop offset=".88" stop-color="#c4e0ef"/><stop offset="1" stop-color="#8eb8d0"/>
+ </radialGradient>
+ <radialGradient id="shine" cx="28%" cy="18%" r="70%">
+  <stop offset="0" stop-color="#fff" stop-opacity=".98"/><stop offset=".42" stop-color="#fff" stop-opacity=".36"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+ </radialGradient>
+ <linearGradient id="lowerShade" x1="0" y1="0" x2=".18" y2="1">
+  <stop offset="0" stop-color="#d8edf7" stop-opacity="0"/><stop offset=".58" stop-color="#8fb9d0" stop-opacity=".12"/><stop offset="1" stop-color="#527f9d" stop-opacity=".54"/>
+ </linearGradient>
+ <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#7faec7" stop-opacity=".48"/><stop offset="1" stop-color="#a9d2e5" stop-opacity="0"/>
+ </linearGradient>
+ <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+ <filter id="flakeGlow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <clipPath id="ballClip"><circle cx="256" cy="246" r="145"/></clipPath>
+ <pattern id="grain" width="47" height="43" patternUnits="userSpaceOnUse">
+  <circle cx="7" cy="9" r="1.8" fill="#fff" opacity=".8"/><circle cx="29" cy="6" r="1.1" fill="#8fb9d0" opacity=".36"/>
+  <circle cx="39" cy="28" r="1.6" fill="#fff" opacity=".72"/><circle cx="15" cy="35" r="1.2" fill="#7da9c2" opacity=".3"/>
+  <path d="M22 17l3-1" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".72"/>
+ </pattern>
+</defs>
+<!-- Sombra de contato reforçada: halo suave + sombra média + núcleo de contato -->
+<ellipse cx="256" cy="411" rx="139" ry="25" fill="#527f9d" opacity=".34" filter="url(#soft)"/>
+<ellipse cx="256" cy="405" rx="116" ry="15" fill="#638eaa" opacity=".32"/>
+<ellipse cx="256" cy="400" rx="88" ry="8" fill="#456f8b" opacity=".22"/>
+<ellipse cx="256" cy="405" rx="116" ry="15" fill="url(#ground)"/>
+<!-- Partículas em queda -->
+<g fill="#f7fdff" filter="url(#flakeGlow)">
+ <g opacity=".95"><circle cx="82" cy="183" r="5"><animate attributeName="cy" values="183;278;183" dur="3.8s" repeatCount="indefinite"/></circle><circle cx="420" cy="162" r="4"><animate attributeName="cy" values="162;270;162" dur="4.4s" repeatCount="indefinite"/></circle><circle cx="117" cy="319" r="3.4"><animate attributeName="cy" values="319;390;319" dur="3.2s" repeatCount="indefinite"/></circle><circle cx="395" cy="328" r="4.5"><animate attributeName="cy" values="328;407;328" dur="3.6s" repeatCount="indefinite"/></circle></g>
+ <g opacity=".8"><circle cx="160" cy="112" r="2.8"><animate attributeName="cy" values="112;222;112" dur="4.8s" repeatCount="indefinite"/></circle><circle cx="351" cy="105" r="3"><animate attributeName="cy" values="105;214;105" dur="5.1s" repeatCount="indefinite"/></circle><circle cx="67" cy="367" r="2.5"><animate attributeName="cy" values="367;448;367" dur="4.1s" repeatCount="indefinite"/></circle><circle cx="455" cy="257" r="2.8"><animate attributeName="cy" values="257;359;257" dur="4.6s" repeatCount="indefinite"/></circle></g>
+</g>
+<!-- Bola principal -->
+<circle cx="256" cy="246" r="151" fill="#8eb7cf" opacity=".18" filter="url(#soft)"/>
+<circle cx="256" cy="246" r="145" fill="url(#snow)" stroke="#d9edf7" stroke-width="3"/>
+<g clip-path="url(#ballClip)">
+ <circle cx="256" cy="246" r="145" fill="url(#shine)"/>
+ <circle cx="256" cy="246" r="145" fill="url(#lowerShade)"/>
+ <circle cx="256" cy="246" r="145" fill="url(#grain)" opacity=".7"/>
+ <path d="M145 174c23-27 53-39 81-37M302 128c23 8 40 23 52 43M125 262c7 26 18 44 37 59M302 363c26-8 45-23 60-44" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".28"/>
+ <path d="M150 319c28 22 57 30 87 26M284 337c22-4 41-15 55-32" fill="none" stroke="#8db8d0" stroke-width="5" stroke-linecap="round" opacity=".16"/>
+ <ellipse cx="205" cy="158" rx="70" ry="34" fill="#fff" opacity=".2" transform="rotate(-28 205 158)"/>
+</g>
+<ellipse cx="211" cy="151" rx="47" ry="22" fill="#fff" opacity=".36" transform="rotate(-32 211 151)"/>
+<path d="M145 207c12-48 47-83 91-96" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".62"/>
+<path d="M360 302c-16 44-51 73-94 83" fill="none" stroke="#78a9c5" stroke-width="5" stroke-linecap="round" opacity=".2"/>
+<g fill="#fff" opacity=".95"><circle cx="118" cy="230" r="3"/><circle cx="384" cy="240" r="3.5"/><circle cx="177" cy="365" r="2.5"/><circle cx="337" cy="128" r="2.5"/></g>
+</svg>
