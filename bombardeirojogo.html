@@ -17501,14 +17501,7 @@ function drawBomb(b){
  ctx.restore();
 }
 
- const warp=b.whirlwind,progress=warp?Math.min(1,warp.t/warp.duration):0,warpScale=warp?Math.max(.08,Math.abs(1-progress*2)):1;
- const px=ox+b.x*TILE+24,py=oy+b.y*TILE+24-(warp?Math.sin(progress*Math.PI)*12:0),pulse=1+Math.sin(b.animTime*4.2)*.075;ctx.save();if(warp){ctx.globalAlpha=Math.min(1,Math.abs(1-progress*2)*3);ctx.translate(px,py);ctx.scale(warpScale,warpScale);ctx.translate(-px,-py)}ctx.translate(px,py);ctx.scale(pulse,pulse);ctx.fillStyle="#080d12";ctx.beginPath();ctx.ellipse(0,15,17,6,0,0,Math.PI*2);ctx.fill();const bodyGradient=ctx.createRadialGradient(-6,-7,2,0,0,19);bodyGradient.addColorStop(0,"#71818b");bodyGradient.addColorStop(.35,"#364957");bodyGradient.addColorStop(1,"#101820");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a9bac2";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-6,-7,5,3,-.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle="#b78b4c";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.strokeStyle="#e4c17b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,-13);ctx.quadraticCurveTo(11,-20,14,-20);ctx.stroke();ctx.restore();
- const flicker=Math.sin(b.animTime*23+b.sparkPhase),flicker2=Math.cos(b.animTime*17+b.sparkPhase),sx=px+14+flicker*1.5,sy=py-21+flicker2*1.2;ctx.save();ctx.shadowColor="#ff6b18";ctx.shadowBlur=12;ctx.fillStyle="#ff6b18";ctx.beginPath();ctx.moveTo(sx,sy+5);ctx.quadraticCurveTo(sx-7,sy-2-flicker,sx,sy-9-Math.abs(flicker)*2);ctx.quadraticCurveTo(sx+7,sy-2+flicker,sx,sy+5);ctx.fill();ctx.fillStyle="#ffe36b";ctx.beginPath();ctx.moveTo(sx,sy+3);ctx.quadraticCurveTo(sx-3,sy-1,sx,sy-6-Math.abs(flicker2)*2);ctx.quadraticCurveTo(sx+4,sy-1,sx,sy+3);ctx.fill();ctx.shadowBlur=0;
- for(let i=0;i<3;i++){const phase=b.animTime*13+b.sparkPhase+i*2.1,particleX=sx+Math.sin(phase)*5,particleY=sy-5-Math.abs(Math.cos(phase))*7,particleSize=1+Math.abs(Math.sin(phase))*1.2;ctx.globalAlpha=.45+.5*Math.abs(Math.sin(phase));ctx.fillStyle=i%2===0?"#ffe36b":"#ff8a32";ctx.beginPath();ctx.arc(particleX,particleY,particleSize,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;ctx.restore();
- if(b.slide){ctx.fillStyle="#ffe36b";ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText("➜",px,py-29)}
- ctx.restore();
-}
-function drawFlame(f){
+ function drawFlame(f){
  const px=ox+f.x*TILE,py=oy+f.y*TILE,age=f.age||0,phase=f.phase||0;
  const fade=Math.min(1,f.t*2.4),flicker=Math.sin(age*25+phase),flicker2=Math.cos(age*19+phase*1.7);
  const cx=px+TILE/2,baseY=py+TILE-3;
