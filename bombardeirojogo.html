@@ -16610,12 +16610,12 @@ function updateEnemies(dt){
   if(enemy.bombEscapePending){
    enemy.bombReactionTimer=Math.max(0,(enemy.bombReactionTimer||0)-dt);
    if(enemy.bombReactionTimer>0){enemy.speed=0;continue}
-   const escape=currentWorld==="ice"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter||enemy.isMushroom));
+   const escape=currentWorld==="ice"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath(enemy,danger,true);
    enemy.bombEscapePending=false;
    if(escape.length){
     enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;if(!(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)))enemy.evadeTimer=0;
     if(currentInDanger)for(const bomb of bombs)if(getBombDangerCells(bomb).has(currentKey))enemy.evadeTimer=Math.max(enemy.evadeTimer,bomb.t+.18);
-    enemy.speed=currentWorld==="ice"?(enemy.isHunter?enemy.huntSpeed*1.3:enemy.isHorned?enemy.huntSpeed*1.2:enemy.baseSpeed*1.24):enemy.isHorned&&!enemy.isEnraged?enemy.baseSpeed:enemy.isHunter?enemy.huntSpeed*1.18:enemy.isHorned?enemy.huntSpeed*1.12:enemy.baseSpeed*1.16;
+    enemy.speed=currentWorld==="ice"?(enemy.isHunter?enemy.huntSpeed*1.3:enemy.isHorned?enemy.huntSpeed*1.2:enemy.baseSpeed*1.45):enemy.isHorned&&!enemy.isEnraged?enemy.baseSpeed*1.3:enemy.isHunter?enemy.huntSpeed*1.35:enemy.isHorned?enemy.huntSpeed*1.3:enemy.baseSpeed*1.45;
     followEnemyPath(enemy,dt);continue;
    }
    if(routeInDanger||routeBlockedByBomb){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
@@ -16624,11 +16624,11 @@ function updateEnemies(dt){
   // Prioridade máxima: sair de uma explosão que realmente ameaça a posição atual.
   if(currentInDanger){
    if(enemy.mode!=="evade"||!enemy.path.length||(enemy.evadeRepath||0)<=0){
-    const escape=findBombEscapePath(enemy,danger);
+    const escape=findBombEscapePath(enemy,danger,true);
     enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;enemy.evadeTimer=0;
     for(const bomb of bombs)if(getBombDangerCells(bomb).has(currentKey))enemy.evadeTimer=Math.max(enemy.evadeTimer,bomb.t+.18);
    }
-   enemy.speed=enemy.isHorned?(enemy.isEnraged?enemy.huntSpeed*1.22:enemy.baseSpeed):enemy.isHunter?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;
+   enemy.speed=enemy.isHorned?(enemy.isEnraged?enemy.huntSpeed*1.22:enemy.baseSpeed):enemy.isHunter?enemy.huntSpeed*1.35:enemy.baseSpeed*1.45;
    if(enemy.path.length){followEnemyPath(enemy,dt);continue}
    enemy.evadeRepath=Math.max(0,(enemy.evadeRepath||0)-dt);
    continue;
@@ -16636,7 +16636,7 @@ function updateEnemies(dt){
 
   if((routeInDanger||routeBlockedByBomb)&&enemy.mode!=="evade"){enemy.path=[];enemy.patrolTarget=null;enemy.repath=0}
   if(enemy.mode==="evade"){
-   if(enemy.path.length){enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter||enemy.isBuilder?enemy.huntSpeed*1.18:enemy.baseSpeed*1.22;followEnemyPath(enemy,dt);continue}
+   if(enemy.path.length){enemy.speed=enemy.isHorned&&enemy.isEnraged?enemy.huntSpeed*1.22:enemy.isHunter||enemy.isBuilder?enemy.huntSpeed*1.35:enemy.baseSpeed*1.45;followEnemyPath(enemy,dt);continue}
    if(enemy.evadeTimer>0){
     // Depois de alcançar uma casa segura, continua patrulhando enquanto monitora a bomba.
     enemy.speed=enemy.baseSpeed*1.05;
