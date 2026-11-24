@@ -18479,37 +18479,56 @@ function snowballParticleSeed(x,y,k,salt){
  n=Math.imul(n^(n>>>13),1274126177);
  return ((n^(n>>>16))>>>0)/4294967295;
 }
-function drawSnowballParticles(){
+const snowballParticleSpecs=[];
+function buildSnowballParticleSpecs(){
+ snowballParticleSpecs.length=0;
  if(currentWorld!=="ice"||!map||!map.length)return;
- ctx.save();
  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
   if(map[y][x]!==2)continue;
-  const px=ox+x*TILE,py=oy+y*TILE;
-  // Quatro flocos independentes por bola; sementes estáveis evitam sorteios e alocações por quadro.
+  const particles=[];
   for(let k=0;k<4;k++){
    const speedSeed=snowballParticleSeed(x,y,k,1);
    const offsetSeed=snowballParticleSeed(x,y,k,2);
    const xSeed=snowballParticleSeed(x,y,k,3);
    const sizeSeed=snowballParticleSeed(x,y,k,4);
    const colorSeed=snowballParticleSeed(x,y,k,5);
+   particles.push({
+    speed:.58+speedSeed*.38,
+    offset:offsetSeed,
+    xSeed,
+    radius:2.15+sizeSeed*1.15,
+    alpha:.66+sizeSeed*.28,
+    color:ICE_SNOWFALL_COLORS[Math.min(2,Math.floor(colorSeed*3))]
+   });
+  }
+  snowballParticleSpecs.push({x,y,particles});
+ }
+}
+function drawSnowballParticles(){
+ if(currentWorld!=="ice"||!snowballParticleSpecs.length)return;
+ ctx.save();
+ for(const ball of snowballParticleSpecs){
+  if(map[ball.y][ball.x]!==2)continue;
+  const px=ox+ball.x*TILE,py=oy+ball.y*TILE;
+  for(const p of ball.particles){
    // Ciclo unidirecional: nasce no topo, desce e some ao tocar o montinho.
-   const phase=(gameClock*(.58+speedSeed*.38)+offsetSeed)%1;
+   const phase=(gameClock*p.speed+p.offset)%1;
    const localY=.12+phase*.76;
    // Limita cada floco à silhueta arredondada da bola, sem cair pelas laterais.
-   const crossSection=Math.sqrt(Math.max(.025,1-Math.pow((localY-.48)/.43,2)));
+   const normalized=(localY-.48)/.43;
+   const crossSection=Math.sqrt(Math.max(.025,1-normalized*normalized));
    const halfWidth=TILE*.45*crossSection*.8;
-   const fx=px+TILE*.5+(xSeed*2-1)*halfWidth;
+   const fx=px+TILE*.5+(p.xSeed*2-1)*halfWidth;
    const fy=py+localY*TILE;
    const fadeIn=Math.min(1,phase/.10);
    const fadeOut=Math.min(1,(1-phase)/.20);
-   const alpha=(.66+sizeSeed*.28)*fadeIn*fadeOut;
-   const radius=2.15+sizeSeed*1.15;
+   const alpha=p.alpha*fadeIn*fadeOut;
    ctx.globalAlpha=alpha;
-   ctx.fillStyle=ICE_SNOWFALL_COLORS[Math.min(2,Math.floor(colorSeed*3))];
-   ctx.beginPath();ctx.arc(fx,fy,radius,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle=p.color;
+   ctx.beginPath();ctx.arc(fx,fy,p.radius,0,Math.PI*2);ctx.fill();
    // Pequeno brilho central, sem shadowBlur nem criação de sprites por quadro.
    ctx.globalAlpha=alpha*.72;ctx.fillStyle="#ffffff";
-   ctx.beginPath();ctx.arc(fx-radius*.22,fy-radius*.24,Math.max(.7,radius*.28),0,Math.PI*2);ctx.fill();
+   ctx.beginPath();ctx.arc(fx-p.radius*.22,fy-p.radius*.24,Math.max(.7,p.radius*.28),0,Math.PI*2);ctx.fill();
   }
  }
  ctx.restore();
@@ -18537,6 +18556,8 @@ createForestPuddles=function(){
 rebuildStaticMapCache=function(){
  cacheBeforeIce();
  if(currentWorld!=="ice")return;
+ // Prepara as sementes e características das partículas apenas ao montar/alterar o mapa.
+ buildSnowballParticleSpecs();
  for(const p of iceDetails){
   const x=ox+p.x*TILE,y=oy+p.y*TILE;
   staticFloorCtx.save();staticFloorCtx.globalAlpha=.72;
