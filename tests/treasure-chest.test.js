@@ -94,7 +94,10 @@ test("fuga de bombas é limitada a cinco casas, prioriza abrigo e reage sem paus
   assert.match(update, /findBombEscapePath\(enemy,danger,true\)/);
   assert.match(update, /enemy\.baseSpeed\*1\.45/);
   const reaction = game.slice(game.indexOf("function reactToNewBomb"), game.indexOf("function followEnemyPath"));
-  assert.match(reaction, /routeBlockedByBomb\|\|nearbyBomb/);
+  assert.match(game, /function isStandardBombEvader\(enemy\)/);
+  assert.match(game, /!enemy\.isBuilder&&!enemy\.isMushroom&&!enemy\.isHorned&&!enemy\.isSnowman&&!enemy\.isBlueFlame&&!enemy\.isSwampGhost/);
+  assert.match(reaction, /isStandardBombEvader\(enemy\)/);
+  assert.match(reaction, /routeBlockedByBomb\|\|bombs\.some/);
   assert.match(reaction, /enemy\.bombReactionTimer=0/);
 });
 test("fantasma aparece rapidamente, patrulha com teletransportes e desvia de bombas", () => {
