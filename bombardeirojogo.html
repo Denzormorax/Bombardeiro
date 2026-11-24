@@ -17491,7 +17491,7 @@ function spawnTreasureEffect(x,y,kind){
  const count=kind==="reveal"?24:kind==="burst"?30:7,particles=[];
  for(let i=0;i<count;i++){
   const angle=(Math.PI*2*i/count)+(Math.random()-.5)*.28,speed=kind==="reveal"?.8+Math.random()*1.5:kind==="burst"?.7+Math.random()*2.1:.45+Math.random()*1.05;
-  particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-(kind==="reveal"?.55:kind==="burst"?.25:.35),size:kind==="hit"?1.5+Math.random()*1.2:2+Math.random()*2.8,rotation:Math.random()*6.28,spin:(Math.random()-.5)*5,life:kind==="reveal"?.85+Math.random()*.55:kind==="burst"?.75+Math.random()*.5:.28+Math.random()*.18,t:0});
+  particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-(kind==="reveal"?.55:kind==="burst"?.25:.35),size:kind==="hit"?1.5+Math.random()*1.2:2+Math.random()*2.8,life:kind==="reveal"?.85+Math.random()*.55:kind==="burst"?.75+Math.random()*.5:.28+Math.random()*.18,t:0});
  }
  treasureEffects.push({x,y,kind,age:0,duration:kind==="reveal"?1.45:kind==="burst"?1.25:.5,particles});
 }
@@ -17499,7 +17499,7 @@ function updateTreasureEffects(dt){
  for(let i=treasureEffects.length-1;i>=0;i--){
   const effect=treasureEffects[i];effect.age+=dt;
   for(let j=effect.particles.length-1;j>=0;j--){
-   const p=effect.particles[j];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(effect.kind==="reveal"?1.25:2.2)*dt;p.vx*=Math.max(0,1-1.05*dt);p.rotation+=p.spin*dt;
+   const p=effect.particles[j];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(effect.kind==="reveal"?1.25:2.2)*dt;p.vx*=Math.max(0,1-1.05*dt);
    if(p.t>=p.life)effect.particles.splice(j,1);
   }
   if(effect.age>=effect.duration||!effect.particles.length)treasureEffects.splice(i,1);
@@ -17511,10 +17511,9 @@ function drawTreasureEffects(){
  ctx.save();ctx.globalCompositeOperation="lighter";
  for(const effect of treasureEffects)for(const p of effect.particles){
   const fade=Math.min(1,(p.life-p.t)/Math.min(.2,p.life*.35)),px=ox+p.x*TILE,py=oy+p.y*TILE;
-  ctx.globalAlpha=Math.max(0,fade)*(effect.kind==="hit"?.9:.95);ctx.save();ctx.translate(px,py);ctx.rotate(p.rotation);
-  if(effect.kind==="burst"){const size=p.size*(1+p.t*1.2);ctx.drawImage(treasureBlueFlameCanvas,-size*.65,-size,size*1.3,size*2)}
-  else{const size=p.size*(1+p.t*.25);ctx.drawImage(treasureGoldSparkCanvas,-size,-size,size*2,size*2)}
-  ctx.restore();
+  ctx.globalAlpha=Math.max(0,fade)*(effect.kind==="hit"?.9:.95);
+  if(effect.kind==="burst"){const size=p.size*(1+p.t*1.2);ctx.drawImage(treasureBlueFlameCanvas,px-size*.65,py-size,size*1.3,size*2)}
+  else{const size=p.size*(1+p.t*.25);ctx.drawImage(treasureGoldSparkCanvas,px-size,py-size,size*2,size*2)}
  }
  ctx.restore();
 }
