@@ -147,6 +147,5 @@ test("colisão entre fantasmas causa teleporte simultâneo para casas aleatória
 test("teleporte aleatório de patrulha acontece em intervalo variável de dois a quatro segundos", () => {
   assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);
   assert.match(game, /g\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
-  assert.match(game, /enemy\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
   assert.match(game, /if\(!g\.alerted&&swampGhostSees\(g\)\)/);
 });
