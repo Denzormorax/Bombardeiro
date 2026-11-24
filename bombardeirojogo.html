@@ -17391,6 +17391,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  const tilt=hurt?Math.sin(gameClock*38)*.045:Math.sin(gameClock*2.8+e.x)*.018;ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.22*deathScale,1.22*deathScale);
  // Galhos e folhas dos inimigos usam quadros pré-renderizados.
  if(currentWorld==="swamp"&&!e.isSnowman){
+  if(!swampEnemyBranchFrames.length)buildSwampSecondaryFrames();
   const vinePhase=gameClock*1.05+(e.x||0)*1.7+(e.y||0)*.9,tau=Math.PI*2;
   const normalized=((vinePhase%tau)+tau)%tau,branchFrame=Math.floor(normalized*SWAMP_TENDRIL_FRAMES/tau);
   if(swampEnemyBranchFrames[branchFrame])ctx.drawImage(swampEnemyBranchFrames[branchFrame],-24,-28,48,40);
@@ -19117,8 +19118,8 @@ function buildSwampSecondaryFrames(){
   const branch=document.createElement("canvas");branch.width=48;branch.height=40;const q=branch.getContext("2d");q.lineCap="round";q.lineJoin="round";
   for(let side=-1;side<=1;side+=2){
    const bx=24+side*8,by=20,reach=side*7,tipY=9+Math.sin(phase+side)*1.2;
-   q.strokeStyle="#392d20";q.lineWidth=4.8;q.beginPath();q.moveTo(bx,by);q.quadraticCurveTo(bx+side*4,13,bx+reach+24,tipY);q.stroke();
-   q.strokeStyle="#8b6740";q.lineWidth=2.2;q.beginPath();q.moveTo(bx,by+1);q.quadraticCurveTo(bx+side*4,14,bx+reach+24,tipY+1);q.stroke();
+   q.strokeStyle="#392d20";q.lineWidth=4.8;q.beginPath();q.moveTo(bx,by);q.quadraticCurveTo(bx+side*4,13,24+side*15,tipY);q.stroke();
+   q.strokeStyle="#8b6740";q.lineWidth=2.2;q.beginPath();q.moveTo(bx,by+1);q.quadraticCurveTo(bx+side*4,14,24+side*15,tipY+1);q.stroke();
    q.save();q.translate(24+side*14,tipY);q.rotate(Math.sin(phase+side*1.6)*.24);
    q.fillStyle="#9fb84b";q.beginPath();q.moveTo(0,0);q.quadraticCurveTo(side*5,-5,side*8,-1);q.quadraticCurveTo(side*5,4,0,0);q.fill();
    q.strokeStyle="#d3df82";q.lineWidth=.8;q.beginPath();q.moveTo(0,0);q.lineTo(side*7,-1);q.stroke();q.restore();
@@ -19187,6 +19188,7 @@ function ensureSwampWoodDecorPositions(){
 }
 function drawSwampAmbientDetails(){
  if(currentWorld!=="swamp"||!map||!map.length)return;
+ if(!swampWoodLeafFrames.length)buildSwampSecondaryFrames();
  ensureSwampWoodDecorPositions();
  const sway=gameClock;
  for(let i=0;i<swampWoodDecorPositions.length;i++){
