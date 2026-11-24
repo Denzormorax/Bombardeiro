@@ -16699,13 +16699,13 @@ function placeBomb(){
  const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};
  const forestWater=currentWorld==="forest"&&waterPuddleCells.has(cellKey(x,y));
  const volcanoLava=currentWorld==="volcano"&&waterPuddleCells.has(cellKey(x,y));
- if(forestWater){bomb.extinguished=true;bomb.t=999999;bomb.activeSlotReleased=true;activeBombs=Math.max(0,activeBombs-1)}
+ if(forestWater){bomb.extinguished=true;bomb.t=999999;bomb.activeSlotReleased=true}
  if(currentWorld==="ice"&&waterPuddleCells.has(cellKey(x,y))){
   const directionX=player.facingX||0,directionY=player.facingY||(directionX===0?1:0);
   bomb.slide={dx:directionX,dy:directionY,icePuddle:true};bomb.slideClock=0;
  }
  if(currentWorld==="desert"&&waterPuddleCells.has(cellKey(x,y))){const exits=waterPuddles.filter(p=>(p.x!==x||p.y!==y)&&!bombAt(p.x,p.y)&&map[p.y]?.[p.x]===0);if(exits.length){const destination=exits[Math.floor(Math.random()*exits.length)];bomb.whirlwind={toX:destination.x,toY:destination.y,t:0,duration:.82,moved:false}}}
- bombs.push(bomb);player.passBomb=bomb;activeBombs++;bombCooldown=forestWater?0:.25;reactToNewBomb(bomb);playSfx("bomb");
+ bombs.push(bomb);player.passBomb=bomb;activeBombs++;if(forestWater)activeBombs=Math.max(0,activeBombs-1);bombCooldown=forestWater?0:.25;reactToNewBomb(bomb);playSfx("bomb");
  if(volcanoLava){bombs.splice(bombs.indexOf(bomb),1);explode(bomb);}
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
