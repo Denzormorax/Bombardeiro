@@ -16642,7 +16642,7 @@ function updateEnemies(dt){
   if(enemy.bombEscapePending){
    enemy.bombReactionTimer=Math.max(0,(enemy.bombReactionTimer||0)-dt);
    if(enemy.bombReactionTimer>0){enemy.speed=0;continue}
-   const escape=currentWorld==="ice"?findBlueFlameEscapePath(enemy,danger):(isStandardBombEvader(enemy)?findBombEscapePath(enemy,danger,true):findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter||enemy.isMushroom)));
+   const escape=isStandardBombEvader(enemy)?findBombEscapePath(enemy,danger,true):(currentWorld==="ice"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath(enemy,danger,!!(enemy.isHorned||enemy.isHunter||enemy.isMushroom)));
    enemy.bombEscapePending=false;
    if(escape.length){
     enemy.path=escape;enemy.mode="evade";enemy.evadeRepath=.22;if(!(currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)))enemy.evadeTimer=0;
