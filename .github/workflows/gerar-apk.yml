@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Baixar o repositório
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
       - name: Preparar Java
         uses: actions/setup-java@v5
         with:
@@ -39,11 +41,41 @@ jobs:
         run: |
           yes | sdkmanager --licenses
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
-      - name: Preparar ferramenta de recorte do ícone
+      - name: Preparar ferramentas somente quando necessário
         run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick ffmpeg
+          set -euo pipefail
+
+          NEEDS_AUDIO_CONVERSION=false
+          if [[ ! -s game-assets/audio/explosion.wav || ! -s game-assets/audio/coin_pickup.wav || ! -s game-assets/audio/ui_click.wav ]]; then
+            NEEDS_AUDIO_CONVERSION=true
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] && ! git diff --quiet HEAD^ HEAD -- "bomba explosão.mp3" "moeda.mp3" "botões.mp3"; then
+            NEEDS_AUDIO_CONVERSION=true
+          fi
+
+          PACKAGES=()
+          if ! command -v magick >/dev/null 2>&1; then
+            PACKAGES+=(imagemagick)
+          fi
+          if [[ "$NEEDS_AUDIO_CONVERSION" == "true" ]] && ! command -v ffmpeg >/dev/null 2>&1; then
+            PACKAGES+=(ffmpeg)
+          fi
+
+          if (( ${#PACKAGES[@]} > 0 )); then
+            echo "Instalando somente ferramentas ausentes: ${PACKAGES[*]}"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends "${PACKAGES[@]}"
+          else
+            echo "ImageMagick já está disponível e os WAVs existentes continuam válidos."
+          fi
+
+          if [[ "$NEEDS_AUDIO_CONVERSION" == "true" ]]; then
+            command -v ffmpeg >/dev/null 2>&1 || { echo "FFmpeg não está disponível para converter os áudios." >&2; exit 1; }
+            echo "NEEDS_AUDIO_CONVERSION=true" >> "$GITHUB_ENV"
+          else
+            echo "NEEDS_AUDIO_CONVERSION=false" >> "$GITHUB_ENV"
+          fi
       - name: Converter e suavizar os áudios da explosão, moeda e botões
+        if: env.NEEDS_AUDIO_CONVERSION == 'true'
         run: |
           mkdir -p game-assets/audio
           ffmpeg -hide_banner -loglevel error -y \
@@ -66,6 +98,7 @@ jobs:
           test -s game-assets/audio/ui_click.wav
           echo "Áudios convertidos para WAV PCM 16-bit, 44.1 kHz, estéreo."
       - name: Salvar WAVs convertidos no repositório
+        if: env.NEEDS_AUDIO_CONVERSION == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
