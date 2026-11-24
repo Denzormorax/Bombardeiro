@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - "bombardeirojogo.html"
+      - "tests/**"
       - "bombericon.jpg"
       - "game-assets/**"
       - "logo-bombardeiro-transparente.png"
