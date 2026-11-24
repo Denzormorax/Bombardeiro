@@ -107,7 +107,7 @@ test("fantasma escolhe somente um dos quatro quadrados ortogonais livres ao surg
 });
 test("aparição de perseguição usa espiral lenta e não coloca o fantasma sobre o jogador", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /style==="chase"\?1\.35/);
+  assert.match(html, /style==="chase"\?2\.2:style==="bomb"\?1\.8/);
   assert.match(html, /g\.teleportStyle==="chase"&&g\.teleportSwapped/);
   assert.match(html, /g\.spiralEmitClock/);
   assert.match(html, /ctx\.rotate\(\(1-revealProgress\)\*Math\.PI\*2\.15\)/);

@@ -83,7 +83,7 @@ test("inimigos comuns percebem bombas próximas e descartam rotas bloqueadas qua
 test("fantasma preserva a perseguição após reaparecer e acelera ao detectar o jogador", () => {
   assert.match(game, /enemy\.bombEvading=false;enemy\.bombEvadeRepath=0/);
   assert.match(game, /enemy\.bombTeleportCooldown=1\.1/);
-  assert.match(game, /g\.speed=\(g\.baseSpeed\|\|g\.speed\|\|1\.12\)\*1\.45/);
+  assert.match(game, /g\.speed=\(g\.baseSpeed\|\|g\.speed\|\|\.82\)\*1\.22/);
   assert.match(game, /if\(g\.alerted\)/);
 });
 test("a fuga por caminhos permanece apenas nos inimigos comuns, não nos fantasmas do pântano", () => {
