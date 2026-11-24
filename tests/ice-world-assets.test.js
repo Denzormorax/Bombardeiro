@@ -54,7 +54,13 @@ test("poças de gelo usam paleta azul cristalina e brilho diagonal em cache", ()
   assert.ok(game.includes('["#061b46","#0b3d82","#2879bd","#8fdcff","#f7fdff"]'));
   assert.ok(game.includes('if(currentWorld==="ice")drawIcePuddleShimmer(p,px,py)'));
   assert.ok(game.includes("function drawIcePuddleShimmer(p,px,py)"));
-  assert.ok(game.includes("ctx.drawImage(pillarShimmerCanvas,-20,-28,40,56)"));
+  assert.ok(game.includes("ctx.drawImage(pillarShimmerCanvas,-31,-28,40,56)"));
+  assert.ok(game.includes("ctx.drawImage(pillarShimmerCanvas,-9,-28,40,56)"));
+});
+
+test("poças congeladas mantêm a textura parada enquanto só o brilho diagonal se move", () => {
+  assert.ok(game.includes('const frame=currentWorld==="ice"?0:Math.floor(gameClock*5.5+p.phase)%frames.length;'));
+  assert.ok(game.includes("const travel=(phase-.5)*(TILE+40)"));
 });
 
 test("bombas nas poças congeladas deslizam na direção para a qual o jogador olha", () => {
