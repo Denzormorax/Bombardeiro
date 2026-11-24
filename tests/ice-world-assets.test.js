@@ -108,3 +108,44 @@ test("brilho dos blocos indestrutíveis tem maior intensidade sem perder o cache
   assert.ok(game.includes('"rgba(245,253,255,1)"'));
   assert.ok(game.includes("const pulse=.68+.32*Math.sin(phase*Math.PI*2)"));
 });
+
+
+test("Boneco de Neve aparece em 3 ou 4 unidades nas fases 1 a 9 do Gelo", () => {
+  assert.ok(game.includes('snowmanCount=currentWorld==="ice"&&level>=1&&level<=9?3+Math.floor(Math.random()*2):0'));
+  assert.ok(game.includes('createEnemySpawnPositions(count+builderCount+snowmanCount)'));
+  assert.ok(game.includes('snowmanSlots=new Set(slots.splice(0,snowmanCount))'));
+  assert.ok(game.includes('isSnowman=snowmanSlots.has(index)'));
+  assert.ok(game.includes('freezingBomb:null,freezeCooldown:0'));
+});
+
+test("Boneco de Neve usa a perseguição do Caçador e precisa de três acertos", () => {
+  assert.ok(game.includes('isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned'));
+  assert.ok(game.includes('hp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1'));
+  assert.ok(game.includes('enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame'));
+  assert.ok(game.includes('if(e.isSnowman){'));
+  assert.ok(game.includes('faceYOffset=e.isSnowman?-17:0'));
+  assert.ok(game.includes('function drawSnowmanBreath(e)'));
+});
+
+test("sopro congela a bomba de baixo para cima e libera imediatamente o limite de bombas", () => {
+  assert.ok(game.includes('function startSnowmanFreeze(enemy,bomb)'));
+  assert.ok(game.includes('bomb.freezeDuration=1.15'));
+  assert.ok(game.includes('activeBombs=Math.max(0,activeBombs-1);bomb.activeSlotReleased=true'));
+  assert.ok(game.includes('if((b.freezing||b.frozen)&&!b.chainTriggered)'));
+  assert.ok(game.includes('const top=16-progress*32'));
+  assert.ok(game.includes('ctx.fillRect(-17,top,34,32*progress)'));
+});
+
+test("bomba congelada funciona como bloco destrutível e entra na detonação em cadeia", () => {
+  assert.ok(game.includes('if(bomb.freezing||bomb.frozen)return new Set()'));
+  assert.ok(game.includes('const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen)'));
+  assert.ok(game.includes('frozenBomb.chainTriggered=true;frozenBomb.t=0;break'));
+  assert.ok(game.includes('if(other.freezing||other.frozen){other.chainTriggered=true;other.t=0}'));
+  assert.ok(game.includes('if(!b.activeSlotReleased)activeBombs=Math.max(0,activeBombs-1)'));
+});
+
+
+test("Boneco de Neve mantém a perseguição após terminar o sopro de gelo", () => {
+  assert.ok(game.includes('enemy.alert=3.2;enemy.lastSeen={x:player.x,y:player.y}'));
+  assert.ok(game.includes("if(player.passBomb===bomb)player.passBomb=null")===false);
+});
