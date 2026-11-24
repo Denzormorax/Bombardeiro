@@ -16138,7 +16138,7 @@ function findFreeCoinPosition(x,y){
  for(const p of candidates)if(tileAt(Math.floor(p.x),Math.floor(p.y))===0&&canOccupy(p.x,p.y,COIN_RADIUS,null,null))return p;
  return null;
 }
-function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position){const value=coinValue(type);coinsOnMap.push({x:position.x,y:position.y,type:"yellow",value,phase:Math.random()*Math.PI*2,life:0)}}}
+function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position){const value=coinValue(type);coinsOnMap.push({x:position.x,y:position.y,type:"yellow",value,phase:Math.random()*Math.PI*2,life:0})}}
 function coinValue(type){return type==="yellow"?2:type==="green"?4:6}
 function updateHUD(){
  $("level").textContent=level;$("forestThemeName").textContent=currentForestTheme().name;const hearts=$("lifeHearts").children;
