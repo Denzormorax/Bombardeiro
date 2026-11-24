@@ -154,20 +154,20 @@ test("explosões reutilizam sprites de chama e colisões espaciais", () => {
 });
 
 
-test("fantasmas têm colisão entre si e recalculam a rota ao encontrar outro", () => {
-  assert.match(game, /function swampGhostBlockedByOther\(ghost,x,y,radius=\.445\)/);
-  assert.match(game, /function swampGhostCanOccupy\(ghost,x,y\)/);
+test("fantasmas se afastam suavemente sem bloquear as rotas uns dos outros", () => {
+  assert.match(game, /function swampGhostBlockedByOther\\(ghost,x,y,radius=\\.445\\)\\{return false\\}/);
+  assert.match(game, /function swampGhostCanOccupy\\(ghost,x,y\\)\\{return swampGhostStand\\(x,y)\\}/);
+  assert.match(game, /function swampGhostSpread\\(ghost,dt\\)/);
   const move = game.slice(game.indexOf("function swampGhostMove"), game.indexOf("function swampGhostSees"));
-  assert.match(move, /swampGhostCanOccupy\(ghost,nx,ghost\.y\)/);
-  assert.match(move, /swampGhostCanOccupy\(ghost,ghost\.x,ny\)/);
-  assert.match(move, /ghost\.path=\[\];ghost\.patrolWait=0;ghost\.chaseRepath=0;ghost\.bombEvadeRepath=0/);
+  assert.match(move, /swampGhostCanOccupy\\(ghost,nx,ghost\\.y\\)/);
+  assert.match(move, /swampGhostCanOccupy\\(ghost,ghost\\.x,ny\\)/);
+  assert.match(move, /swampGhostSpread\\(ghost,dt\\)/);
   const patrol = game.slice(game.indexOf("function swampGhostPath"), game.indexOf("function swampGhostChasePath"));
   const chase = game.slice(game.indexOf("function swampGhostChasePath"), game.indexOf("function swampGhostBombEscapePath"));
-  assert.match(patrol, /swampGhostBlockedByOther\(ghost,x\+\.5,y\+\.5,\.72\)/);
-  assert.match(chase, /swampGhostBlockedByOther\(ghost,x\+\.5,y\+\.5,\.72\)/);
-  assert.match(game, /swampGhostBlockedByOther\(ghost,x,y,\.72\)/);
+  assert.match(patrol, /swampGhostBlockedByOther\\(ghost,x\\+\\.5,y\\+\\.5,\\.72\\)/);
+  assert.match(chase, /const score=Math\\.min\\(nearest,3\\)\\*2\\.2/);
+  assert.match(game, /swampGhostSpread\\(ghost,dt\\);/);
 });
-
 test("teleporte aleatório de patrulha acontece em intervalo variável de dois a quatro segundos", () => {
   assert.match(game, /patrolTeleportTimer:2\+Math\.random\(\)\*2/);
   assert.match(game, /g\.patrolTeleportTimer=2\+Math\.random\(\)\*2/);
