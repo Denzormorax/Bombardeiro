@@ -96,23 +96,25 @@ test("teletransporte periódico dos fantasminhas também continua durante a pers
   assert.match(html, /ctx\.drawImage\(swampGhostBody,-33,-39,66,77\)/);
 });
 
-test("fantasma escolhe somente um dos quatro quadrados ortogonais livres ao surgir perto do jogador", () => {
+test("fantasma escolhe um dos quatro destinos a dois quadrados do jogador", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   const target = html.slice(html.indexOf("function swampGhostChaseSpawnTarget"), html.indexOf("function swampGhostTarget"));
   assert.match(target, /for\(const d of \[\[0,-2\],\[2,0\],\[0,2\],\[-2,0\]\]\)/);
-  assert.match(target, /tileAt\(x,y\)!==0/);\n   assert.match(target, /distance\(tx,ty,player\.x,player\.y\)<1\.5/);
+  assert.match(target, /tileAt\(x,y\)!==0/);
+  assert.match(target, /distance\(tx,ty,player\.x,player\.y\)<1\.5/);
   assert.match(target, /waterPuddleCells\.has\(key\)/);
   assert.match(target, /danger\.has\(key\)/);
-  assert.match(html, /swampGhostStartTeleport\(g,target,false,false,false,"chase"\)/);
+  assert.match(html, /if\(g\.teleportStyle==="chase"\)g\.teleportDestination=swampGhostChaseSpawnTarget\(g,danger\)/);
+  assert.match(html, /g\.teleporting=Math\.max\(g\.teleporting,\.12\)/);
 });
-test("aparição de perseguição usa espiral lenta e não coloca o fantasma sobre o jogador", () => {
+test("aparição do fantasma usa espiral visual e lenta", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /style==="chase"\?2\.2:style==="bomb"\?1\.8/);
   assert.match(html, /g\.teleportStyle==="chase"&&g\.teleportSwapped/);
-  assert.match(html, /g\.spiralEmitClock/);
-  assert.match(html, /ctx\.rotate\(\(1-revealProgress\)\*Math\.PI\*3\.2\)/);\n   assert.match(html, /const showingSpiral=\(g\.teleportStyle==="chase"&&g\.teleportSwapped\)\|\|\(g\.teleportStyle==="bomb"&&g\.teleportSwapped\)/);\n   assert.match(html, /const spiralPulse=Math\.sin\(revealProgress\*Math\.PI\)/);\n   assert.match(html, /ctx\.strokeStyle=arm===0\?"#a8f7ff":"#d2c0ff"/);
+  assert.match(html, /showingSpiral=/);
+  assert.match(html, /ctx\.strokeStyle=arm===0\?"#a8f7ff":"#d2c0ff"/);
+  assert.match(html, /ctx\.rotate\(\(1-revealProgress\)\*Math\.PI\*3\.2\)/);
 });
-
 test("fantasmas do Pântano patrulham e perseguem mais devagar", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /speed=\.82\+Math\.min\(level\*\.018,\.12\)/);
