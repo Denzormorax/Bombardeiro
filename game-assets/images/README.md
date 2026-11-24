@@ -1,0 +1,1 @@
+# Imagens\nColoque aqui imagens de interface, fundos e elementos visuais.\n

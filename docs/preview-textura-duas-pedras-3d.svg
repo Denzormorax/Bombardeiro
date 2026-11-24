@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" shape-rendering="crispEdges">
+<title>Textura pixel art 3D de duas pedras</title>
+<defs>
+ <linearGradient id="topA" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#c8d0d0"/><stop offset=".52" stop-color="#87969b"/><stop offset="1" stop-color="#64747a"/></linearGradient>
+ <linearGradient id="sideA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#52636b"/><stop offset="1" stop-color="#273941"/></linearGradient>
+ <linearGradient id="topB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b8c2c0"/><stop offset=".55" stop-color="#7c8c8e"/><stop offset="1" stop-color="#56696c"/></linearGradient>
+ <linearGradient id="sideB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#485b60"/><stop offset="1" stop-color="#202f35"/></linearGradient>
+ <filter id="groundShadow" x="-35%" y="-80%" width="170%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+ <linearGradient id="shadeA" x1="0" y1="0" x2="0.2" y2="1"><stop stop-color="#dce2df" stop-opacity=".24"/><stop offset=".45" stop-color="#263940" stop-opacity=".04"/><stop offset="1" stop-color="#14252c" stop-opacity=".48"/></linearGradient>
+ <linearGradient id="shadeB" x1="0" y1="0" x2=".3" y2="1"><stop stop-color="#e0e5df" stop-opacity=".2"/><stop offset=".5" stop-color="#263a40" stop-opacity=".02"/><stop offset="1" stop-color="#13262c" stop-opacity=".5"/></linearGradient>
+</defs>
+<!-- soft contact shadows directly beneath the stones -->
+<ellipse cx="153" cy="378" rx="125" ry="23" fill="#071317" opacity=".72" filter="url(#groundShadow)"/>
+<ellipse cx="365" cy="395" rx="112" ry="22" fill="#071317" opacity=".76" filter="url(#groundShadow)"/>
+<path d="M48 363h16v-8h24v-8h32v-8h32v8h24v8h16v16H48z" fill="#101d20" opacity=".38"/>
+<path d="M270 380h16v-8h24v-8h32v-8h40v8h24v8h16v16H270z" fill="#101d20" opacity=".4"/>
+<!-- left stone: broad angular top and deep right/front bevel; slightly enlarged -->
+<g transform="translate(-21 -40) scale(1.15)">
+<path d="M42 277v-38h16v-32h24v-24h32v-16h64v8h24v16h24v32h16v48h-16v48h-24v24h-40v16h-72v-8H66v-24H50v-32H42z" fill="#24353b"/>
+<path d="M50 270v-34h16v-32h24v-24h32v-16h56v8h24v16h16v32h16v40h-16v40h-24v24h-40v8h-64v-8H74v-24H58v-32H50z" fill="url(#sideA)"/>
+<path d="M50 270v-34h16v-32h24v-24h32v-16h56v8h24v16h16v32h16v32h-24v16h-32v16h-48v8H90v-8H66v-24H50z" fill="url(#topA)"/>
+<!-- subtle broad shading keeps the original stone colors while adding volume -->
+<path d="M50 270v-34h16v-32h24v-24h32v-16h56v8h24v16h16v32h16v32h-24v16h-32v16h-48v8H90v-8H66v-24H50z" fill="url(#shadeA)"/>
+<!-- pixel facets left -->
+<path d="M122 164h56v8h24v16h-24v8h-48v-8h-24v-16h16z" fill="#e0e4df"/>
+<path d="M74 220h24v-16h24v16h-16v24H82v24H66v-32h8z" fill="#d0d8d4"/>
+<path d="M130 204h32v8h-16v16h-24v-16h8z" fill="#aebcbb"/>
+<path d="M178 196h24v16h16v32h-16v-16h-24z" fill="#74868a"/>
+<path d="M90 260h24v16h32v8h-40v-8H90z" fill="#e0e4df"/>
+<path d="M122 292h40v8h-24v16h-24v-16h8z" fill="#aab8b6"/>
+<path d="M178 260h24v16h-16v24h-24v-16h16z" fill="#53666d"/>
+<path d="M66 292h16v24h24v16H82v-8H66z" fill="#43565e"/>
+<path d="M154 324h40v-8h16v-16h16v24h-24v16h-48z" fill="#263a42"/>
+<path d="M202 236h16v32h-16v24h-16v-40h16z" fill="#354951"/>
+</g>
+<!-- right stone, slightly smaller and overlapping in depth; slightly enlarged -->
+<g transform="translate(-57 -40) scale(1.15)">
+<path d="M264 306v-32h16v-32h24v-24h32v-16h56v8h24v16h24v32h16v40h-16v40h-24v24h-40v16h-64v-8h-24v-24h-16v-32h-8z" fill="#1e3036"/>
+<path d="M272 300v-32h16v-32h24v-24h32v-16h48v8h24v16h16v32h16v40h-16v32h-24v24h-40v8h-56v-8h-24v-24h-16v-32z" fill="url(#sideB)"/>
+<path d="M272 300v-32h16v-32h24v-24h32v-16h48v8h24v16h16v32h16v32h-24v16h-32v16h-48v8h-40v-8h-24v-24h-8z" fill="url(#topB)"/>
+<!-- subtle broad shading on the right stone -->
+<path d="M272 300v-32h16v-32h24v-24h32v-16h48v8h24v16h16v32h16v32h-24v16h-32v16h-48v8h-40v-8h-24v-24h-8z" fill="url(#shadeB)"/>
+<!-- right stone pixel facets -->
+<path d="M344 196h48v8h24v16h-16v8h-48v-8h-24v-16h16z" fill="#d4dcd7"/>
+<path d="M296 252h24v-16h24v16h-16v24h-16v16h-16v-32h8z" fill="#c4cfca"/>
+<path d="M344 236h32v8h-16v16h-24v-16h8z" fill="#a7b6b3"/>
+<path d="M392 228h24v16h16v24h-16v-16h-24z" fill="#718388"/>
+<path d="M312 292h24v16h32v8h-40v-8h-16z" fill="#d4dcd7"/>
+<path d="M344 324h40v8h-24v16h-24v-16h8z" fill="#9eaeab"/>
+<path d="M392 292h24v16h-16v24h-24v-16h16z" fill="#4b6067"/>
+<path d="M288 324h16v24h24v16h-24v-8h-16z" fill="#3c5159"/>
+<path d="M376 356h40v-8h16v-16h16v24h-24v16h-48z" fill="#1d3037"/>
+<path d="M424 268h16v32h-16v24h-16v-40h16z" fill="#30464e"/>
+</g>
+<!-- small crisp glints and chips -->
+<path d="M106 188h8v8h-8zM138 180h8v8h-8zM82 236h8v8h-8zM186 220h8v8h-8zM330 220h8v8h-8zM362 212h8v8h-8zM306 268h8v8h-8zM410 252h8v8h-8z" fill="#f0f2e9" opacity=".8"/>
+<path d="M106 316h8v8h-8zM170 308h8v8h-8zM330 348h8v8h-8zM394 340h8v8h-8z" fill="#1b2b31" opacity=".9"/>
+<!-- restrained pixel grain and darker contact creases -->
+<g opacity=".2" fill="#182a30">
+ <path d="M94 279h16v4H94zM154 303h12v4h-12zM190 247h8v12h-8zM312 310h12v4h-12zM372 333h16v4h-16zM420 286h8v12h-8z"/>
+</g>
+</svg>

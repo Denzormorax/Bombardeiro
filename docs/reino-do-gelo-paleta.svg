@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<defs>
+ <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#dff8ff"/><stop offset=".48" stop-color="#559bc8"/><stop offset="1" stop-color="#081c48"/></linearGradient>
+ <linearGradient id="ice" x2="1" y2="1"><stop stop-color="#f5ffff"/><stop offset=".45" stop-color="#8ddcf5"/><stop offset="1" stop-color="#2764b0"/></linearGradient>
+ <linearGradient id="night" x2="0" y2="1"><stop stop-color="#091744"/><stop offset=".55" stop-color="#174e9d"/><stop offset="1" stop-color="#03102e"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<path d="M0 180L180 45 290 150 430 22 590 170 760 38 940 160 1100 25 1270 155 1440 40 1600 160V0H0Z" fill="#fff" opacity=".72"/>
+<text x="800" y="92" font-family="Arial,sans-serif" font-size="62" font-weight="900" fill="#08356f" text-anchor="middle" stroke="#fff" stroke-width="2">REINO DO GELO • MUNDO 4</text>
+<text x="800" y="145" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#eaffff" text-anchor="middle">PALETA VISUAL DAS 10 FASES — DA TARDE À NOITE POLAR</text>
+<g font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">
+<g transform="translate(42 205)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">01 • Floresta Congelada</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#c9f2ff" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#78c9e8" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#3b8eb9" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#eafcff" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">TARDE</text>
+ </g><g transform="translate(350 205)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">02 • Lago Congelado</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#a8f2f4" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#39c6df" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#147fae" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#e4ffff" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">GELO AZUL</text>
+ </g><g transform="translate(658 205)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">03 • Grutas de Cristal</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#d7caff" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#9d7cf4" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#5d50bd" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#38e5ff" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">CRISTAIS</text>
+ </g><g transform="translate(966 205)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">04 • Montanhas Nevadas</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#f4fbff" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#b7d8ef" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#668fb8" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#e0f5ff" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">NEVE</text>
+ </g><g transform="translate(1274 205)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">05 • Vale da Nevasca</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#dce9f5" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#9db7d0" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#536f96" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#effaff" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">VENTANIA</text>
+ </g><g transform="translate(42 570)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">06 • Pinheiros Congelados</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#c4efff" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#6eb7d7" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#376c9d" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#b9e9f7" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">PINHEIROS</text>
+ </g><g transform="translate(350 570)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">07 • Palácio de Gelo</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#efffff" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#a9e7ff" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#5c9bd7" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#d7caff" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">PALÁCIO</text>
+ </g><g transform="translate(658 570)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">08 • Geleira Profunda</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#8cecff" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#328dc8" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#15528f" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#1b2e70" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">ABISMO</text>
+ </g><g transform="translate(966 570)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#ice)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">09 • Tempestade Polar</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#8e9be9" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#5558a8" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#28285e" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#c2b7ff" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">NOITE</text>
+ </g><g transform="translate(1274 570)">
+ <rect width="286" height="330" rx="22" fill="#082b58" opacity=".84" stroke="#e8fbff" stroke-width="5"/>
+ <rect x="10" y="10" width="266" height="190" rx="15" fill="url(#night)"/>
+ <path d="M10 148L65 78 105 130 155 50 210 124 276 70V200H10Z" fill="#fff" opacity=".34"/>
+ <path d="M10 174L70 123 111 160 167 105 220 158 276 120V200H10Z" fill="#1b70a6" opacity=".25"/>
+ <g fill="#fff" opacity=".85" filter="url(#glow)"><path d="M38 25l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/><path d="M233 33l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/></g>
+ <text x="143" y="235" font-size="22" fill="#fff">10 • Reino do Gelo</text>
+ <g transform="translate(18 255)"><rect x="0" y="0" width="55" height="42" rx="8" fill="#061a4a" stroke="#fff" stroke-width="2"/><rect x="63" y="0" width="55" height="42" rx="8" fill="#075baf" stroke="#fff" stroke-width="2"/><rect x="126" y="0" width="55" height="42" rx="8" fill="#18c8d0" stroke="#fff" stroke-width="2"/><rect x="189" y="0" width="55" height="42" rx="8" fill="#7cffe8" stroke="#fff" stroke-width="2"/></g>
+ <text x="143" y="316" font-size="13" fill="#dff8ff">AURORA</text>
+ </g>
+</g>
+<text x="800" y="970" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#eaffff" text-anchor="middle">Cores de cenário, chão, paredes, cristais e iluminação • conceito visual do Mundo 4</text>
+</svg>

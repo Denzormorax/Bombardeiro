@@ -1,0 +1,20 @@
+Sound effects bundled with Bombardeiro
+
+Kenney audio files are licensed CC0 1.0 Universal (public domain dedication). They may be used, modified and redistributed, including inside offline games and APKs.
+
+Creator: Kenney Vleugels (Kenney.nl)
+Sources:
+- https://kenney.nl/assets/impact-sounds
+- https://kenney.nl/assets/sci-fi-sounds
+- https://kenney.nl/assets/rpg-audio
+
+Additional sound:
+- enemy_poof.ogg: nightmare_poof.ogg from tgstation/tgstation, assembled from breath_01.wav by Nightflame (CC0) and slide-click.wav by Qat (CC0), as stated in the upstream sound attributions.
+- https://github.com/tgstation/tgstation/blob/3d539ad0265e208bf8a1b9a964b458a469114226/sound/attributions.txt
+
+New original effects:
+- explosion.wav: original short retro arcade-style explosion synthesized for Bombardeiro; created for this project and dedicated to the public domain under CC0 1.0.
+- coin_pickup.wav: original two-note arcade coin pickup sound synthesized for Bombardeiro; created for this project and dedicated to the public domain under CC0 1.0.
+
+License for original effects: https://creativecommons.org/publicdomain/zero/1.0/
+Current files: bomb_place.ogg, explosion.ogg, block_break.ogg, player_hit.ogg, enemy_hit.ogg, enemy_poof.ogg, coin_pickup.ogg, exit_reveal.ogg.

@@ -1,0 +1,1 @@
+# Mapas\nColoque aqui dados externos de mapas, fases e configurações de mundos.\n
