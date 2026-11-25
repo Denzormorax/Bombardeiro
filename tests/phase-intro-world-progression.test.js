@@ -10,7 +10,7 @@ test("entrada de fase exibe fase-mundo com parada central e saída à esquerda",
   assert.match(game, /12%\s*\{transform:translateX\(0\);opacity:1\}/);
   assert.match(game, /58%\s*\{transform:translateX\(0\);opacity:1\}/);
   assert.match(game, /100%\s*\{transform:translateX\(-120vw\);opacity:0\}/);
-  assert.match(game, /phaseIntro\.textContent=String\(level\)\+"-"+String\(worldNumber\(\)\)/);
+  assert.ok(game.includes('phaseIntro.textContent=String(level)+"-"+String(worldNumber())'));
 });
 
 test("jogo e entradas ficam bloqueados durante toda a animação", () => {
