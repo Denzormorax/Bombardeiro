@@ -23,7 +23,7 @@ test("disfarces se movem em passos cardinais, centralizados e com intervalo de c
 
 test("aranha revelada pela bomba explora continuamente caminhos aleatórios em quatro direções",()=>{
  assert.match(html,/function spiderFindWanderPath/);
- assert.match(html,/const choices=queue\.filter\(p=>cellKey\(p\.x,p\.y\)!==start\)/);
+ assert.match(html,/let choices=queue\.filter\(p=>cellKey\(p\.x,p\.y\)!==start&&!danger\.has\(cellKey\(p\.x,p\.y\)\)\)/);
  assert.match(html,/choices\[Math\.floor\(Math\.random\(\)\*choices\.length\)\]/);
  assert.match(html,/spider\.speed\*dt/);
  assert.match(html,/speed:1\.72,baseSpeed:1\.72/);
