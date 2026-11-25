@@ -19806,17 +19806,26 @@ damageEnemy=function(enemy){
 const spiderUpdatePlayerBase=updatePlayer;
 updatePlayer=function(dt){
  const originalHurt=hurtPlayer;
+ const allEnemies= enemies;
+ // A rotina genérica não calcula dano para a aranha: isso é tratado abaixo
+ // por uma única distância curta, evitando o gatilho antigo de tile adjacente.
+ enemies=allEnemies.filter(enemy=>!enemy||!enemy.isSpider);
  try{
   spiderUpdatePlayerBase(dt);
-  for(const spider of enemies.slice()){
-   if(!spider||!spider.isSpider||!spider.alive||player.inv>0)continue;
-   const contact=distance(spider.x,spider.y,player.x,player.y)<.48;
-   if((spider.passive&&contact)||(!spider.passive&&spiderAdjacentToPlayer(spider))){
-    originalHurt();
-    break;
-   }
+ }finally{
+  enemies=allEnemies;
+  hurtPlayer=originalHurt;
+ }
+ if(player.inv>0)return;
+ for(const spider of allEnemies){
+  if(!spider||!spider.isSpider||!spider.alive||spider.burrowing)continue;
+  // Dano apenas no contato muito próximo entre os centros dos personagens.
+  // Mantém o bote/revelação original; reduz somente a área de dano contínuo.
+  if(distance(spider.x,spider.y,player.x,player.y)<.36){
+   originalHurt();
+   break;
   }
- }finally{hurtPlayer=originalHurt}
+ }
 };
 const spiderAllEnemiesDefeatedBase=allEnemiesDefeated;
 allEnemiesDefeated=function(){return spiderDisguises.length===0&&spiderAllEnemiesDefeatedBase()};
