@@ -19593,7 +19593,7 @@ function spiderReveal(disguise,reason){
  const x=disguise.x,y=disguise.y;
  spiderDisguises.splice(index,1);
  const adjacent=Math.abs(Math.floor(player.x)-x)+Math.abs(Math.floor(player.y)-y)===1;
- const spider={isSpider:true,x:x+.5,y:y+.5,speed:1.58,baseSpeed:1.58,hp:1,maxHp:1,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],repath:0,walkPhase:Math.random()*6.28,moving:false,alert:false,revealFlash:.55,revealReason:reason||"near",revealProtection:.7,noAttackUntilLeave:adjacent};
+ const spider={isSpider:true,x:x+.5,y:y+.5,speed:1.58,baseSpeed:1.58,hp:1,maxHp:1,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],repath:0,walkPhase:Math.random()*6.28,moving:false,alert:false,revealFlash:.55,revealReason:reason||"near",revealProtection:.7,passive:reason==="bomb"};
  enemies.push(spider);
  return spider;
 }
@@ -19772,15 +19772,6 @@ damageEnemy=function(enemy){
  }
  return spiderDamageEnemyBase(enemy);
 };
-function spiderHideAfterAttack(spider){
- if(!spider||!spider.isSpider||!spider.alive)return;
- const x=Math.floor(spider.x),y=Math.floor(spider.y);
- spider.alive=false;spider.deathTimer=0;
- const index=enemies.indexOf(spider);if(index>=0)enemies.splice(index,1);
- if(x>0&&y>0&&x<COLS-1&&y<ROWS-1&&spiderTileAtBase(x,y)===0&&!bombAt(x,y)&&!spiderDisguises.some(d=>d.x===x&&d.y===y)){
-  spiderDisguises.push({x,y,wait:5,moveTimer:5,near:false,phase:Math.random()*6.28,lift:.72,revealAnim:0,moving:false,renderX:x,renderY:y,hideAnim:.72});
- }
-}
 const spiderUpdatePlayerBase=updatePlayer;
 updatePlayer=function(dt){
  const originalHurt=hurtPlayer;
@@ -19788,7 +19779,8 @@ updatePlayer=function(dt){
   spiderUpdatePlayerBase(dt);
   for(const spider of enemies.slice()){
    if(!spider||!spider.isSpider||!spider.alive||player.inv>0)continue;
-   if(distance(spider.x,spider.y,player.x,player.y)<.48){
+   const contact=distance(spider.x,spider.y,player.x,player.y)<.48;
+   if((spider.passive&&contact)||(!spider.passive&&spiderAdjacentToPlayer(spider))){
     originalHurt();
     break;
    }
