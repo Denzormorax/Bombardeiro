@@ -17424,6 +17424,35 @@ function drawPlayer(){
  ctx.strokeStyle="#18242a";ctx.lineWidth=1.8;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-4,7);ctx.quadraticCurveTo(0,10,4,7);ctx.stroke()}
  ctx.restore();
 }
+const FOREST_LEAF_PALETTE=["#173f27","#28633a","#43864a","#70a84e","#9abd62","#536f32"];
+function drawForestLeaf(x,y,rx,ry,angle,color){
+ ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle=color;ctx.strokeStyle="#173b25";ctx.lineWidth=.65;
+ ctx.beginPath();ctx.moveTo(-rx,0);ctx.quadraticCurveTo(-rx*.25,-ry*1.18,rx,0);ctx.quadraticCurveTo(rx*.15,ry*1.12,-rx,0);ctx.fill();ctx.stroke();
+ ctx.strokeStyle="#c0d88a99";ctx.lineWidth=.55;ctx.beginPath();ctx.moveTo(-rx*.72,0);ctx.quadraticCurveTo(0,-.25,rx*.72,0);ctx.stroke();ctx.restore();
+}
+function drawForestLeafCluster(x,y,scale=1,phase=0,count=5){
+ for(let i=0;i<count;i++){
+  const angle=phase+i*Math.PI*2/count,spread=i%2?3.2:2.2;
+  drawForestLeaf(x+Math.cos(angle)*spread*scale,y+Math.sin(angle)*spread*.72*scale,5.2*scale,2.5*scale,angle*.48,FOREST_LEAF_PALETTE[(i+Math.floor(Math.abs(phase)*2))%FOREST_LEAF_PALETTE.length]);
+ }
+}
+function drawForestHunterCover(){
+ // Folhagem sobre todo o corpo; os olhos e a boca são desenhados depois, em primeiro plano.
+ const rows=[[-11,-9,0],[-2,-10,1],[8,-8,2],[-10,1,2],[0,1,3],[10,2,4],[-7,10,1],[3,11,2]];
+ for(const p of rows)drawForestLeafCluster(p[0],p[1],.86,p[2]*.72,5);
+}
+function drawForestEnemyDetails(e){
+ if(e.isHunter){drawForestHunterCover();return}
+ if(!e.isSnowman&&!e.isBuilder&&!e.isMushroom&&!e.isHorned){
+  // O inimigo vermelho mantém sua cor original e ganha um pequeno chapéu de folhas volumosas.
+  drawForestLeafCluster(-8,-17,.92,.1,5);drawForestLeafCluster(0,-20,1.02,.55,6);drawForestLeafCluster(8,-17,.9,1.1,5);
+  drawForestLeaf(-13,-13,4.8,2.3,-.55,"#28633a");drawForestLeaf(13,-13,4.8,2.3,.55,"#70a84e");
+  return;
+ }
+ // Os demais inimigos recebem pequenos ramos laterais e folhas junto à cabeça.
+ drawForestLeafCluster(-13,-5,.58,.35,4);drawForestLeafCluster(13,-5,.58,1.15,4);
+ drawForestLeaf(-7,-16,4.6,2.1,-.45,"#43864a");drawForestLeaf(7,-16,4.6,2.1,.45,"#9abd62");
+}
 function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob,hurt=(e.hurtTimer||0)>0||!e.alive,facingX=e.facingX||0,facingY=e.facingY||1,faceYOffset=e.isSnowman?-17:0;
  const deathScale=deathProgress>0?Math.max(.25,1-deathProgress*.45):1,deathAlpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
@@ -17470,6 +17499,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   ctx.fillStyle="#eea044";ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(9,-14);ctx.lineTo(0,-12.5);ctx.closePath();ctx.fill();
  }else if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":currentWorld==="swamp"?"#596b32":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":currentWorld==="swamp"?"#9eaa45":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
  else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(e.isBuilder){ctx.fillStyle="#000000";for(const pebble of [[-10,4,2.1],[-6,11,1.7],[8,5,2.2],[10,-3,1.6],[1,12,1.8],[-12,-4,1.5]]){ctx.beginPath();ctx.arc(pebble[0],pebble[1],pebble[2],0,Math.PI*2);ctx.fill()}ctx.fillStyle=helmetColor;ctx.beginPath();ctx.moveTo(-14,-5);ctx.lineTo(-11,-13);ctx.quadraticCurveTo(0,-20,11,-13);ctx.lineTo(14,-5);ctx.closePath();ctx.fill();ctx.fillRect(-16,-5,32,3);ctx.fillStyle="#ffe39a";ctx.fillRect(-5,-13,10,2)}else if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
+ if(currentWorld==="forest")drawForestEnemyDetails(e);
  if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5+faceYOffset);ctx.lineTo(eyeX+2.2,1.8+faceYOffset);ctx.moveTo(eyeX+2.2,-2.5+faceYOffset);ctx.lineTo(eyeX-2.2,1.8+faceYOffset);ctx.stroke()}}
  else{const eyeShiftX=facingX*2,eyeShiftY=facingY*2;ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY+faceYOffset,3.3,4.1,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY+faceYOffset,3.3,4.1,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#24101b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8+faceYOffset,1.9,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8+faceYOffset,1.9,0,Math.PI*2);ctx.fill()}
  ctx.strokeStyle="#24101b";ctx.lineWidth=2.5;ctx.lineCap="round";
@@ -19647,10 +19677,10 @@ function spiderUpdateDisguises(dt){
  }
 }
 // Aranha revelada pela bomba percorre continuamente rotas aleatórias e evita bloqueios.
-function spiderFindWanderPath(spider){
+function spiderFindWanderPath(spider,danger=getAllBombDangerCells()){
  const sx=Math.floor(spider.x),sy=Math.floor(spider.y);
  const start=cellKey(sx,sy),queue=[{x:sx,y:sy}],seen=new Set([start]),parents=new Map();
- const dirs=[[0,-1],[1,0],[0,1],[-1,0]],danger=getAllBombDangerCells();
+ const dirs=[[0,-1],[1,0],[0,1],[-1,0]];
  let head=0;
  while(head<queue.length&&head<ROWS*COLS){
   const p=queue[head++],k=cellKey(p.x,p.y);
@@ -19673,7 +19703,7 @@ function spiderFindWanderPath(spider){
  }
  path.reverse();spider.path=path;spider.wanderTarget=targetKey;
 }
-function spiderUpdateEnemy(spider,dt){
+function spiderUpdateEnemy(spider,dt,danger=getAllBombDangerCells()){
  if(!spider.alive){spider.deathTimer=Math.max(0,(spider.deathTimer||0)-dt);return}
  spider.hitFlash=Math.max(0,(spider.hitFlash||0)-dt);
  spider.hurtTimer=Math.max(0,(spider.hurtTimer||0)-dt);
@@ -19681,7 +19711,6 @@ function spiderUpdateEnemy(spider,dt){
  spider.revealProtection=Math.max(0,(spider.revealProtection||0)-dt);
  spider.repath=Math.max(0,(spider.repath||0)-dt);
  spider.moving=false;
- const danger=getAllBombDangerCells();
  const next=spider.path&&spider.path[0];
  if(next){
   const key=cellKey(next.x,next.y);
@@ -19690,7 +19719,7 @@ function spiderUpdateEnemy(spider,dt){
   }
  }
  if(spider.repath<=0||!spider.path.length){
-  spiderFindWanderPath(spider);spider.repath=.28+Math.random()*.22;
+  spiderFindWanderPath(spider,danger);spider.repath=.28+Math.random()*.22;
  }
  if(spider.path.length){
   const target=spider.path[0],tx=target.x+.5,ty=target.y+.5,dx=tx-spider.x,dy=ty-spider.y,dist=Math.hypot(dx,dy);
@@ -19819,7 +19848,8 @@ updateEnemies=function(dt){
  const all=enemies;enemies=all.filter(e=>!e.isSpider);
  try{spiderUpdateEnemiesBase(dt)}finally{enemies=all}
  spiderUpdateDisguises(dt);
- for(const e of all)if(e.isSpider)spiderUpdateEnemy(e,dt);
+ const activeSpiders=all.filter(e=>e.isSpider);
+ if(activeSpiders.length){const spiderDanger=getAllBombDangerCells();for(const e of activeSpiders)spiderUpdateEnemy(e,dt,spiderDanger)}
 };
 const spiderDrawEnemyBase=drawEnemy;
 drawEnemy=function(e){if(e&&e.isSpider){drawSpider(e);return}spiderDrawEnemyBase(e)};
