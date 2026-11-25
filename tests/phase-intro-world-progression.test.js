@@ -30,3 +30,17 @@ test("as cinco campanhas usam contagem local e avançam na ordem dos mundos", ()
   assert.match(game, /index<worldOrder\.length-1[\s\S]*?newLevel\(true\)/);
   assert.match(game, /unlockedLevel=TOTAL_LEVELS;saveProgress\(\);gameOver\(true\)/);
 });
+
+test("as propriedades animadas de opacidade e deslocamento não são travadas por !important", () => {
+  const introStart = game.indexOf("#phaseToast{position:fixed!important");
+  assert.notEqual(introStart, -1, "CSS da introdução da fase não encontrado");
+  const baseEnd = game.indexOf("}", introStart);
+  const baseRule = game.slice(introStart, baseEnd + 1);
+  const activeStart = game.indexOf("#phaseToast.phase-intro-active{", baseEnd);
+  assert.notEqual(activeStart, -1, "Regra ativa da introdução não encontrada");
+  const activeEnd = game.indexOf("}", activeStart);
+  const activeRule = game.slice(activeStart, activeEnd + 1);
+  assert.doesNotMatch(baseRule, /opacity:\s*0\s*!important|transform:\s*none\s*!important/);
+  assert.doesNotMatch(activeRule, /opacity:\s*1\s*!important|transform:\s*none\s*!important/);
+  assert.match(activeRule, /animation:phaseIntroSlide 1\.75s linear both!important/);
+});
