@@ -19629,7 +19629,7 @@ function spiderUpdateDisguises(dt){
   }else{
    d.renderX=d.x;d.renderY=d.y;
    d.moveTimer=Math.max(0,(d.moveTimer??5)-dt);
-   d.lift=d.revealAnim>0?Math.min(.72,d.revealAnim):Math.max(0,Math.sin(d.phase*.72))*.07;
+   if(d.hideAnim>0){d.hideAnim=Math.max(0,d.hideAnim-dt*2.2);d.lift=d.hideAnim}else d.lift=d.revealAnim>0?Math.min(.72,d.revealAnim):Math.max(0,Math.sin(d.phase*.72))*.07;
    if(d.moveTimer<=0){
     const step=spiderChooseDisguiseStep(d);
     if(step){
