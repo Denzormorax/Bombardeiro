@@ -38,7 +38,8 @@ test("primeira bomba revela sem dano simultâneo e uma bomba posterior pode mata
 test("ataque só ocorre em uma das quatro casas imediatamente adjacentes",()=>{
  assert.match(html,/Math\.abs\(px-sx\)\+Math\.abs\(py-sy\)===1/);
  assert.match(html,/if\(spider\.noAttackUntilLeave\|\|player\.inv>0\)continue/);
- assert.match(html,/function spiderHideAfterAttack/);\n assert.match(html,/d.hideAnim=Math.max\\(0,d.hideAnim-dt\\*2.2\\)/);
+ assert.match(html,/function spiderHideAfterAttack/);
+ assert.match(html,/d\.hideAnim=Math\.max\(0,d\.hideAnim-dt\*2\.2\)/);
 });
 
 test("aranha mantém 5 moedas, inimigos de três níveis mantêm 8 moedas",()=>{
