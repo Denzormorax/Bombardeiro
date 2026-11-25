@@ -135,6 +135,8 @@ test("a animação entra pela direita, segura no centro por cerca de 0,8 s e sai
 
 test("não inicia a apresentação quando o jogo não está em execução", () => {
   const run = runIntro("forest");
+  for (const child of run.body.children.slice()) run.body.removeChild(child);
+  run.sandbox.window.__bombardeiroPhaseIntroState = undefined;
   run.sandbox.running = false;
   run.sandbox.newLevel(false);
   assert.equal(run.body.children.length, 0);
