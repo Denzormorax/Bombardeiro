@@ -134,14 +134,15 @@ test("fantasmas do Pântano patrulham e perseguem mais devagar", () => {
   assert.match(html, /speed=\.82\+Math\.min\(level\*\.018,\.12\)/);
   assert.match(html, /g\.speed=\(g\.baseSpeed\|\|g\.speed\|\|\.82\)\*1\.22/);
 });
-test("detecção de bomba faz o fantasma desaparecer e reaparecer lentamente em espiral", () => {
+test("fantasmas atravessam bombas e só recuam após dano, cinco segundos ou distância", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   const durations = ghostTeleportDurations(html);
   assert.ok(durations.appearance >= 2.2, `Aparição deve continuar lenta (atual: ${durations.appearance}s).`);
   assert.ok(durations.escape >= 1.8, `Fuga deve continuar lenta (atual: ${durations.escape}s).`);
   assert.match(html, /if\(style==="chase"\)g\.bombTeleportCooldown=([0-9.]+)/);
-  assert.match(html, /swampGhostStartTeleport\(g,destination,true,false,false,"bomb"\)/);
-  assert.match(html, /g\.teleportStyle==="bomb"&&!g\.teleportSwapped/);
-  assert.match(html, /vanishProgress\*Math\.PI\*3\.2/);
-  assert.match(html, /g\.spiralEmitClock\+=\.06/);
+  assert.match(html, /g\.chaseAppearTimer=5;g\.chaseAppearActive=true/);
+  assert.match(html, /g\.chaseAppearTimer=Math\.max\(0,\(g\.chaseAppearTimer\|\|0\)-dt\)/);
+  assert.match(html, /g\.chaseAppearTimer<=0\|\|distance\(g\.x,g\.y,player\.x,player\.y\)>5/);
+  assert.match(html, /swampGhostStartTeleport\(g,destination,true,true,false,"damage"\)/);
+  assert.doesNotMatch(html, /swampGhostStartTeleport\(g,destination,true,false,false,"bomb"\)/);
 });
