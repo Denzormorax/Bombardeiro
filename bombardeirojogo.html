@@ -17869,6 +17869,258 @@ function startIntroSplash(){
  setTimeout(()=>{splash.remove();showMenuScreen("main")},9000);
 }
 
+
+/* CRIATURA DO PÂNTANO — TRONCO RASTEJANTE.
+   IA isolada, dois pontos de vida, fuga subterrânea de bombas e desenho 3D procedural.
+   Mantém os inimigos existentes fora deste controlador. */
+const swampLogTuning={surfaceSpeed:.72,burrowSpeed:1.42,surfaceCycle:7,sinkTime:1.05,emergeTime:1.18,burrowMax:3.2,radius:.235};
+function swampLogCellSafe(x,y,underground=false){
+ if(x<1||y<1||x>=COLS-1||y>=ROWS-1)return false;
+ const tile=tileAt(x,y);
+ if(tile===1||(!underground&&tile!==0))return false;
+ return true;
+}
+function swampLogCanStand(x,y,underground=false){
+ const r=swampLogTuning.radius;
+ if(x<r||y<r||x>COLS-r||y>ROWS-r)return false;
+ for(let ty=Math.floor(y-r);ty<=Math.floor(y+r);ty++)for(let tx=Math.floor(x-r);tx<=Math.floor(x+r);tx++){
+  const tile=tileAt(tx,ty);
+  if((tile===1||(!underground&&tile!==0))&&circleRectCollision(x,y,r,tx,ty,1,1))return false;
+ }
+ for(const chest of treasureChests)if(circleRectCollision(x,y,r,chest.x,chest.y,1,1))return false;
+ return true;
+}
+function swampLogPath(log,allowCrates,danger,preferSafe=true){
+ const sx=Math.floor(log.x),sy=Math.floor(log.y),queue=[{x:sx,y:sy,parent:-1,depth:0}],seen=new Set([cellKey(sx,sy)]);
+ let head=0,best=-1,bestScore=Infinity;
+ while(head<queue.length&&head<Math.min(COLS*ROWS,360)){
+  const p=queue[head],key=cellKey(p.x,p.y),tile=tileAt(p.x,p.y);
+  if(head>0&&tile===0&&!bombAt(p.x,p.y)&&(!danger||!danger.has(key))){
+   const d=distance(p.x+.5,p.y+.5,player.x,player.y);
+   const score=p.depth+(preferSafe?Math.max(0,3.4-d)*1.8:0);
+   if(score<bestScore){best=head;bestScore=score}
+  }
+  if(p.depth<14){
+   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
+    const x=p.x+dx,y=p.y+dy,k=cellKey(x,y),t=tileAt(x,y);
+    if(seen.has(k)||t===1||(t===2&&!allowCrates)||x<1||y<1||x>=COLS-1||y>=ROWS-1)continue;
+    seen.add(k);queue.push({x,y,parent:head,depth:p.depth+1});
+   }
+  }
+  head++;
+ }
+ if(best<0)return [];
+ const path=[];for(let i=best;i>0;i=queue[i].parent)path.push({x:queue[i].x+.5,y:queue[i].y+.5});
+ return path.reverse();
+}
+function swampLogMove(log,dt,underground=false){
+ const target=log.path&&log.path[0];if(!target)return;
+ const dx=target.x-log.x,dy=target.y-log.y,d=Math.hypot(dx,dy);
+ if(d<.055){log.x=target.x;log.y=target.y;log.path.shift();return}
+ const step=Math.min(d,(underground?swampLogTuning.burrowSpeed:swampLogTuning.surfaceSpeed)*dt);
+ const nx=log.x+dx/d*step,ny=log.y+dy/d*step;
+ if(swampLogCanStand(nx,ny,underground)){log.x=nx;log.y=ny;log.facingX=dx/d;log.facingY=dy/d;return}
+ // Passos curtos com deslizamento lateral: não altera moveEntity nem a física global.
+ let moved=false;
+ for(const off of [.035,.07,.11,.15,.19,.23]){
+  for(const sign of [-1,1]){
+   const sx=nx-Math.sign(dx||1)*off*sign,sy=ny+Math.sign(dy||1)*off*sign;
+   if(swampLogCanStand(sx,log.y,underground)){log.x=sx;log.facingX=Math.sign(dx);moved=true;break}
+   if(swampLogCanStand(log.x,sy,underground)){log.y=sy;log.facingY=Math.sign(dy);moved=true;break}
+  }
+  if(moved)break;
+ }
+ if(!moved){log.path=[];log.repath=0}
+}
+function swampLogBeginBurrow(log,danger){
+ if(log.phase==="burrow"||log.phase==="sinking")return;
+ log.phase="sinking";log.phaseTime=0;log.burrowing=true;log.path=[];log.repath=0;
+ log.burrowTime=0;log.surfaceClock=0;log.escapeRequested=true;
+ log.bubbleClock=0;log.dripClock=0;
+}
+function swampLogSpawn(){
+ if(currentWorld!=="swamp"||level<5||level>9)return;
+ const spots=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(tileAt(x,y)!==0||waterPuddleCells.has(cellKey(x,y))||bombAt(x,y))continue;
+  if(distance(x+.5,y+.5,player.x,player.y)<4.3)continue;
+  if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.5))continue;
+  spots.push({x,y});
+ }
+ for(let i=0;i<2&&spots.length;i++){
+  const p=spots.splice(Math.floor(Math.random()*spots.length),1)[0];
+  enemies.push({isSwampLog:true,x:p.x+.5,y:p.y+.5,speed:swampLogTuning.surfaceSpeed,hp:2,maxHp:2,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],phase:"surface",phaseTime:0,surfaceClock:Math.random()*1.5,repath:.1,burrowTime:0,escapeRequested:false,anim:Math.random()*6.28,bubbleClock:0,dripClock:Math.random()*.2,drips:[],waterPhase:Math.random()*6.28,attackCooldown:0});
+ }
+}
+function updateSwampLog(log,dt,danger){
+ if(!log.alive){log.deathTimer=Math.max(0,(log.deathTimer||0)-dt);return}
+ log.hitFlash=Math.max(0,(log.hitFlash||0)-dt);log.hurtTimer=Math.max(0,(log.hurtTimer||0)-dt);
+ log.anim=(log.anim||0)+dt*2.5;log.attackCooldown=Math.max(0,(log.attackCooldown||0)-dt);
+ log.dripClock-=dt;
+ if(log.dripClock<=0){
+  log.dripClock=.17+Math.random()*.12;
+  if(log.phase==="surface"&&log.drips.length<8)log.drips.push({x:log.x+(Math.random()-.5)*.3,y:log.y+.16,vx:(Math.random()-.5)*.12,vy:.18+Math.random()*.22,t:.55,life:.55});
+ }
+ for(let i=log.drips.length-1;i>=0;i--){const p=log.drips[i];p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.5*dt;if(p.t<=0)log.drips.splice(i,1)}
+ const key=cellKey(Math.floor(log.x),Math.floor(log.y));
+ if(log.phase==="surface"&&danger&&danger.has(key))swampLogBeginBurrow(log,danger);
+ if(log.phase==="surface"){
+  log.burrowing=false;log.surfaceClock+=dt;log.repath-=dt;
+  if(log.surfaceClock>=swampLogTuning.surfaceCycle){swampLogBeginBurrow(log,danger);return}
+  if(log.repath<=0||!log.path.length){
+   log.repath=.55+Math.random()*.25;
+   const px=Math.floor(player.x),py=Math.floor(player.y),sx=Math.floor(log.x),sy=Math.floor(log.y);
+   // Persegue por corredores livres; caso não haja rota direta, patrulha um ponto aberto.
+   const goals=[[px+1,py],[px-1,py],[px,py+1],[px,py-1],[px+1,py+1],[px-1,py+1],[px+1,py-1],[px-1,py-1]];
+   let target=null,best=Infinity;
+   for(const [gx,gy] of goals){if(!swampLogCellSafe(gx,gy,false))continue;const d=Math.abs(gx-sx)+Math.abs(gy-sy);if(d<best){best=d;target={x:gx+.5,y:gy+.5}}}
+   if(!target||Math.random()<.32){
+    const opts=[];for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(tileAt(x,y)===0&&distance(x+.5,y+.5,log.x,log.y)>1.2&&distance(x+.5,y+.5,player.x,player.y)>1.2)opts.push({x:x+.5,y:y+.5});
+    if(opts.length)target=opts[Math.floor(Math.random()*opts.length)];
+   }
+   if(target)log.path=[target];
+  }
+  swampLogMove(log,dt,false);
+ }else if(log.phase==="sinking"){
+  log.phaseTime+=dt;log.burrowing=true;
+  if(log.phaseTime>=swampLogTuning.sinkTime){log.phase="burrow";log.phaseTime=0;log.path=[];log.repath=0}
+ }else if(log.phase==="burrow"){
+  log.burrowing=true;log.burrowTime+=dt;log.repath-=dt;
+  if(log.repath<=0||!log.path.length){log.repath=.28;log.path=swampLogPath(log,true,danger,true)}
+  swampLogMove(log,dt,true);
+  const here=cellKey(Math.floor(log.x),Math.floor(log.y));
+  if(log.burrowTime>=.65&&tileAt(Math.floor(log.x),Math.floor(log.y))===0&&!bombAt(Math.floor(log.x),Math.floor(log.y))&&(!danger||!danger.has(here))&&distance(log.x,log.y,player.x,player.y)>1.05){
+   log.phase="emerging";log.phaseTime=0;log.path=[];return;
+  }
+  if(log.burrowTime>=swampLogTuning.burrowMax){
+   const path=swampLogPath(log,true,danger,false);
+   const safe=path.find(p=>tileAt(Math.floor(p.x),Math.floor(p.y))===0&&(!danger||!danger.has(cellKey(Math.floor(p.x),Math.floor(p.y)))));
+   if(safe){log.path=[safe];log.forceEmerge=true}
+  }
+  if(log.forceEmerge&&log.path.length===0&&tileAt(Math.floor(log.x),Math.floor(log.y))===0){log.phase="emerging";log.phaseTime=0;log.forceEmerge=false}
+ }else if(log.phase==="emerging"){
+  log.burrowing=true;log.phaseTime+=dt;
+  const x=Math.floor(log.x),y=Math.floor(log.y),k=cellKey(x,y);
+  if(tileAt(x,y)!==0||bombAt(x,y)||(danger&&danger.has(k))||distance(log.x,log.y,player.x,player.y)<.78){
+   log.phase="burrow";log.phaseTime=0;log.path=[];log.forceEmerge=false;return;
+  }
+  if(log.phaseTime>=swampLogTuning.emergeTime){log.phase="surface";log.phaseTime=0;log.surfaceClock=0;log.burrowing=false;log.path=[];log.repath=.2}
+ }
+}
+function drawSwampLog(log){
+ const x=ox+log.x*TILE,y=oy+log.y*TILE,phase=log.phase||"surface";
+ const death=log.alive?1:Math.max(0,(log.deathTimer||0)/ENEMY_DEATH_TIME);
+ const sinking=phase==="sinking"?Math.min(1,log.phaseTime/swampLogTuning.sinkTime):phase==="emerging"?1-Math.min(1,log.phaseTime/swampLogTuning.emergeTime):phase==="burrow"?1:0;
+ const bob=phase==="surface"?Math.sin(log.anim*2.2)*1.25:0;
+ ctx.save();ctx.globalAlpha=death;ctx.translate(x,y+bob);
+ // Sombra úmida rente ao chão.
+ ctx.fillStyle="rgba(3,17,13,.48)";ctx.beginPath();ctx.ellipse(0,12,17,5,0,0,Math.PI*2);ctx.fill();
+ if(phase==="burrow"){
+  // Só olhos e boca permanecem visíveis na lama.
+  const pulse=.85+Math.sin(gameClock*5+log.waterPhase)*.12;
+  ctx.fillStyle="rgba(12,38,25,.72)";ctx.beginPath();ctx.ellipse(0,10,14,5,0,0,Math.PI*2);ctx.fill();
+  for(const ex of [-5,5]){
+   ctx.fillStyle="#b9e96a";ctx.shadowColor="#b8ef68";ctx.shadowBlur=8;
+   ctx.beginPath();ctx.ellipse(ex,8,2.25*pulse,1.7*pulse,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+   ctx.fillStyle="#15251a";ctx.beginPath();ctx.arc(ex,8,0.8,0,Math.PI*2);ctx.fill();
+  }
+  ctx.strokeStyle="#101b14";ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(0,12,3.5,.12,Math.PI-.12);ctx.stroke();
+  ctx.restore();return;
+ }
+ const squash=phase==="sinking"?1-.55*sinking:phase==="emerging"?.45+.55*(1-sinking):1;
+ ctx.scale(1,squash);
+ ctx.translate(0,8*sinking);
+ // Corpo de tronco tridimensional, com iluminação superior e bordas profundas.
+ const wood=ctx.createLinearGradient(-14,-21,15,16);wood.addColorStop(0,"#a17b45");wood.addColorStop(.22,"#684a2d");wood.addColorStop(.55,"#3d3824");wood.addColorStop(.82,"#263a29");wood.addColorStop(1,"#17291f");
+ ctx.shadowColor="#07150f";ctx.shadowBlur=8;ctx.shadowOffsetY=3;
+ ctx.beginPath();ctx.moveTo(-10,-22);ctx.quadraticCurveTo(-16,-17,-14,-8);ctx.lineTo(-12,10);ctx.quadraticCurveTo(-10,17,-2,17);ctx.lineTo(10,14);ctx.quadraticCurveTo(16,10,14,1);ctx.lineTo(12,-15);ctx.quadraticCurveTo(8,-23,0,-22);ctx.closePath();ctx.fillStyle=wood;ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+ // Anéis, rachaduras e veios de madeira.
+ ctx.strokeStyle="rgba(10,22,15,.78)";ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(-8,-15);ctx.quadraticCurveTo(-3,-9,-7,-2);ctx.moveTo(5,-18);ctx.quadraticCurveTo(1,-10,6,-4);ctx.moveTo(-8,5);ctx.quadraticCurveTo(-2,0,2,7);ctx.stroke();
+ ctx.strokeStyle="rgba(196,151,82,.68)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-10,-13);ctx.quadraticCurveTo(-5,-8,-9,-1);ctx.moveTo(3,-17);ctx.quadraticCurveTo(0,-10,4,-5);ctx.stroke();
+ // Raízes e pés agarrados ao solo.
+ for(const side of [-1,1]){
+  ctx.fillStyle="#263a27";ctx.strokeStyle="#15261b";ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(side*6,9);ctx.quadraticCurveTo(side*12,11,side*15,16);ctx.quadraticCurveTo(side*8,17,side*3,14);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.strokeStyle="#728747";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(side*8,12);ctx.lineTo(side*13,15);ctx.stroke();
+ }
+ // Musgo em volumes sobre a cabeça, laterais e parte inferior.
+ for(const m of [[-8,-17,7,4],[1,-20,7,4],[10,-12,5,6],[-12,-4,5,7],[-8,8,7,4],[5,9,8,4],[0,-3,7,4]]){
+  const g=ctx.createRadialGradient(m[0]-2,m[1]-2,1,m[0],m[1],m[2]);g.addColorStop(0,"#b2c66a");g.addColorStop(.42,"#668b42");g.addColorStop(1,"#294b30");
+  ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(m[0],m[1],m[2],m[3],-.25,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="rgba(15,42,27,.65)";ctx.lineWidth=.8;ctx.stroke();
+ }
+ // Película de água/lama com bolhas animadas sobre o tronco.
+ ctx.save();ctx.globalAlpha=.45;ctx.strokeStyle="#8bbd77";ctx.lineWidth=1.2;
+ for(let i=0;i<3;i++){const bx=Math.sin(gameClock*1.7+i*2.1+log.waterPhase)*7,by=((gameClock*3+i*7)%23)-11;ctx.beginPath();ctx.ellipse(bx,by,2.1,1.3,0,0,Math.PI*2);ctx.stroke()}
+ ctx.restore();
+ ctx.fillStyle="rgba(25,72,45,.8)";ctx.beginPath();ctx.ellipse(-5,-5,3,1.4,.2,0,Math.PI*2);ctx.ellipse(8,3,2.8,1.2,-.3,0,Math.PI*2);ctx.fill();
+ // Rosto com olhos verde-limão e boca escura.
+ ctx.fillStyle="#17251b";ctx.beginPath();ctx.ellipse(-5,-5,3.1,3.7,0,0,Math.PI*2);ctx.ellipse(5,-5,3.1,3.7,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=log.hitFlash>0?"#fff3c8":"#c8f276";ctx.shadowColor="#b8ef68";ctx.shadowBlur=log.hitFlash>0?12:5;
+ ctx.beginPath();ctx.ellipse(-5,-5,1.8,2.2,0,0,Math.PI*2);ctx.ellipse(5,-5,1.8,2.2,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ ctx.fillStyle="#111b15";ctx.beginPath();ctx.ellipse(0,3,5,2.3,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#9baf68";ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-3,3);ctx.lineTo(3,3);ctx.stroke();
+ // Brilho úmido no topo e gotas descendo dos pés.
+ ctx.strokeStyle="rgba(218,235,164,.55)";ctx.lineWidth=1.1;ctx.beginPath();ctx.arc(-2,-12,7,3.5,5.2);ctx.stroke();
+ ctx.restore();
+ // Barrinha de vida: dois segmentos visíveis acima da cabeça.
+ if(log.alive){
+  const bx=x-12,by=y-31;ctx.save();ctx.fillStyle="rgba(5,15,10,.82)";ctx.fillRect(bx-1,by-1,26,6);
+  for(let i=0;i<2;i++){ctx.fillStyle=i<(log.hp||0)?"#b7e65c":"#344437";ctx.fillRect(bx+i*12,by,10,4)}
+  ctx.strokeStyle="#d4e6a1";ctx.lineWidth=.65;ctx.strokeRect(bx-1,by-1,26,6);ctx.restore();
+ }
+ for(const p of log.drips||[]){ctx.save();ctx.globalAlpha=Math.max(0,p.t/p.life);ctx.fillStyle="#536b39";ctx.beginPath();ctx.ellipse(ox+p.x*TILE,oy+p.y*TILE,1.6,2.4,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+}
+const swampLogNewLevelBase=newLevel;
+newLevel=function(preservePowerUps=false){swampLogNewLevelBase(preservePowerUps);swampLogSpawn()};
+const swampLogUpdateEnemiesBase=updateEnemies;
+updateEnemies=function(dt){
+ const all=enemies;enemies=all.filter(e=>!e.isSwampLog);
+ try{swampLogUpdateEnemiesBase(dt)}finally{enemies=all}
+ if(currentWorld==="swamp"){
+  const danger=getAllBombDangerCells();
+  for(const log of all)if(log&&log.isSwampLog)updateSwampLog(log,dt,danger);
+ }
+};
+const swampLogDrawEnemyBase=drawEnemy;
+drawEnemy=function(e){if(e&&e.isSwampLog){drawSwampLog(e);return}swampLogDrawEnemyBase(e)};
+const swampLogDamageEnemyBase=damageEnemy;
+damageEnemy=function(enemy){
+ if(enemy&&enemy.isSwampLog){
+  if(!enemy.alive||enemy.burrowing||enemy.phase!=="surface")return;
+  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||2)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.3;
+  if(enemy.hp<=0)killEnemy(enemy);
+  return;
+ }
+ return swampLogDamageEnemyBase(enemy);
+};
+const swampLogUpdatePlayerBase=updatePlayer;
+updatePlayer=function(dt){
+ const all=enemies;enemies=all.filter(e=>!e.isSwampLog);
+ try{swampLogUpdatePlayerBase(dt)}finally{enemies=all}
+ if(currentWorld!=="swamp"||player.inv>0)return;
+ for(const log of all)if(log&&log.isSwampLog&&log.alive&&!log.burrowing&&log.phase==="surface"&&distance(log.x,log.y,player.x,player.y)<.43){hurtPlayer();break}
+};
+const swampLogReactToNewBombBase=reactToNewBomb;
+reactToNewBomb=function(newBomb=null){
+ swampLogReactToNewBombBase(newBomb);
+ if(currentWorld!=="swamp")return;
+ const danger=getAllBombDangerCells();
+ for(const log of enemies)if(log&&log.isSwampLog&&log.alive&&!log.burrowing){
+  if(danger.has(cellKey(Math.floor(log.x),Math.floor(log.y))))swampLogBeginBurrow(log,danger);
+ }
+};
+const swampLogExplodeBase=explode;
+explode=function(b){
+ const danger=getBombDangerCells(b);
+ swampLogExplodeBase(b);
+ if(currentWorld==="swamp")for(const log of enemies)if(log&&log.isSwampLog&&log.alive&&log.burrowing){
+  if(danger.has(cellKey(Math.floor(log.x),Math.floor(log.y)))){log.escapeRequested=true;log.path=[];log.repath=0}
+ }
+};
+const swampLogAllEnemiesBase=allEnemiesDefeated;
+allEnemiesDefeated=function(){return swampLogAllEnemiesBase()};
+
 /* BOMBARDEIRO_RUNTIME_DIAGNOSTIC_V1
    Captura erros do WebView para impedir tela branca sem explicação. */
 (function(){
