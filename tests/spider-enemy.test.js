@@ -49,10 +49,13 @@ test("primeira bomba revela sem dano simultâneo e uma bomba posterior pode mata
  assert.match(html,/hp:1,maxHp:1/);
 });
 
-test("aranha revelada por proximidade continua perigosa, mas a revelada por bomba só causa dano por contato",()=>{
+test("aranha mantém o bote original e só causa dano quando está em contato muito próximo",()=>{
  assert.match(html,/passive:reason==="bomb"/);
- assert.match(html,/const contact=distance\(spider\.x,spider\.y,player\.x,player\.y\)<\.48/);
- assert.match(html,/\(spider\.passive&&contact\)\|\|\(!spider\.passive&&spiderAdjacentToPlayer\(spider\)\)/);
+ assert.match(html,/const spiderUpdatePlayerBase=updatePlayer/);
+ assert.match(html,/enemies=allEnemies\.filter\(enemy=>!enemy\|\|!enemy\.isSpider\)/);
+ assert.match(html,/distance\(spider\.x,spider\.y,player\.x,player\.y\)<\.36/);
+ assert.match(html,/if\(close\)\{d\.revealAnim=Math\.min\(1/);
+ assert.match(html,/revealProtection:\.7/);
  assert.doesNotMatch(html,/function spiderHideAfterAttack/);
 });
 
