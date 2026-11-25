@@ -19593,7 +19593,7 @@ function spiderReveal(disguise,reason){
  const x=disguise.x,y=disguise.y;
  spiderDisguises.splice(index,1);
  const adjacent=Math.abs(Math.floor(player.x)-x)+Math.abs(Math.floor(player.y)-y)===1;
- const spider={isSpider:true,x:x+.5,y:y+.5,speed:1.42,baseSpeed:1.42,hp:1,maxHp:1,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],repath:0,walkPhase:Math.random()*6.28,moving:false,alert:false,revealFlash:.55,revealReason:reason||"near",revealProtection:.7,noAttackUntilLeave:adjacent};
+ const spider={isSpider:true,x:x+.5,y:y+.5,speed:1.58,baseSpeed:1.58,hp:1,maxHp:1,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],repath:0,walkPhase:Math.random()*6.28,moving:false,alert:false,revealFlash:.55,revealReason:reason||"near",revealProtection:.7,noAttackUntilLeave:adjacent};
  enemies.push(spider);
  return spider;
 }
@@ -19647,27 +19647,29 @@ function spiderUpdateDisguises(dt){
   }else if(dist>2.35){d.near=false;d.wait=5;d.revealAnim=Math.max(0,(d.revealAnim||0)-dt*2.2)}
  }
 }
-function spiderFindFleePath(spider){
+function spiderFindWanderPath(spider){
  const sx=Math.floor(spider.x),sy=Math.floor(spider.y);
- const start=cellKey(sx,sy),queue=[{x:sx,y:sy}],seen=new Set([start]),parents=new Map(),distances=new Map([[start,0]]);
- const dirs=[[0,-1],[1,0],[0,1],[-1,0]];
- let head=0,best={x:sx,y:sy,score:distance(sx+.5,sy+.5,player.x,player.y)},bestKey=start;
+ const start=cellKey(sx,sy),queue=[{x:sx,y:sy}],seen=new Set([start]),parents=new Map();
+ const dirs=[[0,-1],[1,0],[0,1],[-1,0]],danger=getAllBombDangerCells();
+ let head=0;
  while(head<queue.length&&head<ROWS*COLS){
-  const p=queue[head++],k=cellKey(p.x,p.y),score=distance(p.x+.5,p.y+.5,player.x,player.y)+(Math.random()*.08);
-  if(score>best.score){best={x:p.x,y:p.y,score};bestKey=k}
+  const p=queue[head++],k=cellKey(p.x,p.y);
   for(const [dx,dy] of dirs){
    const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
-   if(seen.has(key)||tileAt(x,y)!==0||bombAt(x,y))continue;
-   seen.add(key);parents.set(key,k);distances.set(key,(distances.get(k)||0)+1);queue.push({x,y});
+   if(seen.has(key)||tileAt(x,y)!==0||bombAt(x,y)||danger.has(key))continue;
+   seen.add(key);parents.set(key,k);queue.push({x,y});
   }
  }
- if(bestKey===start){spider.path=[];return}
- const path=[];let key=bestKey;
+ const choices=queue.filter(p=>cellKey(p.x,p.y)!==start);
+ if(!choices.length){spider.path=[];spider.wanderTarget=null;return}
+ const target=choices[Math.floor(Math.random()*choices.length)];
+ const targetKey=cellKey(target.x,target.y),path=[];
+ let key=targetKey;
  while(key!==start){
   const parts=key.split(",").map(Number);path.push({x:parts[0],y:parts[1]});
-  key=parents.get(key);if(!key){spider.path=[];return}
+  key=parents.get(key);if(!key){spider.path=[];spider.wanderTarget=null;return}
  }
- path.reverse();spider.path=path;
+ path.reverse();spider.path=path;spider.wanderTarget=targetKey;
 }
 function spiderUpdateEnemy(spider,dt){
  if(!spider.alive){spider.deathTimer=Math.max(0,(spider.deathTimer||0)-dt);return}
@@ -19677,17 +19679,27 @@ function spiderUpdateEnemy(spider,dt){
  spider.revealProtection=Math.max(0,(spider.revealProtection||0)-dt);
  spider.repath=Math.max(0,(spider.repath||0)-dt);
  spider.moving=false;
- if(spider.repath<=0||!spider.path.length){spiderFindFleePath(spider);spider.repath=.42}
+ const danger=getAllBombDangerCells();
+ const next=spider.path&&spider.path[0];
+ if(next){
+  const key=cellKey(next.x,next.y);
+  if(tileAt(next.x,next.y)!==0||bombAt(next.x,next.y)||danger.has(key)){
+   spider.path=[];spider.wanderTarget=null;spider.repath=0;
+  }
+ }
+ if(spider.repath<=0||!spider.path.length){
+  spiderFindWanderPath(spider);spider.repath=.28+Math.random()*.22;
+ }
  if(spider.path.length){
   const target=spider.path[0],tx=target.x+.5,ty=target.y+.5,dx=tx-spider.x,dy=ty-spider.y,dist=Math.hypot(dx,dy);
-  if(dist<.055){spider.x=tx;spider.y=ty;spider.path.shift()}
+  if(dist<.055){spider.x=tx;spider.y=ty;spider.path.shift();if(!spider.path.length)spider.repath=0}
   else{
    const step=Math.min(dist,spider.speed*dt);
    const mx=Math.abs(dx)>.001?Math.sign(dx)*step:0,my=Math.abs(dy)>.001?Math.sign(dy)*step:0;
    spider.facingX=mx?Math.sign(mx):0;spider.facingY=my?Math.sign(my):0;
    const ox0=spider.x,oy0=spider.y;moveEntity(spider,mx,my,ENEMY_RADIUS,"enemy");
    spider.moving=Math.hypot(spider.x-ox0,spider.y-oy0)>.001;
-   if(!spider.moving)spider.repath=0;
+   if(!spider.moving){spider.path=[];spider.wanderTarget=null;spider.repath=0}
    if(spider.moving)spider.walkPhase+=dt*14;
   }
  }
@@ -19772,19 +19784,14 @@ function spiderHideAfterAttack(spider){
 const spiderUpdatePlayerBase=updatePlayer;
 updatePlayer=function(dt){
  const originalHurt=hurtPlayer;
- hurtPlayer=function(){
-  const touching=enemies.find(e=>e&&e.isSpider&&e.alive&&distance(e.x,e.y,player.x,player.y)<.43);
-  if(touching)spiderHideAfterAttack(touching);
-  return originalHurt();
- };
  try{
   spiderUpdatePlayerBase(dt);
   for(const spider of enemies.slice()){
-   if(!spider||!spider.isSpider||!spider.alive)continue;
-   const adjacent=spiderAdjacentToPlayer(spider);
-   if(!adjacent){spider.noAttackUntilLeave=false;continue}
-   if(spider.noAttackUntilLeave||player.inv>0)continue;
-   spiderHideAfterAttack(spider);originalHurt();break;
+   if(!spider||!spider.isSpider||!spider.alive||player.inv>0)continue;
+   if(distance(spider.x,spider.y,player.x,player.y)<.48){
+    originalHurt();
+    break;
+   }
   }
  }finally{hurtPlayer=originalHurt}
 };
