@@ -19592,7 +19592,7 @@ function spiderReveal(disguise,reason){
  if(index<0)return null;
  const x=disguise.x,y=disguise.y;
  spiderDisguises.splice(index,1);
- const spider={isSpider:true,x:x+.5,y:y+.5,speed:1.58,baseSpeed:1.58,hp:1,maxHp:1,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],repath:0,walkPhase:Math.random()*6.28,moving:false,alert:false,revealFlash:.55,revealReason:reason||"near",revealProtection:.7,passive:reason==="bomb"};
+ const spider={isSpider:true,x:x+.5,y:y+.5,speed:1.72,baseSpeed:1.72,hp:1,maxHp:1,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],repath:0,walkPhase:Math.random()*6.28,moving:false,alert:false,revealFlash:.55,revealReason:reason||"near",revealProtection:.7,passive:reason==="bomb"};
  enemies.push(spider);
  return spider;
 }
@@ -19656,11 +19656,13 @@ function spiderFindWanderPath(spider){
   const p=queue[head++],k=cellKey(p.x,p.y);
   for(const [dx,dy] of dirs){
    const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
-   if(seen.has(key)||tileAt(x,y)!==0||bombAt(x,y)||danger.has(key))continue;
+   // A bomba bloqueia a própria casa; a aranha pode atravessar a zona de perigo para alcançar uma rota segura.
+   if(seen.has(key)||tileAt(x,y)!==0||bombAt(x,y))continue;
    seen.add(key);parents.set(key,k);queue.push({x,y});
   }
  }
- const choices=queue.filter(p=>cellKey(p.x,p.y)!==start);
+ let choices=queue.filter(p=>cellKey(p.x,p.y)!==start&&!danger.has(cellKey(p.x,p.y)));
+ if(!choices.length)choices=queue.filter(p=>cellKey(p.x,p.y)!==start&&!bombAt(p.x,p.y));
  if(!choices.length){spider.path=[];spider.wanderTarget=null;return}
  const target=choices[Math.floor(Math.random()*choices.length)];
  const targetKey=cellKey(target.x,target.y),path=[];
@@ -19796,6 +19798,20 @@ explode=function(b){
  for(const d of spiderDisguises.slice())if(danger.has(cellKey(d.x,d.y))||(d.moving&&danger.has(cellKey(d.toX,d.toY)))){
   const spider=spiderReveal(d,"bomb");
   if(spider)spider.revealProtection=.7;
+ }
+};
+const spiderReactToNewBombBase=reactToNewBomb;
+reactToNewBomb=function(newBomb=null){
+ spiderReactToNewBombBase(newBomb);
+ if(!newBomb)return;
+ const bx=Math.floor(newBomb.x),by=Math.floor(newBomb.y);
+ for(const spider of enemies){
+  if(!spider||!spider.isSpider||!spider.alive||!spider.passive)continue;
+  const sx=Math.floor(spider.x),sy=Math.floor(spider.y);
+  // Uma bomba colocada em qualquer casa cardinalmente adjacente provoca desvio imediato.
+  if(Math.abs(sx-bx)+Math.abs(sy-by)<=1){
+   spider.path=[];spider.wanderTarget=null;spider.repath=0;spider.bombAvoiding=true;
+  }
  }
 };
 const spiderUpdateEnemiesBase=updateEnemies;
