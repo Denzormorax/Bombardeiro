@@ -16,7 +16,7 @@ test("primeira explosão revela a aranha depois da explosão, sem acertá-la",()
 });
 test("aranha recebe 5 moedas e inimigos de três níveis recebem 8",()=>{
  assert.match(html,/if\(enemy&&enemy\.isSpider\)dropped\.value=5/);
- assert.match(html,/enemy\.isBuilder\|\|enemy\.isSnowman\|\|enemy\.isSwampGhost\|\|enemy\.isBlueFlame\)dropped\.value=8/);
+ assert.match(html,/enemy\.isBuilder\|\|enemy\.isSnowman\|\|enemy\.isSwampGhost\|\|enemy\.isBlueFlame\)\)dropped\.value=8/);
 });
 test("disfarce conta como inimigo restante e pode ser refeito após contato",()=>{
  assert.match(html,/allEnemiesDefeated=function\(\)\{return spiderDisguises\.length===0/);
