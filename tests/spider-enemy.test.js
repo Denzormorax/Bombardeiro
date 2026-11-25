@@ -26,9 +26,19 @@ test("aranha revelada pela bomba explora continuamente caminhos aleatórios em q
  assert.match(html,/const choices=queue\.filter\(p=>cellKey\(p\.x,p\.y\)!==start\)/);
  assert.match(html,/choices\[Math\.floor\(Math\.random\(\)\*choices\.length\)\]/);
  assert.match(html,/spider\.speed\*dt/);
- assert.match(html,/speed:1\.58,baseSpeed:1\.58/);
- assert.match(html,/danger\.has\(key\)/);
+ assert.match(html,/speed:1\.72,baseSpeed:1\.72/);
+ assert.match(html,/!danger\.has\(cellKey\(p\.x,p\.y\)\)/);
  assert.match(html,/spider\.path=\[\];spider\.wanderTarget=null;spider\.repath=0/);
+});
+
+
+test("aranha passiva detecta bomba cardinalmente adjacente e recalcula a rota imediatamente",()=>{
+ assert.match(html,/const spiderReactToNewBombBase=reactToNewBomb/);
+ assert.match(html,/reactToNewBomb=function\(newBomb=null\)/);
+ assert.match(html,/Math\.abs\(sx-bx\)\+Math\.abs\(sy-by\)<=1/);
+ assert.match(html,/spider\.path=\[\];spider\.wanderTarget=null;spider\.repath=0;spider\.bombAvoiding=true/);
+ assert.match(html,/if\(seen\.has\(key\)\|\|tileAt\(x,y\)!==0\|\|bombAt\(x,y\)\)continue/);
+ assert.match(html,/let choices=queue\.filter\(p=>cellKey\(p\.x,p\.y\)!==start&&!danger\.has\(cellKey\(p\.x,p\.y\)\)\)/);
 });
 
 test("primeira bomba revela sem dano simultâneo e uma bomba posterior pode matar",()=>{
