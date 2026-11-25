@@ -18,7 +18,7 @@ test("ciclo de superfície dura sete segundos e inclui afundar, atravessar e eme
  assert.match(html,/surfaceCycle:7/);
  for(const phase of ["surface","sinking","burrow","emerging"])assert.ok(html.includes('phase="'+phase+'"')||html.includes('phase==="'+phase+'"'));
  assert.match(html,/swampLogPath\(log,true,danger,true\)/);
- assert.match(html,/tileAt\(x,y\)!==0/);
+ assert.match(html,/tile!==0/);
 });
 test("criatura só recebe dano na forma física e morre após dois acertos",()=>{
  assert.match(html,/enemy\.burrowing\|\|enemy\.phase!=="surface"/);
@@ -26,7 +26,8 @@ test("criatura só recebe dano na forma física e morre após dois acertos",()=>
  assert.match(html,/if\(enemy\.hp<=0\)killEnemy\(enemy\)/);
 });
 test("criatura foge de bombas por baixo da terra e não fere o jogador enquanto submersa",()=>{
- assert.match(html,/danger\.has\(cellKey\(Math\.floor\(log\.x\),Math\.floor\(log\.y\)\)\)\)swampLogBeginBurrow/);
+ assert.match(html,/danger\.has\(key\)/);
+ assert.match(html,/swampLogBeginBurrow\(log,danger\)/);
  assert.match(html,/log\.burrowing=true/);
  assert.match(html,/!log\.burrowing&&log\.phase==="surface"/);
 });
