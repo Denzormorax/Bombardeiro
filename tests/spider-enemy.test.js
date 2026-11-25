@@ -21,10 +21,14 @@ test("disfarces se movem em passos cardinais, centralizados e com intervalo de c
  assert.match(html,/drawTileTo\(ctx,cx,cy,2\)/);
 });
 
-test("aranha revelada foge do jogador e usa caminho em quatro direções",()=>{
- assert.match(html,/function spiderFindFleePath/);
- assert.match(html,/score=distance\(p\.x\+\.5,p\.y\+\.5,player\.x,player\.y\)/);
- assert.match(html,/const dirs=\[\[0,-1\],\[1,0\],\[0,1\],\[-1,0\]\]/);
+test("aranha revelada pela bomba explora continuamente caminhos aleatórios em quatro direções",()=>{
+ assert.match(html,/function spiderFindWanderPath/);
+ assert.match(html,/const choices=queue\.filter\(p=>cellKey\(p\.x,p\.y\)!==start\)/);
+ assert.match(html,/choices\[Math\.floor\(Math\.random\(\)\*choices\.length\)\]/);
+ assert.match(html,/spider\.speed\*dt/);
+ assert.match(html,/speed:1\.58,baseSpeed:1\.58/);
+ assert.match(html,/danger\.has\(key\)/);
+ assert.match(html,/spider\.path=\[\];spider\.wanderTarget=null;spider\.repath=0/);
 });
 
 test("primeira bomba revela sem dano simultâneo e uma bomba posterior pode matar",()=>{
@@ -35,11 +39,11 @@ test("primeira bomba revela sem dano simultâneo e uma bomba posterior pode mata
  assert.match(html,/hp:1,maxHp:1/);
 });
 
-test("ataque só ocorre em uma das quatro casas imediatamente adjacentes",()=>{
- assert.match(html,/Math\.abs\(px-sx\)\+Math\.abs\(py-sy\)===1/);
- assert.match(html,/if\(spider\.noAttackUntilLeave\|\|player\.inv>0\)continue/);
- assert.match(html,/function spiderHideAfterAttack/);
- assert.match(html,/d\.hideAnim=Math\.max\(0,d\.hideAnim-dt\*2\.2\)/);
+test("aranha revelada por proximidade continua perigosa, mas a revelada por bomba só causa dano por contato",()=>{
+ assert.match(html,/passive:reason==="bomb"/);
+ assert.match(html,/const contact=distance\(spider\.x,spider\.y,player\.x,player\.y\)<\.48/);
+ assert.match(html,/\(spider\.passive&&contact\)\|\|\(!spider\.passive&&spiderAdjacentToPlayer\(spider\)\)/);
+ assert.doesNotMatch(html,/function spiderHideAfterAttack/);
 });
 
 test("aranha mantém 5 moedas, inimigos de três níveis mantêm 8 moedas",()=>{
@@ -47,9 +51,10 @@ test("aranha mantém 5 moedas, inimigos de três níveis mantêm 8 moedas",()=>{
  assert.match(html,/enemy\.isBuilder\|\|enemy\.isSnowman\|\|enemy\.isSwampGhost\|\|enemy\.isBlueFlame\)\)dropped\.value=8/);
 });
 
-test("disfarce continua contando como inimigo restante e pode se esconder novamente",()=>{
+test("disfarces continuam contando como inimigos restantes e a aranha revelada não volta a se esconder",()=>{
  assert.match(html,/allEnemiesDefeated=function\(\)\{return spiderDisguises\.length===0/);
- assert.match(html,/spiderDisguises\.push\(\{x,y,wait:5,moveTimer:5/);
+ assert.match(html,/spiderDisguises\.push\(\{x:p\.x,y:p\.y,wait:5/);
+ assert.doesNotMatch(html,/function spiderHideAfterAttack/);
 });
 
 test("bloco acompanha a aranha nos dois eixos durante a interpolação vertical e horizontal",()=>{
