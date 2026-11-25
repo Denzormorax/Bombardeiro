@@ -39,7 +39,7 @@ test("tronco recalcula a rota ao encontrar paredes, blocos e inimigos nos dois m
  assert.match(html,/log\.path=\[\];log\.repath=0/);
 });
 test("tronco borbulha, pinga no chão e mistura tons de madeira e limo",()=>{
- assert.match(html,/for\\(let i=0;i<12;i\\+\\+\\)/);
+ assert.match(html,/for\(let i=0;i<12;i\+\+\)/);
  assert.match(html,/function swampLogEnemyBlocked/);
  assert.match(html,/log\.splats\.push/);
  assert.match(html,/const puddle=ctx\.createRadialGradient/);
