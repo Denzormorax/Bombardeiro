@@ -19318,8 +19318,8 @@ buildDestroyedBlockGlow=function(world){if(world!=="swamp")return swampGlowBase(
 const swampParticleBase=getDestroyedBlockParticleSprite;
 getDestroyedBlockParticleSprite=function(world,p){if(world!=="swamp")return swampParticleBase(world,p);const size=Math.round(p.size*2)/2,key=p.kind+":"+size;if(swampDebrisCache.has(key))return swampDebrisCache.get(key);const c=document.createElement("canvas");c.width=c.height=64;const q=c.getContext("2d");q.translate(32,32);q.lineJoin="round";q.lineCap="round";if(p.kind===0){q.fillStyle="#65452d";q.strokeStyle="#30251c";q.lineWidth=1.8;q.beginPath();q.moveTo(-size*1.6,-size*.55);q.lineTo(size*1.05,-size*1.1);q.lineTo(size*1.65,size*.28);q.lineTo(-size*.75,size*.88);q.closePath();q.fill();q.stroke();q.strokeStyle="#c49a68";q.beginPath();q.moveTo(-size*.8,-size*.18);q.lineTo(size*.9,-size*.45);q.stroke()}else if(p.kind<3){q.strokeStyle=p.kind===1?"#3b2c20":"#6b4a2c";q.lineWidth=Math.max(2,size*.48);q.beginPath();q.moveTo(-size*1.55,size*.8);q.bezierCurveTo(-size*.5,-size*.9,size*.45,size*.9,size*1.45,-size*.75);q.stroke();q.strokeStyle="#b18a55";q.lineWidth=Math.max(1,size*.16);q.stroke()}else{q.rotate(p.kind===3?-.28:.34);q.fillStyle=p.kind===3?"#a8c65a":"#6e9843";q.strokeStyle="#d9e995";q.beginPath();q.moveTo(-size*1.5,0);q.quadraticCurveTo(-size*.35,-size*1.5,size*1.65,-size*.35);q.quadraticCurveTo(size*.55,size*.95,-size*1.5,0);q.closePath();q.fill();q.stroke();q.strokeStyle="#e6f2ae";q.beginPath();q.moveTo(-size,0);q.lineTo(size*1.25,-size*.3);q.stroke()}swampDebrisCache.set(key,c);return c};
 const swampGhostParticles=[];
-function swampGhostOpen(x,y){const t=tileAt(x,y);return(t===0||t===2)&&x>0&&y>0&&x<COLS-1&&y<ROWS-1&&!bombAt(x,y)}
-function swampGhostStand(x,y){const r=.22;for(let ty=Math.floor(y-r);ty<=Math.floor(y+r);ty++)for(let tx=Math.floor(x-r);tx<=Math.floor(x+r);tx++)if(tileAt(tx,ty)===1&&circleRectCollision(x,y,r,tx,ty,1,1))return false;for(const b of bombs)if(circleRectCollision(x,y,r,b.x+.12,b.y+.12,.76,.76))return false;return x>.22&&y>.22&&x<COLS-.22&&y<ROWS-.22}
+function swampGhostOpen(x,y){const t=tileAt(x,y);return(t===0||t===2)&&x>0&&y>0&&x<COLS-1&&y<ROWS-1}
+function swampGhostStand(x,y){const r=.22;for(let ty=Math.floor(y-r);ty<=Math.floor(y+r);ty++)for(let tx=Math.floor(x-r);tx<=Math.floor(x+r);tx++)if(tileAt(tx,ty)===1&&circleRectCollision(x,y,r,tx,ty,1,1))return false;return x>.22&&y>.22&&x<COLS-.22&&y<ROWS-.22}
 // Fantasmas não se bloqueiam mutuamente: o afastamento é suave e não trava as rotas.
 function swampGhostBlockedByOther(ghost,x,y,radius=.445){return false}
 function swampGhostCanOccupy(ghost,x,y){return swampGhostStand(x,y)}
@@ -19456,14 +19456,6 @@ function updateSwampGhost(g,dt,danger){
  }
  g.teleportCooldown=Math.max(0,(g.teleportCooldown||0)-dt);
  g.bombTeleportCooldown=Math.max(0,(g.bombTeleportCooldown||0)-dt);
- const currentKey=cellKey(Math.floor(g.x),Math.floor(g.y));
- const currentDanger=danger.has(currentKey),routeDanger=!!(g.path&&g.path.some(p=>danger.has(cellKey(p.x,p.y))));
- const routeBlocked=!!(g.path&&g.path.some(p=>bombAt(p.x,p.y)));
- const nearbyBomb=bombs.some(b=>distance(g.x,g.y,b.x+.5,b.y+.5)<=5.2);
- if((currentDanger||routeDanger||routeBlocked||nearbyBomb)&&g.bombTeleportCooldown<=0){
-  const destination=swampGhostRandomDestination(g,danger);
-  if(destination){g.speed=g.baseSpeed||g.speed||.82;g.bombTeleportCooldown=2.1;swampGhostStartTeleport(g,destination,true,false,false,"bomb");return}
- }
  const seesPlayer=swampGhostSees(g);
  if(g.ignorePlayerUntilOutOfSight){if(!seesPlayer)g.ignorePlayerUntilOutOfSight=false}
  if(!g.alerted&&!g.ignorePlayerUntilOutOfSight&&seesPlayer){
@@ -19471,7 +19463,7 @@ function updateSwampGhost(g,dt,danger){
   if(target){g.alerted=true;g.chaseRepath=0;swampGhostStartTeleport(g,target,false,false,false,"chase");return}
  }
  g.patrolTeleportTimer=Math.max(0,(g.patrolTeleportTimer??4)-dt);
- if(g.patrolTeleportTimer<=0&&!nearbyBomb&&!currentDanger){
+ if(g.patrolTeleportTimer<=0){
   const target=swampGhostTarget(g,!g.alerted,danger);
   if(target){g.patrolTeleportTimer=2+Math.random()*2;swampGhostStartTeleport(g,target,!g.alerted,true);return}
   g.patrolTeleportTimer=2+Math.random()*2;
