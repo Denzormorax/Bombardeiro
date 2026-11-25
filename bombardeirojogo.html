@@ -17485,7 +17485,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   }
   ctx.restore();
  }
- if(e.isHorned){ctx.fillStyle=currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
+ if(e.isHorned){ctx.fillStyle=currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):currentWorld==="forest"?(e.isEnraged?"#263f2b":"#315a35"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
  if(e.isSnowman){
   ctx.fillStyle="#b8dce9";ctx.beginPath();ctx.arc(0,7,17,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle="#83b9ce";ctx.lineWidth=1.2;ctx.stroke();
@@ -17497,7 +17497,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   ctx.fillStyle="#ffffff";ctx.beginPath();ctx.ellipse(-4,-23,4.2,2.1,-.45,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="#547c8c";for(const buttonY of [3,10,16]){ctx.beginPath();ctx.arc(0,buttonY,1.8,0,Math.PI*2);ctx.fill()}
   ctx.fillStyle="#eea044";ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(9,-14);ctx.lineTo(0,-12.5);ctx.closePath();ctx.fill();
- }else if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":currentWorld==="swamp"?"#596b32":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":currentWorld==="swamp"?"#9eaa45":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle="#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
+ }else if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":currentWorld==="forest"?"#315d37":currentWorld==="swamp"?"#596b32":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":currentWorld==="forest"?"#4e8a45":currentWorld==="swamp"?"#9eaa45":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle=currentWorld==="forest"?"#b7cc79":"#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
  else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(e.isBuilder){ctx.fillStyle="#000000";for(const pebble of [[-10,4,2.1],[-6,11,1.7],[8,5,2.2],[10,-3,1.6],[1,12,1.8],[-12,-4,1.5]]){ctx.beginPath();ctx.arc(pebble[0],pebble[1],pebble[2],0,Math.PI*2);ctx.fill()}ctx.fillStyle=helmetColor;ctx.beginPath();ctx.moveTo(-14,-5);ctx.lineTo(-11,-13);ctx.quadraticCurveTo(0,-20,11,-13);ctx.lineTo(14,-5);ctx.closePath();ctx.fill();ctx.fillRect(-16,-5,32,3);ctx.fillStyle="#ffe39a";ctx.fillRect(-5,-13,10,2)}else if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
  if(currentWorld==="forest")drawForestEnemyDetails(e);
  if(hurt){ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5+faceYOffset);ctx.lineTo(eyeX+2.2,1.8+faceYOffset);ctx.moveTo(eyeX+2.2,-2.5+faceYOffset);ctx.lineTo(eyeX-2.2,1.8+faceYOffset);ctx.stroke()}}
@@ -17533,7 +17533,7 @@ function drawEnemy(e){
  }
  let bodyColor=e.isSnowman?"#eefaff":e.isBuilder?(currentWorld==="swamp"?"#806044":"#d9a04b"):e.isMushroom?(currentWorld==="swamp"?"#647b35":"#27c957"):e.isHorned?(e.isEnraged?"#8a4936":currentWorld==="swamp"?"#667b38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":currentWorld==="swamp"?"#687c43":"#a94bd8"):(currentWorld==="volcano"?"#df6329":currentWorld==="swamp"?"#806044":currentWorld==="forest"?"#43864a":"#d64c4c"),helmetColor=e.isSnowman?"#8cc9dc":e.isBuilder?(currentWorld==="swamp"?"#49382b":"#805027"):e.isMushroom?(currentWorld==="swamp"?"#394c27":"#126b31"):e.isHorned?(e.isEnraged?"#513126":currentWorld==="swamp"?"#394c27":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":currentWorld==="swamp"?"#40352a":"#542080"):(currentWorld==="volcano"?"#702b20":currentWorld==="swamp"?"#51402e":"#8c2020");
  if(e.hitFlash>0&&Math.sin(gameClock*65)>.25){bodyColor=e.isHorned&&e.isEnraged?"#ff6262":"#ef7777";helmetColor="#a92727"}
- if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):currentWorld==="forest"?"#8cc77b":"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
  if(e.isSnowman&&!isDying)drawSnowmanBreath(e);
  if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-(e.isSnowman?43:31);ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isSnowman?(ratio>.66?"#a5edff":ratio>.33?"#64c9f2":"#3c8dbf"):e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
@@ -19857,6 +19857,63 @@ const spiderNewLevelBase=newLevel;
 newLevel=function(preservePowerUps=false){spiderNewLevelBase(preservePowerUps);spiderCreateDisguises()};
 spiderCreateDisguises();
 updateHUD();
+
+/* REVISÃO VISUAL DO MUNDO 1 — FLORESTA.
+   Remove os adornos de folhas dos inimigos comuns e aplica uma identidade de bosque
+   apenas neste mundo. A aranha usa drawSpider e permanece totalmente independente. */
+drawForestEnemyDetails=function(e){ /* Sem folhas nos inimigos comuns da floresta. */ };
+const drawEnemyFaceBeforeForestRetheme=drawEnemyFace;
+function drawForestWoodlandArmor(e,deathProgress=0){
+ if(!e||e.isSpider||e.isSnowman||e.isBuilder)return;
+ const px=ox+e.x*TILE,py=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7;
+ const alpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py-bob);ctx.scale(1.22,1.22);
+ ctx.lineJoin="round";ctx.lineCap="round";
+ // Ombreiras de casca: madeira escura com veios quentes, sem folhas.
+ for(const side of [-1,1]){
+  ctx.beginPath();ctx.moveTo(side*7,-1);ctx.quadraticCurveTo(side*14,-4,side*16,3);
+  ctx.lineTo(side*13,9);ctx.quadraticCurveTo(side*9,10,side*7,5);ctx.closePath();
+  ctx.fillStyle=e.isHunter?"#60482d":e.isHorned?"#58452d":"#705333";
+  ctx.strokeStyle="#293d29";ctx.lineWidth=1.35;ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(side*9,2);ctx.quadraticCurveTo(side*12,1,side*14,5);
+  ctx.strokeStyle="#b18b4e";ctx.lineWidth=1;ctx.stroke();
+ }
+ // Faixa de cipó escuro e friso de musgo na parte inferior do corpo.
+ ctx.beginPath();ctx.moveTo(-9,8);ctx.quadraticCurveTo(0,12,9,8);
+ ctx.strokeStyle="#294d32";ctx.lineWidth=2.8;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-7,10);ctx.quadraticCurveTo(0,13,7,10);
+ ctx.strokeStyle="#91ad55";ctx.lineWidth=1.15;ctx.stroke();
+ // Pequenos pontos de musgo integrados à armadura, não são folhas.
+ ctx.fillStyle="#91ad55";
+ for(const p of [[-7,4],[0,7],[7,4]]){ctx.beginPath();ctx.arc(p[0],p[1],1.25,0,Math.PI*2);ctx.fill()}
+ if(e.isHunter){
+  // O caçador recebe uma faixa de couro verde-musgo sobre o peito.
+  ctx.beginPath();ctx.moveTo(-8,-2);ctx.quadraticCurveTo(0,3,8,-2);
+  ctx.strokeStyle="#315d3b";ctx.lineWidth=2.2;ctx.stroke();
+ }else if(e.isHorned){
+  // O inimigo de chifres ganha braçadeiras de madeira.
+  ctx.strokeStyle="#a17a43";ctx.lineWidth=1.5;
+  for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*12,3);ctx.lineTo(side*14,7);ctx.stroke()}
+ }else if(e.isMushroom){
+  // Colar de casca discreto para integrar o cogumelo ao bosque.
+  ctx.beginPath();ctx.moveTo(-7,11);ctx.quadraticCurveTo(0,14,7,11);
+  ctx.strokeStyle="#765735";ctx.lineWidth=2.1;ctx.stroke();
+ }
+ ctx.restore();
+}
+drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
+ if(currentWorld!=="forest"||!e||e.isSpider)
+  return drawEnemyFaceBeforeForestRetheme(e,color,helmetColor,deathProgress);
+ const flashing=e.hitFlash>0&&Math.sin(gameClock*65)>.25;
+ if(!flashing){
+  if(e.isHunter){color="#3f8150";helmetColor="#244b32"}
+  else if(e.isHorned){color=e.isEnraged?"#547d3f":"#6f914b";helmetColor=e.isEnraged?"#263f2b":"#365c37"}
+  else if(e.isMushroom){color="#39794a";helmetColor="#284d31"}
+  else{color="#43864a";helmetColor="#285632"}
+ }
+ drawEnemyFaceBeforeForestRetheme(e,color,helmetColor,deathProgress);
+ drawForestWoodlandArmor(e,deathProgress);
+};
 
 })();
 </script>
