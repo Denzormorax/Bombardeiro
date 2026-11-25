@@ -19,12 +19,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#101820;color:white;
 canvas{position:relative;z-index:1;display:block;width:100vw;height:100vh;object-fit:contain}
 #hud{position:fixed;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:6px;pointer-events:none;z-index:3;font-size:13px;font-weight:bold;text-shadow:0 2px 4px #000}
 #hudRight{display:flex;align-items:center;gap:6px}
-.hudbox{background:#101820e8;border:1px solid #5d7888;border-radius:8px;padding:7px 10px;white-space:nowrap}
+.hudbox{background:rgba(16,24,32,.68);border:1px solid #5d7888;border-radius:8px;padding:7px 10px;white-space:nowrap;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 #coinHud{color:#ffe36b;border-color:#b58b27}
-#lifeHud{display:flex;align-items:center;gap:9px}.phaseInfo{display:flex;flex-direction:column;gap:2px;min-width:0}.phaseThemeName{font-size:10px;line-height:1.1;color:#b9f3a0;max-width:145px;white-space:normal;text-shadow:0 1px 3px #000}
+#lifeHud{display:flex;align-items:center;gap:9px}.phaseInfo{display:none}.phaseThemeName{font-size:10px;line-height:1.1;color:#b9f3a0;max-width:145px;white-space:normal;text-shadow:0 1px 3px #000}
 #lifeHearts{display:flex;align-items:center;gap:5px}
 .lifeHeart{font-size:20px;line-height:1;color:#ff3d55;text-shadow:0 0 5px #ff526b,0 2px 3px #000}
 .lifeHeart.empty{color:transparent;-webkit-text-stroke:1.5px #f2f5f7;text-shadow:0 0 3px #ffffff66}
+#phaseToast{position:fixed;left:50%;bottom:5px;transform:translate(-50%,12px);z-index:4;max-width:90vw;padding:8px 16px;border:1px solid #b9f3a088;border-radius:12px;background:rgba(16,24,32,.72);color:#eaffdc;font-size:14px;font-weight:800;letter-spacing:.5px;text-align:center;text-shadow:0 2px 4px #000;box-shadow:0 3px 14px #0005;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s ease,transform .3s ease,visibility .3s}#phaseToast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
 #controls{position:fixed;inset:0;pointer-events:none;z-index:5}
 .control{position:absolute;pointer-events:auto;touch-action:none;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;text-shadow:0 2px 4px #000}
 #stick{width:145px;height:145px;border-radius:50%;background:#162b38a8;border:3px solid #78909c99;left:4%;bottom:5%}
@@ -37,8 +38,8 @@ canvas{position:relative;z-index:1;display:block;width:100vw;height:100vh;object
 .dir[data-dir="down"]{grid-column:2;grid-row:3}
 #bombBtn{width:82px;height:82px;border-radius:50%;right:5%;bottom:8%;background:transparent;border:0;box-shadow:none;padding:0;overflow:hidden;font-size:0}
 #bombBtn img{position:absolute;left:50%;top:50%;width:233.66%;height:127%;max-width:none;transform:translate(-50%,-50%);object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none}
-#shopBtn{width:49px;height:49px;border-radius:13px;right:6%;bottom:calc(8% + 94px);background:linear-gradient(145deg,#ffe36b,#a96b12);border:2px solid #fff0a3;font-size:25px;box-shadow:0 0 13px #ffcf3988}
-#pauseBtn{width:48px;height:48px;border-radius:50%;right:5%;top:65px;background:#1b3545dd;border:2px solid #a5c5d3;font-size:20px}
+#shopBtn{width:49px;height:49px;border-radius:13px;right:3%;top:19%;bottom:auto;background:linear-gradient(145deg,#ffe36b,#a96b12);border:2px solid #fff0a3;font-size:25px;box-shadow:0 0 13px #ffcf3988}
+#pauseBtn{width:48px;height:48px;border-radius:50%;left:5%;right:auto;top:19%;background:#1b3545dd;border:2px solid #a5c5d3;font-size:20px}
 #controls.editing{z-index:30}
 #controls.editing .control{outline:3px dashed #ffe36b;outline-offset:4px;filter:brightness(1.3);box-shadow:0 0 18px #ffe36b99;cursor:grab;touch-action:none}
 #controls.editing .control:active{outline:4px solid #fff;filter:brightness(1.6);cursor:grabbing}
@@ -15520,6 +15521,7 @@ h/uVzzRXSyjbIQuAM9ABRRdsv2sj/9k=
  <div class="hudbox" id="lifeHud"><div class="phaseInfo"><span>FASE: <span id="level">1</span></span><span id="forestThemeName" class="phaseThemeName">Bosque Esmeralda</span></div><div id="lifeHearts" aria-label="Três vidas"><span class="lifeHeart">♥</span><span class="lifeHeart">♥</span><span class="lifeHeart">♥</span></div></div>
  <div id="hudRight"><div class="hudbox">PONTOS: <span id="score">0</span></div><div class="hudbox" id="coinHud">🪙 <span id="coins">0</span></div></div>
 </div>
+<div id="phaseToast" role="status" aria-live="polite"></div>
 <div id="controls">
  <div id="stick" class="control"><div id="stickKnob"></div></div>
  <div id="dpad" class="control hidden"><button class="dir" data-dir="up">▲</button><button class="dir" data-dir="left">◀</button><button class="dir" data-dir="right">▶</button><button class="dir" data-dir="down">▼</button></div>
@@ -15852,7 +15854,7 @@ let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurch
 let gameClock=0,lastTime=0,exit={x:-1,y:-1,found:false,spawnTime:0};
 let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,portalEnterStart=0,shopReturnPaused=false,menuReturn="main";
 let selectedMapLevel=1,mapMoveTimer=null;
-const controlSettings={moveType:"stick",moveSize:145,bombSize:82,pauseSize:48,positions:{}};
+const controlSettings={moveType:"stick",moveSize:145,bombSize:82,pauseSize:48,positions:{},layoutVersion:2};
 const controlEls={stick:$("stick"),dpad:$("dpad"),bombBtn:$("bombBtn"),shopBtn:$("shopBtn"),pauseBtn:$("pauseBtn")};
 let selectedSize="move";
 
@@ -15958,11 +15960,11 @@ function message(txt){
  $("message").textContent=txt;$("message").style.display="block";
  clearTimeout(message.timer);message.timer=setTimeout(()=>$("message").style.display="none",1500);
 }
-function saveControls(){try{localStorage.setItem("bombard-controls",JSON.stringify(controlSettings))}catch(e){}}
+function saveControls(){try{controlSettings.layoutVersion=2;localStorage.setItem("bombard-controls",JSON.stringify(controlSettings))}catch(e){}}
 function loadControls(){
  try{
   const v=JSON.parse(localStorage.getItem("bombard-controls")||"null");
-  if(v){if(v.moveType)controlSettings.moveType=v.moveType;if(Number.isFinite(+v.moveSize))controlSettings.moveSize=+v.moveSize;if(Number.isFinite(+v.bombSize))controlSettings.bombSize=+v.bombSize;if(Number.isFinite(+v.pauseSize))controlSettings.pauseSize=+v.pauseSize;if(v.positions&&typeof v.positions==="object")controlSettings.positions=v.positions}
+  if(v){if(v.moveType)controlSettings.moveType=v.moveType;if(Number.isFinite(+v.moveSize))controlSettings.moveSize=+v.moveSize;if(Number.isFinite(+v.bombSize))controlSettings.bombSize=+v.bombSize;if(Number.isFinite(+v.pauseSize))controlSettings.pauseSize=+v.pauseSize;if(v.layoutVersion===2&&v.positions&&typeof v.positions==="object")controlSettings.positions=v.positions}
  }catch(e){}
  applyControls();selectSizeControl("move");
 }
@@ -20245,6 +20247,26 @@ drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
  }
  if(logo.complete)processar();else logo.addEventListener("load",processar,{once:true});
 })();
+
+/* AVISO TEMPORÁRIO DA FASE — compartilhado por todos os mundos. */
+let phaseToastTimer=null,lastPhaseToastKey="";
+function showPhaseToast(){
+ const theme=typeof currentForestTheme==="function"?currentForestTheme():null;
+ const phaseNumber=$("level")?$("level").textContent:String(level);
+ const phaseName=theme&&theme.name?theme.name:"";
+ const key=String(currentWorld||"forest")+":"+phaseNumber+":"+phaseName;
+ if(!phaseName||key===lastPhaseToastKey)return;
+ lastPhaseToastKey=key;
+ const toast=$("phaseToast");if(!toast)return;
+ toast.textContent="FASE "+phaseNumber+" · "+phaseName;
+ toast.classList.remove("show");void toast.offsetWidth;toast.classList.add("show");
+ if(phaseToastTimer)clearTimeout(phaseToastTimer);
+ phaseToastTimer=setTimeout(()=>toast.classList.remove("show"),2800);
+}
+const updateHUDWithPhaseToast=updateHUD;
+updateHUD=function(){updateHUDWithPhaseToast();showPhaseToast()};
+const startGameWithPhaseToast=startGame;
+startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
 </script>
 
 </body>
