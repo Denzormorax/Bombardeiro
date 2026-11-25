@@ -14,10 +14,11 @@ test("entrada de fase exibe fase-mundo com parada central e saída à esquerda",
 });
 
 test("jogo e entradas ficam bloqueados durante toda a animação", () => {
-  assert.match(game, /paused=true;\s*clearMovementInput\(\)/);
+  assert.match(game, /paused=true;[\s\S]*?introBlocker\.style\.display="block";[\s\S]*?clearMovementInput\(\)/);
   assert.match(game, /phaseIntro\.onanimationend=function\(event\)/);
   assert.match(game, /if\(running\)paused=false/);
-  assert.match(game, /#phaseIntroBlocker\\{position:fixed;inset:0;z-index:99998;display:none;background:rgba\\(0,0,0,\\.10\\);pointer-events:auto\\}/);\n  assert.match(game, /pointer-events:none!important;animation:phaseIntroSlide/);
+  assert.ok(game.includes("#phaseIntroBlocker{position:fixed;inset:0;z-index:99998;display:none;background:rgba(0,0,0,.10);pointer-events:auto}"));
+  assert.match(game, /pointer-events:none!important;animation:phaseIntroSlide/);
   assert.match(game, /newLevel=function\(preservePowerUps=false\)[\s\S]*?if\(running\)beginPhaseIntro\(\)/);
 });
 
