@@ -20273,10 +20273,12 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
  "use strict";
  const phaseIntro=$("phaseToast");
  if(!phaseIntro)return;
+ const introBlocker=document.createElement("div");introBlocker.id="phaseIntroBlocker";document.body.appendChild(introBlocker);
  const introStyle=document.createElement("style");
  introStyle.textContent=`
- #phaseToast{position:fixed!important;inset:0!important;z-index:99999!important;display:none!important;align-items:center!important;justify-content:center!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:rgba(0,0,0,.10)!important;color:#fff!important;font-size:clamp(76px,19vw,164px)!important;font-weight:1000!important;line-height:1!important;letter-spacing:1px!important;text-align:center!important;text-shadow:-4px -4px 0 #31a85a,4px -4px 0 #31a85a,-4px 4px 0 #31a85a,4px 4px 0 #31a85a,0 7px 16px #001b0c!important;opacity:0!important;visibility:hidden!important;transform:none!important;transition:none!important;pointer-events:none!important}
- #phaseToast.phase-intro-active{display:flex!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;animation:phaseIntroSlide 1.75s linear both!important}
+ #phaseIntroBlocker{position:fixed;inset:0;z-index:99998;display:none;background:rgba(0,0,0,.10);pointer-events:auto}
+ #phaseToast{position:fixed!important;inset:0!important;z-index:99999!important;display:none!important;align-items:center!important;justify-content:center!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#fff!important;font-size:clamp(76px,19vw,164px)!important;font-weight:1000!important;line-height:1!important;letter-spacing:1px!important;text-align:center!important;text-shadow:-4px -4px 0 #31a85a,4px -4px 0 #31a85a,-4px 4px 0 #31a85a,4px 4px 0 #31a85a,0 7px 16px #001b0c!important;opacity:0!important;visibility:hidden!important;transform:none!important;transition:none!important;pointer-events:none!important}
+ #phaseToast.phase-intro-active{display:flex!important;opacity:1!important;visibility:visible!important;pointer-events:none!important;animation:phaseIntroSlide 1.75s linear both!important}
  @keyframes phaseIntroSlide{
   0%{transform:translateX(120vw);opacity:0}
   12%{transform:translateX(0);opacity:1}
@@ -20298,6 +20300,7 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
   if(!running)return;
   const token=++introToken;
   paused=true;
+  introBlocker.style.display="block";
   clearMovementInput();
   phaseIntro.textContent=String(level)+"-"+String(worldNumber());
   phaseIntro.classList.remove("show","phase-intro-active");
@@ -20306,6 +20309,7 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
   phaseIntro.onanimationend=function(event){
    if(event.target!==phaseIntro||token!==introToken)return;
    phaseIntro.classList.remove("phase-intro-active");
+   introBlocker.style.display="none";
    phaseIntro.onanimationend=null;
    clearMovementInput();
    if(running)paused=false;
