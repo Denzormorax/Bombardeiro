@@ -78,3 +78,20 @@ test("pernas sob o disfarce ficam maiores, definidas e com articulações destac
  assert.match(html,/hidden\?2\.15:1\.35/);
  assert.match(html,/ctx\.arc\(mx,my,2\.5/);
 });
+
+test("folhagem temática da floresta preserva a cor vermelha, cobre o caçador e mantém o rosto em primeiro plano",()=>{
+ assert.match(html,/const FOREST_LEAF_PALETTE=\["#173f27","#28633a","#43864a","#70a84e","#9abd62","#536f32"\]/);
+ assert.match(html,/O inimigo vermelho mantém sua cor original/);
+ assert.match(html,/if\(e\.isHunter\)\{drawForestHunterCover\(\);return\}/);
+ assert.match(html,/os olhos e a boca são desenhados depois/);
+ assert.match(html,/if\(currentWorld==="forest"\)drawForestEnemyDetails\(e\)/);
+ assert.match(html,/currentWorld==="volcano".*"#df6329".*"#d64c4c"/);
+});
+
+test("atualização das aranhas reutiliza o cálculo de perigo de bombas no mesmo quadro",()=>{
+ assert.match(html,/function spiderUpdateEnemy\(spider,dt,danger=getAllBombDangerCells\(\)\)/);
+ assert.match(html,/const activeSpiders=all\.filter\(e=>e\.isSpider\)/);
+ assert.match(html,/const spiderDanger=getAllBombDangerCells\(\);for\(const e of activeSpiders\)spiderUpdateEnemy\(e,dt,spiderDanger\)/);
+ assert.match(html,/function spiderFindWanderPath\(spider,danger=getAllBombDangerCells\(\)\)/);
+ assert.match(html,/spiderFindWanderPath\(spider,danger\)/);
+});
