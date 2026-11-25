@@ -16528,7 +16528,7 @@ function isStandardBombEvader(enemy){return !enemy.isBuilder&&!enemy.isMushroom&
 function reactToNewBomb(newBomb=null){
  const danger=getAllBombDangerCells();
  for(const enemy of enemies){
-  if(!enemy.alive||enemy.burrowing)continue;
+  if(!enemy.alive||enemy.burrowing||enemy.isSwampLog)continue;
   // Mantém os gatilhos especiais que já existiam para construtores e bonecos de neve.
   if(enemy.isBuilder){
    const targetBomb=newBomb||bombs.reduce((best,b)=>!best||distance(enemy.x,enemy.y,b.x+.5,b.y+.5)<distance(enemy.x,enemy.y,best.x+.5,best.y+.5)?b:best,null);

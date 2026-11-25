@@ -54,6 +54,8 @@ test("criatura só recebe dano na forma física e morre após dois acertos",()=>
 });
 test("monstro não detecta bombas e só ataca quando o jogador pisa sobre ele",()=>{
  const section=html.slice(html.indexOf("/* CRIATURA DO PÂNTANO"),html.indexOf("/* BOMBARDEIRO_RUNTIME_DIAGNOSTIC_V1"));
+ const bombReaction=html.slice(html.indexOf("function reactToNewBomb"),html.indexOf("function followEnemyPath"));
+ assert.match(bombReaction,/if\(!enemy\.alive\|\|enemy\.burrowing\|\|enemy\.isSwampLog\)continue/);
  assert.doesNotMatch(section,/getAllBombDangerCells|getBombDangerCells|reactToNewBomb|swampLogExplodeBase|bombAt\(|danger/);
  assert.match(section,/player\.inv<=0&&distance\(log\.x,log\.y,player\.x,player\.y\)<\.62/);
  assert.match(section,/log\.phase="emerging";log\.phaseTime=0;log\.ambushTriggered=true/);
