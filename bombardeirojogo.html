@@ -35,7 +35,8 @@ canvas{position:relative;z-index:1;display:block;width:100vw;height:100vh;object
 .dir[data-dir="left"]{grid-column:1;grid-row:2}
 .dir[data-dir="right"]{grid-column:3;grid-row:2}
 .dir[data-dir="down"]{grid-column:2;grid-row:3}
-#bombBtn{width:82px;height:82px;border-radius:50%;right:5%;bottom:8%;background:radial-gradient(#ffad43,#b83b18);border:4px solid #ffd18a;box-shadow:0 0 18px #ff681c99;font-size:32px}
+#bombBtn{width:82px;height:82px;border-radius:50%;right:5%;bottom:8%;background:transparent;border:0;box-shadow:none;padding:0;overflow:hidden;font-size:0}
+#bombBtn img{position:absolute;left:50%;top:50%;width:234.46%;height:127%;max-width:none;transform:translate(-50%,-50%);object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none}
 #shopBtn{width:49px;height:49px;border-radius:13px;right:6%;bottom:calc(8% + 94px);background:linear-gradient(145deg,#ffe36b,#a96b12);border:2px solid #fff0a3;font-size:25px;box-shadow:0 0 13px #ffcf3988}
 #pauseBtn{width:48px;height:48px;border-radius:50%;right:5%;top:65px;background:#1b3545dd;border:2px solid #a5c5d3;font-size:20px}
 #controls.editing{z-index:30}
@@ -15523,7 +15524,7 @@ h/uVzzRXSyjbIQuAM9ABRRdsv2sj/9k=
  <div id="stick" class="control"><div id="stickKnob"></div></div>
  <div id="dpad" class="control hidden"><button class="dir" data-dir="up">▲</button><button class="dir" data-dir="left">◀</button><button class="dir" data-dir="right">▶</button><button class="dir" data-dir="down">▼</button></div>
  <button id="shopBtn" class="control hidden" aria-label="Loja de power-ups">🛒</button>
- <button id="bombBtn" class="control">💣</button>
+ <button type="button" id="bombBtn" class="control" aria-label="Colocar bomba"><img src="game-assets/images/bomb-button.png" alt=""></button>
  <button id="pauseBtn" class="control">Ⅱ</button>
 </div>
 <div id="customHint" class="hidden">ARRASTE OS CONTROLES DESTACADOS PARA POSICIONAR</div>
@@ -17871,9 +17872,9 @@ function startIntroSplash(){
 
 
 /* CRIATURA DO PÂNTANO — TRONCO RASTEJANTE.
-   IA isolada, dois pontos de vida, fuga subterrânea de bombas e desenho 3D procedural.
+   IA isolada, dois pontos de vida, emboscada subterrânea por proximidade e desenho 3D procedural.
    Mantém os inimigos existentes fora deste controlador. */
-const swampLogTuning={surfaceSpeed:.72,burrowSpeed:1.42,surfaceCycle:7,sinkTime:5,emergeTime:5,burrowMin:5,burrowMax:8,radius:.235};
+const swampLogTuning={surfaceSpeed:.72,surfaceCycle:7,sinkTime:.45,emergeTime:.45,radius:.235};
 function swampLogCellSafe(x,y,underground=false){
  if(x<1||y<1||x>=COLS-1||y>=ROWS-1)return false;
  const tile=tileAt(x,y);
@@ -17887,7 +17888,7 @@ function swampLogEnemyBlocked(x,y,log,margin=.58){
  }
  return false;
 }
-function swampLogCanStand(x,y,underground=false,log=null){
+function swampLogCanStand(x,y,log=null){
  const r=swampLogTuning.radius;
  if(x<r||y<r||x>COLS-r||y>ROWS-r)return false;
  for(let ty=Math.floor(y-r);ty<=Math.floor(y+r);ty++)for(let tx=Math.floor(x-r);tx<=Math.floor(x+r);tx++){
@@ -17898,32 +17899,7 @@ function swampLogCanStand(x,y,underground=false,log=null){
  for(const chest of treasureChests)if(circleRectCollision(x,y,r,chest.x,chest.y,1,1))return false;
  return true;
 }
-function swampLogPath(log,allowCrates,danger,preferSafe=true){
- const sx=Math.floor(log.x),sy=Math.floor(log.y),queue=[{x:sx,y:sy,parent:-1,depth:0}],seen=new Set([cellKey(sx,sy)]);
- let head=0,best=-1,bestScore=Infinity;
- while(head<queue.length&&head<Math.min(COLS*ROWS,360)){
-  const p=queue[head],key=cellKey(p.x,p.y),tile=tileAt(p.x,p.y);
-  if(head>0&&tile===0&&!bombAt(p.x,p.y)&&(!danger||!danger.has(key))){
-   const d=distance(p.x+.5,p.y+.5,player.x,player.y);
-   const score=p.depth+(preferSafe?Math.max(0,3.4-d)*1.8:0);
-   if(score<bestScore){best=head;bestScore=score}
-  }
-  if(p.depth<14){
-   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
-    const x=p.x+dx,y=p.y+dy,k=cellKey(x,y),t=tileAt(x,y);
-    if(seen.has(k)||t!==0||x<1||y<1||x>=COLS-1||y>=ROWS-1||bombAt(x,y)||
-       (danger&&danger.has(k))||swampLogEnemyBlocked(x+.5,y+.5,log,.62)||
-       treasureChests.some(chest=>chest.x===x&&chest.y===y))continue;
-    seen.add(k);queue.push({x,y,parent:head,depth:p.depth+1});
-   }
-  }
-  head++;
- }
- if(best<0)return [];
- const path=[];for(let i=best;i>0;i=queue[i].parent)path.push({x:queue[i].x+.5,y:queue[i].y+.5});
- return path.reverse();
-}
-function swampLogRoute(log,targetX,targetY,allowCrates=false,danger=null){
+function swampLogRoute(log,targetX,targetY){
  const sx=Math.floor(log.x),sy=Math.floor(log.y);
  if(sx===targetX&&sy===targetY)return [];
  const queue=[{x:sx,y:sy,parent:-1}],seen=new Set([cellKey(sx,sy)]);
@@ -17934,8 +17910,7 @@ function swampLogRoute(log,targetX,targetY,allowCrates=false,danger=null){
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+dx,y=p.y+dy,key=cellKey(x,y),tile=tileAt(x,y);
    if(seen.has(key)||x<1||y<1||x>=COLS-1||y>=ROWS-1||tile===1||
-      tile!==0||bombAt(x,y)||(danger&&danger.has(key))||
-      swampLogEnemyBlocked(x+.5,y+.5,log,.62)||
+      tile!==0||swampLogEnemyBlocked(x+.5,y+.5,log,.62)||
       treasureChests.some(chest=>chest.x===x&&chest.y===y))continue;
    seen.add(key);queue.push({x,y,parent:head});
   }
@@ -17946,11 +17921,11 @@ function swampLogRoute(log,targetX,targetY,allowCrates=false,danger=null){
  for(let i=goal;i>0;i=queue[i].parent)path.push({x:queue[i].x+.5,y:queue[i].y+.5});
  return path.reverse();
 }
-function swampLogMove(log,dt,underground=false){
+function swampLogMove(log,dt){
  const target=log.path&&log.path[0];if(!target)return;
  const dx=target.x-log.x,dy=target.y-log.y,d=Math.hypot(dx,dy);
  if(d<.035){log.x=target.x;log.y=target.y;log.path.shift();return}
- const step=Math.min(d,(underground?swampLogTuning.burrowSpeed:swampLogTuning.surfaceSpeed)*dt);
+ const step=Math.min(d,swampLogTuning.surfaceSpeed*dt);
  let nx=log.x,ny=log.y;
  // Se houver qualquer pequeno desalinhamento, centraliza primeiro um eixo;
  // nunca combina deslocamento horizontal e vertical no mesmo passo.
@@ -17963,7 +17938,7 @@ function swampLogMove(log,dt,underground=false){
   ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
  }
  const movedX=Math.abs(nx-log.x)>.000001,movedY=Math.abs(ny-log.y)>.000001;
- if(swampLogCanStand(nx,ny,underground,log)){
+ if(swampLogCanStand(nx,ny,log)){
   log.x=nx;log.y=ny;
   if(movedX)log.facingX=Math.sign(dx);
   if(movedY)log.facingY=Math.sign(dy);
@@ -17972,27 +17947,27 @@ function swampLogMove(log,dt,underground=false){
  // Não desliza para as laterais: descarta a rota e recalcula pelo centro da passagem.
  log.path=[];log.repath=0;
 }
-function swampLogBeginBurrow(log,danger){
+function swampLogBeginBurrow(log){
  if(log.phase==="burrow"||log.phase==="sinking")return;
  log.phase="sinking";log.phaseTime=0;log.burrowing=true;log.path=[];log.repath=0;
- log.burrowTime=0;log.surfaceClock=0;log.escapeRequested=true;
+ log.surfaceClock=0;log.ambushTriggered=false;
  log.bubbleClock=0;log.dripClock=0;
 }
 function swampLogSpawn(){
  if(currentWorld!=="swamp"||level<5||level>9)return;
  const spots=[];
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  if(tileAt(x,y)!==0||waterPuddleCells.has(cellKey(x,y))||bombAt(x,y))continue;
+  if(tileAt(x,y)!==0||waterPuddleCells.has(cellKey(x,y)))continue;
   if(distance(x+.5,y+.5,player.x,player.y)<4.3)continue;
   if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.5))continue;
   spots.push({x,y});
  }
  for(let i=0;i<2&&spots.length;i++){
   const p=spots.splice(Math.floor(Math.random()*spots.length),1)[0];
-  enemies.push({isSwampLog:true,x:p.x+.5,y:p.y+.5,speed:swampLogTuning.surfaceSpeed,hp:2,maxHp:2,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],phase:"surface",phaseTime:0,surfaceClock:Math.random()*1.5,repath:.1,burrowTime:0,escapeRequested:false,anim:Math.random()*6.28,bubbleClock:0,dripClock:Math.random()*.2,drips:[],splats:[],waterPhase:Math.random()*6.28,attackCooldown:0});
+  enemies.push({isSwampLog:true,x:p.x+.5,y:p.y+.5,speed:swampLogTuning.surfaceSpeed,hp:2,maxHp:2,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],phase:"surface",phaseTime:0,surfaceClock:Math.random()*1.5,repath:.1,ambushTriggered:false,anim:Math.random()*6.28,bubbleClock:0,dripClock:Math.random()*.2,drips:[],splats:[],waterPhase:Math.random()*6.28,attackCooldown:0});
  }
 }
-function updateSwampLog(log,dt,danger){
+function updateSwampLog(log,dt){
  if(!log.alive){log.deathTimer=Math.max(0,(log.deathTimer||0)-dt);return}
  log.hitFlash=Math.max(0,(log.hitFlash||0)-dt);log.hurtTimer=Math.max(0,(log.hurtTimer||0)-dt);
  log.anim=(log.anim||0)+dt*2.5;log.attackCooldown=Math.max(0,(log.attackCooldown||0)-dt);
@@ -18010,64 +17985,54 @@ function updateSwampLog(log,dt,danger){
    log.drips.splice(i,1);
   }
  }
- const key=cellKey(Math.floor(log.x),Math.floor(log.y));
- if(log.phase==="surface"&&danger&&danger.has(key))swampLogBeginBurrow(log,danger);
  if(log.phase==="surface"&&swampLogEnemyBlocked(log.x,log.y,log,.52)){log.path=[];log.repath=0}
  if(log.phase==="surface"){
   log.burrowing=false;log.surfaceClock+=dt;log.repath-=dt;
-  if(log.surfaceClock>=swampLogTuning.surfaceCycle){swampLogBeginBurrow(log,danger);return}
+  if(log.surfaceClock>=swampLogTuning.surfaceCycle){swampLogBeginBurrow(log);return}
   if(log.repath<=0||!log.path.length){
    log.repath=.55+Math.random()*.25;
-   const px=Math.floor(player.x),py=Math.floor(player.y),sx=Math.floor(log.x),sy=Math.floor(log.y);
-   // Persegue por corredores livres; caso não haja rota direta, patrulha um ponto aberto.
+   const px=Math.floor(player.x),py=Math.floor(player.y);
+   // Patrulha pelos corredores livres sem consultar posição ou alcance de bombas.
    const goals=[[px+1,py],[px-1,py],[px,py+1],[px,py-1]];
    let chosenPath=null,best=Infinity;
    for(const [gx,gy] of goals){
     if(!swampLogCellSafe(gx,gy,false))continue;
-    const route=swampLogRoute(log,gx,gy,false,danger);
+    const route=swampLogRoute(log,gx,gy);
     if(!route.length)continue;
     const score=route.length+Math.abs(gx-px)+Math.abs(gy-py);
     if(score<best){best=score;chosenPath=route}
    }
    if(!chosenPath||Math.random()<.32){
-    const opts=[];for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(tileAt(x,y)===0&&distance(x+.5,y+.5,log.x,log.y)>1.2&&distance(x+.5,y+.5,player.x,player.y)>1.2&&!bombAt(x,y))opts.push({x,y});
+    const opts=[];for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++)if(tileAt(x,y)===0&&distance(x+.5,y+.5,log.x,log.y)>1.2&&distance(x+.5,y+.5,player.x,player.y)>1.2)opts.push({x,y});
     for(let attempt=0;attempt<Math.min(12,opts.length);attempt++){
      const pick=opts.splice(Math.floor(Math.random()*opts.length),1)[0];
-     const route=swampLogRoute(log,pick.x,pick.y,false,danger);
+     const route=swampLogRoute(log,pick.x,pick.y);
      if(route.length){chosenPath=route;break}
     }
    }
    if(chosenPath)log.path=chosenPath;
   }
-  swampLogMove(log,dt,false);
+  swampLogMove(log,dt);
  }else if(log.phase==="sinking"){
   log.phaseTime+=dt;log.burrowing=true;
   if(log.phaseTime>=swampLogTuning.sinkTime){log.phase="burrow";log.phaseTime=0;log.path=[];log.repath=0}
  }else if(log.phase==="burrow"){
-  log.burrowing=true;log.burrowTime+=dt;log.repath-=dt;
-  if(log.repath<=0||!log.path.length){log.repath=.28;log.path=swampLogPath(log,true,danger,true)}
-  swampLogMove(log,dt,true);
-  const here=cellKey(Math.floor(log.x),Math.floor(log.y));
-  if(log.burrowTime>=swampLogTuning.burrowMin&&tileAt(Math.floor(log.x),Math.floor(log.y))===0&&!bombAt(Math.floor(log.x),Math.floor(log.y))&&(!danger||!danger.has(here))&&!swampLogEnemyBlocked(log.x,log.y,log,.68)&&distance(log.x,log.y,player.x,player.y)>1.05){
-   log.phase="emerging";log.phaseTime=0;log.path=[];return;
+  // Fica imóvel e completamente escondido. Só emerge quando o jogador pisa sobre ele.
+  log.burrowing=true;
+  if(player.inv<=0&&distance(log.x,log.y,player.x,player.y)<.62){
+   log.phase="emerging";log.phaseTime=0;log.ambushTriggered=true;log.path=[];
   }
-  if(log.burrowTime>=swampLogTuning.burrowMax){
-   const path=swampLogPath(log,false,danger,false);
-   const safe=path.find(p=>tileAt(Math.floor(p.x),Math.floor(p.y))===0&&(!danger||!danger.has(cellKey(Math.floor(p.x),Math.floor(p.y)))));
-   if(safe){log.path=[safe];log.forceEmerge=true}
-  }
-  if(log.forceEmerge&&log.path.length===0&&tileAt(Math.floor(log.x),Math.floor(log.y))===0){log.phase="emerging";log.phaseTime=0;log.forceEmerge=false}
  }else if(log.phase==="emerging"){
   log.burrowing=true;log.phaseTime+=dt;
-  const x=Math.floor(log.x),y=Math.floor(log.y),k=cellKey(x,y);
-  if(tileAt(x,y)!==0||bombAt(x,y)||(danger&&danger.has(k))||distance(log.x,log.y,player.x,player.y)<.78){
-   log.phase="burrow";log.phaseTime=0;log.burrowTime=0;log.path=[];log.forceEmerge=false;return;
+  if(log.phaseTime>=swampLogTuning.emergeTime){
+   if(log.ambushTriggered){log.ambushTriggered=false;if(player.inv<=0)hurtPlayer()}
+   log.phase="surface";log.phaseTime=0;log.surfaceClock=0;log.burrowing=false;log.path=[];log.repath=.2;
   }
-  if(log.phaseTime>=swampLogTuning.emergeTime){log.phase="surface";log.phaseTime=0;log.surfaceClock=0;log.burrowing=false;log.path=[];log.repath=.2}
  }
 }
 function drawSwampLog(log){
- const x=ox+log.x*TILE,y=oy+log.y*TILE,phase=log.phase||"surface";
+ const phase=log.phase||"surface";if(phase==="burrow")return;
+ const x=ox+log.x*TILE,y=oy+log.y*TILE;
  const death=log.alive?1:Math.max(0,(log.deathTimer||0)/ENEMY_DEATH_TIME);
  // Pequenas marcas de limo no chão: desenho simples e barato, sem gradientes por quadro.
  for(const p of log.splats||[]){
@@ -18082,18 +18047,6 @@ function drawSwampLog(log){
  ctx.save();ctx.globalAlpha=death;ctx.translate(x,y+bob);ctx.scale(1.25,1.25);
  // Sombra úmida rente ao chão.
  ctx.fillStyle="rgba(3,17,13,.48)";ctx.beginPath();ctx.ellipse(0,12,17,5,0,0,Math.PI*2);ctx.fill();
- if(phase==="burrow"){
-  // Só olhos e boca permanecem visíveis na lama.
-  const pulse=.85+Math.sin(gameClock*5+log.waterPhase)*.12;
-  ctx.fillStyle="rgba(12,38,25,.72)";ctx.beginPath();ctx.ellipse(0,10,14,5,0,0,Math.PI*2);ctx.fill();
-  for(const ex of [-5,5]){
-   ctx.fillStyle="#b9e96a";ctx.shadowColor="#b8ef68";ctx.shadowBlur=8;
-   ctx.beginPath();ctx.ellipse(ex,8,2.25*pulse,1.7*pulse,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
-   ctx.fillStyle="#15251a";ctx.beginPath();ctx.arc(ex,8,0.8,0,Math.PI*2);ctx.fill();
-  }
-  ctx.strokeStyle="#101b14";ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(0,12,3.5,.12,Math.PI-.12);ctx.stroke();
-  ctx.restore();return;
- }
  const squash=phase==="sinking"?1-.55*sinking:phase==="emerging"?.45+.55*(1-sinking):1;
  ctx.scale(1,squash);
  ctx.translate(0,8*sinking);
@@ -18171,8 +18124,7 @@ updateEnemies=function(dt){
  const all=enemies;enemies=all.filter(e=>!e.isSwampLog);
  try{swampLogUpdateEnemiesBase(dt)}finally{enemies=all}
  if(currentWorld==="swamp"){
-  const danger=getAllBombDangerCells();
-  for(const log of all)if(log&&log.isSwampLog)updateSwampLog(log,dt,danger);
+  for(const log of all)if(log&&log.isSwampLog)updateSwampLog(log,dt);
  }
 };
 const swampLogDrawEnemyBase=drawEnemy;
@@ -18193,23 +18145,6 @@ updatePlayer=function(dt){
  try{swampLogUpdatePlayerBase(dt)}finally{enemies=all}
  if(currentWorld!=="swamp"||player.inv>0)return;
  for(const log of all)if(log&&log.isSwampLog&&log.alive&&!log.burrowing&&log.phase==="surface"&&distance(log.x,log.y,player.x,player.y)<.43){hurtPlayer();break}
-};
-const swampLogReactToNewBombBase=reactToNewBomb;
-reactToNewBomb=function(newBomb=null){
- swampLogReactToNewBombBase(newBomb);
- if(currentWorld!=="swamp")return;
- const danger=getAllBombDangerCells();
- for(const log of enemies)if(log&&log.isSwampLog&&log.alive&&!log.burrowing){
-  if(danger.has(cellKey(Math.floor(log.x),Math.floor(log.y))))swampLogBeginBurrow(log,danger);
- }
-};
-const swampLogExplodeBase=explode;
-explode=function(b){
- const danger=getBombDangerCells(b);
- swampLogExplodeBase(b);
- if(currentWorld==="swamp")for(const log of enemies)if(log&&log.isSwampLog&&log.alive&&log.burrowing){
-  if(danger.has(cellKey(Math.floor(log.x),Math.floor(log.y)))){log.escapeRequested=true;log.path=[];log.repath=0}
- }
 };
 const swampLogAllEnemiesBase=allEnemiesDefeated;
 allEnemiesDefeated=function(){return swampLogAllEnemiesBase()};
