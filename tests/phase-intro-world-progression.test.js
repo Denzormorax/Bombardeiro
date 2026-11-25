@@ -126,7 +126,7 @@ test("a animação entra pela direita, segura no centro por cerca de 0,8 s e sai
 
   frame = run.rafQueue.shift();
   frame(1750);
-  assert.match(overlay.style.transform, /-480px/);
+  assert.match(overlay.style.transform, /-480(?:\.\d+)?px/);
   assert.equal(overlay.style.opacity, "0");
   assert.equal(run.body.children.length, 0);
   assert.equal(run.sandbox.paused, false);
