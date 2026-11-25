@@ -19700,11 +19700,13 @@ function spiderHideAfterAttack(spider){
 }
 const spiderUpdatePlayerBase=updatePlayer;
 updatePlayer=function(dt){
- const oldHurt=hurtPlayer;
- let touching=null;
- for(const e of enemies)if(e&&e.isSpider&&e.alive&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){touching=e;break}
- if(touching){const original=hurtPlayer;hurtPlayer=function(){spiderHideAfterAttack(touching);return original()};try{return spiderUpdatePlayerBase(dt)}finally{hurtPlayer=original}}
- return spiderUpdatePlayerBase(dt);
+ const original=hurtPlayer;
+ hurtPlayer=function(){
+  const touching=enemies.find(e=>e&&e.isSpider&&e.alive&&distance(e.x,e.y,player.x,player.y)<.43);
+  if(touching)spiderHideAfterAttack(touching);
+  return original();
+ };
+ try{return spiderUpdatePlayerBase(dt)}finally{hurtPlayer=original}
 };
 const spiderAllEnemiesDefeatedBase=allEnemiesDefeated;
 allEnemiesDefeated=function(){return spiderDisguises.length===0&&spiderAllEnemiesDefeatedBase()};

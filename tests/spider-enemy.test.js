@@ -21,6 +21,7 @@ test("aranha recebe 5 moedas e inimigos de três níveis recebem 8",()=>{
 test("disfarce conta como inimigo restante e pode ser refeito após contato",()=>{
  assert.match(html,/allEnemiesDefeated=function\(\)\{return spiderDisguises\.length===0/);
  assert.match(html,/function spiderHideAfterAttack/);
+ assert.match(html,/hurtPlayer=function\(\)\{\s*const touching=enemies\.find\(e=>e&&e\.isSpider/);
 });
 test("aranha usa animação de pernas e movimento separado sem alterar o corpo verticalmente",()=>{
  assert.match(html,/function drawSpiderLegs/);\n assert.match(html,/for\\(const d of spiderDisguises\\)if\\(d\\.y===y\\)drawSpiderDisguise\\(d\\)/);
