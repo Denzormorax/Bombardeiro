@@ -23,7 +23,7 @@ test("disfarce conta como inimigo restante e pode ser refeito após contato",()=
  assert.match(html,/function spiderHideAfterAttack/);
 });
 test("aranha usa animação de pernas e movimento separado sem alterar o corpo verticalmente",()=>{
- assert.match(html,/function drawSpiderLegs/);
+ assert.match(html,/function drawSpiderLegs/);\n assert.match(html,/for\\(const d of spiderDisguises\\)if\\(d\\.y===y\\)drawSpiderDisguise\\(d\\)/);
  assert.match(html,/function spiderUpdateEnemy/);
  assert.match(html,/drawEnemy=function\(e\)\{if\(e&&e\.isSpider\)\{drawSpider\(e\);return\}/);
 });

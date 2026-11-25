@@ -17811,7 +17811,7 @@ function draw(){
  drawTreasureEffects();
  for(let y=0;y<ROWS;y++){
   for(const crate of burningCrates)if(crate.y===y&&currentWorld!=="desert"&&currentWorld!=="volcano")drawBurningCrate(crate);
-  if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const chest of treasureChests)if(chest.y===y)drawTreasureChest(chest);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
+  if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const d of spiderDisguises)if(d.y===y)drawSpiderDisguise(d);for(const chest of treasureChests)if(chest.y===y)drawTreasureChest(chest);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
   if(currentWorld==="volcano"){for(const e of enemyDrawRows[y])drawEnemy(e)}
   else{for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
