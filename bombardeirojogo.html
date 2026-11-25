@@ -19451,7 +19451,7 @@ function updateSwampGhost(g,dt,danger){
    }
    if(g.particles.length>64)g.particles.splice(0,g.particles.length-64);
   }
-  if(g.teleporting<=0){g.teleportDestination=null;g.teleportSwapped=false;g.teleportStyle="normal";g.spiralEmitClock=0;g.patrolWait=.12;g.chaseRepath=0;g.patrolTeleportTimer=2+Math.random()*2}
+  if(g.teleporting<=0){const finishedStyle=g.teleportStyle;g.teleportDestination=null;g.teleportSwapped=false;g.teleportStyle="normal";g.spiralEmitClock=0;g.patrolWait=.12;g.chaseRepath=0;g.patrolTeleportTimer=2+Math.random()*2;if(finishedStyle==="chase"){g.chaseAppearTimer=5;g.chaseAppearActive=true}}
   return;
  }
  g.teleportCooldown=Math.max(0,(g.teleportCooldown||0)-dt);
@@ -19469,6 +19469,7 @@ function updateSwampGhost(g,dt,danger){
   g.patrolTeleportTimer=2+Math.random()*2;
  }
  if(g.alerted){
+  if(g.chaseAppearActive){g.chaseAppearTimer=Math.max(0,(g.chaseAppearTimer||0)-dt);if(g.chaseAppearTimer<=0||distance(g.x,g.y,player.x,player.y)>5){const destination=swampGhostRandomDestination(g,danger);g.alerted=false;g.ignorePlayerUntilOutOfSight=true;g.chaseAppearActive=false;g.chaseAppearTimer=0;g.path=[];g.chaseRepath=0;g.speed=g.baseSpeed||g.speed;if(destination){swampGhostStartTeleport(g,destination,true,true,false,"damage");return}}}
   g.speed=(g.baseSpeed||g.speed||.82)*1.22;
   g.chaseRepath=Math.max(0,(g.chaseRepath||0)-dt);
   if(!g.path.length||g.chaseRepath<=0){swampGhostChasePath(g,danger);g.chaseRepath=.18}
