@@ -18069,12 +18069,13 @@ function updateSwampLog(log,dt,danger){
 function drawSwampLog(log){
  const x=ox+log.x*TILE,y=oy+log.y*TILE,phase=log.phase||"surface";
  const death=log.alive?1:Math.max(0,(log.deathTimer||0)/ENEMY_DEATH_TIME);
- // Pequenas poças de limo aparecem exatamente onde as gotas atingem o chão.
+ // Pequenas marcas de limo no chão: desenho simples e barato, sem gradientes por quadro.
  for(const p of log.splats||[]){
-  ctx.save();ctx.globalAlpha=Math.max(0,p.t/p.life)*.72;
-  const puddle=ctx.createRadialGradient(ox+p.x*TILE-1,oy+p.y*TILE-1,1,ox+p.x*TILE,oy+p.y*TILE,p.size);
-  puddle.addColorStop(0,"rgba(155,183,91,.68)");puddle.addColorStop(.55,"rgba(77,111,55,.56)");puddle.addColorStop(1,"rgba(36,64,39,0)");
-  ctx.fillStyle=puddle;ctx.beginPath();ctx.ellipse(ox+p.x*TILE,oy+p.y*TILE,p.size*1.55,p.size*.58,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  const alpha=Math.max(0,p.t/p.life)*.68,px=ox+p.x*TILE,py=oy+p.y*TILE;
+  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle="rgba(91,132,62,.78)";
+  ctx.beginPath();ctx.ellipse(px,py,p.size*1.5,p.size*.52,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=alpha*.62;ctx.fillStyle="rgba(183,204,111,.72)";
+  ctx.beginPath();ctx.ellipse(px-1,py-1,p.size*.58,p.size*.2,-.08,0,Math.PI*2);ctx.fill();ctx.restore();
  }
  const sinking=phase==="sinking"?Math.min(1,log.phaseTime/swampLogTuning.sinkTime):phase==="emerging"?1-Math.min(1,log.phaseTime/swampLogTuning.emergeTime):phase==="burrow"?1:0;
  const bob=phase==="surface"?Math.sin(log.anim*2.2)*1.25:0;
@@ -18118,19 +18119,31 @@ function drawSwampLog(log){
   ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(m[0],m[1],m[2],m[3],-.25,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle="rgba(15,42,27,.65)";ctx.lineWidth=.8;ctx.stroke();
  }
- // Várias bolhas vivas, de tamanhos diferentes, subindo e estourando na superfície do corpo.
- ctx.save();
- for(let i=0;i<10;i++){
-  const cycle=(gameClock*(.62+(i%3)*.13)+log.waterPhase+i*.173)%1;
-  const bx=Math.sin(gameClock*1.35+i*2.17+log.waterPhase)*8+((i%3)-1)*1.5;
-  const by=10-cycle*27;
-  const radius=1.15+(i%4)*.48;
-  ctx.globalAlpha=.28+Math.sin(cycle*Math.PI)*.48;
-  const bubble=ctx.createRadialGradient(bx-radius*.35,by-radius*.4,.2,bx,by,radius*1.5);
-  bubble.addColorStop(0,"rgba(230,255,194,.88)");bubble.addColorStop(.38,"rgba(154,211,133,.48)");bubble.addColorStop(1,"rgba(65,139,101,.08)");
-  ctx.fillStyle=bubble;ctx.strokeStyle="rgba(205,239,167,.78)";ctx.lineWidth=.75;
-  ctx.beginPath();ctx.arc(bx,by,radius,0,Math.PI*2);ctx.fill();ctx.stroke();
-  ctx.fillStyle="rgba(239,255,213,.78)";ctx.beginPath();ctx.arc(bx-radius*.32,by-radius*.35,Math.max(.45,radius*.24),0,Math.PI*2);ctx.fill();
+ // Bolhas distribuídas por todo o tronco: sobem, incham e estouram em pequenos anéis.
+ // Formas simples reutilizam o contexto e evitam gradientes/objetos temporários por partícula.
+ ctx.save();ctx.lineWidth=.8;
+ for(let i=0;i<12;i++){
+  const cycle=(gameClock*(.58+(i%4)*.075)+log.waterPhase+i*.137)%1;
+  const bx=Math.sin(gameClock*1.22+i*2.09+log.waterPhase)*8.7+((i%3)-1)*1.8;
+  const by=15-cycle*34;
+  const radius=1.05+(i%4)*.43;
+  if(cycle<.86){
+   const riseFade=Math.min(1,cycle*7.5,(1-cycle)*7.2);
+   ctx.globalAlpha=.22+riseFade*.58;
+   ctx.fillStyle="rgba(151,207,125,.48)";ctx.strokeStyle="rgba(210,242,173,.86)";
+   ctx.beginPath();ctx.arc(bx,by,radius,0,Math.PI*2);ctx.fill();ctx.stroke();
+   ctx.globalAlpha=.7*riseFade;ctx.fillStyle="rgba(244,255,218,.86)";
+   ctx.beginPath();ctx.arc(bx-radius*.3,by-radius*.34,Math.max(.4,radius*.22),0,Math.PI*2);ctx.fill();
+  }else{
+   const pop=(cycle-.86)/.14,ring=radius*(1+pop*2.15);
+   ctx.globalAlpha=(1-pop)*.72;ctx.strokeStyle="rgba(207,242,164,.9)";
+   ctx.beginPath();ctx.ellipse(bx,by,ring,ring*.72,0,0,Math.PI*2);ctx.stroke();
+   ctx.globalAlpha=(1-pop)*.68;ctx.fillStyle="rgba(191,226,139,.9)";
+   for(let k=0;k<3;k++){
+    const a=k*2.094+log.waterPhase+i;
+    ctx.beginPath();ctx.arc(bx+Math.cos(a)*ring*1.15,by+Math.sin(a)*ring*.82,.65,0,Math.PI*2);ctx.fill();
+   }
+  }
  }
  ctx.restore();
  ctx.fillStyle="rgba(25,72,45,.8)";ctx.beginPath();ctx.ellipse(-5,-5,3,1.4,.2,0,Math.PI*2);ctx.ellipse(8,3,2.8,1.2,-.3,0,Math.PI*2);ctx.fill();
