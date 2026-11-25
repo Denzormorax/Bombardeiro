@@ -4,6 +4,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
+
+function ghostTeleportDurations(html) {
+  const match = html.match(/const duration=style==="chase"\?([0-9]+(?:\.[0-9]+)?):style==="bomb"\?([0-9]+(?:\.[0-9]+)?)/);
+  assert.ok(match, "Durações de aparição e fuga dos fantasmas não foram encontradas.");
+  return { appearance: Number(match[1]), escape: Number(match[2]) };
+}
 const atlas = fs.readFileSync(path.join(root, "game-assets/sprites/swamp_themes.svg"), "utf8");
 const world = JSON.parse(fs.readFileSync(path.join(root, "game-assets/worlds/swamp-world.json"), "utf8"));
 
@@ -114,7 +120,10 @@ test("fantasma escolhe um dos quatro destinos a dois quadrados do jogador", () =
 });
 test("aparição do fantasma usa espiral visual e lenta", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /style==="chase"\?2\.2:style==="bomb"\?1\.8/);
+  const durations = ghostTeleportDurations(html);
+  assert.ok(durations.appearance >= 2.2, `Aparição deve continuar lenta (atual: ${durations.appearance}s).`);
+  assert.ok(durations.escape >= 1.8, `Fuga deve continuar lenta (atual: ${durations.escape}s).`);
+  assert.match(html, /if\(style==="chase"\)g\.bombTeleportCooldown=([0-9.]+)/);
   assert.match(html, /g\.teleportStyle==="chase"&&g\.teleportSwapped/);
   assert.match(html, /showingSpiral=/);
   assert.match(html, /ctx\.strokeStyle=arm===0\?"#a8f7ff":"#d2c0ff"/);
@@ -127,7 +136,10 @@ test("fantasmas do Pântano patrulham e perseguem mais devagar", () => {
 });
 test("detecção de bomba faz o fantasma desaparecer e reaparecer lentamente em espiral", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /style==="chase"\?2\.2:style==="bomb"\?1\.8/);
+  const durations = ghostTeleportDurations(html);
+  assert.ok(durations.appearance >= 2.2, `Aparição deve continuar lenta (atual: ${durations.appearance}s).`);
+  assert.ok(durations.escape >= 1.8, `Fuga deve continuar lenta (atual: ${durations.escape}s).`);
+  assert.match(html, /if\(style==="chase"\)g\.bombTeleportCooldown=([0-9.]+)/);
   assert.match(html, /swampGhostStartTeleport\(g,destination,true,false,false,"bomb"\)/);
   assert.match(html, /g\.teleportStyle==="bomb"&&!g\.teleportSwapped/);
   assert.match(html, /vanishProgress\*Math\.PI\*3\.2/);
