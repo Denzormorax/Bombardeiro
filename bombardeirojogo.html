@@ -19427,7 +19427,7 @@ function swampGhostTarget(ghost,escape,danger){
  if(escape)return swampGhostRandomDestination(ghost,danger);
  return swampGhostChaseSpawnTarget(ghost,danger);
 }
-function swampGhostStartTeleport(g,target,escape,fast=false,collision=false,style="normal"){if(!target)return false;const duration=style==="chase"?2.2:style==="bomb"?1.8:collision?.30:fast?.48:escape?.48:.48;swampGhostBurst(g.x,g.y,collision?18:style==="chase"?30:22);g.teleportDuration=duration;g.teleporting=duration;g.teleportSwapAt=duration*.5;g.teleportDestination=target;g.teleportSwapped=false;g.teleportStyle=style;g.spiralEmitClock=0;g.path=[];g.teleportCooldown=collision?1.1:escape?.8:2.1;g.bombEvading=false;g.bombEvadeRepath=0;return true}
+function swampGhostStartTeleport(g,target,escape,fast=false,collision=false,style="normal"){if(!target)return false;const duration=style==="chase"?3.0:style==="bomb"?2.6:collision?.30:fast?.48:escape?.48:.48;swampGhostBurst(g.x,g.y,collision?18:style==="chase"?30:22);g.teleportDuration=duration;g.teleporting=duration;g.teleportSwapAt=duration*.5;g.teleportDestination=target;g.teleportSwapped=false;g.teleportStyle=style;g.spiralEmitClock=0;g.path=[];g.teleportCooldown=collision?1.1:escape?.8:2.1;if(style==="chase")g.bombTeleportCooldown=1.4;g.bombEvading=false;g.bombEvadeRepath=0;return true}
 function updateSwampGhost(g,dt,danger){
  if(!g.alive){g.deathTimer=Math.max(0,(g.deathTimer||0)-dt);return}
  g.phase+=dt*3.2;g.hitFlash=Math.max(0,g.hitFlash-dt);g.hurtTimer=Math.max(0,g.hurtTimer-dt);
