@@ -51,3 +51,15 @@ test("disfarce continua contando como inimigo restante e pode se esconder novame
  assert.match(html,/allEnemiesDefeated=function\(\)\{return spiderDisguises\.length===0/);
  assert.match(html,/spiderDisguises\.push\(\{x,y,wait:5,moveTimer:5/);
 });
+
+test("bloco acompanha a aranha nos dois eixos durante a interpolação vertical e horizontal",()=>{
+ assert.match(html,/ctx\.translate\(\(rx-cx\)\*TILE,\(ry-cy\)\*TILE-\(d\.lift\|\|0\)\*15\)/);
+});
+
+test("pernas sob o disfarce ficam maiores, definidas e com articulações destacadas",()=>{
+ assert.match(html,/hidden\?16:17/);
+ assert.match(html,/hidden\?25:23/);
+ assert.match(html,/hidden\?4\.2:4\.1/);
+ assert.match(html,/hidden\?2\.15:1\.35/);
+ assert.match(html,/ctx\.arc\(mx,my,2\.5/);
+});
