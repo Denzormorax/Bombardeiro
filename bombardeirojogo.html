@@ -19592,7 +19592,6 @@ function spiderReveal(disguise,reason){
  if(index<0)return null;
  const x=disguise.x,y=disguise.y;
  spiderDisguises.splice(index,1);
- const adjacent=Math.abs(Math.floor(player.x)-x)+Math.abs(Math.floor(player.y)-y)===1;
  const spider={isSpider:true,x:x+.5,y:y+.5,speed:1.58,baseSpeed:1.58,hp:1,maxHp:1,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],repath:0,walkPhase:Math.random()*6.28,moving:false,alert:false,revealFlash:.55,revealReason:reason||"near",revealProtection:.7,passive:reason==="bomb"};
  enemies.push(spider);
  return spider;
@@ -19647,6 +19646,7 @@ function spiderUpdateDisguises(dt){
   }else if(dist>2.35){d.near=false;d.wait=5;d.revealAnim=Math.max(0,(d.revealAnim||0)-dt*2.2)}
  }
 }
+// Aranha revelada pela bomba percorre continuamente rotas aleatórias e evita bloqueios.
 function spiderFindWanderPath(spider){
  const sx=Math.floor(spider.x),sy=Math.floor(spider.y);
  const start=cellKey(sx,sy),queue=[{x:sx,y:sy}],seen=new Set([start]),parents=new Map();
