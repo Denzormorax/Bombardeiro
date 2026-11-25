@@ -20267,6 +20267,90 @@ const updateHUDWithPhaseToast=updateHUD;
 updateHUD=function(){updateHUDWithPhaseToast();showPhaseToast()};
 const startGameWithPhaseToast=startGame;
 startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
+
+/* INTRODUÇÃO DAS FASES: fase-mundo, com pausa real da simulação. */
+(function(){
+ "use strict";
+ const phaseIntro=$("phaseToast");
+ if(!phaseIntro)return;
+ const introStyle=document.createElement("style");
+ introStyle.textContent=`
+ #phaseToast{position:fixed!important;inset:0!important;z-index:99999!important;display:none!important;align-items:center!important;justify-content:center!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:rgba(0,0,0,.10)!important;color:#fff!important;font-size:clamp(76px,19vw,164px)!important;font-weight:1000!important;line-height:1!important;letter-spacing:1px!important;text-align:center!important;text-shadow:-4px -4px 0 #31a85a,4px -4px 0 #31a85a,-4px 4px 0 #31a85a,4px 4px 0 #31a85a,0 7px 16px #001b0c!important;opacity:0!important;visibility:hidden!important;transform:none!important;transition:none!important;pointer-events:none!important}
+ #phaseToast.phase-intro-active{display:flex!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;animation:phaseIntroSlide 1.75s linear both!important}
+ @keyframes phaseIntroSlide{
+  0%{transform:translateX(120vw);opacity:0}
+  12%{transform:translateX(0);opacity:1}
+  58%{transform:translateX(0);opacity:1}
+  100%{transform:translateX(-120vw);opacity:0}
+ }`;
+ document.head.appendChild(introStyle);
+ let introToken=0;
+ function worldNumber(){
+  return ({forest:1,desert:2,volcano:3,ice:4,swamp:5})[currentWorld]||1;
+ }
+ function clearMovementInput(){
+  move={x:0,y:0};pointerMove=null;
+  if(typeof keys==="object")for(const k of Object.keys(keys))delete keys[k];
+  if(typeof dpadDirections==="object"){dpadDirections={up:false,down:false,left:false,right:false}}
+  const knob=$("stickKnob");if(knob)knob.style.transform="translate(0,0)";
+ }
+ function beginPhaseIntro(){
+  if(!running)return;
+  const token=++introToken;
+  paused=true;
+  clearMovementInput();
+  phaseIntro.textContent=String(level)+"-"+String(worldNumber());
+  phaseIntro.classList.remove("show","phase-intro-active");
+  void phaseIntro.offsetWidth;
+  phaseIntro.classList.add("phase-intro-active");
+  phaseIntro.onanimationend=function(event){
+   if(event.target!==phaseIntro||token!==introToken)return;
+   phaseIntro.classList.remove("phase-intro-active");
+   phaseIntro.onanimationend=null;
+   clearMovementInput();
+   if(running)paused=false;
+  };
+ }
+ /* O antigo aviso inferior é substituído pela animação numerada. */
+ showPhaseToast=function(){};
+ const originalNewLevel=newLevel;
+ newLevel=function(preservePowerUps=false){
+  originalNewLevel(preservePowerUps);
+  if(running)beginPhaseIntro();
+ };
+ /* Mantém a numeração local de 1 a 10 em todos os mundos. */
+ worldLevelNumber=function(){return level};
+ updateHUD();
+ /* O botão de reiniciar também respeita a apresentação e não libera o jogo antes dela. */
+ $("restartBtn").onclick=()=>{newLevel(true);hidePanels()};
+ /* Ao concluir a fase 10, a campanha segue para o próximo mundo e reinicia a contagem em 1. */
+ const worldOrder=["forest","desert","volcano","ice","swamp"];
+ checkWin=function(){
+  if(levelTransition)return;
+  if(allEnemiesDefeated()&&exit.found&&Math.floor(player.x)===exit.x&&Math.floor(player.y)===exit.y){
+   levelTransition=true;portalEnterStart=gameClock;score+=500;updateHUD();
+   unlockedLevel=Math.max(unlockedLevel,level);saveProgress();
+   setTimeout(()=>{
+    if(!running)return;
+    if(level<TOTAL_LEVELS){
+     unlockedLevel=Math.max(unlockedLevel,level+1);saveProgress();
+     level++;selectedMapLevel=level;newLevel(true);
+     return;
+    }
+    const index=worldOrder.indexOf(currentWorld);
+    if(index>=0&&index<worldOrder.length-1){
+     currentWorld=worldOrder[index+1];
+     loadProgress();
+     level=1;selectedMapLevel=1;
+     treasureSpawnWorld=currentWorld;treasureSpawnedThisWorld=false;treasureSpawnedThisLevel=false;
+     newLevel(true);
+     return;
+    }
+    unlockedLevel=TOTAL_LEVELS;saveProgress();gameOver(true);
+   },1100);
+  }
+ };
+})();
 </script>
 
 </body>
