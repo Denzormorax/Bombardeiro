@@ -17,7 +17,7 @@ test("jogo e entradas ficam bloqueados durante toda a animação", () => {
   assert.match(game, /paused=true;\s*clearMovementInput\(\)/);
   assert.match(game, /phaseIntro\.onanimationend=function\(event\)/);
   assert.match(game, /if\(running\)paused=false/);
-  assert.match(game, /pointer-events:auto!important;animation:phaseIntroSlide/);
+  assert.match(game, /#phaseIntroBlocker\\{position:fixed;inset:0;z-index:99998;display:none;background:rgba\\(0,0,0,\\.10\\);pointer-events:auto\\}/);\n  assert.match(game, /pointer-events:none!important;animation:phaseIntroSlide/);
   assert.match(game, /newLevel=function\(preservePowerUps=false\)[\s\S]*?if\(running\)beginPhaseIntro\(\)/);
 });
 
