@@ -82,13 +82,20 @@ test("pernas sob o disfarce ficam maiores, definidas e com articulações destac
  assert.match(html,/ctx\.arc\(mx,my,2\.5/);
 });
 
-test("folhagem temática da floresta preserva a cor vermelha, cobre o caçador e mantém o rosto em primeiro plano",()=>{
- assert.match(html,/const FOREST_LEAF_PALETTE=\["#173f27","#28633a","#43864a","#70a84e","#9abd62","#536f32"\]/);
- assert.match(html,/O inimigo vermelho mantém sua cor original/);
- assert.match(html,/if\(e\.isHunter\)\{drawForestHunterCover\(\);return\}/);
- assert.match(html,/os olhos e a boca são desenhados depois/);
+test("paleta da floresta diferencia inimigo comum e caçador apenas nesse mundo",()=>{
+ assert.match(html,/const FOREST_COMMON_BODY_PALETTE=\[/);
+ assert.match(html,/const FOREST_COMMON_HELMET_PALETTE=\[/);
+ assert.match(html,/const FOREST_HUNTER_BODY_PALETTE=\[/);
+ assert.match(html,/const FOREST_HUNTER_HELMET_PALETTE=\[/);
+ assert.match(html,/const FOREST_HUNTER_LEAF_PALETTES=\[/);
+ assert.match(html,/forestColorIndex:Math\.floor\(Math\.random\(\)\*4\)/);
+ assert.match(html,/drawForestHunterCover\(e\)/);
  assert.match(html,/if\(currentWorld==="forest"\)drawForestEnemyDetails\(e\)/);
  assert.match(html,/currentWorld==="volcano".*"#df6329".*"#d64c4c"/);
+});
+
+test("efeito de colocar bomba usa o novo MP3 local para funcionar offline",()=>{
+ assert.match(html,/bomb:"game-assets\/audio\/bomb_place\.mp3"/);
 });
 
 test("atualização das aranhas reutiliza o cálculo de perigo de bombas no mesmo quadro",()=>{
