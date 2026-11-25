@@ -39,10 +39,10 @@ test("blocos destrutíveis do novo mundo são troncos de madeira em relevo", () 
   assert.match(atlas, /filter id="shadow"/);
 });
 
-test("fantasminhas aparecem somente nas fases 3 a 6 do Pântano", () => {
+test("fantasminhas aparecem nas fases 2 a 9, com dois ou três até a fase 4 e exatamente dois da 5 à 9", () => {
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
-  assert.match(html, /currentWorld==="swamp"&&level>=3&&level<=6\)spawnSwampGhosts\(\)/);
-  assert.match(html, /const count=2\+Math\.floor\(Math\.random\(\)\*2\)/);
+  assert.match(html, /currentWorld==="swamp"&&level>=2&&level<=9\)spawnSwampGhosts\(\)/);
+  assert.match(html, /const count=level>=5&&level<=9\?2:2\+Math\.floor\(Math\.random\(\)\*2\)/);
   assert.match(html, /dist>5\)return false/);
 });
 test("fantasminhas flutuam, perseguem por caminhos e só teleportam ao receber dano", () => {

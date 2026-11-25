@@ -14,11 +14,21 @@ test("criatura possui dois pontos de vida e barra dupla sobre a cabeça",()=>{
  assert.match(html,/hp:2,maxHp:2/);
  assert.match(html,/for\(let i=0;i<2;i\+\+\)\{ctx\.fillStyle=i<\(log\.hp\|\|0\)/);
 });
-test("ciclo de superfície dura sete segundos e inclui afundar, atravessar e emergir",()=>{
+test("ciclo mantém sete segundos na superfície, cinco para afundar e cinco para emergir",()=>{
  assert.match(html,/surfaceCycle:7/);
+ assert.match(html,/sinkTime:5,emergeTime:5,burrowMin:5,burrowMax:8/);
+ assert.match(html,/log\.burrowTime>=swampLogTuning\.burrowMin/);
  for(const phase of ["surface","sinking","burrow","emerging"])assert.ok(html.includes('phase="'+phase+'"')||html.includes('phase==="'+phase+'"'));
  assert.match(html,/swampLogPath\(log,true,danger,true\)/);
  assert.match(html,/tile!==0/);
+});
+test("tronco percorre rotas cardinais pelo centro das células, sem deslizar lateralmente",()=>{
+ assert.match(html,/function swampLogRoute\(log,targetX,targetY,allowCrates=false,danger=null\)/);
+ assert.match(html,/for\(const \[dx,dy\] of \[\[0,-1\],\[1,0\],\[0,1\],\[-1,0\]\]\)/);
+ const move=html.slice(html.indexOf("function swampLogMove"),html.indexOf("function swampLogBeginBurrow"));
+ assert.match(move,/swampLogCanStand\(nx,ny,underground\)/);
+ assert.doesNotMatch(move,/for\(const off of \[\.035,\.07,\.11/);
+ assert.match(html,/ctx\.scale\(1\.25,1\.25\)/);
 });
 test("criatura só recebe dano na forma física e morre após dois acertos",()=>{
  assert.match(html,/enemy\.burrowing\|\|enemy\.phase!=="surface"/);
