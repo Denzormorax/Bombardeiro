@@ -109,8 +109,8 @@ test("a animação entra pela direita, segura no centro por cerca de 0,8 s e sai
   const run = runIntro("forest", 4);
   const overlay = run.body.children.find(element => element.id === "phaseIntroOverlay");
   assert.ok(overlay);
-  assert.match(overlay.style.transform, /480px/);
-  assert.equal(overlay.style.opacity, "0");
+  assert.match(overlay.style.cssText, /translate3d\\(120vw/);
+  assert.match(overlay.style.cssText, /opacity:0/);
 
   let frame = run.rafQueue.shift();
   frame(0);
