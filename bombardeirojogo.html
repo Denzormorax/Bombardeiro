@@ -20717,6 +20717,8 @@ function buildDiamondPortalFrames(themeIndex){
 function createDiamondPortals(){
  diamondPortalPositions.length=0;
  if(currentWorld!=="diamonds"||!map||!map.length)return;
+ // No Reino dos Diamantes, os espirais substituem as poças de água dos outros mundos.
+ waterPuddles.length=0;waterPuddleCells.clear();
  const candidates=[];
  for(let y=2;y<ROWS-2;y++)for(let x=2;x<COLS-2;x++){
   if(map[y][x]!==0||isStartSafeCell(x,y)||x<=3&&y<=3)continue;
@@ -20773,6 +20775,7 @@ function checkDiamondPortal(entity,radius,isPlayer,dt){
  entity._diamondPortalInside=destination;entity[cooldownKey]=.85;
  inside.flash=1;destination.flash=1;
  if(isPlayer)entity.inv=Math.max(entity.inv||0,.28);
+ else{entity.path=[];entity.repath=0;entity.patrolTarget=null;entity.lastSeen=null;entity.mode="patrol";}
 }
 function drawDiamondPortals(){
  if(currentWorld!=="diamonds"||!diamondPortalPositions.length)return;
@@ -20781,7 +20784,9 @@ function drawDiamondPortals(){
  for(const portal of diamondPortalPositions){
   const px=ox+portal.x*TILE,py=oy+portal.y*TILE;
   const frame=(Math.floor(gameClock*7.2+portal.phase)%6+6)%6;
+  ctx.globalAlpha=portal.flash>0?1:.94;
   ctx.drawImage(frames[frame],px-3,py-3,TILE+6,TILE+6);
+  ctx.globalAlpha=1;
   for(const p of portal.particles){
    const t=(gameClock*p.speed*.72+p.phase)%1;
    const r=3+t*27,a=p.angle+gameClock*.18;
