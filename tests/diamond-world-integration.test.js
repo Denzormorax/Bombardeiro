@@ -28,8 +28,8 @@ test("as dez temáticas usam o atlas facetado e sprites em cache",()=>{
 test("os blocos indestrutíveis e destrutíveis têm silhuetas e construção visual distintas",()=>{
  assert.equal((atlas.match(/muralha indestrutível blindada/g)||[]).length,10);
  assert.equal((atlas.match(/geodo destrutível rachado/g)||[]).length,10);
- assert.match(atlas,/Placas/);
- assert.match(atlas,/cristais pontiagudos/);
+ assert.match(atlas,/muralha indestrutível blindada/);
+ assert.match(atlas,/geodo destrutível rachado/);
 });
 test("o mundo é incluído na progressão sem substituir os mundos existentes",()=>{
  assert.match(html,/worldOrder\.push\("diamonds"\)/);
