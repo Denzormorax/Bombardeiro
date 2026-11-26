@@ -17931,7 +17931,7 @@ var diamondShimmerCanvases=[]; // Brilhos originais por tema.
 var diamondShimmerTileCanvas=null; // Quadro expandido reutilizado no pré-renderizador.
 var diamondOutlineGlowCanvas=null; // Máscara expandida reutilizada para o halo externo do PNG.
 var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1;
-const DIAMOND_SHIMMER_PADDING=8,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
+const DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24;
 function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  if(diamondShimmerFrameAtlas&&diamondShimmerFrameTheme===themeIndex)return diamondShimmerFrameAtlas;
@@ -17944,7 +17944,7 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  const outlineCtx=diamondOutlineGlowCanvas.getContext("2d");
  const paletteGetter=window.__bombardeiroGetDiamondEffectPalette;
  const palette=typeof paletteGetter==="function"?paletteGetter(themeIndex):null;
- const outlineColor=palette&&palette.glow?palette.glow:"#ffffff";
+ const outlineColor="#168BFF"; // Azul elétrico para combinar com o brilho dos diamantes.
  atlasCtx.imageSmoothingEnabled=false;effectCtx.imageSmoothingEnabled=false;outlineCtx.imageSmoothingEnabled=false;
  for(let frame=0;frame<DIAMOND_SHIMMER_FRAME_COUNT;frame++){
   const phase=frame/DIAMOND_SHIMMER_FRAME_COUNT,pulse=.72+.28*Math.sin(phase*Math.PI*2),travel=(phase-.5)*(TILE+40);
@@ -17962,8 +17962,8 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
   const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
   outlineCtx.setTransform(1,0,0,1,0,0);outlineCtx.globalCompositeOperation="source-over";
   outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
-  outlineCtx.shadowColor=outlineColor;outlineCtx.shadowBlur=4.8+2.2*glowPulse;
-  outlineCtx.globalAlpha=.56+.26*glowPulse;
+  outlineCtx.shadowColor=outlineColor;outlineCtx.shadowBlur=14+8*glowPulse;
+  outlineCtx.globalAlpha=.92+.08*glowPulse;
   outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
   outlineCtx.shadowBlur=0;outlineCtx.globalAlpha=1;
   outlineCtx.globalCompositeOperation="destination-out";
