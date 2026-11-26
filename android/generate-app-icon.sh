@@ -24,10 +24,10 @@ if [[ ! "$WIDTH" =~ ^[0-9]+$ || ! "$HEIGHT" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
-if (( WIDTH != HEIGHT )); then
-  echo "ERRO: a área visível do novo ícone precisa ser quadrada; encontrada ${WIDTH}x${HEIGHT}." >&2
-  exit 1
-fi
+# O limite visível pode variar um pixel por causa do antialiasing.
+# Completa o lado menor com transparência, sem cortar nenhuma parte da arte.
+SIZE=$(( WIDTH > HEIGHT ? WIDTH : HEIGHT ))
+
 
 declare -A DENSITIES=(
   [mipmap-mdpi]=48
