@@ -17937,6 +17937,13 @@ function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
  outlineCtx.fillRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  outlineCtx.globalCompositeOperation="destination-out";
  outlineCtx.drawImage(sheet,288,0,96,96,x,y,TILE,TILE);
+ // O atlas inclui uma elipse de sombra no chão (centro 49,83; raio 34,7).
+ // Removemos essa área apenas da máscara do contorno, mantendo o geodo original intacto.
+ outlineCtx.globalCompositeOperation="destination-out";
+ const spriteScale=TILE/96;
+ outlineCtx.beginPath();
+ outlineCtx.ellipse(x+49.1*spriteScale,y+86.5*spriteScale,37.4*spriteScale,7.7*spriteScale,0,0,Math.PI*2);
+ outlineCtx.fill();
  outlineCtx.globalCompositeOperation="source-over";
 }
 function renderDiamondShimmerAtlasFrame(state,frame){
