@@ -205,3 +205,18 @@ test("a IA valida cada rota em uma passagem e reutiliza a percepção visual do 
  assert.match(update,/enemy\.isHorned&&enemy\.isEnraged&&seesPlayer/);
  assert.doesNotMatch(update,/enemy\.isBuilder&&enemy\.isEnraged&&canSeePlayer/);
 });
+
+test("o rastreamento de movimento evita arrays e objetos temporários em cada quadro",()=>{
+ const updateStart=html.indexOf("function update(dt){");
+ const updateEnd=html.indexOf("\n/* DESENHO DO CENÁRIO */",updateStart);
+ const update=html.slice(updateStart,updateEnd);
+ const walkersStart=html.indexOf("function updateWaterWalker(");
+ const walkersEnd=html.indexOf("\nfunction ",walkersStart+12);
+ const walkers=html.slice(walkersStart,walkersEnd);
+ assert.match(update,/player\._previousX=player\.x;player\._previousY=player\.y/);
+ assert.match(update,/for\(const enemy of enemies\)\{enemy\._previousX=enemy\.x;enemy\._previousY=enemy\.y\}/);
+ assert.doesNotMatch(update,/enemies\.map\(e=>\(\{x:e\.x,y:e\.y\}\)\)/);
+ assert.match(update,/updateWaterWalkers\(dt\)/);
+ assert.match(walkers,/for\(const entity of enemies\)/);
+ assert.doesNotMatch(walkers,/walkers=\[|enemies\.map/);
+});
