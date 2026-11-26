@@ -95,7 +95,7 @@ test("a espiral dos portais cresce visualmente sem alterar a área central de co
  assert.match(html.slice(collisionStart,collisionEnd),/portal\.x\+\.5,portal\.y\+\.5\)<\.39/);
 });
 test("o contorno dos geodos recebe halo pulsante temático com margem para não ser cortado",()=>{
- const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
+ const buildStart=html.indexOf("function renderDiamondShimmerAtlasFrame(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const builder=html.slice(buildStart,drawStart);
  assert.match(html,/DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE\+DIAMOND_SHIMMER_PADDING\*2/);
@@ -115,7 +115,7 @@ test("o contorno dos geodos recebe halo pulsante temático com margem para não 
  assert.doesNotMatch(renderer,/destination-out|clearRect|createElement\("canvas"\)/,"o halo é pré-renderizado e reutilizado, sem máscaras por geodo a cada quadro");
 });
 test("o brilho dos geodos usa quadros pré-renderizados e elimina composição alfa por bloco a cada quadro",()=>{
- assert.match(html,/DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24/);
+ assert.match(html,/DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8/);
  const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const drawEnd=html.indexOf("\nfunction draw(){",drawStart);
@@ -126,10 +126,13 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(builder,/atlasCtx\.drawImage\(diamondShimmerTileCanvas/);
  assert.doesNotMatch(renderer,/destination-in|clearRect|createElement\("canvas"\)/,"o quadro não pode recriar máscaras nem canvases por geodo");
  assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox\+tile\.x\*TILE-DIAMOND_SHIMMER_PADDING,oy\+tile\.y\*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
- assert.match(html,/DIAMOND_SHIMMER_BUILD_CHUNK=6/);
  assert.match(builder,/diamondShimmerFrameBuild!==state/);
- assert.match(builder,/requestAnimationFrame\(renderChunk\)/,"a montagem do atlas é dividida em pequenos lotes");
- assert.match(renderer,/if\(!atlas\)return/,"o jogo continua sem aguardar o atlas ficar pronto");
+ assert.match(builder,/requestIdleCallback/,"a montagem usa o tempo ocioso do navegador");
+ assert.match(builder,/setTimeout\(\(\)=>renderChunk\(null\),16\)/,"há alternativa leve quando requestIdleCallback não existe");
+ assert.match(builder,/renderDiamondShimmerAtlasFrame\(state,0\)/,"o primeiro quadro é preparado imediatamente");
+ assert.match(html,/diamondShimmerPreviewCanvas\.getContext\("2d"\)\.drawImage\(diamondShimmerTileCanvas,0,0\)/,"o preview é isolado para não ser sobrescrito pelos próximos quadros");
+ assert.match(renderer,/if\(!atlas&&!preview\)return/,"o renderizador mostra o halo inicial antes do atlas animado");
+ assert.match(renderer,/ctx\.drawImage\(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE/,"o halo inicial aparece desde o começo da fase");
  assert.match(html,/function prepareDiamondShimmerAtlasForLevel\(n\)/);
  assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?prepareDiamondShimmerAtlasForLevel\(n\);return startBeforeDiamonds\(n\)/,"a fase começa imediatamente enquanto o atlas termina em segundo plano");
  assert.match(html,/buildDiamondMap\(\);buildBurningCrateSprite\(\);prepareDiamondShimmerAtlasForLevel\(selectedMapLevel\)/,"o pré-aquecimento começa ao abrir o mapa");
