@@ -128,7 +128,11 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
  assert.match(builder,/diamondShimmerFrameBuild!==state/);
  assert.match(builder,/requestIdleCallback/,"a montagem usa o tempo ocioso do navegador");
- assert.match(builder,/setTimeout\(\(\)=>renderChunk\(null\),16\)/,"há alternativa leve quando requestIdleCallback não existe");
+ assert.match(builder,/setTimeout\(\(\)=>renderChunk\(null\),24\)/,"há alternativa leve quando requestIdleCallback não existe");
+ assert.match(builder,/buildDiamondShimmerHalo\(outlineCtx,sheet,outlineColor\)/,"o halo caro é pré-renderizado uma única vez por tema");
+ assert.match(builder,/if\(!palette\|\|typeof palette\.glow!=="string"\|\|!palette\.glow\)return null/,"não existe preview branco de fallback");
+ assert.match(builder,/window\.__bombardeiroPhaseIntroState&&window\.__bombardeiroPhaseIntroState\.active[\s\S]*?setTimeout\(scheduleChunk,140\)/,"a montagem do atlas aguarda o fim da transição numérica");
+ assert.match(builder,/Date\.now\(\)-started<2/,"cada lote de preparação tem orçamento menor de CPU");
  assert.match(builder,/renderDiamondShimmerAtlasFrame\(state,0\)/,"o primeiro quadro é preparado imediatamente");
  assert.match(html,/diamondShimmerPreviewCanvas\.getContext\("2d"\)\.drawImage\(diamondShimmerTileCanvas,0,0\)/,"o preview é isolado para não ser sobrescrito pelos próximos quadros");
  assert.match(renderer,/if\(!atlas&&!preview\)return/,"o renderizador mostra o halo inicial antes do atlas animado");
