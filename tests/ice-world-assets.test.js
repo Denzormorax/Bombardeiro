@@ -76,7 +76,7 @@ test("inimigos do Gelo fogem da bomba recém-colocada e o Caçador acelera na fu
   assert.ok(reaction.includes("enemy.speed=Math.max(enemy.speed||0,(enemy.baseSpeed||1)*1.08)"));
   const update=game.slice(game.indexOf("function updateEnemies(dt)"),game.indexOf("/* BOMBAS E COMBATE */"));
   assert.ok(update.includes('isStandardBombEvader(enemy)?findBombEscapePath(enemy,danger,true):(currentWorld==="ice"?findBlueFlameEscapePath(enemy,danger):findBombEscapePath'));
-  assert.ok(update.includes("enemy.isHunter?enemy.huntSpeed*1.35"));
+  assert.ok(update.includes("enemy.isHunter?enemy.huntSpeed*1.05"));
 });
 
 test("bombas nas poças congeladas param em obstáculos sem detonar antes do temporizador", () => {
