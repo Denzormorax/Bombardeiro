@@ -17886,35 +17886,47 @@ function drawIndestructibleShimmer(){
  }
  ctx.restore();
 }
-var diamondShimmerCanvases=[]; // Cache global inicializado antes de qualquer chamada ao renderizador.
-var diamondShimmerTileCanvas=null; // Canvas reutilizado para recortar a luz pela transparência real da joia.
- function drawDiamondDestructibleShimmer(){
- if(currentWorld!=="diamonds"||!destructibleTilePositions.length)return;
- const index=Math.max(0,Math.min(9,level-1));
- const shimmerCanvas=diamondShimmerCanvases[index],spriteGetter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof spriteGetter==="function"?spriteGetter(index):null;
- // Sem o sprite original carregado, não desenha um brilho quadrado de fallback.
- if(!shimmerCanvas||!sheet)return;
+var diamondShimmerCanvases=[]; // Brilhos originais por tema.
+var diamondShimmerTileCanvas=null; // Canvas temporário reutilizado apenas ao pré-renderizar a animação.
+var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1;
+const DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24;
+function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
+ if(diamondShimmerFrameAtlas&&diamondShimmerFrameTheme===themeIndex)return diamondShimmerFrameAtlas;
  if(!diamondShimmerTileCanvas){diamondShimmerTileCanvas=document.createElement("canvas");diamondShimmerTileCanvas.width=TILE;diamondShimmerTileCanvas.height=TILE;}
- const effectCtx=diamondShimmerTileCanvas.getContext("2d"),phaseBase=gameClock*.42;
- for(const tile of destructibleTilePositions){
-  const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
-  const pulse=.72+.28*Math.sin(phase*Math.PI*2),px=ox+tile.x*TILE,py=oy+tile.y*TILE;
-  const travel=(phase-.5)*(TILE+40);
-  effectCtx.setTransform(1,0,0,1,0,0);
-  effectCtx.globalCompositeOperation="source-over";
-  effectCtx.globalAlpha=1;
-  effectCtx.clearRect(0,0,TILE,TILE);
-  effectCtx.globalAlpha=pulse;
-  effectCtx.translate(TILE*.5+travel,TILE*.5+travel);
-  effectCtx.rotate(Math.PI/4);
+ const atlas=document.createElement("canvas");
+ atlas.width=DIAMOND_SHIMMER_FRAME_COLUMNS*TILE;
+ atlas.height=Math.ceil(DIAMOND_SHIMMER_FRAME_COUNT/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
+ const atlasCtx=atlas.getContext("2d"),effectCtx=diamondShimmerTileCanvas.getContext("2d");
+ atlasCtx.imageSmoothingEnabled=false;effectCtx.imageSmoothingEnabled=false;
+ for(let frame=0;frame<DIAMOND_SHIMMER_FRAME_COUNT;frame++){
+  const phase=frame/DIAMOND_SHIMMER_FRAME_COUNT,pulse=.72+.28*Math.sin(phase*Math.PI*2),travel=(phase-.5)*(TILE+40);
+  effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalCompositeOperation="source-over";effectCtx.globalAlpha=1;
+  effectCtx.clearRect(0,0,TILE,TILE);effectCtx.globalAlpha=pulse;
+  effectCtx.translate(TILE*.5+travel,TILE*.5+travel);effectCtx.rotate(Math.PI/4);
   effectCtx.drawImage(shimmerCanvas,-20,-28,40,56);
-  // A própria transparência do PNG/SVG da joia define onde a luz pode existir.
-  effectCtx.setTransform(1,0,0,1,0,0);
-  effectCtx.globalAlpha=1;
+  // A transparência real do geodo é aplicada uma única vez na pré-renderização.
+  effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalAlpha=1;
   effectCtx.globalCompositeOperation="destination-in";
   effectCtx.drawImage(sheet,288,0,96,96,0,0,TILE,TILE);
   effectCtx.globalCompositeOperation="source-over";
-  ctx.drawImage(diamondShimmerTileCanvas,px,py,TILE,TILE);
+  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
+  atlasCtx.drawImage(diamondShimmerTileCanvas,sx,sy,TILE,TILE);
+ }
+ diamondShimmerFrameAtlas=atlas;diamondShimmerFrameTheme=themeIndex;
+ return atlas;
+}
+function drawDiamondDestructibleShimmer(){
+ if(currentWorld!=="diamonds"||!destructibleTilePositions.length)return;
+ const index=Math.max(0,Math.min(9,level-1));
+ const shimmerCanvas=diamondShimmerCanvases[index],spriteGetter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof spriteGetter==="function"?spriteGetter(index):null;
+ // Sem os recursos originais carregados, não desenha brilho quadrado de fallback.
+ if(!shimmerCanvas||!sheet)return;
+ const atlas=buildDiamondShimmerFrameAtlas(index,shimmerCanvas,sheet),phaseBase=(gameClock*.42)%1;
+ for(const tile of destructibleTilePositions){
+  const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
+  const frame=Math.min(DIAMOND_SHIMMER_FRAME_COUNT-1,Math.floor(phase*DIAMOND_SHIMMER_FRAME_COUNT));
+  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
+  ctx.drawImage(atlas,sx,sy,TILE,TILE,ox+tile.x*TILE,oy+tile.y*TILE,TILE,TILE);
  }
 }
 function draw(){
