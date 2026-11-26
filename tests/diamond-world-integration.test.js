@@ -95,18 +95,21 @@ test("a espiral dos portais cresce visualmente sem alterar a área central de co
  const collisionEnd=html.indexOf("\nfunction drawDiamondPortals(",collisionStart);
  assert.match(html.slice(collisionStart,collisionEnd),/portal\.x\+\.5,portal\.y\+\.5\)<\.39/);
 });
-test("o contorno dos geodos recebe halo pulsante na cor do tema, limitado à silhueta alfa do PNG",()=>{
+test("o contorno dos geodos recebe halo pulsante temático com margem para não ser cortado",()=>{
  const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const builder=html.slice(buildStart,drawStart);
- assert.match(html,/diamondOutlineGlowCanvas=null/);
+ assert.match(html,/DIAMOND_SHIMMER_PADDING=8,DIAMOND_SHIMMER_FRAME_SIZE=TILE\+DIAMOND_SHIMMER_PADDING\*2/);
  assert.match(builder,/paletteGetter=window\.__bombardeiroGetDiamondEffectPalette/);
  assert.match(builder,/outlineColor=palette&&palette\.glow\?palette\.glow/);
  assert.match(builder,/outlineCtx\.shadowColor=outlineColor/);
+ assert.match(builder,/outlineCtx\.shadowBlur=4\.8\+2\.2\*glowPulse/);
+ assert.match(builder,/outlineCtx\.globalAlpha=\.56\+\.26\*glowPulse/);
  assert.match(builder,/outlineCtx\.globalCompositeOperation="destination-out"/);
- assert.match(builder,/outlineCtx\.drawImage\(sheet,288,0,96,96,0,0,TILE,TILE\)/);
+ assert.match(builder,/outlineCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
- const renderer=html.slice(drawStart,html.indexOf("\nfunction draw(){",drawStart));
+ const renderer=html.slice(drawStart,html.indexOf("\\nfunction draw(){",drawStart));
+ assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox\+tile\.x\*TILE-DIAMOND_SHIMMER_PADDING,oy\+tile\.y\*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
  assert.doesNotMatch(renderer,/destination-out|clearRect|createElement\("canvas"\)/,"o halo é pré-renderizado e reutilizado, sem máscaras por geodo a cada quadro");
 });
 test("o brilho dos geodos usa quadros pré-renderizados e elimina composição alfa por bloco a cada quadro",()=>{
