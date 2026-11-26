@@ -40,7 +40,7 @@ declare -A DENSITIES=(
 for folder in "${!DENSITIES[@]}"; do
   pixels="${DENSITIES[$folder]}"
   mkdir -p "$RES/$folder"
-  magick "$SOURCE" -trim +repage \
+  magick "$SOURCE" -trim +repage -gravity center -background none -extent "${SIZE}x${SIZE}" \
     -filter Lanczos -resize "${pixels}x${pixels}" -strip "PNG32:$RES/$folder/ic_launcher.png"
   cp "$RES/$folder/ic_launcher.png" "$RES/$folder/ic_launcher_round.png"
   magick identify "$RES/$folder/ic_launcher.png"
