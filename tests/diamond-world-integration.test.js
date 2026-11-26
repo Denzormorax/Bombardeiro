@@ -56,3 +56,20 @@ test("o desenho dos inimigos acessa os temas de diamantes somente no escopo corr
  assert.match(html,/enemyFaceBeforeDiamonds\(e,dt\.wall\[0\],dt\.wall\[1\],deathProgress\)/);
  assert.match(html,/drawDiamondEnemyDetails\(e,deathProgress\)/);
 });
+
+test("o brilho diagonal do Mundo dos Diamantes aparece apenas nos geodos destrutíveis e usa as dez cores",()=>{
+ assert.match(html,/function drawDiamondDestructibleShimmer\(\)/);
+ assert.match(html,/if\(currentWorld==="diamonds"\)return;[\s\S]*?function drawDiamondDestructibleShimmer/);
+ assert.match(html,/destructibleTilePositions\.push\(\{x,y\}\)/);
+ assert.match(html,/diamondShimmerCanvases=diamondThemes\.map/);
+ assert.match(html,/drawDiamondDestructibleShimmer\(\)/);
+});
+test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase com sprites e brilhos em cache",()=>{
+ assert.match(html,/world==="diamonds"\?72/);
+ assert.match(html,/function buildDiamondDestroyedBlockGlow\(themeIndex\)/);
+ assert.match(html,/diamondDestroyedGlowCanvases=Array\(10\)\.fill\(null\)/);
+ assert.match(html,/themeIndex\+":"+p\.kind\+":"+sizeKey/);
+ assert.match(html,/q\.moveTo\(0,-w\*2\.05\)/);
+ assert.match(html,/currentWorld==="diamonds"\)spawnDestroyedBlockEffect/);
+ assert.match(html,/world==="diamonds"\?1\.08/);
+});
