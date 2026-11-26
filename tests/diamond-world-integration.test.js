@@ -93,6 +93,7 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(builder,/atlasCtx\.drawImage\(diamondShimmerTileCanvas/);
  assert.doesNotMatch(renderer,/destination-in|clearRect|createElement\("canvas"\)/,"o quadro não pode recriar máscaras nem canvases por geodo");
  assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,TILE,TILE,ox\+tile\.x\*TILE,oy\+tile\.y\*TILE,TILE,TILE\)/);
+ assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?buildDiamondShimmerFrameAtlas\(themeIndex,shimmer,sheet\)[\s\S]*?return startBeforeDiamonds\(n\)/,"a animação é pré-aquecida antes de iniciar a fase");
 });
 test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase com sprites e brilhos em cache",()=>{
  assert.match(html,/world==="diamonds"\?72/);
