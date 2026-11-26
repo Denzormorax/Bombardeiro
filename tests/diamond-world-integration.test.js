@@ -37,3 +37,16 @@ test("o Mundo dos Diamantes usa apenas inimigos comuns com aparência cristalina
  assert.match(html,/if\(currentWorld==="diamonds"\)\{const dt=diamondThemes\[diamondIndex\(\)\];color=dt\.wall\[0\];helmetColor=dt\.wall\[1\];\}/);
  assert.match(html,/if\(currentWorld==="diamonds"&&!hurt\)/);
 });
+
+test("o desenho dos inimigos acessa os temas de diamantes somente no escopo correto",()=>{
+ const baseStart=html.indexOf("function drawEnemyFace(");
+ const baseEnd=html.indexOf("function drawSnowmanBreath(",baseStart);
+ assert.ok(baseStart>=0&&baseEnd>baseStart,"função-base drawEnemyFace localizada");
+ const baseFace=html.slice(baseStart,baseEnd);
+ assert.doesNotMatch(baseFace,/diamondThemes|diamondIndex/,"a função-base não pode acessar constantes privadas do módulo de diamantes");
+ assert.match(html,/const enemyFaceBeforeDiamonds=drawEnemyFace;/);
+ assert.match(html,/function drawDiamondEnemyDetails\(e,deathProgress=0\)/);
+ assert.match(html,/drawEnemyFace=function\(e,color,helmetColor,deathProgress=0\)\{[\s\S]*?currentWorld!=="diamonds"[\s\S]*?diamondThemes\[diamondIndex\(\)\]/);
+ assert.match(html,/enemyFaceBeforeDiamonds\(e,dt\.wall\[0\],dt\.wall\[1\],deathProgress\)/);
+ assert.match(html,/drawDiamondEnemyDetails\(e,deathProgress\)/);
+});

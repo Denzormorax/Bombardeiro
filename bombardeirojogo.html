@@ -17506,7 +17506,6 @@ function drawForestEnemyDetails(e){
 }
 function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob,hurt=(e.hurtTimer||0)>0||!e.alive,facingX=e.facingX||0,facingY=e.facingY||1,faceYOffset=e.isSnowman?-17:0;
- if(currentWorld==="diamonds"){const dt=diamondThemes[diamondIndex()];color=dt.wall[0];helmetColor=dt.wall[1];}
  const deathScale=deathProgress>0?Math.max(.25,1-deathProgress*.45):1,deathAlpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
  ctx.save();ctx.globalAlpha=.34*deathAlpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+14,15*(1-bob*.025)*deathScale,6*(1-bob*.025)*deathScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  const tilt=hurt?Math.sin(gameClock*38)*.045:Math.sin(gameClock*2.8+e.x)*.018;ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.22*deathScale,1.22*deathScale);
@@ -17559,7 +17558,6 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  else if(e.isHorned){ctx.fillStyle="#291018";ctx.beginPath();ctx.ellipse(0,8,6.5,4.3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-4,5);ctx.lineTo(-1.5,8);ctx.lineTo(-5,8);ctx.moveTo(1.5,8);ctx.lineTo(4,5);ctx.lineTo(5,8);ctx.fill()}
  else{ctx.beginPath();ctx.moveTo(-5.5,8);ctx.quadraticCurveTo(0,3.5,5.5,8);ctx.stroke()}
  if(!e.isMushroom&&!e.isSnowman){ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-9,-5);ctx.lineTo(-5,-3.5);ctx.moveTo(9,-5);ctx.lineTo(5,-3.5);ctx.stroke()}
- if(currentWorld==="diamonds"&&!hurt){const dt=diamondThemes[diamondIndex()];ctx.save();ctx.globalAlpha=.58;ctx.fillStyle=dt.accent;ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-3,-14);ctx.lineTo(1,-7);ctx.lineTo(-5,-3);ctx.closePath();ctx.fill();ctx.globalAlpha=.42;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.moveTo(4,-13);ctx.lineTo(10,-8);ctx.lineTo(6,-3);ctx.lineTo(1,-7);ctx.closePath();ctx.fill();ctx.globalAlpha=.8;ctx.strokeStyle=dt.accent;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-11,2);ctx.lineTo(-6,6);ctx.lineTo(-2,3);ctx.moveTo(7,2);ctx.lineTo(10,5);ctx.stroke();ctx.restore()}
  ctx.restore();
 }
 function drawSnowmanBreath(e){
@@ -20440,6 +20438,37 @@ function buildDiamondSpriteSheets(){
 diamondSpriteSheet.onload=buildDiamondSpriteSheets;
 diamondSpriteSheet.src="game-assets/sprites/diamond_themes.svg";
 function diamondIndex(){return Math.max(0,Math.min(9,level-1))}
+
+/* O desenho-base está fora deste escopo. O tema dos diamantes só é acessado
+   neste adaptador, que fecha sobre diamondThemes e diamondIndex corretamente. */
+const enemyFaceBeforeDiamonds=drawEnemyFace;
+function drawDiamondEnemyDetails(e,deathProgress=0){
+ if(!e)return;
+ const px=ox+e.x*TILE,groundY=oy+e.y*TILE;
+ const bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob;
+ const hurt=(e.hurtTimer||0)>0||!e.alive;
+ if(hurt)return;
+ const deathScale=deathProgress>0?Math.max(.25,1-deathProgress*.45):1;
+ const deathAlpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
+ const tilt=Math.sin(gameClock*2.8+e.x)*.018;
+ const dt=diamondThemes[diamondIndex()];
+ ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);
+ ctx.scale(1.22*deathScale,1.22*deathScale);
+ ctx.globalAlpha*=.58;ctx.fillStyle=dt.accent;
+ ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-3,-14);ctx.lineTo(1,-7);ctx.lineTo(-5,-3);ctx.closePath();ctx.fill();
+ ctx.globalAlpha=deathAlpha*.42;ctx.fillStyle="#ffffff";
+ ctx.beginPath();ctx.moveTo(4,-13);ctx.lineTo(10,-8);ctx.lineTo(6,-3);ctx.lineTo(1,-7);ctx.closePath();ctx.fill();
+ ctx.globalAlpha=deathAlpha*.8;ctx.strokeStyle=dt.accent;ctx.lineWidth=1.2;
+ ctx.beginPath();ctx.moveTo(-11,2);ctx.lineTo(-6,6);ctx.lineTo(-2,3);ctx.moveTo(7,2);ctx.lineTo(10,5);ctx.stroke();
+ ctx.restore();
+}
+drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
+ if(!e)return;
+ if(currentWorld!=="diamonds")return enemyFaceBeforeDiamonds(e,color,helmetColor,deathProgress);
+ const dt=diamondThemes[diamondIndex()];
+ enemyFaceBeforeDiamonds(e,dt.wall[0],dt.wall[1],deathProgress);
+ drawDiamondEnemyDetails(e,deathProgress);
+};
 const themeBeforeDiamonds=currentForestTheme,loadBeforeDiamonds=loadProgress,saveBeforeDiamonds=saveProgress;
 const numberBeforeDiamonds=worldLevelNumber,backgroundBeforeDiamonds=drawForestBackground;
 const tileBeforeDiamonds=drawTileTo,crateBeforeDiamonds=buildBurningCrateSprite;
