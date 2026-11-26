@@ -17933,22 +17933,12 @@ var diamondOutlineGlowCanvas=null; // Máscara expandida reutilizada para o halo
 var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null;
 const DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8;
-function renderDiamondShimmerAtlasFrame(state,frame){
- const {atlasCtx,effectCtx,outlineCtx,shimmerCanvas,sheet,outlineColor,atlas}=state;
- const phase=frame/DIAMOND_SHIMMER_FRAME_COUNT,pulse=.72+.28*Math.sin(phase*Math.PI*2),travel=(phase-.5)*(TILE+40);
- effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalCompositeOperation="source-over";effectCtx.globalAlpha=1;
- effectCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);effectCtx.globalAlpha=pulse;
- effectCtx.save();effectCtx.beginPath();effectCtx.rect(DIAMOND_SHIMMER_PADDING+1,DIAMOND_SHIMMER_PADDING+1,TILE-2,TILE-2);effectCtx.clip();
- effectCtx.translate(DIAMOND_SHIMMER_PADDING+TILE*.5+travel,DIAMOND_SHIMMER_PADDING+TILE*.5+travel);effectCtx.rotate(Math.PI/4);
- effectCtx.drawImage(shimmerCanvas,-20,-28,40,56);effectCtx.restore();
- effectCtx.globalAlpha=1;effectCtx.globalCompositeOperation="destination-in";
- effectCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- effectCtx.globalCompositeOperation="source-over";
- const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
+function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
+ const glowPulse=.5;
  outlineCtx.setTransform(1,0,0,1,0,0);outlineCtx.globalCompositeOperation="source-over";
  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  outlineCtx.shadowColor=outlineColor;
- // Halo em três camadas, pré-renderizado no atlas de cada tema.
+ // Halo em três camadas, construído uma única vez por tema, não 64 vezes.
  outlineCtx.shadowBlur=28+12*glowPulse;outlineCtx.globalAlpha=.82+.16*glowPulse;
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
  outlineCtx.shadowBlur=18+8*glowPulse;outlineCtx.globalAlpha=.90+.10*glowPulse;
@@ -17959,7 +17949,22 @@ function renderDiamondShimmerAtlasFrame(state,frame){
  outlineCtx.globalCompositeOperation="destination-out";
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
  outlineCtx.globalCompositeOperation="source-over";
+}
+function renderDiamondShimmerAtlasFrame(state,frame){
+ const {atlasCtx,effectCtx,shimmerCanvas,atlas}=state;
+ const phase=frame/DIAMOND_SHIMMER_FRAME_COUNT,pulse=.72+.28*Math.sin(phase*Math.PI*2),travel=(phase-.5)*(TILE+40);
+ effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalCompositeOperation="source-over";effectCtx.globalAlpha=1;
+ effectCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);effectCtx.globalAlpha=pulse;
+ effectCtx.save();effectCtx.beginPath();effectCtx.rect(DIAMOND_SHIMMER_PADDING+1,DIAMOND_SHIMMER_PADDING+1,TILE-2,TILE-2);effectCtx.clip();
+ effectCtx.translate(DIAMOND_SHIMMER_PADDING+TILE*.5+travel,DIAMOND_SHIMMER_PADDING+TILE*.5+travel);effectCtx.rotate(Math.PI/4);
+ effectCtx.drawImage(shimmerCanvas,-20,-28,40,56);effectCtx.restore();
+ effectCtx.globalAlpha=1;effectCtx.globalCompositeOperation="destination-in";
+ effectCtx.drawImage(state.sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
+ effectCtx.globalCompositeOperation="source-over";
+ const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
+ effectCtx.globalAlpha=.82+.16*glowPulse;
  effectCtx.drawImage(diamondOutlineGlowCanvas,0,0);
+ effectCtx.globalAlpha=1;
  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
  atlasCtx.drawImage(diamondShimmerTileCanvas,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
 }
@@ -17977,9 +17982,12 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  const outlineCtx=diamondOutlineGlowCanvas.getContext("2d");
  const paletteGetter=window.__bombardeiroGetDiamondEffectPalette;
  const palette=typeof paletteGetter==="function"?paletteGetter(themeIndex):null;
- const outlineColor=palette&&palette.glow?palette.glow:"#ffffff";
+ // Nunca cria preview branco: espera a paleta real do tema estar disponível.
+ if(!palette||typeof palette.glow!=="string"||!palette.glow)return null;
+ const outlineColor=palette.glow;
  atlasCtx.imageSmoothingEnabled=false;effectCtx.imageSmoothingEnabled=false;outlineCtx.imageSmoothingEnabled=false;
- const state={themeIndex,atlas,atlasCtx,effectCtx,outlineCtx,shimmerCanvas,sheet,outlineColor,frame:1,handle:0,kind:"",cancel:null};
+ buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor);
+ const state={themeIndex,atlas,atlasCtx,effectCtx,shimmerCanvas,sheet,frame:1,handle:0,kind:"",cancel:null};
  diamondShimmerFrameBuild=state;
  // Renderiza um quadro inicial de halo imediatamente, para o glow não esperar o atlas inteiro.
  renderDiamondShimmerAtlasFrame(state,0);
@@ -17993,15 +18001,20 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
   do{
    renderDiamondShimmerAtlasFrame(state,state.frame++);
    if(state.frame>=DIAMOND_SHIMMER_FRAME_COUNT)break;
-  }while(state.frame<DIAMOND_SHIMMER_FRAME_COUNT&&deadline&&deadline.timeRemaining&&deadline.timeRemaining()>3&&Date.now()-started<5);
+  }while(state.frame<DIAMOND_SHIMMER_FRAME_COUNT&&deadline&&deadline.timeRemaining&&deadline.timeRemaining()>5&&Date.now()-started<2);
   if(state.frame<DIAMOND_SHIMMER_FRAME_COUNT){scheduleChunk();return;}
   diamondShimmerFrameAtlas=atlas;diamondShimmerFrameTheme=themeIndex;diamondShimmerFrameBuild=null;
  }
  function scheduleChunk(){
+  // A contagem da fase tem prioridade: o preview já está pronto e o atlas
+  // continua a ser montado assim que a introdução terminar.
+  if(window.__bombardeiroPhaseIntroState&&window.__bombardeiroPhaseIntroState.active){
+   state.kind="timer";state.handle=setTimeout(scheduleChunk,140);return;
+  }
   if(typeof window.requestIdleCallback==="function"){
-   state.kind="idle";state.handle=window.requestIdleCallback(renderChunk,{timeout:120});
+   state.kind="idle";state.handle=window.requestIdleCallback(renderChunk,{timeout:250});
   }else{
-   state.kind="timer";state.handle=setTimeout(()=>renderChunk(null),16);
+   state.kind="timer";state.handle=setTimeout(()=>renderChunk(null),24);
   }
  }
  state.cancel=function(){
