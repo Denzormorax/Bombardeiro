@@ -14,6 +14,6 @@ test("as dez fases usam exatamente o mesmo piso de terra com três pequenas gema
  assert.equal((atlas.match(/rx="3\.2" ry="1\.9"/g)||[]).length,60);
  assert.equal((atlas.match(/pedrinhas azuis/g)||[]).length,20);
  assert.doesNotMatch(atlas,/pedrinhas (vermelhas|verdes|roxas|douradas|rosas)/);
- assert.equal((atlas.match(/<g transform="translate\\(96 \\d+\\)">/g)||[]).length,10,"a segunda camada deve existir nas dez fases");
- assert.equal((atlas.match(/<title>Fase \\d+ — piso de terra com cristais naturais e três pedrinhas azuis<\\/title>/g)||[]).length,20,"as duas camadas devem usar o piso de terra");
+ assert.equal((atlas.match(/<g transform="translate\(96 \d+\)">/g)||[]).length,10,"a segunda camada deve existir nas dez fases");
+ assert.equal((atlas.match(/<title>Fase \d+ — piso de terra com cristais naturais e três pedrinhas azuis<\/title>/g)||[]).length,20,"as duas camadas devem usar o piso de terra");
 });
