@@ -20409,6 +20409,131 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
    },1100);
   }
  };
+
+/* MUNDO 6 — REINO DOS DIAMANTES */
+const diamondThemes=[
+{name:"Diamante Azul-Glacial",sky:["#b9f5ff","#397caa","#101f43"],floor:"rgba(28,75,112,.92)",floor2:"rgba(125,225,255,.24)",wall:["#245c86","#9cecff","#102b50"],far:"#285a83",near:"#102b50",glow:"#8cecff",accent:"#c8f8ff",style:"diamond"},
+{name:"Caverna dos Rubis",sky:["#ff9c9e","#8c203b","#310d28"],floor:"rgba(91,22,42,.93)",floor2:"rgba(255,90,113,.25)",wall:["#76213a","#ff9e9e","#351027"],far:"#78223b",near:"#351027",glow:"#ff657d",accent:"#ffd0cf",style:"ruby"},
+{name:"Jardins de Esmeralda",sky:["#a9f4b4","#287a54","#103b36"],floor:"rgba(22,83,58,.93)",floor2:"rgba(117,255,169,.23)",wall:["#176744","#9cf3b4","#103b36"],far:"#216e4b",near:"#103b36",glow:"#73f5a2",accent:"#c5ffd4",style:"emerald"},
+{name:"Abismo das Safiras",sky:["#8bcaff","#2358a5","#101b4c"],floor:"rgba(24,48,105,.94)",floor2:"rgba(88,161,255,.24)",wall:["#214a91","#9ccfff","#101b4c"],far:"#244f91",near:"#101b4c",glow:"#69baff",accent:"#d4efff",style:"sapphire"},
+{name:"Grutas de Ametista",sky:["#d9a8ff","#673a9c","#24143e"],floor:"rgba(58,35,91,.94)",floor2:"rgba(190,125,255,.25)",wall:["#553080","#e1bdff","#24143e"],far:"#58378a",near:"#24143e",glow:"#c58aff",accent:"#f0d8ff",style:"amethyst"},
+{name:"Minas do Ouro",sky:["#ffe59a","#a66a20","#382014"],floor:"rgba(105,67,24,.94)",floor2:"rgba(255,207,91,.25)",wall:["#8a5b20","#ffe3a0","#382014"],far:"#956222",near:"#382014",glow:"#ffd15e",accent:"#fff0b4",style:"gold"},
+{name:"Palácio de Quartzo Rosa",sky:["#ffd5e8","#bd668e","#512b56"],floor:"rgba(116,55,91,.93)",floor2:"rgba(255,171,211,.25)",wall:["#a44f80","#ffe0ef","#512b56"],far:"#a65383",near:"#512b56",glow:"#ffacd4",accent:"#fff0f7",style:"rose"},
+{name:"Fortaleza de Obsidiana",sky:["#77758b","#252538","#080b16"],floor:"rgba(25,25,39,.96)",floor2:"rgba(153,145,190,.2)",wall:["#242438","#77758b","#080b16"],far:"#29293e",near:"#080b16",glow:"#a49acb",accent:"#e1d9ff",style:"obsidian"},
+{name:"Lagoas de Turquesa",sky:["#a1fff0","#218f9d","#103b54"],floor:"rgba(20,91,103,.93)",floor2:"rgba(93,238,225,.25)",wall:["#176e7b","#a5fff0","#103b54"],far:"#207c87",near:"#103b54",glow:"#66f3df",accent:"#d2fff5",style:"turquoise"},
+{name:"Catedral de Opala",sky:["#f8d7ff","#7c91ce","#29335f"],floor:"rgba(54,60,112,.94)",floor2:"rgba(238,177,255,.26)",wall:["#535c9d","#ffe0f6","#29335f"],far:"#6069a7",near:"#29335f",glow:"#f4c5ff",accent:"#fff1d6",style:"opal"}
+];
+const diamondProgressKey="bomberquest-diamonds-unlocked";
+const diamondSpriteSheet=new Image(),diamondThemedSpriteSheets=Array(10).fill(null);
+function buildDiamondSpriteSheets(){
+ if(!diamondSpriteSheet.complete||!diamondSpriteSheet.naturalWidth)return;
+ for(let i=0;i<10;i++){
+  const c=document.createElement("canvas");c.width=384;c.height=96;
+  const q=c.getContext("2d");q.imageSmoothingEnabled=false;
+  q.drawImage(diamondSpriteSheet,0,i*96,384,96,0,0,384,96);
+  diamondThemedSpriteSheets[i]=c;
+ }
+ if(currentWorld==="diamonds"){buildBurningCrateSprite();rebuildStaticMapCache()}
+}
+diamondSpriteSheet.onload=buildDiamondSpriteSheets;
+diamondSpriteSheet.src="game-assets/sprites/diamond_themes.svg";
+function diamondIndex(){return Math.max(0,Math.min(9,level-1))}
+const themeBeforeDiamonds=currentForestTheme,loadBeforeDiamonds=loadProgress,saveBeforeDiamonds=saveProgress;
+const numberBeforeDiamonds=worldLevelNumber,backgroundBeforeDiamonds=drawForestBackground;
+const tileBeforeDiamonds=drawTileTo,crateBeforeDiamonds=buildBurningCrateSprite;
+const mapBeforeDiamonds=buildForestMap,selectBeforeDiamonds=selectMapLevel;
+const menuBeforeDiamonds=showMenuScreen,startBeforeDiamonds=startGame;
+const hudBeforeDiamonds=updateHUD,overBeforeDiamonds=gameOver,backBeforeDiamonds=window.handleAndroidBack;
+currentForestTheme=function(){return currentWorld==="diamonds"?diamondThemes[diamondIndex()]:themeBeforeDiamonds()};
+loadProgress=function(){
+ if(currentWorld==="diamonds"){try{const n=Number(localStorage.getItem(diamondProgressKey)||1);unlockedLevel=Math.max(1,Math.min(TOTAL_LEVELS,n||1))}catch(e){unlockedLevel=1}}
+ else loadBeforeDiamonds();
+};
+saveProgress=function(){if(currentWorld==="diamonds"){try{localStorage.setItem(diamondProgressKey,String(unlockedLevel))}catch(e){}}else saveBeforeDiamonds()};
+worldLevelNumber=function(){return currentWorld==="diamonds"?level+50:numberBeforeDiamonds()};
+drawForestBackground=function(target){
+ if(currentWorld!=="diamonds")return backgroundBeforeDiamonds(target);
+ const c=target||ctx,t=currentForestTheme(),g=c.createLinearGradient(0,0,0,H);syncThemedBackdrop();
+ if($("game").dataset.theme!==t.name){$("game").style.background="linear-gradient(180deg,"+t.sky[0]+","+t.sky[1]+" 48%,"+t.sky[2]+")";$("game").dataset.theme=t.name}
+ g.addColorStop(0,t.sky[0]);g.addColorStop(.48,t.sky[1]);g.addColorStop(1,t.sky[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
+ const halo=c.createRadialGradient(W*.5,H*.25,5,W*.5,H*.25,Math.max(W,H)*.7);halo.addColorStop(0,t.glow+"66");halo.addColorStop(1,"#00000000");c.fillStyle=halo;c.fillRect(0,0,W,H);
+ c.save();c.globalAlpha=.5;c.fillStyle=t.far;
+ for(let i=0;i<9;i++){const x=i*125-25,y=H*(.48+(i%3)*.035);c.beginPath();c.moveTo(x,y);c.lineTo(x+40,y-80-(i%4)*17);c.lineTo(x+76,y);c.closePath();c.fill()}
+ c.restore();c.fillStyle=t.near;c.fillRect(0,H*.73,W,H*.27);
+ c.save();c.globalAlpha=.28;c.strokeStyle=t.accent;c.lineWidth=2;
+ for(let i=0;i<16;i++){const x=(i*137)%W,y=H*.55+(i%4)*24;c.beginPath();c.moveTo(x,y);c.lineTo(x+9,y-17);c.lineTo(x+18,y);c.stroke()}
+ c.restore();
+};
+drawTileTo=function(target,x,y,type,offsetY=0){
+ if(currentWorld!=="diamonds")return tileBeforeDiamonds(target,x,y,type,offsetY);
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY,index=diamondIndex(),sheet=diamondThemedSpriteSheets[index];
+ if(sheet){
+  const col=type===1?2:type===2?3:(((x*7+y*11+level)%6===0)?0:1);
+  target.drawImage(sheet,col*96,0,96,96,px,py,TILE,TILE);
+ }else{
+  const t=diamondThemes[index];target.fillStyle=type===1?t.wall[0]:type===2?t.wall[1]:t.floor;target.fillRect(px,py,TILE,TILE);
+  target.strokeStyle=t.accent;target.globalAlpha=.35;target.strokeRect(px+3,py+3,TILE-6,TILE-6);target.globalAlpha=1;
+ }
+};
+buildBurningCrateSprite=function(){if(currentWorld==="diamonds"){if(diamondThemedSpriteSheets[diamondIndex()]){for(let f=0;f<BURNING_CRATE_FRAMES;f++){const c=burningCrateCanvases[diamondIndex()][f].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(diamondThemedSpriteSheets[diamondIndex()],288,0,96,96,4,5,56,56)}burningCrateReady=true}return}crateBeforeDiamonds()};
+function buildDiamondMap(){
+ const nodes=$("diamondLevelNodes");nodes.innerHTML="";
+ for(let i=1;i<=TOTAL_LEVELS;i++){
+  const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.style.pointerEvents="auto";n.style.touchAction="manipulation";n.textContent=i;
+  if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
+  n.addEventListener("click",()=>selectMapLevel(i));nodes.appendChild(n);
+ }
+ const p=mapPoint(Math.min(Math.max(1,selectedMapLevel),unlockedLevel)),m=$("diamondMapMascot");m.style.left=p.x+"%";m.style.top=p.y+"%";
+ $("diamondProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
+}
+function addDiamondWorldUI(){
+ const card=$("swampBtn").cloneNode(true);card.id="diamondsBtn";card.className="worldCard diamondWorldCard";
+ card.querySelector(".worldName").textContent="💎 MUNDO DOS DIAMANTES";
+ const art=card.querySelector(".swampArt");art.className="diamondArt";
+ art.style.cssText="position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 50% 58%,#ffffff 0 3%,#8cecff 4% 12%,transparent 13%),linear-gradient(180deg,#b8eaff 0%,#5267a9 50%,#171d49 100%)";
+ art.innerHTML='<span style="position:absolute;left:0;right:0;bottom:0;height:68%;background:linear-gradient(135deg,#294b91,#7b74c8,#18365f);clip-path:polygon(0 100%,13% 45%,27% 70%,43% 5%,58% 64%,74% 25%,88% 70%,100% 20%,100% 100%)"></span><span style="position:absolute;left:0;right:0;top:17px;font-size:32px;text-align:center">💎 ✨ 💎</span>';
+ card.style.borderColor="#a9efff";card.style.background="linear-gradient(#bceeff 0%,#536db3 48%,#171d49 100%)";card.style.boxShadow="0 7px 0 #25366d,0 12px 18px #0008";
+ $("swampBtn").parentNode.appendChild(card);card.addEventListener("click",()=>showMenuScreen("diamonds"));
+ const panel=$("swampPanel").cloneNode(true);panel.id="diamondPanel";
+ const ids={"swampBackArrowBtn":"diamondBackArrowBtn","swampMap":"diamondMap","swampPath":"diamondPath","swampLevelNodes":"diamondLevelNodes","swampMapMascot":"diamondMapMascot","swampProgressText":"diamondProgressText"};
+ panel.querySelectorAll("[id]").forEach(el=>{if(ids[el.id])el.id=ids[el.id]});
+ panel.querySelector(".menuTitle").textContent="💎 MUNDO DOS DIAMANTES";
+ panel.querySelector("#diamondProgressText").textContent="FASES CONCLUÍDAS: 0/10";
+ panel.style.cssText="";
+ $("swampPanel").parentNode.appendChild(panel);
+ $("diamondBackArrowBtn").onclick=()=>showMenuScreen("worlds");
+ const style=document.createElement("style");
+ style.textContent="#diamondPanel{position:fixed;inset:0;z-index:12;width:100%;height:100dvh;margin:0;padding:clamp(12px,2vh,18px) clamp(12px,3vw,35px);border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;background:radial-gradient(ellipse at 50% 78%,#456db0,#202b62 55%,#0b1230)}#diamondPanel>*{position:relative;z-index:1}#diamondPanel .menuTitle{margin:3px 0 8px;color:#e5faff;text-shadow:0 3px 0 #203d79,0 0 16px #8cecff}#diamondBackArrowBtn{position:absolute;top:12px;left:12px;z-index:10;width:43px;height:43px;border:2px solid #a9efff;border-radius:12px;background:linear-gradient(145deg,#397da5,#183b68);color:#f3fdff;font-size:29px}#diamondMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;overflow:hidden}#diamondPath{position:absolute;inset:0;width:100%;height:100%}#diamondPath .pathShadow{fill:none;stroke:#101b45;stroke-width:24;stroke-linecap:round}#diamondPath .pathBase{fill:none;stroke:#527ec1;stroke-width:15;stroke-linecap:round}#diamondPath .pathCenter{fill:none;stroke:#d8f8ff;stroke-width:3;stroke-dasharray:5 10}#diamondLevelNodes{position:absolute;inset:0}#diamondMapMascot{position:absolute;width:clamp(43px,7vw,65px);height:clamp(43px,7vw,65px);left:0;top:0;transform:translate(-50%,-112%);z-index:8;pointer-events:none;transition:left .38s,top .38s;filter:drop-shadow(0 5px 3px #081b38)}#diamondMapMascot .miniBody{position:absolute;inset:7px;border-radius:50%;background:radial-gradient(circle at 32% 25%,#fff,#e8faff 52%,#91c9ec);border:4px solid #a9efff}#diamondMapMascot .miniHelmet{position:absolute;z-index:2;left:20%;right:20%;top:12%;height:32%;border-radius:50% 50% 10px 10px;background:linear-gradient(#fff,#78c9ef)}#diamondMapMascot .miniEyes{position:absolute;z-index:3;left:29%;right:29%;top:42%;display:flex;justify-content:space-between}#diamondMapMascot .miniEyes i{width:6px;height:9px;border-radius:50%;background:#fff}#diamondMapMascot .miniMouth{position:absolute;z-index:3;left:40%;top:68%;width:20%;height:8%;border-bottom:2px solid #19364e;border-radius:50%}#diamondLevelNodes .mapNode{border-color:#c8f5ff;background:radial-gradient(circle at 32% 25%,#f4fdff,#6dc6e8 58%,#245a8c);box-shadow:0 4px 0 #173e68,0 0 13px #8deaff;color:#fff}#diamondLevelNodes .mapNode.available{animation:diamondPulse 1.8s ease-in-out infinite}#diamondLevelNodes .mapNode.completed{background:linear-gradient(145deg,#eaffff,#67b8d8);border-color:#fff}#diamondLevelNodes .mapNode.locked{background:linear-gradient(145deg,#687f91,#34475d);border-color:#a9bdc9}@keyframes diamondPulse{50%{box-shadow:0 4px 0 #173e68,0 0 25px #8deaff}}#diamondProgressText{position:absolute;left:0;right:0;bottom:clamp(20px,5vh,42px);text-align:center;font-size:12px;color:#e5faff}@media(max-width:600px){#diamondPanel{padding:10px 8px}#diamondMap{width:100%;height:min(48vh,250px);min-height:160px}#diamondPanel .menuTitle{font-size:24px}}";
+ document.head.appendChild(style);
+}
+addDiamondWorldUI();
+showMenuScreen=function(which){
+ if(which==="diamonds"){
+  $("overlay").style.display="none";$("worldsPanel").classList.add("hidden");
+  ["forestPanel","desertPanel","volcanoPanel","icePanel","swampPanel"].forEach(id=>$(id).classList.add("hidden"));
+  $("diamondPanel").classList.remove("hidden");$("diamondPanel").style.display="flex";
+  $("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
+  $("hud").style.display="none";$("controls").style.display="none";
+  currentWorld="diamonds";loadProgress();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildDiamondMap();buildBurningCrateSprite();menuReturn="diamonds";return;
+ }
+ $("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");
+ return menuBeforeDiamonds(which);
+};
+startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");return startBeforeDiamonds(n)};
+buildForestMap=function(){if(currentWorld==="diamonds")buildDiamondMap();else mapBeforeDiamonds()};
+selectMapLevel=function(i){
+ if(currentWorld!=="diamonds")return selectBeforeDiamonds(i);
+ if(i>unlockedLevel||i<1)return;
+ if(mapMoveTimer)clearTimeout(mapMoveTimer);selectedMapLevel=i;
+ document.querySelectorAll("#diamondLevelNodes .mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));
+ const p=mapPoint(i),m=$("diamondMapMascot");m.style.left=p.x+"%";m.style.top=p.y+"%";
+ mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;startGame(i)},430);
+};
+updateHUD=function(){hudBeforeDiamonds();if(currentWorld==="diamonds")$("level").textContent=worldLevelNumber()};
+gameOver=function(win){overBeforeDiamonds(win);if(currentWorld==="diamonds")$("endText").textContent=win?"Parabéns! Você completou as 10 fases do Mundo dos Diamantes! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins};
+window.handleAndroidBack=function(){if($("diamondPanel")&&!$("diamondPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return backBeforeDiamonds()};
+if(!worldOrder.includes("diamonds"))worldOrder.push("diamonds");
+
 })();
 
 })();
