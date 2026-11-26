@@ -20691,7 +20691,7 @@ function buildDiamondPortalFrames(themeIndex){
   const c=document.createElement("canvas");c.width=c.height=96;
   const q=c.getContext("2d");q.imageSmoothingEnabled=true;
   const pulse=frame/6*Math.PI*2;
-  q.save();q.translate(48,49);
+  q.save();q.translate(48,49);q.scale(1.06,1.06);
   q.globalAlpha=.32;q.fillStyle=theme.near;q.filter="blur(3px)";
   q.beginPath();q.ellipse(0,17,39,12,0,0,Math.PI*2);q.fill();q.filter="none";
   const halo=q.createRadialGradient(0,0,4,0,0,44);
@@ -20723,29 +20723,32 @@ function createDiamondPortals(){
  for(let y=2;y<ROWS-2;y++)for(let x=2;x<COLS-2;x++){
   if(map[y][x]!==0||isStartSafeCell(x,y)||x<=3&&y<=3)continue;
   if(bombAt(x,y)||treasureChests.some(ch=>ch.x===x&&ch.y===y))continue;
-  if(distance(x+.5,y+.5,player.x,player.y)<4.2)continue;
+  if(distance(x+.5,y+.5,player.x,player.y)<2.6)continue;
   let occupied=false;
-  for(const e of enemies)if(e.alive&&!e.burrowing&&distance(x+.5,y+.5,e.x,e.y)<1.5){occupied=true;break}
+  for(const e of enemies)if(e.alive&&!e.burrowing&&distance(x+.5,y+.5,e.x,e.y)<1.15){occupied=true;break}
   if(!occupied)candidates.push({x,y});
  }
  shuffleArray(candidates);
  for(const p of candidates){
   if(diamondPortalPositions.length>=10)break;
   let spaced=true;
-  for(const other of diamondPortalPositions)if(distance(p.x+.5,p.y+.5,other.x+.5,other.y+.5)<4.2){spaced=false;break}
+  for(const other of diamondPortalPositions)if(distance(p.x+.5,p.y+.5,other.x+.5,other.y+.5)<2.35){spaced=false;break}
   if(!spaced)continue;
   const particles=[];
   for(let i=0;i<16;i++)particles.push({angle:(Math.PI*2*i/16)+(Math.random()-.5)*.22,phase:Math.random(),speed:.58+Math.random()*.42,size:1.8+Math.random()*1.6,color:i%diamondPortalGemColors.length});
   diamondPortalPositions.push({x:p.x,y:p.y,phase:Math.random()*6,flash:0,particles});
  }
- // Em mapas muito apertados, dois portais já formam uma ligação funcional.
+}
+function diamondPortalHasExit(portal,radius){
+ const cx=portal.x+.5,cy=portal.y+.5,step=.68;
+ return canOccupy(cx+step,cy,radius,null)||canOccupy(cx-step,cy,radius,null)||canOccupy(cx,cy+step,radius,null)||canOccupy(cx,cy-step,radius,null);
 }
 function findDiamondPortalDestination(entity,source,radius,isPlayer){
  const count=diamondPortalPositions.length;if(count<2)return null;
  const start=Math.floor(Math.random()*(count-1));
  for(let n=0;n<count-1;n++){
   const index=(start+n)%count,d=diamondPortalPositions[index];
-  if(d===source||!canOccupy(d.x+.5,d.y+.5,radius,null))continue;
+  if(d===source||!canOccupy(d.x+.5,d.y+.5,radius,null)||!diamondPortalHasExit(d,radius))continue;
   if(isPlayer){
    let crowded=false;
    for(const e of enemies)if(e.alive&&!e.burrowing&&distance(d.x+.5,d.y+.5,e.x,e.y)<.72){crowded=true;break}
@@ -20785,11 +20788,12 @@ function drawDiamondPortals(){
   const px=ox+portal.x*TILE,py=oy+portal.y*TILE;
   const frame=(Math.floor(gameClock*7.2+portal.phase)%6+6)%6;
   ctx.globalAlpha=portal.flash>0?1:.94;
-  ctx.drawImage(frames[frame],px-3,py-3,TILE+6,TILE+6);
+  // A arte ocupa exatamente o quadrado do mapa; a colisão permanece no centro da célula.
+  ctx.drawImage(frames[frame],px,py,TILE,TILE);
   ctx.globalAlpha=1;
   for(const p of portal.particles){
    const t=(gameClock*p.speed*.72+p.phase)%1;
-   const r=3+t*27,a=p.angle+gameClock*.18;
+   const r=2+t*(TILE*.34),a=p.angle+gameClock*.18;
    const x=px+TILE*.5+Math.cos(a)*r,y=py+TILE*.5+Math.sin(a)*r*.72;
    const alpha=(.95-t*.58)*(portal.flash>0?1:1);
    const rot=a+t*2,cs=Math.cos(rot),sn=Math.sin(rot),w=p.size*.72,h=p.size;
