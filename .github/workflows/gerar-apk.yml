@@ -9,6 +9,7 @@ on:
       - "bombardeirojogo.html"
       - "tests/**"
       - "bombericon.jpg"
+      - "Icone do jogo.png"
       - "game-assets/**"
       - "logo-bombardeiro-transparente.png"
       - "bomba explosão.mp3"
