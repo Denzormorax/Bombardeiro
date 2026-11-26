@@ -68,7 +68,7 @@ test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase
  assert.match(html,/world==="diamonds"\?72/);
  assert.match(html,/function buildDiamondDestroyedBlockGlow\(themeIndex\)/);
  assert.match(html,/diamondDestroyedGlowCanvases=Array\(10\)\.fill\(null\)/);
- assert.match(html,/themeIndex\+":"+p\.kind\+":"+sizeKey/);
+ assert.match(html,/p\.themeIndex\+":"+p\.kind\+":"+sizeKey/);
  assert.match(html,/q\.moveTo\(0,-w\*2\.05\)/);
  assert.match(html,/currentWorld==="diamonds"\)spawnDestroyedBlockEffect/);
  assert.match(html,/world==="diamonds"\?1\.08/);
