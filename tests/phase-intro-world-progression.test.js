@@ -53,6 +53,7 @@ function runIntro(world, level = 1) {
   const stickKnob = makeElement();
   const windowObject = { innerWidth: 400 };
   const sandbox = {
+    Image: class { constructor() { this.complete = false; this.naturalWidth = 0; this.onload = null; this.src = ""; } },
     window: windowObject,
     document: {
       body,
