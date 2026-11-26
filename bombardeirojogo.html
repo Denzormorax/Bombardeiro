@@ -20346,6 +20346,7 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
 /* INTRODUÇÃO DAS FASES — controlador independente do HUD.
    A animação usa requestAnimationFrame e um elemento próprio, sem depender
    do CSS antigo de #phaseToast nem de eventos CSS animationend. */
+const worldOrder=["forest","desert","volcano","ice","swamp"];
 (function(){
  "use strict";
  let introToken=0,activeOverlay=null,activeBlocker=null;
@@ -20433,7 +20434,6 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
  updateHUD();
 
  $("restartBtn").onclick=()=>{newLevel(true);hidePanels()};
- const worldOrder=["forest","desert","volcano","ice","swamp"];
  checkWin=function(){
   if(levelTransition)return;
   if(allEnemiesDefeated()&&exit.found&&Math.floor(player.x)===exit.x&&Math.floor(player.y)===exit.y){
@@ -20462,6 +20462,7 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
    },1100);
   }
  };
+})();
 
 /* MUNDO 6 — REINO DOS DIAMANTES */
 const diamondThemes=[
@@ -20621,8 +20622,6 @@ updateHUD=function(){hudBeforeDiamonds();if(currentWorld==="diamonds")$("level")
 gameOver=function(win){overBeforeDiamonds(win);if(currentWorld==="diamonds")$("endText").textContent=win?"Parabéns! Você completou as 10 fases do Mundo dos Diamantes! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins};
 window.handleAndroidBack=function(){if($("diamondPanel")&&!$("diamondPanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return backBeforeDiamonds()};
 if(!worldOrder.includes("diamonds"))worldOrder.push("diamonds");
-
-})();
 
 })();
 </script>
