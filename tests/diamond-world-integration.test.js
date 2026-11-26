@@ -71,7 +71,7 @@ test("o brilho diagonal do Mundo dos Diamantes aparece apenas nos geodos destrut
  assert.match(html,/drawDiamondDestructibleShimmer\(\)/);
  assert.match(html,/diamondShimmerTileCanvas=null/);
  assert.match(html,/effectCtx\.globalCompositeOperation="destination-in"/);
- assert.match(html,/effectCtx\.drawImage\(sheet,288,0,96,96,0,0,TILE,TILE\)/);
+ assert.match(html,/effectCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(html,/if\(!shimmerCanvas\|\|!sheet\)return/);
  const shimmerStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const shimmerEnd=html.indexOf("\nfunction draw()",shimmerStart);
@@ -79,7 +79,6 @@ test("o brilho diagonal do Mundo dos Diamantes aparece apenas nos geodos destrut
  assert.doesNotMatch(html.slice(shimmerStart,shimmerEnd),/diamondThemedSpriteSheets/,"o renderizador não pode acessar diretamente a variável privada do atlas");
  assert.match(html,/window\.__bombardeiroGetDiamondSpriteSheet=function\(themeIndex\)\{[\s\S]*?diamondThemedSpriteSheets\[index\]/);
  assert.match(html,/spriteGetter=window\.__bombardeiroGetDiamondSpriteSheet[\s\S]*?typeof spriteGetter==="function"\?spriteGetter\(index\):null/);
-
 });
 test("a espiral dos portais cresce visualmente sem alterar a área central de colisão",()=>{
  const portalStart=html.indexOf("function buildDiamondPortalFrames(");
@@ -120,10 +119,10 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.ok(buildStart>=0&&drawStart>buildStart&&drawEnd>drawStart,"pré-renderizador e renderizador localizados");
  const builder=html.slice(buildStart,drawStart),renderer=html.slice(drawStart,drawEnd);
  assert.match(builder,/effectCtx\.globalCompositeOperation="destination-in"/);
- assert.match(builder,/effectCtx\\.drawImage\\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\\)/);
+ assert.match(builder,/effectCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(builder,/atlasCtx\.drawImage\(diamondShimmerTileCanvas/);
  assert.doesNotMatch(renderer,/destination-in|clearRect|createElement\("canvas"\)/,"o quadro não pode recriar máscaras nem canvases por geodo");
- assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,TILE,TILE,ox\+tile\.x\*TILE,oy\+tile\.y\*TILE,TILE,TILE\)/);
+ assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox\+tile\.x\*TILE-DIAMOND_SHIMMER_PADDING,oy\+tile\.y\*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
  assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?buildDiamondShimmerFrameAtlas\(themeIndex,shimmer,sheet\)[\s\S]*?return startBeforeDiamonds\(n\)/,"a animação é pré-aquecida antes de iniciar a fase");
 });
 test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase com sprites e brilhos em cache",()=>{
