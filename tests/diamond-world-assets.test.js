@@ -11,7 +11,9 @@ test("as dez fases usam exatamente o mesmo piso de terra com três pequenas gema
   .replace(/transform="translate\(0 \d+\)"/,'transform="translate(0 0)"')
   .replace(/Fase \d+ — piso de terra/,"Fase N — piso de terra"));
  assert.equal(new Set(normalized).size,1,"todas as dez texturas de chão devem ser visualmente idênticas");
- assert.equal((atlas.match(/rx="3\.2" ry="1\.9"/g)||[]).length,30);
- assert.equal((atlas.match(/pedrinhas azuis/g)||[]).length,10);
+ assert.equal((atlas.match(/rx="3\.2" ry="1\.9"/g)||[]).length,60);
+ assert.equal((atlas.match(/pedrinhas azuis/g)||[]).length,20);
  assert.doesNotMatch(atlas,/pedrinhas (vermelhas|verdes|roxas|douradas|rosas)/);
+ assert.equal((atlas.match(/<g transform="translate\\(96 \\d+\\)">/g)||[]).length,10,"a segunda camada deve existir nas dez fases");
+ assert.equal((atlas.match(/<title>Fase \\d+ — piso de terra com cristais naturais e três pedrinhas azuis<\\/title>/g)||[]).length,20,"as duas camadas devem usar o piso de terra");
 });
