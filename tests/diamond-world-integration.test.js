@@ -81,6 +81,34 @@ test("o brilho diagonal do Mundo dos Diamantes aparece apenas nos geodos destrut
  assert.match(html,/spriteGetter=window\.__bombardeiroGetDiamondSpriteSheet[\s\S]*?typeof spriteGetter==="function"\?spriteGetter\(index\):null/);
 
 });
+test("a espiral dos portais cresce visualmente sem alterar a área central de colisão",()=>{
+ const portalStart=html.indexOf("function buildDiamondPortalFrames(");
+ const portalEnd=html.indexOf("\nfunction createDiamondPortals(",portalStart);
+ const portalBuilder=html.slice(portalStart,portalEnd);
+ assert.ok(portalStart>=0&&portalEnd>portalStart,"construtor dos portais localizado");
+ assert.match(portalBuilder,/r=37-t\*29/);
+ assert.match(portalBuilder,/r=33-t\*25/);
+ const portalDrawStart=html.indexOf("function drawDiamondPortals()");
+ const portalDrawEnd=html.indexOf("\nconst newLevelBeforeDiamondPortals",portalDrawStart);
+ assert.match(html.slice(portalDrawStart,portalDrawEnd),/ctx\.drawImage\(frames\[frame\],px,py,TILE,TILE\)/);
+ const collisionStart=html.indexOf("function checkDiamondPortal(");
+ const collisionEnd=html.indexOf("\nfunction drawDiamondPortals(",collisionStart);
+ assert.match(html.slice(collisionStart,collisionEnd),/portal\.x\+\.5,portal\.y\+\.5\)<\.39/);
+});
+test("o contorno dos geodos recebe halo pulsante na cor do tema, limitado à silhueta alfa do PNG",()=>{
+ const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
+ const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
+ const builder=html.slice(buildStart,drawStart);
+ assert.match(html,/diamondOutlineGlowCanvas=null/);
+ assert.match(builder,/paletteGetter=window\.__bombardeiroGetDiamondEffectPalette/);
+ assert.match(builder,/outlineColor=palette&&palette\.glow\?palette\.glow/);
+ assert.match(builder,/outlineCtx\.shadowColor=outlineColor/);
+ assert.match(builder,/outlineCtx\.globalCompositeOperation="destination-out"/);
+ assert.match(builder,/outlineCtx\.drawImage\(sheet,288,0,96,96,0,0,TILE,TILE\)/);
+ assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
+ const renderer=html.slice(drawStart,html.indexOf("\nfunction draw(){",drawStart));
+ assert.doesNotMatch(renderer,/destination-out|clearRect|createElement\("canvas"\)/,"o halo é pré-renderizado e reutilizado, sem máscaras por geodo a cada quadro");
+});
 test("o brilho dos geodos usa quadros pré-renderizados e elimina composição alfa por bloco a cada quadro",()=>{
  assert.match(html,/DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24/);
  const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
