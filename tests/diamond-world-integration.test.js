@@ -100,10 +100,13 @@ test("o contorno dos geodos recebe halo pulsante temático com margem para não 
  const builder=html.slice(buildStart,drawStart);
  assert.match(html,/DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE\+DIAMOND_SHIMMER_PADDING\*2/);
  assert.match(builder,/paletteGetter=window\.__bombardeiroGetDiamondEffectPalette/);
- assert.match(builder,/outlineColor="#168BFF"/);
+ assert.match(builder,/outlineColor=palette&&palette\.glow\?palette\.glow/);
  assert.match(builder,/outlineCtx\.shadowColor=outlineColor/);
- assert.match(builder,/outlineCtx\.shadowBlur=14\+8\*glowPulse/);
- assert.match(builder,/outlineCtx\.globalAlpha=\.92\+\.08\*glowPulse/);
+ assert.match(builder,/outlineCtx\.shadowBlur=28\+12\*glowPulse/);
+ assert.match(builder,/outlineCtx\.shadowBlur=18\+8\*glowPulse/);
+ assert.match(builder,/outlineCtx\.shadowBlur=9\+5\*glowPulse/);
+ assert.match(builder,/Halo em três camadas/);
+ assert.match(builder,/outlineCtx\.globalAlpha=\.82\+\.16\*glowPulse/);
  assert.match(builder,/outlineCtx\.globalCompositeOperation="destination-out"/);
  assert.match(builder,/outlineCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
