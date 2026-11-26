@@ -20337,6 +20337,7 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
     const t=(progress-.58)/.42;x=-viewportWidth*1.2*t;opacity=1-t;
    }
    if(Math.abs(x)<0.001)x=0;
+   opacity=Math.max(0,Math.min(1,opacity));
    overlay.style.transform="translate3d("+x+"px,0,0)";
    overlay.style.opacity=String(opacity);
    if(progress<1)requestAnimationFrame(drawFrame);
