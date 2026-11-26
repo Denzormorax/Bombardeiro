@@ -16,6 +16,7 @@ test("criatura possui dois pontos de vida e barra dupla sobre a cabeça",()=>{
 });
 test("ciclo alterna cinco segundos na superfície e cinco enterrado, com emboscada por colisão real",()=>{
  assert.match(html,/surfaceCycle:5/);
+ assert.match(html,/surfaceClock:0/);
  assert.match(html,/sinkTime:\.45,emergeTime:\.45,ambushEmergeTime:\.14/);
  assert.match(html,/if\(log\.surfaceClock>=swampLogTuning\.surfaceCycle\)\{swampLogBeginBurrow\(log\);return\}/);
  assert.match(html,/log\.phaseTime>=5/);

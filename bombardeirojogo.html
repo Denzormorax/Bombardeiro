@@ -17966,7 +17966,7 @@ function swampLogSpawn(){
  }
  for(let i=0;i<2&&spots.length;i++){
   const p=spots.splice(Math.floor(Math.random()*spots.length),1)[0];
-  enemies.push({isSwampLog:true,x:p.x+.5,y:p.y+.5,speed:swampLogTuning.surfaceSpeed,hp:2,maxHp:2,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],phase:"surface",phaseTime:0,surfaceClock:Math.random()*1.5,repath:.1,ambushTriggered:false,anim:Math.random()*6.28,bubbleClock:0,dripClock:Math.random()*.2,drips:[],splats:[],waterPhase:Math.random()*6.28,attackCooldown:0});
+  enemies.push({isSwampLog:true,x:p.x+.5,y:p.y+.5,speed:swampLogTuning.surfaceSpeed,hp:2,maxHp:2,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,facingX:0,facingY:1,path:[],phase:"surface",phaseTime:0,surfaceClock:0,repath:.1,ambushTriggered:false,anim:Math.random()*6.28,bubbleClock:0,dripClock:Math.random()*.2,drips:[],splats:[],waterPhase:Math.random()*6.28,attackCooldown:0});
  }
 }
 function updateSwampLog(log,dt){
