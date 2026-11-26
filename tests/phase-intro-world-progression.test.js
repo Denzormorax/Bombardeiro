@@ -5,6 +5,18 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 const game = fs.readFileSync(path.join(__dirname, "..", "bombardeirojogo.html"), "utf8");
+const mainScriptStart = game.indexOf("<script>\n(()=>{");
+assert.notEqual(mainScriptStart, -1, "Script principal do jogo não encontrado");
+const mainScriptEnd = game.indexOf("</script>", mainScriptStart);
+assert.notEqual(mainScriptEnd, -1, "Fechamento do script principal não encontrado");
+const mainIifeEnd = game.lastIndexOf("\n})();", mainScriptEnd);
+assert.notEqual(mainIifeEnd, -1, "Fechamento da função isolada do jogo não encontrado");
+const markerPosition = game.indexOf("/* AVISO TEMPORÁRIO DA FASE");
+assert.ok(markerPosition > mainScriptStart && markerPosition < mainIifeEnd,
+  "Controlador da introdução precisa estar dentro do mesmo escopo das funções do jogo");
+assert.ok(game.indexOf("/* AVISO TEMPORÁRIO DA FASE", mainScriptEnd) === -1,
+  "O controlador não pode permanecer em um script externo");
+
 const marker = "/* INTRODUÇÃO DAS FASES — controlador independente do HUD.";
 const introStart = game.indexOf(marker);
 assert.notEqual(introStart, -1, "Controlador independente da introdução não encontrado");

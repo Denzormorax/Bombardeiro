@@ -20217,36 +20217,6 @@ drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
  drawForestWoodlandArmor(e,deathProgress);
 };
 
-})();
-</script>
-
-<script>
-/* Recorta o logotipo original e remove somente o fundo azul conectado às bordas. */
-(function(){
- const logo=document.getElementById("bombardeiroLogoImage");
- if(!logo)return;
- function processar(){
-  if(logo.dataset.processed==="1"||!logo.naturalWidth||!logo.naturalHeight)return;
-  logo.dataset.processed="1";
-  try{
-   const scale=Math.min(1,2000/logo.naturalWidth);
-   const w=Math.max(1,Math.round(logo.naturalWidth*scale));
-   const h=Math.max(1,Math.round(logo.naturalHeight*.575*scale));
-   const c=document.createElement("canvas");c.width=w;c.height=h;
-   const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(logo,0,0,w,h);
-   const frame=x.getImageData(0,0,w,h),p=frame.data,n=w*h;
-   const seen=new Uint8Array(n),q=new Int32Array(n);let head=0,tail=0;
-   function blue(i){const k=i*4,r=p[k],g=p[k+1],b=p[k+2];return b>58&&g>52&&b>r*1.075&&g>r*1.045;}
-   function add(i){if(i>=0&&i<n&&!seen[i]&&blue(i)){seen[i]=1;q[tail++]=i;}}
-   for(let xx=0;xx<w;xx++){add(xx);add((h-1)*w+xx);}
-   for(let yy=0;yy<h;yy++){add(yy*w);add(yy*w+w-1);}
-   while(head<tail){const i=q[head++];p[i*4+3]=0;const xx=i%w;if(xx)add(i-1);if(xx+1<w)add(i+1);if(i>=w)add(i-w);if(i+w<n)add(i+w);}
-   x.putImageData(frame,0,0);
-   logo.onload=null;logo.src=c.toDataURL("image/png");
-  }catch(e){logo.dataset.processed="0";}
- }
- if(logo.complete)processar();else logo.addEventListener("load",processar,{once:true});
-})();
 
 /* AVISO TEMPORÁRIO DA FASE — compartilhado por todos os mundos. */
 let phaseToastTimer=null,lastPhaseToastKey="";
@@ -20385,6 +20355,39 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
   }
  };
 })();
+
+})();
+</script>
+
+<script>
+/* Recorta o logotipo original e remove somente o fundo azul conectado às bordas. */
+(function(){
+ const logo=document.getElementById("bombardeiroLogoImage");
+ if(!logo)return;
+ function processar(){
+  if(logo.dataset.processed==="1"||!logo.naturalWidth||!logo.naturalHeight)return;
+  logo.dataset.processed="1";
+  try{
+   const scale=Math.min(1,2000/logo.naturalWidth);
+   const w=Math.max(1,Math.round(logo.naturalWidth*scale));
+   const h=Math.max(1,Math.round(logo.naturalHeight*.575*scale));
+   const c=document.createElement("canvas");c.width=w;c.height=h;
+   const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(logo,0,0,w,h);
+   const frame=x.getImageData(0,0,w,h),p=frame.data,n=w*h;
+   const seen=new Uint8Array(n),q=new Int32Array(n);let head=0,tail=0;
+   function blue(i){const k=i*4,r=p[k],g=p[k+1],b=p[k+2];return b>58&&g>52&&b>r*1.075&&g>r*1.045;}
+   function add(i){if(i>=0&&i<n&&!seen[i]&&blue(i)){seen[i]=1;q[tail++]=i;}}
+   for(let xx=0;xx<w;xx++){add(xx);add((h-1)*w+xx);}
+   for(let yy=0;yy<h;yy++){add(yy*w);add(yy*w+w-1);}
+   while(head<tail){const i=q[head++];p[i*4+3]=0;const xx=i%w;if(xx)add(i-1);if(xx+1<w)add(i+1);if(i>=w)add(i-w);if(i+w<n)add(i+w);}
+   x.putImageData(frame,0,0);
+   logo.onload=null;logo.src=c.toDataURL("image/png");
+  }catch(e){logo.dataset.processed="0";}
+ }
+ if(logo.complete)processar();else logo.addEventListener("load",processar,{once:true});
+})();
+
+
 </script>
 
 </body>
