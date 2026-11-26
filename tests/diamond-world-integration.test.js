@@ -98,12 +98,12 @@ test("o contorno dos geodos recebe halo pulsante temático com margem para não 
  const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const builder=html.slice(buildStart,drawStart);
- assert.match(html,/DIAMOND_SHIMMER_PADDING=8,DIAMOND_SHIMMER_FRAME_SIZE=TILE\+DIAMOND_SHIMMER_PADDING\*2/);
+ assert.match(html,/DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE\+DIAMOND_SHIMMER_PADDING\*2/);
  assert.match(builder,/paletteGetter=window\.__bombardeiroGetDiamondEffectPalette/);
- assert.match(builder,/outlineColor=palette&&palette\.glow\?palette\.glow/);
+ assert.match(builder,/outlineColor="#168BFF"/);
  assert.match(builder,/outlineCtx\.shadowColor=outlineColor/);
- assert.match(builder,/outlineCtx\.shadowBlur=4\.8\+2\.2\*glowPulse/);
- assert.match(builder,/outlineCtx\.globalAlpha=\.56\+\.26\*glowPulse/);
+ assert.match(builder,/outlineCtx\.shadowBlur=14\+8\*glowPulse/);
+ assert.match(builder,/outlineCtx\.globalAlpha=\.92\+\.08\*glowPulse/);
  assert.match(builder,/outlineCtx\.globalCompositeOperation="destination-out"/);
  assert.match(builder,/outlineCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
