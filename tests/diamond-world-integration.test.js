@@ -73,6 +73,12 @@ test("o brilho diagonal do Mundo dos Diamantes aparece apenas nos geodos destrut
  assert.match(html,/effectCtx\.globalCompositeOperation="destination-in"/);
  assert.match(html,/effectCtx\.drawImage\(sheet,288,0,96,96,0,0,TILE,TILE\)/);
  assert.match(html,/if\(!shimmerCanvas\|\|!sheet\)return/);
+ const shimmerStart=html.indexOf("function drawDiamondDestructibleShimmer()");
+ const shimmerEnd=html.indexOf("\nfunction draw()",shimmerStart);
+ assert.ok(shimmerStart>=0&&shimmerEnd>shimmerStart,"renderizador do brilho localizado");
+ assert.doesNotMatch(html.slice(shimmerStart,shimmerEnd),/diamondThemedSpriteSheets/,"o renderizador não pode acessar diretamente a variável privada do atlas");
+ assert.match(html,/window\.__bombardeiroGetDiamondSpriteSheet=function\(themeIndex\)\{[\s\S]*?diamondThemedSpriteSheets\[index\]/);
+ assert.match(html,/spriteGetter=window\.__bombardeiroGetDiamondSpriteSheet[\s\S]*?typeof spriteGetter==="function"\?spriteGetter\(index\):null/);
 
 });
 test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase com sprites e brilhos em cache",()=>{
