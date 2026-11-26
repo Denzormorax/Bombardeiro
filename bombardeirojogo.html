@@ -20624,7 +20624,7 @@ function buildDiamondSpriteSheets(){
   q.drawImage(diamondSpriteSheet,0,i*96,384,96,0,0,384,96);
   diamondThemedSpriteSheets[i]=c;
  }
- if(currentWorld==="diamonds"){buildBurningCrateSprite();rebuildStaticMapCache()}
+ if(currentWorld==="diamonds"){buildBurningCrateSprite();rebuildStaticMapCache();prepareDiamondShimmerAtlasForLevel(selectedMapLevel)}
 }
 diamondSpriteSheet.onload=buildDiamondSpriteSheets;
 diamondSpriteSheet.src="game-assets/sprites/diamond_themes.svg";
@@ -20745,7 +20745,7 @@ function prepareDiamondShimmerAtlasForLevel(n){
  const themeIndex=Math.max(0,Math.min(9,(Number(n)||1)-1)),shimmer=diamondShimmerCanvases[themeIndex],getter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof getter==="function"?getter(themeIndex):null;
  if(shimmer&&sheet)buildDiamondShimmerFrameAtlas(themeIndex,shimmer,sheet);
 }
-startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");if(currentWorld==="diamonds")prepareDiamondShimmerAtlasForLevel(n);return startBeforeDiamonds(n)};
+startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");if(currentWorld!=="diamonds")return startBeforeDiamonds(n);const beginDiamondLevel=()=>{if(currentWorld!=="diamonds")return;prepareDiamondShimmerAtlasForLevel(n);startBeforeDiamonds(n)};if(diamondSpriteSheet.complete&&diamondSpriteSheet.naturalWidth){beginDiamondLevel();return}diamondSpriteSheet.addEventListener("load",beginDiamondLevel,{once:true})};
 buildForestMap=function(){if(currentWorld==="diamonds")buildDiamondMap();else mapBeforeDiamonds()};
 selectMapLevel=function(i){
  if(currentWorld!=="diamonds")return selectBeforeDiamonds(i);
