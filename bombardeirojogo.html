@@ -17930,8 +17930,8 @@ function drawIndestructibleShimmer(){
 var diamondShimmerCanvases=[]; // Brilhos originais por tema.
 var diamondShimmerTileCanvas=null; // Quadro expandido reutilizado no pré-renderizador.
 var diamondOutlineGlowCanvas=null; // Máscara expandida reutilizada para o halo externo do PNG.
-var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null,diamondShimmerRevealStartedAt=0;
-const DIAMOND_SHIMMER_REVEAL_MS=1200;
+var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFrameWhitePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null,diamondShimmerWhitePreviewCanvas=null,diamondShimmerWhiteCanvas=null,diamondShimmerRevealStartedAt=0;
+const DIAMOND_SHIMMER_REVEAL_MS=1750;
 const DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8;
 function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
@@ -17995,6 +17995,17 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  if(!diamondShimmerPreviewCanvas){diamondShimmerPreviewCanvas=document.createElement("canvas");diamondShimmerPreviewCanvas.width=DIAMOND_SHIMMER_FRAME_SIZE;diamondShimmerPreviewCanvas.height=DIAMOND_SHIMMER_FRAME_SIZE;}
  diamondShimmerPreviewCanvas.getContext("2d").drawImage(diamondShimmerTileCanvas,0,0);
  diamondShimmerFramePreview=diamondShimmerPreviewCanvas;
+ // A camada branca é independente e desaparece enquanto a cor natural ganha força.
+ if(!diamondShimmerWhiteCanvas)diamondShimmerWhiteCanvas=createPillarShimmerCanvas("rgb(255,255,255)","rgba(255,255,255,.99)",1.45);
+ if(!diamondShimmerWhitePreviewCanvas){diamondShimmerWhitePreviewCanvas=document.createElement("canvas");diamondShimmerWhitePreviewCanvas.width=DIAMOND_SHIMMER_FRAME_SIZE;diamondShimmerWhitePreviewCanvas.height=DIAMOND_SHIMMER_FRAME_SIZE;}
+ const whiteCtx=diamondShimmerWhitePreviewCanvas.getContext("2d");
+ whiteCtx.setTransform(1,0,0,1,0,0);whiteCtx.globalCompositeOperation="source-over";whiteCtx.globalAlpha=1;whiteCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
+ whiteCtx.save();whiteCtx.beginPath();whiteCtx.rect(DIAMOND_SHIMMER_PADDING+1,DIAMOND_SHIMMER_PADDING+1,TILE-2,TILE-2);whiteCtx.clip();
+ whiteCtx.translate(DIAMOND_SHIMMER_PADDING+TILE*.5,DIAMOND_SHIMMER_PADDING+TILE*.5);whiteCtx.rotate(Math.PI/4);whiteCtx.drawImage(diamondShimmerWhiteCanvas,-20,-28,40,56);whiteCtx.restore();
+ whiteCtx.globalCompositeOperation="destination-in";whiteCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
+ whiteCtx.globalCompositeOperation="source-over";whiteCtx.shadowColor="#ffffff";whiteCtx.shadowBlur=34;whiteCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
+ whiteCtx.shadowBlur=0;whiteCtx.globalCompositeOperation="destination-out";whiteCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);whiteCtx.globalCompositeOperation="source-over";
+ diamondShimmerFrameWhitePreview=diamondShimmerWhitePreviewCanvas;
  diamondShimmerFramePreviewTheme=themeIndex;
  function renderChunk(deadline){
   if(diamondShimmerFrameBuild!==state)return;
@@ -18030,21 +18041,26 @@ function drawDiamondDestructibleShimmer(){
  if(!shimmerCanvas||!sheet)return;
  const atlas=buildDiamondShimmerFrameAtlas(index,shimmerCanvas,sheet);
  const preview=diamondShimmerFramePreviewTheme===index?diamondShimmerFramePreview:null;
- if(!atlas&&!preview)return;
+ const whitePreview=diamondShimmerFramePreviewTheme===index?diamondShimmerFrameWhitePreview:null;
+ if(!atlas&&!preview&&!whitePreview)return;
+ const revealTime=diamondShimmerRevealStartedAt||performance.now();
+ const rawReveal=Math.max(0,Math.min(1,(performance.now()-revealTime)/DIAMOND_SHIMMER_REVEAL_MS));
+ const reveal=rawReveal*rawReveal*(3-2*rawReveal);
  const phaseBase=(gameClock*.42)%1;
  for(const tile of destructibleTilePositions){
   const dx=ox+tile.x*TILE-DIAMOND_SHIMMER_PADDING,dy=oy+tile.y*TILE-DIAMOND_SHIMMER_PADDING;
-  if(atlas){
+  if(whitePreview&&preview&&reveal<1){
+   ctx.save();ctx.globalAlpha=1-reveal;ctx.drawImage(whitePreview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
+   ctx.globalAlpha=reveal;ctx.drawImage(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);ctx.restore();
+  }else if(atlas&&reveal>=1){
    const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
    const frame=Math.min(DIAMOND_SHIMMER_FRAME_COUNT-1,Math.floor(phase*DIAMOND_SHIMMER_FRAME_COUNT));
    const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
-   if(!diamondShimmerRevealStartedAt)diamondShimmerRevealStartedAt=performance.now();
-   const reveal=Math.max(0,Math.min(1,(performance.now()-diamondShimmerRevealStartedAt)/DIAMOND_SHIMMER_REVEAL_MS));
-   if(preview&&reveal<1){ctx.save();ctx.globalAlpha=1-reveal;ctx.drawImage(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);ctx.globalAlpha=reveal;ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);ctx.restore();}
-   else ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
+   ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
   }else if(preview){
-   // O halo inicial permanece visível até o atlas temático estar pronto.
    ctx.drawImage(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
+  }else if(whitePreview){
+   ctx.drawImage(whitePreview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
   }
  }
 }
@@ -20612,7 +20628,7 @@ const diamondThemes=[
 /* API estreita para os efeitos do script principal: não expõe o array privado. */
 window.__bombardeiroGetDiamondEffectPalette=function(themeIndex){const theme=diamondThemes[Math.max(0,Math.min(9,themeIndex|0))];return {accent:theme.accent,glow:theme.glow,wall:theme.wall};};
 function diamondHexToRgb(hex){const value=hex.replace("#","");return [parseInt(value.slice(0,2),16),parseInt(value.slice(2,4),16),parseInt(value.slice(4,6),16)]}
-diamondShimmerCanvases=diamondThemes.map(theme=>{const rgb=diamondHexToRgb(theme.glow);return createPillarShimmerCanvas(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`,"rgba(255,255,255,.99)",1.45)});
+diamondShimmerCanvases=diamondThemes.map(theme=>{const rgb=diamondHexToRgb(theme.glow);return createPillarShimmerCanvas(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`,theme.accent,1.45)});
 const diamondProgressKey="bomberquest-diamonds-unlocked";
 const diamondSpriteSheet=new Image(),diamondThemedSpriteSheets=Array(10).fill(null);
 window.__bombardeiroGetDiamondSpriteSheet=function(themeIndex){const index=Math.max(0,Math.min(9,themeIndex|0));return diamondThemedSpriteSheets[index]||null;};
@@ -20745,7 +20761,7 @@ function prepareDiamondShimmerAtlasForLevel(n){
  const themeIndex=Math.max(0,Math.min(9,(Number(n)||1)-1)),shimmer=diamondShimmerCanvases[themeIndex],getter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof getter==="function"?getter(themeIndex):null;
  if(shimmer&&sheet)buildDiamondShimmerFrameAtlas(themeIndex,shimmer,sheet);
 }
-startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");if(currentWorld!=="diamonds")return startBeforeDiamonds(n);const beginDiamondLevel=()=>{if(currentWorld!=="diamonds")return;prepareDiamondShimmerAtlasForLevel(n);startBeforeDiamonds(n)};if(diamondSpriteSheet.complete&&diamondSpriteSheet.naturalWidth){beginDiamondLevel();return}diamondSpriteSheet.addEventListener("load",beginDiamondLevel,{once:true})};
+startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");if(currentWorld!=="diamonds")return startBeforeDiamonds(n);const beginDiamondLevel=()=>{if(currentWorld!=="diamonds")return;prepareDiamondShimmerAtlasForLevel(n);diamondShimmerRevealStartedAt=performance.now();startBeforeDiamonds(n)};if(diamondSpriteSheet.complete&&diamondSpriteSheet.naturalWidth){beginDiamondLevel();return}diamondSpriteSheet.addEventListener("load",beginDiamondLevel,{once:true})};
 buildForestMap=function(){if(currentWorld==="diamonds")buildDiamondMap();else mapBeforeDiamonds()};
 selectMapLevel=function(i){
  if(currentWorld!=="diamonds")return selectBeforeDiamonds(i);

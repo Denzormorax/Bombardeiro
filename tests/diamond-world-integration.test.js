@@ -136,10 +136,12 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(builder,/Date\.now\(\)-started<2/,"cada lote de preparação tem orçamento menor de CPU");
  assert.match(builder,/renderDiamondShimmerAtlasFrame\(state,0\)/,"o primeiro quadro é preparado imediatamente");
  assert.match(html,/diamondShimmerPreviewCanvas\.getContext\("2d"\)\.drawImage\(diamondShimmerTileCanvas,0,0\)/,"o preview é isolado para não ser sobrescrito pelos próximos quadros");
- assert.match(renderer,/if\(!atlas&&!preview\)return/,"o renderizador mostra o halo inicial antes do atlas animado");
- assert.match(renderer,/diamondShimmerRevealStartedAt/);
- assert.match(renderer,/ctx\.globalAlpha=1-reveal[\s\S]*?ctx\.globalAlpha=reveal/,"o halo inicial desaparece enquanto o brilho animado ganha intensidade");
- assert.match(renderer,/ctx\.drawImage\(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE/,"o halo inicial aparece desde o começo da fase");
+ assert.match(renderer,/if\(!atlas&&!preview&&!whitePreview\)return/,"o renderizador mantém o preview branco e o colorido disponíveis");
+ assert.match(html,/diamondShimmerFrameWhitePreview=null/,"a camada branca inicial é separada do brilho colorido final");
+ assert.match(renderer,/const reveal=rawReveal\*rawReveal\*\(3-2\*rawReveal\)/,"a transição é suave e sincronizada com o letreiro");
+ assert.match(renderer,/ctx\.globalAlpha=1-reveal[\s\S]*?ctx\.globalAlpha=reveal/,"o branco diminui enquanto a cor natural aumenta");
+ assert.match(renderer,/drawImage\(whitePreview/,"a camada branca aparece somente durante a transição");
+ assert.match(html,/diamondShimmerRevealStartedAt=performance\.now\(\);startBeforeDiamonds\(n\)/,"a transição começa junto com a introdução da fase");
  assert.match(html,/function prepareDiamondShimmerAtlasForLevel\(n\)/);
  assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?diamondSpriteSheet\.complete&&diamondSpriteSheet\.naturalWidth[\s\S]*?beginDiamondLevel\(\)/,"a fase só começa depois que os sprites e o halo temático podem ser preparados");
  assert.match(html,/diamondSpriteSheet\.addEventListener\("load",beginDiamondLevel,\{once:true\}\)/,"se a imagem ainda estiver carregando, o início aguarda o evento load");
