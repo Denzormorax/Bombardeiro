@@ -139,7 +139,9 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(renderer,/if\(!atlas&&!preview\)return/,"o renderizador mostra o halo inicial antes do atlas animado");
  assert.match(renderer,/ctx\.drawImage\(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE/,"o halo inicial aparece desde o começo da fase");
  assert.match(html,/function prepareDiamondShimmerAtlasForLevel\(n\)/);
- assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?prepareDiamondShimmerAtlasForLevel\(n\);return startBeforeDiamonds\(n\)/,"a fase começa imediatamente enquanto o atlas termina em segundo plano");
+ assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?diamondSpriteSheet\.complete&&diamondSpriteSheet\.naturalWidth[\s\S]*?beginDiamondLevel\(\)/,"a fase só começa depois que os sprites e o halo temático podem ser preparados");
+ assert.match(html,/diamondSpriteSheet\.addEventListener\("load",beginDiamondLevel,\{once:true\}\)/,"se a imagem ainda estiver carregando, o início aguarda o evento load");
+ assert.match(html,/function buildDiamondSpriteSheets\(\)\{[\s\S]*?prepareDiamondShimmerAtlasForLevel\(selectedMapLevel\)/,"o halo da fase selecionada é pré-aquecido assim que o atlas de sprites termina de carregar");
  assert.match(html,/buildDiamondMap\(\);buildBurningCrateSprite\(\);prepareDiamondShimmerAtlasForLevel\(selectedMapLevel\)/,"o pré-aquecimento começa ao abrir o mapa");
  assert.match(html,/selectedMapLevel=i;prepareDiamondShimmerAtlasForLevel\(i\)/,"o tema da fase escolhida é preparado durante a animação do mascote");
 });
