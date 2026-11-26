@@ -127,7 +127,7 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.doesNotMatch(renderer,/destination-in|clearRect|createElement\("canvas"\)/,"o quadro não pode recriar máscaras nem canvases por geodo");
  assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox\+tile\.x\*TILE-DIAMOND_SHIMMER_PADDING,oy\+tile\.y\*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
  assert.match(builder,/DIAMOND_SHIMMER_BUILD_CHUNK=6/);
- assert.match(builder,/diamondShimmerFrameBuild===state/);
+ assert.match(builder,/diamondShimmerFrameBuild!==state/);
  assert.match(builder,/requestAnimationFrame\(renderChunk\)/,"a montagem do atlas é dividida em pequenos lotes");
  assert.match(renderer,/if\(!atlas\)return/,"o jogo continua sem aguardar o atlas ficar pronto");
  assert.match(html,/function prepareDiamondShimmerAtlasForLevel\(n\)/);
