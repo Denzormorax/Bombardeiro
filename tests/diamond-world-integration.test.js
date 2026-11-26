@@ -26,8 +26,8 @@ test("as dez temáticas usam o atlas facetado e sprites em cache",()=>{
  assert.equal((atlas.match(/<g transform="translate\(/g)||[]).length,40);
 });
 test("os blocos indestrutíveis e destrutíveis têm silhuetas e construção visual distintas",()=>{
- assert.equal((atlas.match(/muralha indestrutível blindada/g)||[]).length,10);
- assert.equal((atlas.match(/geodo destrutível rachado/g)||[]).length,10);
+ assert.equal((atlas.match(/<title>[^<]*muralha indestrutível blindada<\/title>/g)||[]).length,10);
+ assert.equal((atlas.match(/<title>[^<]*geodo destrutível rachado<\/title>/g)||[]).length,10);
  assert.match(atlas,/muralha indestrutível blindada/);
  assert.match(atlas,/geodo destrutível rachado/);
 });
