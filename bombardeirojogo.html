@@ -17984,6 +17984,7 @@ function draw(){
  // As poças ficam inteiramente atrás de todos os elementos móveis, sem cortes por ordenação de linhas.
  for(let y=0;y<ROWS;y++)ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
  for(const puddle of waterPuddles)drawWaterPuddle(puddle);
+ if(currentWorld==="diamonds")drawDiamondPortals();
  // Folhas e tentáculos do cenário ficam atrás de todos os elementos móveis.
  if(currentWorld==="swamp")drawSwampAmbientDetails();
  // Flocos discretos acompanham os blocos de neve sem recriar sprites ou alterar a física.
@@ -20757,10 +20758,10 @@ function findDiamondPortalDestination(entity,source,radius,isPlayer){
  }
  return null;
 }
-function checkDiamondPortal(entity,radius,isPlayer){
+function checkDiamondPortal(entity,radius,isPlayer,dt){
  if(currentWorld!=="diamonds"||!entity)return;
  const cooldownKey=isPlayer?"_diamondPortalCooldown":"diamondPortalCooldown";
- if((entity[cooldownKey]||0)>0)entity[cooldownKey]=Math.max(0,entity[cooldownKey]-.016);
+ if((entity[cooldownKey]||0)>0)entity[cooldownKey]=Math.max(0,entity[cooldownKey]-(Number(dt)||1/60));
  let inside=null;
  for(const portal of diamondPortalPositions)if(distance(entity.x,entity.y,portal.x+.5,portal.y+.5)<.39){inside=portal;break}
  if(!inside){entity._diamondPortalInside=null;return}
@@ -20785,8 +20786,9 @@ function drawDiamondPortals(){
    const r=3+t*27,a=p.angle+gameClock*.18;
    const x=px+TILE*.5+Math.cos(a)*r,y=py+TILE*.5+Math.sin(a)*r*.72;
    const alpha=(.95-t*.58)*(portal.flash>0?1:1);
-   ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=diamondPortalGemColors[p.color];ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=5;
-   ctx.translate(x,y);ctx.rotate(a+t*2);ctx.beginPath();ctx.moveTo(0,-p.size);ctx.lineTo(p.size*.72,0);ctx.lineTo(0,p.size);ctx.lineTo(-p.size*.72,0);ctx.closePath();ctx.fill();ctx.restore();
+   const rot=a+t*2,cs=Math.cos(rot),sn=Math.sin(rot),w=p.size*.72,h=p.size;
+   ctx.globalAlpha=alpha;ctx.fillStyle=diamondPortalGemColors[p.color];ctx.beginPath();
+   ctx.moveTo(x+sn*h,y-cs*h);ctx.lineTo(x+cs*w,y+sn*w);ctx.lineTo(x-sn*h,y+cs*h);ctx.lineTo(x-cs*w,y-sn*w);ctx.closePath();ctx.fill();
   }
   portal.flash=Math.max(0,portal.flash-.016);
  }
@@ -20799,15 +20801,15 @@ newLevel=function(preservePowerUps=false){
 const updatePlayerBeforeDiamondPortals=updatePlayer;
 updatePlayer=function(dt){
  updatePlayerBeforeDiamondPortals(dt);
- if(currentWorld==="diamonds"&&running)checkDiamondPortal(player,PLAYER_RADIUS,true);
+ if(currentWorld==="diamonds"&&running)checkDiamondPortal(player,PLAYER_RADIUS,true,dt);
 };
 const updateEnemiesBeforeDiamondPortals=updateEnemies;
 updateEnemies=function(dt){
  updateEnemiesBeforeDiamondPortals(dt);
  if(currentWorld!=="diamonds")return;
  for(const enemy of enemies){
-  if(!enemy.alive||enemy.burrowing||enemy.isSwampGhost||enemy.isBlueFlame||enemy.isFlying||enemy.isFloating||enemy.isAirborne||enemy.isHovering)continue;
-  checkDiamondPortal(enemy,.25,false);
+  if(!enemy.alive||enemy.burrowing||enemy.isSwampGhost||enemy.isBlueFlame||enemy.isFlying||enemy.isFloating||enemy.isAirborne||enemy.isHovering||enemy.flying||enemy.floating||enemy.airborne||enemy.movementType==="flying"||enemy.moveType==="fly")continue;
+  checkDiamondPortal(enemy,.25,false,dt);
  }
 };
 const drawBeforeDiamondPortals=draw;
