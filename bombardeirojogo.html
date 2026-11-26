@@ -17069,7 +17069,7 @@ function getDestroyedBlockParticleSprite(world,p){
 }
 function spawnDestroyedBlockEffect(x,y,world){
  if(world!=="desert"&&world!=="volcano"&&world!=="ice"&&world!=="diamonds")return;
- const themeIndex=world==="diamonds"?diamondIndex():0;
+ const themeIndex=world==="diamonds"?Math.max(0,Math.min(9,level-1)):0;
  const effect={x,y,world,themeIndex,age:0,duration:world==="diamonds"?1.08:world==="desert"?.86:world==="ice"?.92:.78,particles:[]};
  const count=world==="diamonds"?72:world==="desert"?26:world==="ice"?34:30;
  for(let i=0;i<count;i++){
