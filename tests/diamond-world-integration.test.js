@@ -152,7 +152,7 @@ test("os fragmentos de diamante usam a ponte pública da paleta sem acessar diam
  assert.doesNotMatch(html.slice(particleStart,particleEnd),/diamondThemes/,"os fragmentos não podem acessar o catálogo privado");
  assert.doesNotMatch(html,/buildDiamondDestroyedBlockGlow|diamondDestroyedGlowCanvases/,"não há clarão radial na destruição dos diamantes");
  assert.match(html,/window\.__bombardeiroGetDiamondEffectPalette=function\(themeIndex\)/);
- assert.match(html,/window\.__bombardeiroGetDiamondEffectPalette\?window\.__bombardeiroGetDiamondEffectPalette\(index\)/);
+ assert.match(html,/const paletteGetter=window\.__bombardeiroGetDiamondEffectPalette/);
 });
 test("o controlador de introdução das fases termina antes do módulo Diamante",()=>{
  const outerStart=html.indexOf('(()=>{\n"use strict";');
