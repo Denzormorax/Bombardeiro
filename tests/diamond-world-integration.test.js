@@ -95,12 +95,13 @@ test("a espiral dos portais cresce visualmente sem alterar a área central de co
  assert.match(html.slice(collisionStart,collisionEnd),/portal\.x\+\.5,portal\.y\+\.5\)<\.39/);
 });
 test("o contorno dos geodos recebe halo pulsante temático com margem para não ser cortado",()=>{
+ const haloStart=html.indexOf("function buildDiamondShimmerHalo(");
  const buildStart=html.indexOf("function renderDiamondShimmerAtlasFrame(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
- const builder=html.slice(buildStart,drawStart);
+ const builder=html.slice(haloStart,drawStart);
  assert.match(html,/DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE\+DIAMOND_SHIMMER_PADDING\*2/);
  assert.match(builder,/paletteGetter=window\.__bombardeiroGetDiamondEffectPalette/);
- assert.match(builder,/outlineColor=palette&&palette\.glow\?palette\.glow/);
+ assert.match(builder,/outlineColor=palette\.glow/);
  assert.match(builder,/outlineCtx\.shadowColor=outlineColor/);
  assert.match(builder,/outlineCtx\.shadowBlur=28\+12\*glowPulse/);
  assert.match(builder,/outlineCtx\.shadowBlur=18\+8\*glowPulse/);
