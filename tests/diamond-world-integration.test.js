@@ -26,7 +26,7 @@ test("as dez temáticas usam o atlas facetado e sprites em cache",()=>{
  assert.equal((atlas.match(/<g transform="translate\(/g)||[]).length,40);
 });
 test("as dez arenas usam pisos de terra com pequenos cristais encrustados, sem alterar geodos ou muralhas",()=>{
- assert.equal((atlas.match(/— piso de terra com cristais/g)||[]).length,10);
+ assert.equal((atlas.match(/— piso de terra com cristais/g)||[]).length,20);
  assert.equal((atlas.match(/<title>[^<]*geodo destrutível rachado<\/title>/g)||[]).length,10);
  assert.equal((atlas.match(/<title>[^<]*muralha indestrutível blindada<\/title>/g)||[]).length,10);
  assert.match(atlas,/piso de terra com cristais/);
