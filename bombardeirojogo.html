@@ -17939,11 +17939,11 @@ function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  outlineCtx.shadowColor=outlineColor;
  // Halo em três camadas, construído uma única vez por tema, não 64 vezes.
- outlineCtx.shadowBlur=28+12*glowPulse;outlineCtx.globalAlpha=.82+.16*glowPulse;
+ outlineCtx.shadowBlur=14+6*glowPulse;outlineCtx.globalAlpha=.48+.10*glowPulse;
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- outlineCtx.shadowBlur=18+8*glowPulse;outlineCtx.globalAlpha=.90+.10*glowPulse;
+ outlineCtx.shadowBlur=8+4*glowPulse;outlineCtx.globalAlpha=.58+.12*glowPulse;
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- outlineCtx.shadowBlur=9+5*glowPulse;outlineCtx.globalAlpha=1;
+ outlineCtx.shadowBlur=4+2*glowPulse;outlineCtx.globalAlpha=.72;
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
  outlineCtx.shadowBlur=0;outlineCtx.globalAlpha=1;
  outlineCtx.globalCompositeOperation="destination-out";
@@ -17962,7 +17962,7 @@ function renderDiamondShimmerAtlasFrame(state,frame){
  effectCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
  effectCtx.globalCompositeOperation="source-over";
  const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
- effectCtx.globalAlpha=.82+.16*glowPulse;
+ effectCtx.globalAlpha=.52+.10*glowPulse;
  effectCtx.drawImage(diamondOutlineGlowCanvas,0,0);
  effectCtx.globalAlpha=1;
  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
@@ -20856,7 +20856,9 @@ function checkDiamondPortal(entity,radius,isPlayer,dt){
  entity._diamondPortalInside=inside;
  const destination=findDiamondPortalDestination(entity,inside,radius,isPlayer);
  if(!destination)return;
- entity.x=destination.x+.5;entity.y=destination.y+.5;
+ const fromX=entity.x,fromY=entity.y,toX=destination.x+.5,toY=destination.y+.5;
+ entity._diamondPortalTransit={fromX,fromY,toX,toY,elapsed:0,duration:.78};
+ entity.x=toX;entity.y=toY;
  entity._diamondPortalInside=destination;entity[cooldownKey]=.85;
  inside.flash=1;destination.flash=1;
  if(isPlayer)entity.inv=Math.max(entity.inv||0,.28);
@@ -20893,15 +20895,23 @@ newLevel=function(preservePowerUps=false){
 };
 const updatePlayerBeforeDiamondPortals=updatePlayer;
 updatePlayer=function(dt){
+ const transit=player._diamondPortalTransit;
+ if(transit){transit.elapsed+=dt;if(transit.elapsed>=transit.duration)player._diamondPortalTransit=null;return;}
  updatePlayerBeforeDiamondPortals(dt);
  if(currentWorld==="diamonds"&&running)checkDiamondPortal(player,PLAYER_RADIUS,true,dt);
 };
 const updateEnemiesBeforeDiamondPortals=updateEnemies;
 updateEnemies=function(dt){
- updateEnemiesBeforeDiamondPortals(dt);
- if(currentWorld!=="diamonds")return;
+ if(currentWorld!=="diamonds"){updateEnemiesBeforeDiamondPortals(dt);return;}
+ const allEnemies=enemies,transiting=allEnemies.filter(e=>e&&e._diamondPortalTransit);
+ if(transiting.length){
+  enemies=allEnemies.filter(e=>!e._diamondPortalTransit);
+  try{updateEnemiesBeforeDiamondPortals(dt)}finally{enemies=allEnemies;}
+  for(const enemy of transiting){const transit=enemy._diamondPortalTransit;if(transit){transit.elapsed+=dt;if(transit.elapsed>=transit.duration)enemy._diamondPortalTransit=null;}}
+ }else updateEnemiesBeforeDiamondPortals(dt);
  for(const enemy of enemies){
   if(!enemy.alive||enemy.burrowing||enemy.isSwampGhost||enemy.isBlueFlame||enemy.isFlying||enemy.isFloating||enemy.isAirborne||enemy.isHovering||enemy.flying||enemy.floating||enemy.airborne||enemy.movementType==="flying"||enemy.moveType==="fly")continue;
+  if(enemy._diamondPortalTransit)continue;
   checkDiamondPortal(enemy,.25,false,dt);
  }
 };
@@ -20909,6 +20919,33 @@ const drawBeforeDiamondPortals=draw;
 draw=function(){
  if(currentWorld==="diamonds")buildDiamondPortalFrames(diamondIndex());
  drawBeforeDiamondPortals();
+};
+// Entrada e saída animadas dos espirais: encolhe na origem e cresce no destino.
+function diamondPortalTransitPose(entity){
+ const t=entity&&entity._diamondPortalTransit;
+ if(!t)return null;
+ const progress=Math.max(0,Math.min(1,t.elapsed/t.duration));
+ const entering=progress<.5,local=entering?progress*2:(progress-.5)*2;
+ const scale=entering?Math.max(.035,Math.cos(local*Math.PI*.5)):Math.max(.035,Math.sin(local*Math.PI*.5));
+ return {x:entering?t.fromX:t.toX,y:entering?t.fromY:t.toY,scale};
+}
+const drawPlayerBeforeDiamondTransit=drawPlayer;
+drawPlayer=function(){
+ const pose=diamondPortalTransitPose(player);
+ if(!pose)return drawPlayerBeforeDiamondTransit();
+ const oldX=player.x,oldY=player.y;player.x=pose.x;player.y=pose.y;
+ const px=ox+pose.x*TILE,py=oy+pose.y*TILE;
+ ctx.save();ctx.translate(px,py);ctx.scale(pose.scale,pose.scale);ctx.translate(-px,-py);
+ try{drawPlayerBeforeDiamondTransit()}finally{ctx.restore();player.x=oldX;player.y=oldY;}
+};
+const drawEnemyBeforeDiamondTransit=drawEnemy;
+drawEnemy=function(enemy){
+ const pose=diamondPortalTransitPose(enemy);
+ if(!pose)return drawEnemyBeforeDiamondTransit(enemy);
+ const oldX=enemy.x,oldY=enemy.y;enemy.x=pose.x;enemy.y=pose.y;
+ const px=ox+pose.x*TILE,py=oy+pose.y*TILE;
+ ctx.save();ctx.translate(px,py);ctx.scale(pose.scale,pose.scale);ctx.translate(-px,-py);
+ try{drawEnemyBeforeDiamondTransit(enemy)}finally{ctx.restore();enemy.x=oldX;enemy.y=oldY;}
 };
 const syncBackdropBeforeDiamondControls=syncThemedBackdrop;
 syncThemedBackdrop=function(){
