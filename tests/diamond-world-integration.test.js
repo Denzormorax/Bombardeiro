@@ -106,3 +106,41 @@ test("os efeitos de destruição dos diamantes usam uma ponte pública estreita,
  assert.match(html,/window\.__bombardeiroGetDiamondEffectPalette=function\(themeIndex\)/);
  assert.match(html,/window\.__bombardeiroGetDiamondEffectPalette\?window\.__bombardeiroGetDiamondEffectPalette\(index\)/);
 });
+
+
+test("o controlador de introdução das fases termina antes do módulo Diamante",()=>{
+ const outerStart=html.indexOf('(()=>{\n"use strict";');
+ const shimmerStart=html.indexOf("function drawDiamondDestructibleShimmer()");
+ const introStart=html.indexOf('(function(){\n "use strict";\n let introToken');
+ const introClose=html.indexOf("})();",introStart);
+ const diamondStart=html.indexOf("/* MUNDO 6 — REINO DOS DIAMANTES */");
+ const spriteSheetsDecl=html.indexOf("const diamondSpriteSheet=new Image(),diamondThemedSpriteSheets=Array(10).fill(null)");
+ const outerClose=html.indexOf("})();",html.indexOf('if(!worldOrder.includes("diamonds"))worldOrder.push("diamonds");'));
+ assert.ok(outerStart>=0&&shimmerStart>outerStart&&shimmerStart<introStart);
+ assert.ok(introStart>shimmerStart&&introClose>introStart&&introClose<diamondStart);
+ assert.ok(diamondStart>introClose&&spriteSheetsDecl>diamondStart);
+ assert.ok(outerClose>spriteSheetsDecl,"o escopo principal só fecha depois das declarações do Mundo Diamante");
+ assert.ok(html.indexOf('const worldOrder=["forest","desert","volcano","ice","swamp"]')<introStart);
+ assert.match(html,/if\(!worldOrder\.includes\("diamonds"\)\)worldOrder\.push\("diamonds"\)/);
+});
+
+test("as variáveis do Mundo Diamante ficam no mesmo escopo lexical dos efeitos de renderização",()=>{
+ const outerStart=html.indexOf('(()=>{\n"use strict";');
+ const shimmerStart=html.indexOf("function drawDiamondDestructibleShimmer()");
+ const introStart=html.indexOf('(function(){\n "use strict";\n let introToken');
+ const introClose=html.indexOf("})();",introStart);
+ const diamondStart=html.indexOf("/* MUNDO 6 — REINO DOS DIAMANTES */");
+ const spriteSheetsDecl=html.indexOf("const diamondSpriteSheet=new Image(),diamondThemedSpriteSheets=Array(10).fill(null)");
+ const outerClose=html.indexOf("})();",html.indexOf('if(!worldOrder.includes("diamonds"))worldOrder.push("diamonds");'));
+ assert.ok(outerStart<shimmerStart&&shimmerStart<introStart);
+ assert.ok(introClose<diamondStart&&diamondStart<spriteSheetsDecl&&spriteSheetsDecl<outerClose);
+ assert.match(html.slice(shimmerStart,introStart),/diamondThemedSpriteSheets\[index\]/);
+ assert.match(html.slice(diamondStart,outerClose),/const diamondSpriteSheet=new Image\(\),diamondThemedSpriteSheets=Array\(10\)\.fill\(null\)/);
+});
+
+test("todos os blocos JavaScript embutidos no HTML passam pela análise de sintaxe",()=>{
+ const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+  .map(match=>match[1]).filter(source=>source.trim());
+ assert.ok(scripts.length>=2,"scripts JavaScript inline localizados");
+ scripts.forEach((source,index)=>assert.doesNotThrow(()=>new Function(source),"script inline "+(index+1)+" deve ter sintaxe válida"));
+});
