@@ -16360,19 +16360,48 @@ function findGridPath(sx,sy,tx,ty,blockedDanger=null){
  }
  path.reverse();return path;
 }
+function reconstructGridPath(parent,start,target){
+ const path=[];let current=target;
+ while(current!==start){
+  const parts=current.split(",").map(Number);
+  path.push({x:parts[0],y:parts[1]});
+  current=parent.get(current);
+  if(!current)return [];
+ }
+ path.reverse();return path;
+}
 function findEnemyPath(enemy,targetX,targetY,blockedDanger=null){
  return findGridPath(Math.floor(enemy.x),Math.floor(enemy.y),Math.floor(targetX),Math.floor(targetY),blockedDanger);
 }
 function findEnemyRoute(enemy,targetX,targetY,blockedDanger=null){
- const tx=Math.floor(targetX),ty=Math.floor(targetY),goals=[];
+ const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),tx=Math.floor(targetX),ty=Math.floor(targetY);
+ const start=cellKey(sx,sy),queue=[{x:sx,y:sy,depth:0}],visited=new Set([start]),parent=new Map(),goalByKey=new Map();
+ let goalOrder=0;
  for(const [dx,dy] of [[0,0],[0,-1],[1,0],[0,1],[-1,0]]){
-  const x=tx+dx,y=ty+dy;
-  if(tileAt(x,y)!==0||bombAt(x,y)||(blockedDanger&&blockedDanger.has(cellKey(x,y))))continue;
-  const path=findEnemyPath(enemy,x+.5,y+.5,blockedDanger);
-  if(path.length)goals.push({path,dist:distance(x+.5,y+.5,targetX,targetY)});
+  const x=tx+dx,y=ty+dy,key=cellKey(x,y);
+  if(tileAt(x,y)!==0||bombAt(x,y)||(blockedDanger&&blockedDanger.has(key)))continue;
+  goalByKey.set(key,{distance:distance(x+.5,y+.5,targetX,targetY),order:goalOrder++});
  }
- goals.sort((a,b)=>a.path.length-b.path.length||a.dist-b.dist);
- return goals.length?goals[0].path:[];
+ if(!goalByKey.size)return [];
+ let head=0,bestKey=null,bestDepth=Infinity,bestDistance=Infinity,bestOrder=Infinity;
+ while(head<queue.length){
+  const p=queue[head++],key=cellKey(p.x,p.y);
+  if(p.depth>bestDepth)break;
+  if(p.depth>0&&goalByKey.has(key)){
+   const goal=goalByKey.get(key);
+   if(p.depth<bestDepth||(goal.distance<bestDistance)||(goal.distance===bestDistance&&goal.order<bestOrder)){
+    bestKey=key;bestDepth=p.depth;bestDistance=goal.distance;bestOrder=goal.order;
+   }
+   continue;
+  }
+  if(p.depth>=bestDepth)continue;
+  for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
+   const x=p.x+dx,y=p.y+dy,nextKey=cellKey(x,y);
+   if(visited.has(nextKey)||tileAt(x,y)!==0||bombAt(x,y)||(blockedDanger&&blockedDanger.has(nextKey)))continue;
+   visited.add(nextKey);parent.set(nextKey,key);queue.push({x,y,depth:p.depth+1});
+  }
+ }
+ return bestKey?reconstructGridPath(parent,start,bestKey):[];
 }
 function canSeePlayer(enemy){
  const dx=player.x-enemy.x,dy=player.y-enemy.y,dist=Math.hypot(dx,dy),vision=4;
@@ -16386,7 +16415,8 @@ function canSeePlayer(enemy){
  return true;
 }
 function choosePatrolPath(enemy,blockedDanger=null){
- const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,dist:0,path:[]}],visited=new Set([cellKey(sx,sy)]),reachable=[],dirs=[[0,-1],[1,0],[0,1],[-1,0]];
+ const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),start=cellKey(sx,sy);
+ const queue=[{x:sx,y:sy,dist:0,key:start}],visited=new Set([start]),parent=new Map(),reachable=[],dirs=[[0,-1],[1,0],[0,1],[-1,0]];
  let head=0;
  // Mantém a patrulha natural aprovada: percorre corredores conectados e não quebra blocos.
  while(head<queue.length){
@@ -16397,13 +16427,13 @@ function choosePatrolPath(enemy,blockedDanger=null){
    const x=current.x+dx,y=current.y+dy,key=cellKey(x,y);
    if(visited.has(key)||tileAt(x,y)!==0||bombAt(x,y)||(blockedDanger&&blockedDanger.has(key)))continue;
    if(distance(x+.5,y+.5,player.x,player.y)<3.6)continue;
-   visited.add(key);queue.push({x,y,dist:current.dist+1,path:current.path.concat([{x,y}])});
+   visited.add(key);parent.set(key,current.key);queue.push({x,y,dist:current.dist+1,key});
   }
  }
  if(!reachable.length){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.3;return}
  shuffleArray(reachable);
  const selected=reachable.find(p=>p.dist>=2&&!(enemy.patrolTarget&&p.x===enemy.patrolTarget.x&&p.y===enemy.patrolTarget.y))||reachable[0];
- enemy.path=selected.path.slice();enemy.patrolTarget={x:selected.x,y:selected.y};enemy.patrolWait=.05+Math.random()*.25;
+ enemy.path=reconstructGridPath(parent,start,selected.key);enemy.patrolTarget={x:selected.x,y:selected.y};enemy.patrolWait=.05+Math.random()*.25;
 }
 function isBehindBombCover(x,y){
  for(const bomb of bombs){
@@ -16422,47 +16452,46 @@ function isBehindBombCover(x,y){
  return false;
 }
 function findBombEscapePath(enemy,danger,preferCover=false,allowLonger=false){
- const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),safe=[];
- const shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman);
+ const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),start=cellKey(sx,sy);
+ const queue=[{x:sx,y:sy,key:start,depth:0}],visited=new Set([start]),parent=new Map(),shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman);
  const maxSteps=preferCover?5:(shortFlee?2:COLS*ROWS);
- let head=0;
+ const maxBlastRange=bombs.reduce((max,b)=>Math.max(max,Number(b.range)||1),1),distanceWeight=.28+Math.min(6,maxBlastRange)*.035;
+ let head=0,bestKey=null,bestScore=Infinity;
  while(head<queue.length){
-  const p=queue[head++],key=cellKey(p.x,p.y);
-  if(p.path.length>0&&!danger.has(key)){
+  const p=queue[head++],key=p.key;
+  if(p.depth>0&&!danger.has(key)){
    let nearestBomb=99;
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
    let score;
    if(preferCover){
     const protectedByBlock=nearestBomb>=3.4&&isBehindBombCover(p.x,p.y);
     const distanceScore=Math.abs(4.5-Math.min(5,nearestBomb))*1.65;
-    const stepScore=Math.abs(4.5-p.path.length)*.42;
+    const stepScore=Math.abs(4.5-p.depth)*.42;
     score=distanceScore+stepScore-(protectedByBlock?3.4:0);
    }else{
     const desertHunter=currentWorld==="desert"&&enemy.isHunter;
     const coverBonus=isBehindBombCover(p.x,p.y)?(desertHunter?7.5:2.4):0;
-    const maxBlastRange=bombs.reduce((max,b)=>Math.max(max,Number(b.range)||1),1),distanceWeight=.28+Math.min(6,maxBlastRange)*.035;
-    score=desertHunter?p.path.length*.62-nearestBomb*.42-coverBonus:p.path.length-nearestBomb*distanceWeight-coverBonus;
+    score=desertHunter?p.depth*.62-nearestBomb*.42-coverBonus:p.depth-nearestBomb*distanceWeight-coverBonus;
    }
-   safe.push({path:p.path,score});
+   if(score<bestScore){bestScore=score;bestKey=key}
   }
-  if(p.path.length>=maxSteps)continue;
+  if(p.depth>=maxSteps)continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+dx,y=p.y+dy,k=cellKey(x,y);
    if(visited.has(k)||tileAt(x,y)!==0||bombAt(x,y)||danger.has(k))continue;
-   visited.add(k);queue.push({x,y,path:p.path.concat([{x,y}])});
+   visited.add(k);parent.set(k,key);queue.push({x,y,key:k,depth:p.depth+1});
   }
  }
- safe.sort((a,b)=>a.score-b.score);
- if(!safe.length&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true);
- return safe.length?safe[0].path:[];
+ if(!bestKey&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true);
+ return bestKey?reconstructGridPath(parent,start,bestKey):[];
 }
 function findBlueFlameEscapePath(enemy,danger){
- const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y);
- const queue=[{x:sx,y:sy,path:[]}],visited=new Set([cellKey(sx,sy)]),candidates=[];
- let head=0;
+ const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),start=cellKey(sx,sy);
+ const queue=[{x:sx,y:sy,key:start,depth:0}],visited=new Set([start]),parent=new Map();
+ let head=0,bestKey=null,bestScore=Infinity;
  while(head<queue.length){
-  const p=queue[head++],key=cellKey(p.x,p.y);
-  if(p.path.length>0&&!danger.has(key)){
+  const p=queue[head++],key=p.key;
+  if(p.depth>0&&!danger.has(key)){
    let nearestBomb=99;
    for(const bomb of bombs)nearestBomb=Math.min(nearestBomb,distance(p.x+.5,p.y+.5,Math.floor(bomb.x)+.5,Math.floor(bomb.y)+.5));
    const cover=isBehindBombCover(p.x,p.y);
@@ -16470,19 +16499,18 @@ function findBlueFlameEscapePath(enemy,danger){
    const separation=Math.min(nearestBomb,8);
    const coverBonus=cover?5.2:0;
    const exposedPenalty=Math.max(0,2.8-playerDistance)*.45;
-   const score=p.path.length*.78-separation*1.35-coverBonus+exposedPenalty;
-   candidates.push({path:p.path,score});
+   const score=p.depth*.78-separation*1.35-coverBonus+exposedPenalty;
+   if(score<bestScore){bestScore=score;bestKey=key}
   }
-  if(p.path.length>=((enemy.isHunter||enemy.isSnowman)?2:COLS*ROWS))continue;
+  if(p.depth>=((enemy.isHunter||enemy.isSnowman)?2:COLS*ROWS))continue;
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+dx,y=p.y+dy,k=cellKey(x,y);
    if(visited.has(k)||tileAt(x,y)!==0||bombAt(x,y)||danger.has(k))continue;
-   visited.add(k);queue.push({x,y,path:p.path.concat([{x,y}])});
+   visited.add(k);parent.set(k,key);queue.push({x,y,key:k,depth:p.depth+1});
   }
  }
- candidates.sort((a,b)=>a.score-b.score);
- if(!candidates.length&&(enemy.isHunter||enemy.isSnowman))return findBombEscapePath(enemy,danger,false,true);
- return candidates.length?candidates[0].path:[];
+ if(!bestKey&&(enemy.isHunter||enemy.isSnowman))return findBombEscapePath(enemy,danger,false,true);
+ return bestKey?reconstructGridPath(parent,start,bestKey):[];
 }
 function spawnSandBuildParticles(x,y){
  const cx=x+.5,cy=y+.84;
@@ -16673,8 +16701,15 @@ function updateEnemies(dt){
 
   const currentKey=cellKey(Math.floor(enemy.x),Math.floor(enemy.y));
   const currentInDanger=danger.has(currentKey);
-  const routeInDanger=!!(enemy.path&&enemy.path.some(p=>danger.has(cellKey(p.x,p.y))));
-  const routeBlockedByBomb=!!(enemy.path&&enemy.path.some(p=>bombAt(p.x,p.y)));
+  let routeInDanger=false,routeBlockedByBomb=false;
+  if(enemy.path&&enemy.path.length){
+   for(const step of enemy.path){
+    const routeKey=cellKey(step.x,step.y);
+    if(!routeInDanger&&danger.has(routeKey))routeInDanger=true;
+    if(!routeBlockedByBomb&&bombAt(step.x,step.y))routeBlockedByBomb=true;
+    if(routeInDanger&&routeBlockedByBomb)break;
+   }
+  }
 
   // Reação à bomba recém-colocada: pequena pausa para avaliar e então uma rota segura.
   if(enemy.bombEscapePending){
@@ -16725,9 +16760,9 @@ function updateEnemies(dt){
 
   // Azul: antes de ser atingido patrulha; após o primeiro dano, persegue sem desistir.
   const seesPlayer=canSeePlayer(enemy);
-  if(enemy.isBuilder&&enemy.isEnraged&&canSeePlayer(enemy)){
+  if(enemy.isBuilder&&enemy.isEnraged&&seesPlayer){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=1.25;
-  }else if(enemy.isHorned&&enemy.isEnraged&&canSeePlayer(enemy)){
+  }else if(enemy.isHorned&&enemy.isEnraged&&seesPlayer){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=1.25;
   }else if(seesPlayer){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};
