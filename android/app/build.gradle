@@ -6,6 +6,11 @@ android {
     namespace "com.bombardeiro.game"
     compileSdk 35
 
+    // O APK é distribuído diretamente; mantém compatibilidade e evita bloqueio do lint por política da Play Store.
+    lint {
+        disable "ExpiredTargetSdkVersion"
+    }
+
     defaultConfig {
         applicationId "com.bombardeiro.game.storagepilot"
         minSdk 23
