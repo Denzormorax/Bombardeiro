@@ -116,7 +116,7 @@ test("o contorno dos geodos recebe halo pulsante temático com margem para não 
 });
 test("o brilho dos geodos usa quadros pré-renderizados e elimina composição alfa por bloco a cada quadro",()=>{
  assert.match(html,/DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8/);
- const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
+ const buildStart=html.indexOf("function renderDiamondShimmerAtlasFrame(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const drawEnd=html.indexOf("\nfunction draw(){",drawStart);
  assert.ok(buildStart>=0&&drawStart>buildStart&&drawEnd>drawStart,"pré-renderizador e renderizador localizados");
@@ -125,7 +125,7 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(builder,/effectCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(builder,/atlasCtx\.drawImage\(diamondShimmerTileCanvas/);
  assert.doesNotMatch(renderer,/destination-in|clearRect|createElement\("canvas"\)/,"o quadro não pode recriar máscaras nem canvases por geodo");
- assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox\+tile\.x\*TILE-DIAMOND_SHIMMER_PADDING,oy\+tile\.y\*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
+ assert.match(renderer,/ctx\\.drawImage\\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\\)/);
  assert.match(builder,/diamondShimmerFrameBuild!==state/);
  assert.match(builder,/requestIdleCallback/,"a montagem usa o tempo ocioso do navegador");
  assert.match(builder,/setTimeout\(\(\)=>renderChunk\(null\),16\)/,"há alternativa leve quando requestIdleCallback não existe");
