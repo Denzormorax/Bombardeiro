@@ -324,6 +324,12 @@ jobs:
           KEYSTORE_PATH="$RUNNER_TEMP/bombardeiro-release.jks"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
           test -s "$KEYSTORE_PATH"
+          keytool -list -keystore "$KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null
+          mkdir -p "$RUNNER_TEMP/signature-check"
+          printf 'Bombardeiro signature validation\n' > "$RUNNER_TEMP/signature-check/check.txt"
+          jar --create --file "$RUNNER_TEMP/signature-check.jar" -C "$RUNNER_TEMP/signature-check" .
+          jarsigner -keystore "$KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -keypass "$ANDROID_KEY_PASSWORD" -signedjar "$RUNNER_TEMP/signature-check-signed.jar" "$RUNNER_TEMP/signature-check.jar" "$ANDROID_KEY_ALIAS" >/dev/null
+          echo "Keystore, alias e senhas validados com sucesso."
           echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
           echo "ANDROID_VERSION_CODE=$((GITHUB_RUN_NUMBER + 1))" >> "$GITHUB_ENV"
           echo "ANDROID_VERSION_NAME=1.0.$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
