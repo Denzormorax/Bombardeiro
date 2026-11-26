@@ -17876,7 +17876,7 @@ function startIntroSplash(){
 /* CRIATURA DO PÂNTANO — TRONCO RASTEJANTE.
    IA isolada, dois pontos de vida, emboscada subterrânea por proximidade e desenho 3D procedural.
    Mantém os inimigos existentes fora deste controlador. */
-const swampLogTuning={surfaceSpeed:.72,surfaceCycle:7,sinkTime:.45,emergeTime:.45,radius:.235};
+const swampLogTuning={surfaceSpeed:.72,surfaceCycle:5,sinkTime:.45,emergeTime:.45,ambushEmergeTime:.14,radius:.235};
 function swampLogCellSafe(x,y,underground=false){
  if(x<1||y<1||x>=COLS-1||y>=ROWS-1)return false;
  const tile=tileAt(x,y);
@@ -18019,21 +18019,25 @@ function updateSwampLog(log,dt){
   log.phaseTime+=dt;log.burrowing=true;
   if(log.phaseTime>=swampLogTuning.sinkTime){log.phase="burrow";log.phaseTime=0;log.path=[];log.repath=0}
  }else if(log.phase==="burrow"){
-  // Fica imóvel e completamente escondido. Só emerge quando o jogador pisa sobre ele.
-  log.burrowing=true;
-  if(player.inv<=0&&distance(log.x,log.y,player.x,player.y)<.62){
-   log.phase="emerging";log.phaseTime=0;log.ambushTriggered=true;log.path=[];
+  // Permanece enterrado por cinco segundos; a colisão real do jogador dispara a emboscada.
+  log.burrowing=true;log.phaseTime+=dt;
+  const collisionReach=PLAYER_RADIUS+swampLogTuning.radius;
+  if(player.inv<=0&&distance(log.x,log.y,player.x,player.y)<=collisionReach){
+   log.phase="emerging";log.phaseTime=0;log.ambushTriggered=true;log.emergeDuration=swampLogTuning.ambushEmergeTime;log.path=[];
+  }else if(log.phaseTime>=5){
+   log.phase="emerging";log.phaseTime=0;log.ambushTriggered=false;log.emergeDuration=swampLogTuning.emergeTime;log.path=[];
   }
  }else if(log.phase==="emerging"){
   log.burrowing=true;log.phaseTime+=dt;
-  if(log.phaseTime>=swampLogTuning.emergeTime){
+  const emergeDuration=log.emergeDuration||swampLogTuning.emergeTime;
+  if(log.phaseTime>=emergeDuration){
    if(log.ambushTriggered){log.ambushTriggered=false;if(player.inv<=0)hurtPlayer()}
-   log.phase="surface";log.phaseTime=0;log.surfaceClock=0;log.burrowing=false;log.path=[];log.repath=.2;
+   log.phase="surface";log.phaseTime=0;log.surfaceClock=0;log.burrowing=false;log.emergeDuration=0;log.path=[];log.repath=.2;
   }
  }
 }
 function drawSwampLog(log){
- const phase=log.phase||"surface";if(phase==="burrow")return;
+ const phase=log.phase||"surface";
  const x=ox+log.x*TILE,y=oy+log.y*TILE;
  const death=log.alive?1:Math.max(0,(log.deathTimer||0)/ENEMY_DEATH_TIME);
  // Pequenas marcas de limo no chão: desenho simples e barato, sem gradientes por quadro.
@@ -18043,6 +18047,17 @@ function drawSwampLog(log){
   ctx.beginPath();ctx.ellipse(px,py,p.size*1.5,p.size*.52,0,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=alpha*.62;ctx.fillStyle="rgba(183,204,111,.72)";
   ctx.beginPath();ctx.ellipse(px-1,py-1,p.size*.58,p.size*.2,-.08,0,Math.PI*2);ctx.fill();ctx.restore();
+ }
+ if(phase==="burrow"){
+  // Apenas olhos e boca ficam acima da lama enquanto o corpo permanece subterrâneo.
+  ctx.save();ctx.globalAlpha=death;ctx.translate(x,y);ctx.scale(1.25,1.25);
+  ctx.fillStyle="rgba(8,20,13,.92)";ctx.beginPath();
+  ctx.ellipse(-5,-5,3.7,4.1,0,0,Math.PI*2);ctx.ellipse(5,-5,3.7,4.1,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=log.hitFlash>0?"#fff3c8":"#c8f276";ctx.shadowColor="#b8ef68";ctx.shadowBlur=5;
+  ctx.beginPath();ctx.ellipse(-5,-5,1.9,2.3,0,0,Math.PI*2);ctx.ellipse(5,-5,1.9,2.3,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle="#111b15";ctx.beginPath();ctx.ellipse(0,3,5,2.3,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#9baf68";ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-3,3);ctx.lineTo(3,3);ctx.stroke();
+  ctx.restore();return;
  }
  const sinking=phase==="sinking"?Math.min(1,log.phaseTime/swampLogTuning.sinkTime):phase==="emerging"?1-Math.min(1,log.phaseTime/swampLogTuning.emergeTime):phase==="burrow"?1:0;
  const bob=phase==="surface"?Math.sin(log.anim*2.2)*1.25:0;

@@ -14,12 +14,13 @@ test("criatura possui dois pontos de vida e barra dupla sobre a cabeça",()=>{
  assert.match(html,/hp:2,maxHp:2/);
  assert.match(html,/for\(let i=0;i<2;i\+\+\)\{ctx\.fillStyle=i<\(log\.hp\|\|0\)/);
 });
-test("ciclo mantém sete segundos na superfície e esconde o monstro até o jogador passar por cima",()=>{
- assert.match(html,/surfaceCycle:7/);
- assert.match(html,/sinkTime:\.45,emergeTime:\.45/);
+test("ciclo alterna cinco segundos na superfície e cinco enterrado, com emboscada por colisão real",()=>{
+ assert.match(html,/surfaceCycle:5/);
+ assert.match(html,/sinkTime:\.45,emergeTime:\.45,ambushEmergeTime:\.14/);
  assert.match(html,/if\(log\.surfaceClock>=swampLogTuning\.surfaceCycle\)\{swampLogBeginBurrow\(log\);return\}/);
- assert.match(html,/player\.inv<=0&&distance\(log\.x,log\.y,player\.x,player\.y\)<\.62/);
- assert.match(html,/log\.ambushTriggered=true/);
+ assert.match(html,/log\.phaseTime>=5/);
+ assert.match(html,/PLAYER_RADIUS\+swampLogTuning\.radius/);
+ assert.match(html,/log\.emergeDuration=swampLogTuning\.ambushEmergeTime/);
  assert.match(html,/if\(log\.ambushTriggered\).*hurtPlayer\(\)/s);
  for(const phase of ["surface","sinking","burrow","emerging"])assert.ok(html.includes('phase="'+phase+'"')||html.includes('phase==="'+phase+'"'));
 });
@@ -52,15 +53,15 @@ test("criatura só recebe dano na forma física e morre após dois acertos",()=>
  assert.match(html,/enemy\.hp=Math\.max\(0,\(enemy\.hp\|\|2\)-1\)/);
  assert.match(html,/if\(enemy\.hp<=0\)killEnemy\(enemy\)/);
 });
-test("monstro não detecta bombas e só ataca quando o jogador pisa sobre ele",()=>{
+test("monstro não detecta bombas e só arma emboscada ao colidir com o jogador",()=>{
  const section=html.slice(html.indexOf("/* CRIATURA DO PÂNTANO"),html.indexOf("/* BOMBARDEIRO_RUNTIME_DIAGNOSTIC_V1"));
  const bombReaction=html.slice(html.indexOf("function reactToNewBomb"),html.indexOf("function followEnemyPath"));
  assert.match(bombReaction,/if\(!enemy\.alive\|\|enemy\.burrowing\|\|enemy\.isSwampLog\)continue/);
  assert.doesNotMatch(section,/getAllBombDangerCells|getBombDangerCells|reactToNewBomb|swampLogExplodeBase|bombAt\(|danger/);
- assert.match(section,/player\.inv<=0&&distance\(log\.x,log\.y,player\.x,player\.y\)<\.62/);
+ assert.match(section,/player\.inv<=0&&distance\(log\.x,log\.y,player\.x,player\.y\)<=collisionReach/);
  assert.match(section,/log\.phase="emerging";log\.phaseTime=0;log\.ambushTriggered=true/);
  assert.match(section,/if\(log\.ambushTriggered\).*hurtPlayer\(\)/s);
- assert.match(section,/if\(phase==="burrow"\)return/);
+ assert.match(section,/if\(phase==="burrow"\)[\s\S]*?Apenas olhos e boca ficam acima da lama/);
 });
 
 test("efeitos do tronco usam desenho procedural e partículas limitadas",()=>{
