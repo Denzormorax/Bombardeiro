@@ -145,20 +145,15 @@ test("os efeitos de destruição dos geodos não dependem de diamondIndex fora d
  assert.match(effectFactory,/world==="diamonds"\?Math\.max\(0,Math\.min\(9,level-1\)\):0/);
 });
 
-test("os efeitos de destruição dos diamantes usam uma ponte pública estreita, sem acessar diamondThemes privado",()=>{
- const glowStart=html.indexOf("function buildDiamondDestroyedBlockGlow(");
- const glowEnd=html.indexOf("function buildDestroyedBlockGlow(",glowStart);
+test("os fragmentos de diamante usam a ponte pública da paleta sem acessar diamondThemes privado",()=>{
  const particleStart=html.indexOf("function getDestroyedBlockParticleSprite(");
  const particleEnd=html.indexOf("function spawnDestroyedBlockEffect(",particleStart);
- assert.ok(glowStart>=0&&glowEnd>glowStart,"função do brilho localizada");
  assert.ok(particleStart>=0&&particleEnd>particleStart,"função dos fragmentos localizada");
- assert.doesNotMatch(html.slice(glowStart,glowEnd),/diamondThemes/,"o brilho não pode acessar o catálogo privado");
  assert.doesNotMatch(html.slice(particleStart,particleEnd),/diamondThemes/,"os fragmentos não podem acessar o catálogo privado");
+ assert.doesNotMatch(html,/buildDiamondDestroyedBlockGlow|diamondDestroyedGlowCanvases/,"não há clarão radial na destruição dos diamantes");
  assert.match(html,/window\.__bombardeiroGetDiamondEffectPalette=function\(themeIndex\)/);
  assert.match(html,/window\.__bombardeiroGetDiamondEffectPalette\?window\.__bombardeiroGetDiamondEffectPalette\(index\)/);
 });
-
-
 test("o controlador de introdução das fases termina antes do módulo Diamante",()=>{
  const outerStart=html.indexOf('(()=>{\n"use strict";');
  const shimmerStart=html.indexOf("function drawDiamondDestructibleShimmer()");
