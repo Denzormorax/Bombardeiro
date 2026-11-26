@@ -17930,7 +17930,7 @@ function drawIndestructibleShimmer(){
 var diamondShimmerCanvases=[]; // Brilhos originais por tema.
 var diamondShimmerTileCanvas=null; // Quadro expandido reutilizado no pré-renderizador.
 var diamondOutlineGlowCanvas=null; // Máscara expandida reutilizada para o halo externo do PNG.
-var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1;
+var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null;
 const DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8;
 function renderDiamondShimmerAtlasFrame(state,frame){
@@ -17983,7 +17983,9 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  diamondShimmerFrameBuild=state;
  // Renderiza um quadro inicial de halo imediatamente, para o glow não esperar o atlas inteiro.
  renderDiamondShimmerAtlasFrame(state,0);
- diamondShimmerFramePreview=diamondShimmerTileCanvas;
+ if(!diamondShimmerPreviewCanvas){diamondShimmerPreviewCanvas=document.createElement("canvas");diamondShimmerPreviewCanvas.width=DIAMOND_SHIMMER_FRAME_SIZE;diamondShimmerPreviewCanvas.height=DIAMOND_SHIMMER_FRAME_SIZE;}
+ diamondShimmerPreviewCanvas.getContext("2d").drawImage(diamondShimmerTileCanvas,0,0);
+ diamondShimmerFramePreview=diamondShimmerPreviewCanvas;
  diamondShimmerFramePreviewTheme=themeIndex;
  function renderChunk(deadline){
   if(diamondShimmerFrameBuild!==state)return;
@@ -17999,7 +18001,7 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
   if(typeof window.requestIdleCallback==="function"){
    state.kind="idle";state.handle=window.requestIdleCallback(renderChunk,{timeout:120});
   }else{
-   state.kind="timer";state.handle=setTimeout(()=>renderChunk(null),32);
+   state.kind="timer";state.handle=setTimeout(()=>renderChunk(null),16);
   }
  }
  state.cancel=function(){
