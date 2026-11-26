@@ -73,3 +73,12 @@ test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase
  assert.match(html,/currentWorld==="diamonds"\)spawnDestroyedBlockEffect/);
  assert.match(html,/world==="diamonds"\?1\.08/);
 });
+
+test("os efeitos de destruição dos geodos não dependem de diamondIndex fora do módulo isolado",()=>{
+ const start=html.indexOf("function spawnDestroyedBlockEffect(");
+ const end=html.indexOf("function updateDestroyedBlockEffects(",start);
+ assert.ok(start>=0&&end>start,"função de criação dos efeitos localizada");
+ const effectFactory=html.slice(start,end);
+ assert.doesNotMatch(effectFactory,/diamondIndex/,"a função principal não pode acessar diamondIndex privado");
+ assert.match(effectFactory,/world==="diamonds"\?Math\.max\(0,Math\.min\(9,level-1\)\):0/);
+});
