@@ -17000,7 +17000,7 @@ const diamondDestroyedGlowCanvases=Array(10).fill(null);
 function buildDiamondDestroyedBlockGlow(themeIndex){
  const index=Math.max(0,Math.min(9,themeIndex|0));
  if(diamondDestroyedGlowCanvases[index])return diamondDestroyedGlowCanvases[index];
- const theme=diamondThemes[index],c=document.createElement("canvas");c.width=c.height=128;
+ const theme=window.__bombardeiroGetDiamondEffectPalette?window.__bombardeiroGetDiamondEffectPalette(index):{accent:"#c8f8ff",glow:"#8cecff"};const c=document.createElement("canvas");c.width=c.height=128;
  const q=c.getContext("2d"),g=q.createRadialGradient(64,64,1,64,64,63);
  g.addColorStop(0,"rgba(255,255,255,.98)");g.addColorStop(.2,theme.accent+"e8");
  g.addColorStop(.52,theme.glow+"88");g.addColorStop(1,theme.glow+"00");
@@ -17038,7 +17038,7 @@ function getDestroyedBlockParticleSprite(world,p){
  const c=document.createElement("canvas");c.width=c.height=64;
  const q=c.getContext("2d");q.translate(32,32);
  if(world==="diamonds"){
-  const theme=diamondThemes[p.themeIndex||0],colors=["#ffffff",theme.accent,theme.glow,theme.wall[1],theme.wall[0]],base=colors[p.kind%colors.length];
+  const theme=window.__bombardeiroGetDiamondEffectPalette?window.__bombardeiroGetDiamondEffectPalette(p.themeIndex||0):{accent:"#c8f8ff",glow:"#8cecff",wall:["#245c86","#9cecff"]},colors=["#ffffff",theme.accent,theme.glow,theme.wall[1],theme.wall[0]],base=colors[p.kind%colors.length];
   q.globalCompositeOperation="lighter";q.fillStyle=base;q.shadowColor=theme.glow;q.shadowBlur=0;
   const w=sizeKey;
   q.beginPath();q.moveTo(0,-w*2.05);q.lineTo(w*.52,-w*.55);q.lineTo(w*1.72,-w*.08);q.lineTo(w*.62,w*.38);q.lineTo(w*.12,w*1.92);q.lineTo(-w*.42,w*.58);q.lineTo(-w*1.58,w*.12);q.lineTo(-w*.55,-w*.52);q.closePath();q.fill();
@@ -20459,6 +20459,8 @@ const diamondThemes=[
 {name:"Lagoas de Turquesa",sky:["#a1fff0","#218f9d","#103b54"],floor:"rgba(20,91,103,.93)",floor2:"rgba(93,238,225,.25)",wall:["#176e7b","#a5fff0","#103b54"],far:"#207c87",near:"#103b54",glow:"#66f3df",accent:"#d2fff5",style:"turquoise"},
 {name:"Catedral de Opala",sky:["#f8d7ff","#7c91ce","#29335f"],floor:"rgba(54,60,112,.94)",floor2:"rgba(238,177,255,.26)",wall:["#535c9d","#ffe0f6","#29335f"],far:"#6069a7",near:"#29335f",glow:"#f4c5ff",accent:"#fff1d6",style:"opal"}
 ];
+/* API estreita para os efeitos do script principal: não expõe o array privado. */
+window.__bombardeiroGetDiamondEffectPalette=function(themeIndex){const theme=diamondThemes[Math.max(0,Math.min(9,themeIndex|0))];return {accent:theme.accent,glow:theme.glow,wall:theme.wall};};
 function diamondHexToRgb(hex){const value=hex.replace("#","");return [parseInt(value.slice(0,2),16),parseInt(value.slice(2,4),16),parseInt(value.slice(4,6),16)]}
 diamondShimmerCanvases=diamondThemes.map(theme=>{const rgb=diamondHexToRgb(theme.glow);return createPillarShimmerCanvas(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`,"rgba(255,255,255,.99)",1.45)});
 const diamondProgressKey="bomberquest-diamonds-unlocked";
