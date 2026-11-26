@@ -111,7 +111,7 @@ test("o contorno dos geodos recebe halo pulsante temático com margem para não 
  assert.match(builder,/outlineCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
  const renderer=html.slice(drawStart,html.indexOf("\nfunction draw(){",drawStart));
- assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox\+tile\.x\*TILE-DIAMOND_SHIMMER_PADDING,oy\+tile\.y\*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
+ assert.match(renderer,/ctx\\.drawImage\\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\\)/);
  assert.doesNotMatch(renderer,/destination-out|clearRect|createElement\("canvas"\)/,"o halo é pré-renderizado e reutilizado, sem máscaras por geodo a cada quadro");
 });
 test("o brilho dos geodos usa quadros pré-renderizados e elimina composição alfa por bloco a cada quadro",()=>{
