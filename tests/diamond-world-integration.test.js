@@ -25,6 +25,12 @@ test("as dez temáticas usam o atlas facetado e sprites em cache",()=>{
  assert.match(atlas,/width="384" height="960"/);
  assert.equal((atlas.match(/<g transform="translate\(/g)||[]).length,40);
 });
+test("as dez texturas de piso são claramente mais claras sem alterar geodos ou muralhas",()=>{
+ assert.equal((atlas.match(/data-floor-brighten="true"/g)||[]).length,10);
+ assert.equal((atlas.match(/fill="#ffffff" opacity=".46" data-floor-brighten="true"/g)||[]).length,10);
+ assert.equal((atlas.match(/<title>[^<]*geodo destrutível rachado<\/title>/g)||[]).length,10);
+ assert.equal((atlas.match(/<title>[^<]*muralha indestrutível blindada<\/title>/g)||[]).length,10);
+});
 test("os blocos indestrutíveis e destrutíveis têm silhuetas e construção visual distintas",()=>{
  assert.equal((atlas.match(/<title>[^<]*muralha indestrutível blindada<\/title>/g)||[]).length,10);
  assert.equal((atlas.match(/<title>[^<]*geodo destrutível rachado<\/title>/g)||[]).length,10);
