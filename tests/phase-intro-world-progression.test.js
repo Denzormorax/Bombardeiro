@@ -20,7 +20,7 @@ assert.ok(game.indexOf("/* AVISO TEMPORÁRIO DA FASE", mainScriptEnd) === -1,
 const marker = "/* INTRODUÇÃO DAS FASES — controlador independente do HUD.";
 const introStart = game.indexOf(marker);
 assert.notEqual(introStart, -1, "Controlador independente da introdução não encontrado");
-const introEnd = game.indexOf("\n</script>", introStart);
+const introEnd = game.lastIndexOf("\n})();", mainScriptEnd);
 assert.notEqual(introEnd, -1, "Fim do script principal não encontrado");
 const introCode = game.slice(introStart, introEnd);
 
