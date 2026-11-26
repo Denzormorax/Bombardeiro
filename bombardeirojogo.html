@@ -15612,7 +15612,7 @@ const canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
 const W=960,H=640,TILE=48,COLS=19,ROWS=13,ox=(W-COLS*TILE)/2,oy=(H-ROWS*TILE)/2;
 const backgroundCanvas=document.createElement("canvas");backgroundCanvas.width=W;backgroundCanvas.height=H;const backgroundCtx=backgroundCanvas.getContext("2d");let backgroundTheme=null;
 const staticFloorCanvas=document.createElement("canvas");staticFloorCanvas.width=W;staticFloorCanvas.height=H;const staticFloorCtx=staticFloorCanvas.getContext("2d");
-const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));const indestructibleTilePositions=[];const enemyDrawRows=Array.from({length:ROWS},()=>[]);
+const staticRowCanvases=Array.from({length:ROWS},()=>{const c=document.createElement("canvas");c.width=W;c.height=TILE;return c});const staticRowCtx=staticRowCanvases.map(c=>c.getContext("2d"));const indestructibleTilePositions=[],destructibleTilePositions=[];const enemyDrawRows=Array.from({length:ROWS},()=>[]);
 // Sprite de caixa em chamas pré-renderizado uma única vez.
 const BURNING_CRATE_FRAMES=8;const burningCrateCanvases=Array.from({length:10},()=>Array.from({length:BURNING_CRATE_FRAMES},()=>{const c=document.createElement("canvas");c.width=64;c.height=64;return c}));let burningCrateReady=false;const burningCrates=[];const themedSpriteSheets=Array(10).fill(null);let cachedTileThemeIndex=-1;
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
@@ -16809,7 +16809,7 @@ function explode(b){
    const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen||other.extinguished)&&Math.floor(other.x)===x&&Math.floor(other.y)===y);
    if(frozenBomb){frozenBomb.chainTriggered=true;frozenBomb.t=0;break}
    if(treasureChests.some(chest=>chest.x===x&&chest.y===y))break;
-   if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice"||currentWorld==="swamp")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math.random()<.006){treasureSpawnedThisLevel=true;treasureSpawnedThisWorld=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0,sparkTimer:0,ambientParticles:[]});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
+   if(tile===2){if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice"||currentWorld==="swamp"||currentWorld==="diamonds")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math.random()<.006){treasureSpawnedThisLevel=true;treasureSpawnedThisWorld=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0,sparkTimer:0,ambientParticles:[]});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
   }
  }
  if(brokeBlock){rebuildStaticMapCache();}
@@ -16994,8 +16994,18 @@ function updateWaterParticles(dt){
 // Os brilhos são pré-renderizados em pequenos canvases reutilizáveis: evita recalcular
 // shadowBlur e gradientes radiais em todos os quadros sem reduzir a intensidade visual.
 const destroyedBlockVisualCache={
- desertGlow:null,volcanoGlow:null,iceGlow:null,particles:{desert:new Map(),volcano:new Map(),ice:new Map()}
+ desertGlow:null,volcanoGlow:null,iceGlow:null,particles:{desert:new Map(),volcano:new Map(),ice:new Map(),diamonds:new Map()}
 };
+const diamondDestroyedGlowCanvases=Array(10).fill(null);
+function buildDiamondDestroyedBlockGlow(themeIndex){
+ const index=Math.max(0,Math.min(9,themeIndex|0));
+ if(diamondDestroyedGlowCanvases[index])return diamondDestroyedGlowCanvases[index];
+ const theme=diamondThemes[index],c=document.createElement("canvas");c.width=c.height=128;
+ const q=c.getContext("2d"),g=q.createRadialGradient(64,64,1,64,64,63);
+ g.addColorStop(0,"rgba(255,255,255,.98)");g.addColorStop(.2,theme.accent+"e8");
+ g.addColorStop(.52,theme.glow+"88");g.addColorStop(1,theme.glow+"00");
+ q.fillStyle=g;q.fillRect(0,0,128,128);diamondDestroyedGlowCanvases[index]=c;return c;
+}
 function buildDestroyedBlockGlow(world){
  const key=world==="desert"?"desertGlow":world==="ice"?"iceGlow":"volcanoGlow";
  if(destroyedBlockVisualCache[key])return destroyedBlockVisualCache[key];
@@ -17023,11 +17033,19 @@ function buildDestroyedBlockGlow(world){
 }
 function getDestroyedBlockParticleSprite(world,p){
  const sizeKey=Math.round(p.size*2)/2,cache=destroyedBlockVisualCache.particles[world];
- const key=p.kind+":"+sizeKey;
+ const key=world==="diamonds"?(p.themeIndex+":"+p.kind+":"+sizeKey):(p.kind+":"+sizeKey);
  if(cache.has(key))return cache.get(key);
  const c=document.createElement("canvas");c.width=c.height=64;
  const q=c.getContext("2d");q.translate(32,32);
- if(world==="desert"){
+ if(world==="diamonds"){
+  const theme=diamondThemes[p.themeIndex||0],colors=["#ffffff",theme.accent,theme.glow,theme.wall[1],theme.wall[0]],base=colors[p.kind%colors.length];
+  q.globalCompositeOperation="lighter";q.fillStyle=base;q.shadowColor=theme.glow;q.shadowBlur=0;
+  const w=sizeKey;
+  q.beginPath();q.moveTo(0,-w*2.05);q.lineTo(w*.52,-w*.55);q.lineTo(w*1.72,-w*.08);q.lineTo(w*.62,w*.38);q.lineTo(w*.12,w*1.92);q.lineTo(-w*.42,w*.58);q.lineTo(-w*1.58,w*.12);q.lineTo(-w*.55,-w*.52);q.closePath();q.fill();
+  q.fillStyle=theme.accent;q.globalAlpha=.82;q.beginPath();q.moveTo(0,-w*2.05);q.lineTo(w*.52,-w*.55);q.lineTo(-w*.08,w*.05);q.closePath();q.fill();
+  q.fillStyle="#ffffff";q.globalAlpha=.96;q.beginPath();q.moveTo(-w*.55,-w*.52);q.lineTo(0,-w*2.05);q.lineTo(-w*.08,w*.05);q.closePath();q.fill();
+  q.globalAlpha=.7;q.fillStyle=theme.wall[0];q.beginPath();q.moveTo(-w*.08,w*.05);q.lineTo(w*.62,w*.38);q.lineTo(w*.12,w*1.92);q.closePath();q.fill();
+ }else if(world==="desert"){
   q.fillStyle=p.kind===0?"#fffde0":p.kind===1?"#ffe18a":p.kind===2?"#ffc04f":"#e99a35";
   q.shadowColor="#ffd36a";q.shadowBlur=12;
   q.beginPath();q.ellipse(0,0,sizeKey*1.65,sizeKey*.9,0,0,Math.PI*2);q.fill();
@@ -17050,17 +17068,19 @@ function getDestroyedBlockParticleSprite(world,p){
  return c;
 }
 function spawnDestroyedBlockEffect(x,y,world){
- if(world!=="desert"&&world!=="volcano"&&world!=="ice")return;
- const effect={x,y,world,age:0,duration:world==="desert"?.86:world==="ice"?.92:.78,particles:[]};
- const count=world==="desert"?26:world==="ice"?34:30;
+ if(world!=="desert"&&world!=="volcano"&&world!=="ice"&&world!=="diamonds")return;
+ const themeIndex=world==="diamonds"?diamondIndex():0;
+ const effect={x,y,world,themeIndex,age:0,duration:world==="diamonds"?1.08:world==="desert"?.86:world==="ice"?.92:.78,particles:[]};
+ const count=world==="diamonds"?72:world==="desert"?26:world==="ice"?34:30;
  for(let i=0;i<count;i++){
-  const a=Math.random()*Math.PI*2,speed=world==="desert"?.55+Math.random()*2.15:world==="ice"?.72+Math.random()*2.55:.8+Math.random()*2.65;
-  effect.particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-(world==="volcano"?.95:world==="ice"?.62:.42),size:world==="desert"?1.8+Math.random()*3.2:1.7+Math.random()*3.5,spin:Math.random()*6.28,kind:i%(world==="ice"?4:5)});
+  const a=Math.random()*Math.PI*2,speed=world==="diamonds"?.8+Math.random()*3.15:world==="desert"?.55+Math.random()*2.15:world==="ice"?.72+Math.random()*2.55:.8+Math.random()*2.65;
+  effect.particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-(world==="diamonds"?1.05:world==="volcano"?.95:world==="ice"?.62:.42),size:world==="diamonds"?2.1+Math.random()*3.8:world==="desert"?1.8+Math.random()*3.2:1.7+Math.random()*3.5,spin:Math.random()*6.28,kind:i%(world==="diamonds"?5:world==="ice"?4:5),themeIndex});
  }
+ if(world==="diamonds"&&destroyedBlockEffects.length>=8)destroyedBlockEffects.shift();
  destroyedBlockEffects.push(effect);
 }
 function updateDestroyedBlockEffects(dt){
- for(let i=destroyedBlockEffects.length-1;i>=0;i--){const e=destroyedBlockEffects[i];e.age+=dt;for(const p of e.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-(e.world==="desert"?1.15:e.world==="ice"?.92:1.65)*dt);p.vy+=(e.world==="desert"?3.1:e.world==="ice"?2.05:3.8)*dt;p.spin+=dt*(e.world==="ice"?7:5)}if(e.age>=e.duration)destroyedBlockEffects.splice(i,1)}
+ for(let i=destroyedBlockEffects.length-1;i>=0;i--){const e=destroyedBlockEffects[i];e.age+=dt;for(const p of e.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-(e.world==="diamonds"?1.05:e.world==="desert"?1.15:e.world==="ice"?.92:1.65)*dt);p.vy+=(e.world==="diamonds"?2.7:e.world==="desert"?3.1:e.world==="ice"?2.05:3.8)*dt;p.spin+=dt*(e.world==="diamonds"?8:e.world==="ice"?7:5)}if(e.age>=e.duration)destroyedBlockEffects.splice(i,1)}
 }
 function drawDestroyedBlockEffects(){
  if(!destroyedBlockEffects.length)return;
@@ -17070,7 +17090,7 @@ function drawDestroyedBlockEffects(){
   ctx.save();ctx.globalAlpha=fade;
   // Gradientes grandes são imagens prontas; apenas o tamanho muda durante a animação.
   const radius=e.world==="desert"?9+progress*25:e.world==="ice"?12+progress*29:7+progress*31;
-  const glow=buildDestroyedBlockGlow(e.world);
+  const glow=e.world==="diamonds"?buildDiamondDestroyedBlockGlow(e.themeIndex):buildDestroyedBlockGlow(e.world);
   ctx.drawImage(glow,cx-radius,cy-radius,radius*2,radius*2);
   if(e.world==="volcano"){
    ctx.strokeStyle="rgba(255,205,105,"+(fade*.98)+")";ctx.lineWidth=2.5;
@@ -17085,9 +17105,9 @@ function drawDestroyedBlockEffects(){
    const px=ox+p.x*TILE,py=oy+p.y*TILE;
    ctx.globalAlpha=fade*(.92+.08*Math.sin(p.spin));
    const sprite=getDestroyedBlockParticleSprite(e.world,p);
-   if(e.world==="desert"||e.world==="ice"||e.world==="swamp"){
+   if(e.world==="desert"||e.world==="ice"||e.world==="swamp"||e.world==="diamonds"){
     ctx.save();ctx.translate(px,py);ctx.rotate(p.spin);
-    const scale=e.world==="ice"?1+fade*.42:1+fade*.35/1.05,drawSize=64*scale;
+    const scale=e.world==="diamonds"?1+fade*.7:e.world==="ice"?1+fade*.42:1+fade*.35/1.05,drawSize=64*scale;
     ctx.drawImage(sprite,-drawSize/2,-drawSize/2,drawSize,drawSize);ctx.restore();
    }else{
     const scale=1+fade*.35/1.05;
@@ -17440,10 +17460,10 @@ function drawBurningCrate(crate){
 
 function rebuildStaticMapCache(){
  cachedTileThemeIndex=Math.max(0,Math.min(9,level-1));
- staticFloorCtx.clearRect(0,0,W,H);indestructibleTilePositions.length=0;
+ staticFloorCtx.clearRect(0,0,W,H);indestructibleTilePositions.length=0;destructibleTilePositions.length=0;
  for(let y=0;y<ROWS;y++){
   const rowCtx=staticRowCtx[y],rowOffset=oy+y*TILE;rowCtx.clearRect(0,0,W,TILE);
-  for(let x=0;x<COLS;x++){drawTileTo(staticFloorCtx,x,y,0);const type=map[y][x];if(type===1)indestructibleTilePositions.push({x,y});if(type!==0)drawTileTo(rowCtx,x,y,type,rowOffset)}
+  for(let x=0;x<COLS;x++){drawTileTo(staticFloorCtx,x,y,0);const type=map[y][x];if(type===1)indestructibleTilePositions.push({x,y});else if(type===2)destructibleTilePositions.push({x,y});if(type!==0)drawTileTo(rowCtx,x,y,type,rowOffset)}
  }
 }
 function drawCharacter(x,y,color,helmet,scale=1){
@@ -17848,6 +17868,7 @@ function drawVolcanoCraterAnimation(){
  ctx.restore();
 }
 function drawIndestructibleShimmer(){
+ if(currentWorld==="diamonds")return;
  if(!indestructibleTilePositions.length)return;
  // A faixa diagonal recupera o brilho difuso e assume a cor temática de cada mundo.
  const shimmerCanvas=pillarShimmerCanvases[currentWorld]||pillarShimmerCanvases.forest;
@@ -17862,6 +17883,19 @@ function drawIndestructibleShimmer(){
   ctx.rotate(Math.PI/4);
   ctx.drawImage(shimmerCanvas,-20,-28,40,56);
   ctx.restore();
+ }
+ ctx.restore();
+}
+function drawDiamondDestructibleShimmer(){
+ if(currentWorld!=="diamonds"||!destructibleTilePositions.length)return;
+ const shimmerCanvas=diamondShimmerCanvases[diamondIndex()],phaseBase=gameClock*.42;ctx.save();
+ for(const tile of destructibleTilePositions){
+  const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
+  const pulse=.72+.28*Math.sin(phase*Math.PI*2),px=ox+tile.x*TILE,py=oy+tile.y*TILE;
+  const travel=(phase-.5)*(TILE+40);
+  ctx.save();ctx.beginPath();ctx.rect(px+1,py+1,TILE-2,TILE-2);ctx.clip();
+  ctx.globalAlpha=pulse;ctx.translate(px+TILE*.5+travel,py+TILE*.5+travel);ctx.rotate(Math.PI/4);
+  ctx.drawImage(shimmerCanvas,-20,-28,40,56);ctx.restore();
  }
  ctx.restore();
 }
@@ -17889,6 +17923,7 @@ function draw(){
  drawBuilderBuildAnimations();
  drawDestroyedBlockEffects();
  drawIndestructibleShimmer();
+ drawDiamondDestructibleShimmer();
  drawTreasureEffects();
  for(let y=0;y<ROWS;y++){
   for(const crate of burningCrates)if(crate.y===y&&currentWorld!=="desert"&&currentWorld!=="volcano")drawBurningCrate(crate);
@@ -20423,6 +20458,8 @@ const diamondThemes=[
 {name:"Lagoas de Turquesa",sky:["#a1fff0","#218f9d","#103b54"],floor:"rgba(20,91,103,.93)",floor2:"rgba(93,238,225,.25)",wall:["#176e7b","#a5fff0","#103b54"],far:"#207c87",near:"#103b54",glow:"#66f3df",accent:"#d2fff5",style:"turquoise"},
 {name:"Catedral de Opala",sky:["#f8d7ff","#7c91ce","#29335f"],floor:"rgba(54,60,112,.94)",floor2:"rgba(238,177,255,.26)",wall:["#535c9d","#ffe0f6","#29335f"],far:"#6069a7",near:"#29335f",glow:"#f4c5ff",accent:"#fff1d6",style:"opal"}
 ];
+function diamondHexToRgb(hex){const value=hex.replace("#","");return [parseInt(value.slice(0,2),16),parseInt(value.slice(2,4),16),parseInt(value.slice(4,6),16)]}
+const diamondShimmerCanvases=diamondThemes.map(theme=>{const rgb=diamondHexToRgb(theme.glow);return createPillarShimmerCanvas(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`,"rgba(255,255,255,.99)",1.45)});
 const diamondProgressKey="bomberquest-diamonds-unlocked";
 const diamondSpriteSheet=new Image(),diamondThemedSpriteSheets=Array(10).fill(null);
 function buildDiamondSpriteSheets(){
