@@ -130,7 +130,7 @@ test("o controlador de introdução das fases termina antes do módulo Diamante"
  assert.match(html,/if\(!worldOrder\.includes\("diamonds"\)\)worldOrder\.push\("diamonds"\)/);
 });
 
-test("as variáveis do Mundo Diamante ficam no mesmo escopo lexical dos efeitos de renderização",()=>{
+test("o renderizador dos diamantes acessa o spritesheet por uma ponte global segura",()=>{
  const outerStart=html.indexOf('(()=>{\n"use strict";');
  const shimmerStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const introStart=html.indexOf('(function(){\n "use strict";\n let introToken');
@@ -140,7 +140,9 @@ test("as variáveis do Mundo Diamante ficam no mesmo escopo lexical dos efeitos 
  const outerClose=html.indexOf("})();",html.indexOf('if(!worldOrder.includes("diamonds"))worldOrder.push("diamonds");'));
  assert.ok(outerStart<shimmerStart&&shimmerStart<introStart);
  assert.ok(introClose<diamondStart&&diamondStart<spriteSheetsDecl&&spriteSheetsDecl<outerClose);
- assert.match(html.slice(shimmerStart,introStart),/diamondThemedSpriteSheets\[index\]/);
+ assert.doesNotMatch(html.slice(shimmerStart,introStart),/diamondThemedSpriteSheets/);
+ assert.match(html,/window\.__bombardeiroGetDiamondSpriteSheet=function\(themeIndex\)/);
+ assert.match(html,/spriteGetter=window\.__bombardeiroGetDiamondSpriteSheet/);
  assert.match(html.slice(diamondStart,outerClose),/const diamondSpriteSheet=new Image\(\),diamondThemedSpriteSheets=Array\(10\)\.fill\(null\)/);
 });
 
