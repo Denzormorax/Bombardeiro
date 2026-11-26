@@ -15618,6 +15618,36 @@ const BURNING_CRATE_FRAMES=8;const burningCrateCanvases=Array.from({length:10},(
 // Camadas do portal pré-renderizadas: gradientes e brilhos pesados não são recriados a cada quadro.
 const portalAuraCanvas=document.createElement("canvas");portalAuraCanvas.width=96;portalAuraCanvas.height=96;const portalAuraCtx=portalAuraCanvas.getContext("2d");
 const portalCoreCanvas=document.createElement("canvas");portalCoreCanvas.width=96;portalCoreCanvas.height=96;const portalCoreCtx=portalCoreCanvas.getContext("2d");let portalCacheReady=false;
+const portalDissolveParticles=[]; // pool curta, preenchida uma única vez por entrada no portal
+function createPortalDissolveParticles(){
+ portalDissolveParticles.length=0;
+ const colors=["#baf7ff","#78e8ff","#ffffff","#ffeaa0"];
+ for(let i=0;i<30;i++){
+  const y=13-Math.random()*27;
+  portalDissolveParticles.push({
+   x:(Math.random()-.5)*24,y,
+   vx:(Math.random()-.5)*17,
+   vy:-(24+Math.random()*30),
+   delay:((13-y)/27)*.34+Math.random()*.08,
+   size:.65+Math.random()*.8,
+   color:colors[i%colors.length]
+  });
+ }
+}
+function drawPortalDissolveParticles(px,py,progress){
+ if(!levelTransition||!portalDissolveParticles.length)return;
+ const elapsed=progress*.72;
+ ctx.save();ctx.globalCompositeOperation="lighter";
+ for(const p of portalDissolveParticles){
+  const age=elapsed-p.delay;if(age<0)continue;
+  const life=Math.min(1,age/.38),alpha=(1-life)*Math.min(1,age/.07);
+  if(alpha<=.01)continue;
+  const x=px+p.x+p.vx*age,y=py+p.y+p.vy*age;
+  ctx.globalAlpha=alpha*.9;ctx.fillStyle=p.color;
+  ctx.beginPath();ctx.arc(x,y,p.size*(1-life*.25),0,Math.PI*2);ctx.fill();
+ }
+ ctx.restore();
+}
 // As poças congeladas usam somente duas linhas brancas nítidas.
 const ICE_PETAL_COLORS=["#168fff","#75d9ff","#f4fdff"];
 const icePetalSpriteCache=new Map();
@@ -15852,9 +15882,9 @@ const destroyedBlockEffects=[];
 const treasureChests=[],treasureEffects=[];let treasureSpawnedThisLevel=false,treasureSpawnedThisWorld=false,treasureSpawnWorld=null,treasureVisualsReady=false;
 let treasureChestBodyCanvas=null,treasureChestLidCanvas=null,treasureAuraCanvas=null,treasureGoldSparkCanvas=null,treasureBlueFlameCanvas=null,treasureBlueCoinCanvas=null,treasureRedCoinCanvas=null;
 const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[],iceWaterPuddleFrames=[];let waterPuddleFramesReady=false;
-let player={x:1.5,y:1.5,speed:3.8,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
+let player={x:1.5,y:1.5,speed:3.6,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
-let basePlayerSpeed=3.8,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
+let basePlayerSpeed=3.6,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
 let gameClock=0,lastTime=0,exit={x:-1,y:-1,found:false,spawnTime:0};
 let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,portalEnterStart=0,shopReturnPaused=false,menuReturn="main";
@@ -16245,7 +16275,7 @@ let currentWorld="forest",desertDetails=[];
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
  makeMap();createForestPuddles();rebuildStaticMapCache();bombs=[];flames=[];burningCrates.length=0;coinsOnMap=[];enemies=[];dirtParticles=[];waterParticles=[];builderBuildAnimations=[];treasureChests.length=0;treasureEffects.length=0;treasureSpawnedThisLevel=false;
- basePlayerSpeed=3.8+Math.min(level*.06,.8);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
+ basePlayerSpeed=3.6+Math.min(level*.06,.8);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.45)}
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
@@ -16926,6 +16956,7 @@ function updatePlayerBlink(dt,isMoving){
  if(playerBlinkCooldown<=0){playerBlinkTime=.14;playerBlinkCooldown=2}
 }
 function updatePlayer(dt){
+ if(levelTransition)return;
  player.inv=Math.max(0,player.inv-dt);player.hurtTimer=Math.max(0,(player.hurtTimer||0)-dt);bombCooldown=Math.max(0,bombCooldown-dt);
  if(player.passBomb){const b=player.passBomb,aindaColidindo=circleRectCollision(player.x,player.y,PLAYER_RADIUS,b.x+.12,b.y+.12,.76,.76);if(!aindaColidindo){b.ownerPass=false;player.passBomb=null}}
  const m=getMove();let dx=m.x,dy=m.y;if(Math.abs(dx)>.001&&Math.abs(dy)>.001){if(Math.abs(dx)>=Math.abs(dy))dy=0;else dx=0}
@@ -17431,6 +17462,7 @@ function drawPlayer(){
  else{ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#17232b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.fill()}
  ctx.strokeStyle="#18242a";ctx.lineWidth=1.8;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-4,7);ctx.quadraticCurveTo(0,10,4,7);ctx.stroke()}
  ctx.restore();
+ if(enterProgress>0)drawPortalDissolveParticles(px,bodyY,enterProgress);
 }
 const FOREST_LEAF_PALETTE=["#173f27","#28633a","#43864a","#70a84e","#9abd62","#536f32"];
 const FOREST_COMMON_BODY_PALETTE=["#4f9b43","#70b84b","#8ccf62","#a2c96a"];
@@ -20352,6 +20384,9 @@ startGame=function(n=1){lastPhaseToastKey="";return startGameWithPhaseToast(n)};
  checkWin=function(){
   if(levelTransition)return;
   if(allEnemiesDefeated()&&exit.found&&Math.floor(player.x)===exit.x&&Math.floor(player.y)===exit.y){
+   player.x=exit.x+.5;player.y=exit.y+.5;
+   move={x:0,y:0};pointerMove=null;resetStick();
+   createPortalDissolveParticles();
    levelTransition=true;portalEnterStart=gameClock;score+=500;updateHUD();
    unlockedLevel=Math.max(unlockedLevel,level);saveProgress();
    setTimeout(()=>{
