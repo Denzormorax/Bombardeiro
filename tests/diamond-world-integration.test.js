@@ -33,7 +33,7 @@ test("o mundo é incluído na progressão sem substituir os mundos existentes",(
 test("o Mundo dos Diamantes usa apenas inimigos comuns com aparência cristalina",()=>{
  assert.match(html,/mushroomCount=currentWorld==="diamonds"\?0:/);
  assert.match(html,/hornedCount=currentWorld==="diamonds"\?0:/);
- assert.match(html,/isHunter=currentWorld==="diamonds"\?false:/);
+ assert.match(html,/isHunter=isSnowman\|\|\(!isBuilder&&!isMushroom&&!isHorned&&currentWorld!=="diamonds"/);
  assert.match(html,/if\(currentWorld==="diamonds"\)\{const dt=diamondThemes\[diamondIndex\(\)\];color=dt\.wall\[0\];helmetColor=dt\.wall\[1\];\}/);
  assert.match(html,/if\(currentWorld==="diamonds"&&!hurt\)/);
 });
