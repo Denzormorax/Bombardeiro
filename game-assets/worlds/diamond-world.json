@@ -1,0 +1,162 @@
+{
+  "world": 6,
+  "id": "diamonds",
+  "name": "Mundo dos Diamantes",
+  "phaseCount": 10,
+  "tileAtlas": "game-assets/sprites/diamond_themes.svg",
+  "columns": [
+    "ground",
+    "terrainDetail",
+    "indestructibleBlock",
+    "destructibleGeode"
+  ],
+  "rendering": "Draw ground and terrain effects first; then characters, enemies, bombs and foreground entities.",
+  "performance": "Load the atlas once, build per-phase cached tile canvases once, and reuse static map cache. Do not alter gameplay, collision, bomb, enemy or damage rules.",
+  "destructibleBlock": {
+    "type": "crystal_geode",
+    "sameGameplayAsExistingDestructibleBlocks": true,
+    "description": "Geodo facetado com núcleo luminoso, rachaduras minerais, brilho especular e sombra projetada."
+  },
+  "phases": [
+    {
+      "number": 1,
+      "name": "Diamante Azul-Glacial",
+      "subtitle": "Glaciar Celeste",
+      "environment": "Cavernas de gelo azul, cristais translúcidos e geodos congelados",
+      "palette": {
+        "light": "#dffaff",
+        "highlight": "#51c9f5",
+        "primary": "#0874bd",
+        "shadow": "#063b70",
+        "spark": "#efffff"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 2,
+      "name": "Rubi Vermelho",
+      "subtitle": "Coração Carmesim",
+      "environment": "Grutas rubras com veios incandescentes e cristais de rubi",
+      "palette": {
+        "light": "#ffe0dc",
+        "highlight": "#ff5364",
+        "primary": "#bd123e",
+        "shadow": "#650d32",
+        "spark": "#fff0e8"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 3,
+      "name": "Esmeralda Verde",
+      "subtitle": "Jardim Esmeralda",
+      "environment": "Minas vivas tomadas por musgo, raízes e esmeraldas",
+      "palette": {
+        "light": "#e0ffe8",
+        "highlight": "#55e89a",
+        "primary": "#11965b",
+        "shadow": "#07583e",
+        "spark": "#effff4"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 4,
+      "name": "Safira Azul",
+      "subtitle": "Abismo Safira",
+      "environment": "Salões oceânicos de safira e reflexos azul-profundo",
+      "palette": {
+        "light": "#e2edff",
+        "highlight": "#639bff",
+        "primary": "#2454d5",
+        "shadow": "#17256e",
+        "spark": "#f4f7ff"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 5,
+      "name": "Ametista Roxa",
+      "subtitle": "Catedral Violeta",
+      "environment": "Catedrais subterrâneas de ametista e luz violeta",
+      "palette": {
+        "light": "#f2e3ff",
+        "highlight": "#bd83ff",
+        "primary": "#743acb",
+        "shadow": "#38145f",
+        "spark": "#fff3ff"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 6,
+      "name": "Ouro Dourado",
+      "subtitle": "Palácio Áureo",
+      "environment": "Câmaras douradas com veios metálicos e poeira brilhante",
+      "palette": {
+        "light": "#fff3c4",
+        "highlight": "#ffd45c",
+        "primary": "#c58a19",
+        "shadow": "#71430b",
+        "spark": "#fffbe7"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 7,
+      "name": "Quartzo Rosa",
+      "subtitle": "Jardim Rosé",
+      "environment": "Grutas rosadas com quartzo leitoso e flores minerais",
+      "palette": {
+        "light": "#ffe8f3",
+        "highlight": "#ff9fc9",
+        "primary": "#d45b9a",
+        "shadow": "#7a285e",
+        "spark": "#fff5fa"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 8,
+      "name": "Obsidiana Negra",
+      "subtitle": "Fortaleza Ônix",
+      "environment": "Fortaleza vulcânica de obsidiana negra e reflexos frios",
+      "palette": {
+        "light": "#d8e3ef",
+        "highlight": "#7d91aa",
+        "primary": "#35445d",
+        "shadow": "#101827",
+        "spark": "#f2f7ff"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 9,
+      "name": "Turquesa",
+      "subtitle": "Oásis Turquesa",
+      "environment": "Cavernas aquáticas com turquesas e fontes cristalinas",
+      "palette": {
+        "light": "#d8fff8",
+        "highlight": "#55e4d4",
+        "primary": "#159caa",
+        "shadow": "#07556c",
+        "spark": "#effffc"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 10,
+      "name": "Opala Arco-Íris",
+      "subtitle": "Santuário Prismático",
+      "environment": "Santuário de opalas iridescentes com reflexos multicoloridos",
+      "palette": {
+        "light": "#fff0d9",
+        "highlight": "#ff9bd5",
+        "primary": "#8a75ee",
+        "shadow": "#3454a4",
+        "spark": "#ffffff"
+      },
+      "bossPhase": true
+    }
+  ]
+}
