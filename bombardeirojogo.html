@@ -20621,7 +20621,7 @@ showMenuScreen=function(which){
  $("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");
  return menuBeforeDiamonds(which);
 };
-startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");return startBeforeDiamonds(n)};
+startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");if(currentWorld==="diamonds"){const themeIndex=Math.max(0,Math.min(9,(Number(n)||1)-1)),shimmer=diamondShimmerCanvases[themeIndex],getter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof getter==="function"?getter(themeIndex):null;if(shimmer&&sheet)buildDiamondShimmerFrameAtlas(themeIndex,shimmer,sheet)}return startBeforeDiamonds(n)};
 buildForestMap=function(){if(currentWorld==="diamonds")buildDiamondMap();else mapBeforeDiamonds()};
 selectMapLevel=function(i){
  if(currentWorld!=="diamonds")return selectBeforeDiamonds(i);
