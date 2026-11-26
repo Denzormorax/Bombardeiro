@@ -1,0 +1,269 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="256" viewBox="0 0 640 256">
+<title>Bombardeiro — prévia das texturas de chão do Mundo dos Diamantes</title>
+<defs>
+ <linearGradient id="earth" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#8b6748"/><stop offset=".35" stop-color="#6b4b35"/><stop offset=".72" stop-color="#523a2b"/><stop offset="1" stop-color="#38271f"/></linearGradient>
+ <filter id="soil"><feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="8"/><feColorMatrix values=".55 0 0 0 .18 .0 .38 0 0 .10 0 0 .25 0 .05 0 0 0 .22 0"/></filter>
+</defs>
+<rect width="640" height="256" fill="#171717"/>
+<g transform="translate(0 0)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#35bdf2" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#35bdf2" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#35bdf2" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Azul-glacial</text>
+</g><g transform="translate(128 0)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e52d4b" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e52d4b" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e52d4b" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Rubi</text>
+</g><g transform="translate(256 0)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#28c77a" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#28c77a" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#28c77a" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Esmeralda</text>
+</g><g transform="translate(384 0)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#356de8" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#356de8" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#356de8" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Safira</text>
+</g><g transform="translate(512 0)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#a65be6" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#a65be6" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#a65be6" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Ametista</text>
+</g><g transform="translate(0 128)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e6b52d" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e6b52d" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e6b52d" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Ouro</text>
+</g><g transform="translate(128 128)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e77db2" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e77db2" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#e77db2" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Quartzo rosa</text>
+</g><g transform="translate(256 128)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#9aa6b5" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#9aa6b5" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#9aa6b5" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Obsidiana</text>
+</g><g transform="translate(384 128)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#28c5bd" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#28c5bd" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#28c5bd" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Turquesa</text>
+</g><g transform="translate(512 128)">
+  <rect width="128" height="128" fill="#60432f"/>
+  <rect width="128" height="128" fill="url(#earth)" opacity=".88"/>
+  <path d="M0 18 Q28 8 52 23 T128 17 M0 78 Q34 64 60 82 T128 73 M-4 112 Q31 99 64 113 T132 108" fill="none" stroke="#35251d" stroke-width="5" opacity=".28"/>
+  <path d="M8 42l18-9 10 4-17 12zm66-29 19-7 13 8-20 5zM14 96l19-8 11 7-20 8zm68 19 20-11 13 7-17 10z" fill="#a47a52" opacity=".32"/>
+  <path d="M7 62l10-4m38-40 8 3m38 48 10-5M42 119l8-4" stroke="#2d2019" stroke-width="2" opacity=".35"/>
+  <g transform="translate(25 35)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#d6a6e8" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(82 52)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#d6a6e8" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g><g transform="translate(51 91)">
+    <ellipse cx="1" cy="5" rx="7" ry="4" fill="#241a16" opacity=".6"/>
+    <path d="M-5 0L-2 -5L3 -6L7 -1L4 5L-2 5Z" fill="#d6a6e8" stroke="#241c19" stroke-width="1.2"/>
+    <path d="M-5 0L-2 -5L1 -1L-2 5Z" fill="#ffffff" opacity=".5"/>
+    <path d="M-2 -5L3 -6L7 -1L1 -1Z" fill="#ffffff" opacity=".34"/>
+    <path d="M1 -1L7 -1L4 5L-2 5Z" fill="#111111" opacity=".18"/>
+  </g>
+  <text x="5" y="123" font-family="Arial,sans-serif" font-size="7" fill="#f4e8d9" opacity=".7">Opala</text>
+</g>
+</svg>
