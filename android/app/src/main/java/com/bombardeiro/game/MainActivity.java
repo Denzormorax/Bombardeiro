@@ -28,7 +28,12 @@ public class MainActivity extends Activity {
         try {
             File gameDir = new File(getFilesDir(), GAME_DIR);
             syncGameAssets(gameDir);
+            // Garante que a página principal seja sempre a versão embutida neste APK,
+            // mesmo se uma cópia antiga tiver permanecido no armazenamento privado.
+            copyAsset(ASSET_ROOT + "/bombardeirojogo.html", new File(gameDir, "bombardeirojogo.html"));
             webView = new WebView(this);
+            // Evita que o WebView reutilize uma versão em cache do HTML local após a atualização.
+            webView.clearCache(true);
             webView.setBackgroundColor(0xFF101820);
             webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
             webView.setWebViewClient(new WebViewClient());
