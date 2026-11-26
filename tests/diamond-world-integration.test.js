@@ -126,7 +126,14 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(builder,/atlasCtx\.drawImage\(diamondShimmerTileCanvas/);
  assert.doesNotMatch(renderer,/destination-in|clearRect|createElement\("canvas"\)/,"o quadro não pode recriar máscaras nem canvases por geodo");
  assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox\+tile\.x\*TILE-DIAMOND_SHIMMER_PADDING,oy\+tile\.y\*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE\)/);
- assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?buildDiamondShimmerFrameAtlas\(themeIndex,shimmer,sheet\)[\s\S]*?return startBeforeDiamonds\(n\)/,"a animação é pré-aquecida antes de iniciar a fase");
+ assert.match(builder,/DIAMOND_SHIMMER_BUILD_CHUNK=6/);
+ assert.match(builder,/diamondShimmerFrameBuild===state/);
+ assert.match(builder,/requestAnimationFrame\(renderChunk\)/,"a montagem do atlas é dividida em pequenos lotes");
+ assert.match(renderer,/if\(!atlas\)return/,"o jogo continua sem aguardar o atlas ficar pronto");
+ assert.match(html,/function prepareDiamondShimmerAtlasForLevel\(n\)/);
+ assert.match(html,/startGame=function\(n=1\)\{[\s\S]*?prepareDiamondShimmerAtlasForLevel\(n\);return startBeforeDiamonds\(n\)/,"a fase começa imediatamente enquanto o atlas termina em segundo plano");
+ assert.match(html,/buildDiamondMap\(\);buildBurningCrateSprite\(\);prepareDiamondShimmerAtlasForLevel\(selectedMapLevel\)/,"o pré-aquecimento começa ao abrir o mapa");
+ assert.match(html,/selectedMapLevel=i;prepareDiamondShimmerAtlasForLevel\(i\)/,"o tema da fase escolhida é preparado durante a animação do mascote");
 });
 test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase com sprites e brilhos em cache",()=>{
  assert.match(html,/world==="diamonds"\?72/);
