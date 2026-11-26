@@ -3,4 +3,15 @@ const atlas=fs.readFileSync(path.join(root,"game-assets/sprites/diamond_themes.s
 test("Mundo dos Diamantes possui 40 texturas SVG em dez linhas",()=>{assert.match(atlas,/width="384" height="960"/);assert.equal((atlas.match(/<g transform="translate\(/g)||[]).length,40);});
 test("as dez fases possuem identidades e paletas próprias",()=>{assert.equal(world.phases.length,10);assert.equal(new Set(world.phases.map(p=>p.name)).size,10);assert.equal(new Set(world.phases.map(p=>p.palette.primary)).size,10);});
 test("o atlas define quatro tipos de peças e mantém regras de jogo",()=>{assert.deepEqual(world.columns,["ground","terrainDetail","indestructibleBlock","destructibleGeode"]);assert.equal(world.destructibleBlock.sameGameplayAsExistingDestructibleBlocks,true);assert.match(atlas,/geodo destrutível/);});
-test("os dez pisos usam terra idêntica em quadrados completos e três pedrinhas por fase",()=>{assert.equal(atlas.split('<g transform="translate(0 ').length-1,10);assert.equal(atlas.split('<rect x="0" y="0" width="96" height="96" fill="#60432f"/>').length-1,10);assert.equal(atlas.split('rx="3.2" ry="1.9"').length-1,30);});
+function extractSvgGroup(source,start){const tags=/<\/?g\\b[^>]*>/g;tags.lastIndex=start;let depth=0,match;while((match=tags.exec(source))){if(match[0].startsWith("</"))depth--;else depth++;if(depth===0)return source.slice(start,tags.lastIndex);}throw new Error("Grupo SVG sem fechamento");}
+test("as dez fases usam exatamente o mesmo piso de terra com três pequenas gemas azuis",()=>{
+ const starts=[...atlas.matchAll(/<g transform="translate\\(0 (\\d+)\\)">/g)];
+ assert.equal(starts.length,10);
+ const normalized=starts.map(match=>extractSvgGroup(atlas,match.index)
+  .replace(/transform="translate\\(0 \\d+\\)"/,'transform="translate(0 0)"')
+  .replace(/Fase \\d+ — piso de terra/,"Fase N — piso de terra"));
+ assert.equal(new Set(normalized).size,1,"todas as dez texturas de chão devem ser visualmente idênticas");
+ assert.equal((atlas.match(/rx="3\\.2" ry="1\\.9"/g)||[]).length,30);
+ assert.equal((atlas.match(/pedrinhas azuis/g)||[]).length,10);
+ assert.doesNotMatch(atlas,/pedrinhas (vermelhas|verdes|roxas|douradas|rosas)/);
+});
