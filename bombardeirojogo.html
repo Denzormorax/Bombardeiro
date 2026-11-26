@@ -17891,7 +17891,7 @@ var diamondShimmerTileCanvas=null; // Canvas reutilizado para recortar a luz pel
  function drawDiamondDestructibleShimmer(){
  if(currentWorld!=="diamonds"||!destructibleTilePositions.length)return;
  const index=Math.max(0,Math.min(9,level-1));
- const shimmerCanvas=diamondShimmerCanvases[index],sheet=diamondThemedSpriteSheets[index];
+ const shimmerCanvas=diamondShimmerCanvases[index],spriteGetter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof spriteGetter==="function"?spriteGetter(index):null;
  // Sem o sprite original carregado, não desenha um brilho quadrado de fallback.
  if(!shimmerCanvas||!sheet)return;
  if(!diamondShimmerTileCanvas){diamondShimmerTileCanvas=document.createElement("canvas");diamondShimmerTileCanvas.width=TILE;diamondShimmerTileCanvas.height=TILE;}
@@ -20483,6 +20483,7 @@ function diamondHexToRgb(hex){const value=hex.replace("#","");return [parseInt(v
 diamondShimmerCanvases=diamondThemes.map(theme=>{const rgb=diamondHexToRgb(theme.glow);return createPillarShimmerCanvas(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`,"rgba(255,255,255,.99)",1.45)});
 const diamondProgressKey="bomberquest-diamonds-unlocked";
 const diamondSpriteSheet=new Image(),diamondThemedSpriteSheets=Array(10).fill(null);
+window.__bombardeiroGetDiamondSpriteSheet=function(themeIndex){const index=Math.max(0,Math.min(9,themeIndex|0));return diamondThemedSpriteSheets[index]||null;};
 function buildDiamondSpriteSheets(){
  if(!diamondSpriteSheet.complete||!diamondSpriteSheet.naturalWidth)return;
  for(let i=0;i<10;i++){
