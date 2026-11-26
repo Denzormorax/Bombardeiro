@@ -76,7 +76,8 @@ test("inimigos comuns percebem bombas próximas e descartam rotas bloqueadas qua
   assert.match(reaction, /<=Math\.max\(baseRadius,range\+2\.2\)/);
   assert.match(reaction, /if\(isStandardBombEvader\(enemy\)\)/);
   const update = game.slice(game.indexOf("function updateEnemies(dt)"), game.indexOf("/* BOMBAS E COMBATE */"));
-  assert.match(update, /const routeBlockedByBomb=!!\(enemy\.path&&enemy\.path\.some\(p=>bombAt\(p\.x,p\.y\)\)\)/);
+  assert.match(update, /for\(const step of enemy\.path\)/);
+  assert.match(update, /if\(!routeBlockedByBomb&&bombAt\(step\.x,step\.y\)\)routeBlockedByBomb=true/);
   assert.match(update, /if\(routeInDanger\|\|routeBlockedByBomb\)/);
 });
 
