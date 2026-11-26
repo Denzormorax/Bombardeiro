@@ -17944,7 +17944,7 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  const outlineCtx=diamondOutlineGlowCanvas.getContext("2d");
  const paletteGetter=window.__bombardeiroGetDiamondEffectPalette;
  const palette=typeof paletteGetter==="function"?paletteGetter(themeIndex):null;
- const outlineColor="#168BFF"; // Azul elétrico para combinar com o brilho dos diamantes.
+ const outlineColor=palette&&palette.glow?palette.glow:"#ffffff"; // Cada fase usa a cor luminosa definida em sua paleta.
  atlasCtx.imageSmoothingEnabled=false;effectCtx.imageSmoothingEnabled=false;outlineCtx.imageSmoothingEnabled=false;
  for(let frame=0;frame<DIAMOND_SHIMMER_FRAME_COUNT;frame++){
   const phase=frame/DIAMOND_SHIMMER_FRAME_COUNT,pulse=.72+.28*Math.sin(phase*Math.PI*2),travel=(phase-.5)*(TILE+40);
@@ -17962,8 +17962,13 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
   const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
   outlineCtx.setTransform(1,0,0,1,0,0);outlineCtx.globalCompositeOperation="source-over";
   outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
-  outlineCtx.shadowColor=outlineColor;outlineCtx.shadowBlur=14+8*glowPulse;
-  outlineCtx.globalAlpha=.92+.08*glowPulse;
+  outlineCtx.shadowColor=outlineColor;
+  // Halo em três camadas, pré-renderizado no atlas de cada tema.
+  outlineCtx.shadowBlur=28+12*glowPulse;outlineCtx.globalAlpha=.82+.16*glowPulse;
+  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
+  outlineCtx.shadowBlur=18+8*glowPulse;outlineCtx.globalAlpha=.90+.10*glowPulse;
+  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
+  outlineCtx.shadowBlur=9+5*glowPulse;outlineCtx.globalAlpha=1;
   outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
   outlineCtx.shadowBlur=0;outlineCtx.globalAlpha=1;
   outlineCtx.globalCompositeOperation="destination-out";
