@@ -17929,6 +17929,7 @@ function drawIndestructibleShimmer(){
 }
 var diamondShimmerCanvases=[]; // Brilhos originais por tema.
 var diamondShimmerTileCanvas=null; // Canvas temporário reutilizado apenas ao pré-renderizar a animação.
+var diamondOutlineGlowCanvas=null; // Máscara temporária reutilizada para o contorno externo do PNG.
 var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1;
 const DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24;
 function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
@@ -17938,18 +17939,36 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  atlas.width=DIAMOND_SHIMMER_FRAME_COLUMNS*TILE;
  atlas.height=Math.ceil(DIAMOND_SHIMMER_FRAME_COUNT/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
  const atlasCtx=atlas.getContext("2d"),effectCtx=diamondShimmerTileCanvas.getContext("2d");
- atlasCtx.imageSmoothingEnabled=false;effectCtx.imageSmoothingEnabled=false;
+ if(!diamondOutlineGlowCanvas){diamondOutlineGlowCanvas=document.createElement("canvas");diamondOutlineGlowCanvas.width=TILE;diamondOutlineGlowCanvas.height=TILE;}
+ const outlineCtx=diamondOutlineGlowCanvas.getContext("2d");
+ const paletteGetter=window.__bombardeiroGetDiamondEffectPalette;
+ const palette=typeof paletteGetter==="function"?paletteGetter(themeIndex):null;
+ const outlineColor=palette&&palette.glow?palette.glow:"#ffffff";
+ atlasCtx.imageSmoothingEnabled=false;effectCtx.imageSmoothingEnabled=false;outlineCtx.imageSmoothingEnabled=false;
  for(let frame=0;frame<DIAMOND_SHIMMER_FRAME_COUNT;frame++){
   const phase=frame/DIAMOND_SHIMMER_FRAME_COUNT,pulse=.72+.28*Math.sin(phase*Math.PI*2),travel=(phase-.5)*(TILE+40);
   effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalCompositeOperation="source-over";effectCtx.globalAlpha=1;
   effectCtx.clearRect(0,0,TILE,TILE);effectCtx.globalAlpha=pulse;
   effectCtx.translate(TILE*.5+travel,TILE*.5+travel);effectCtx.rotate(Math.PI/4);
   effectCtx.drawImage(shimmerCanvas,-20,-28,40,56);
-  // A transparência real do geodo é aplicada uma única vez na pré-renderização.
+  // A transparência real do geodo limita o brilho diagonal à silhueta do PNG.
   effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalAlpha=1;
   effectCtx.globalCompositeOperation="destination-in";
   effectCtx.drawImage(sheet,288,0,96,96,0,0,TILE,TILE);
   effectCtx.globalCompositeOperation="source-over";
+  // Halo externo pequeno, pulsante e na cor do tema. A máscara alfa remove o interior:
+  // só resta o brilho que acompanha o contorno irregular do próprio geodo.
+  const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
+  outlineCtx.setTransform(1,0,0,1,0,0);outlineCtx.globalCompositeOperation="source-over";
+  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,TILE,TILE);
+  outlineCtx.shadowColor=outlineColor;outlineCtx.shadowBlur=2.2+1.4*glowPulse;
+  outlineCtx.globalAlpha=.34+.28*glowPulse;
+  outlineCtx.drawImage(sheet,288,0,96,96,0,0,TILE,TILE);
+  outlineCtx.shadowBlur=0;outlineCtx.globalAlpha=1;
+  outlineCtx.globalCompositeOperation="destination-out";
+  outlineCtx.drawImage(sheet,288,0,96,96,0,0,TILE,TILE);
+  outlineCtx.globalCompositeOperation="source-over";
+  effectCtx.drawImage(diamondOutlineGlowCanvas,0,0);
   const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
   atlasCtx.drawImage(diamondShimmerTileCanvas,sx,sy,TILE,TILE);
  }
@@ -20703,9 +20722,9 @@ function buildDiamondPortalFrames(themeIndex){
   q.fillStyle=base;q.beginPath();q.ellipse(0,0,31,25,0,0,Math.PI*2);q.fill();
   q.globalAlpha=.9;q.strokeStyle=theme.accent;q.lineWidth=2.2;q.beginPath();q.ellipse(0,0,27,21,0,0,Math.PI*2);q.stroke();
   q.globalAlpha=.95;q.strokeStyle=theme.glow;q.lineWidth=4.2;q.lineCap="round";q.beginPath();
-  for(let i=0;i<=110;i++){const t=i/110,a=pulse+t*Math.PI*4.5,r=27-t*22,x=Math.cos(a)*r,y=Math.sin(a)*r*.78;if(i===0)q.moveTo(x,y);else q.lineTo(x,y)}q.stroke();
+  for(let i=0;i<=110;i++){const t=i/110,a=pulse+t*Math.PI*4.5,r=37-t*29,x=Math.cos(a)*r,y=Math.sin(a)*r*.78;if(i===0)q.moveTo(x,y);else q.lineTo(x,y)}q.stroke();
   q.globalAlpha=.9;q.strokeStyle=colors[2];q.lineWidth=1.7;q.beginPath();
-  for(let i=0;i<=90;i++){const t=i/90,a=pulse+Math.PI+t*Math.PI*4.2,r=23-t*18,x=Math.cos(a)*r,y=Math.sin(a)*r*.78;if(i===0)q.moveTo(x,y);else q.lineTo(x,y)}q.stroke();
+  for(let i=0;i<=90;i++){const t=i/90,a=pulse+Math.PI+t*Math.PI*4.2,r=33-t*25,x=Math.cos(a)*r,y=Math.sin(a)*r*.78;if(i===0)q.moveTo(x,y);else q.lineTo(x,y)}q.stroke();
   q.globalAlpha=1;q.fillStyle="#080d1b";q.beginPath();q.ellipse(0,0,5.3+Math.sin(pulse)*.5,4.4,0,0,Math.PI*2);q.fill();
   q.globalAlpha=.9;
   for(let i=0;i<8;i++){const a=i*Math.PI/4+pulse*.16,x=Math.cos(a)*29,y=Math.sin(a)*22;q.fillStyle=colors[i%colors.length];q.beginPath();q.moveTo(x,y-3);q.lineTo(x+2.5,y);q.lineTo(x,y+3);q.lineTo(x-2.5,y);q.closePath();q.fill()}
