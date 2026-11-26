@@ -336,6 +336,10 @@ jobs:
           echo "Chave de assinatura carregada com segurança."
 
       - name: Gerar APK release assinado
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle -p android :app:assembleRelease --no-daemon --stacktrace
 
       - name: Verificar assinatura do APK
