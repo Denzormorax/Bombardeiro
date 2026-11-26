@@ -157,8 +157,8 @@ test("Caçador e Boneco de Neve limitam a fuga a dois blocos quando há rota seg
   const escape=game.slice(game.indexOf("function findBombEscapePath"),game.indexOf("function findBlueFlameEscapePath"));
   assert.ok(escape.includes('currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)'));
   assert.ok(escape.includes("maxSteps=preferCover?5:(shortFlee?2:COLS*ROWS)"));
-  assert.ok(escape.includes('const shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)'));
-  assert.ok(escape.includes("if(!safe.length&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true)"));
+  assert.ok(escape.includes('shortFlee=!allowLonger&&currentWorld==="ice"&&(enemy.isHunter||enemy.isSnowman)'));
+  assert.ok(escape.includes("if(!bestKey&&shortFlee)return findBombEscapePath(enemy,danger,preferCover,true)"));
   const blue=game.slice(game.indexOf("function findBlueFlameEscapePath"),game.indexOf("function spawnSandBuildParticles"));
   assert.ok(blue.includes("((enemy.isHunter||enemy.isSnowman)?2:COLS*ROWS)"));
 });
