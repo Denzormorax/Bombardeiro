@@ -17928,18 +17928,19 @@ function drawIndestructibleShimmer(){
  ctx.restore();
 }
 var diamondShimmerCanvases=[]; // Brilhos originais por tema.
-var diamondShimmerTileCanvas=null; // Canvas temporário reutilizado apenas ao pré-renderizar a animação.
-var diamondOutlineGlowCanvas=null; // Máscara temporária reutilizada para o contorno externo do PNG.
+var diamondShimmerTileCanvas=null; // Quadro expandido reutilizado no pré-renderizador.
+var diamondOutlineGlowCanvas=null; // Máscara expandida reutilizada para o halo externo do PNG.
 var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1;
+const DIAMOND_SHIMMER_PADDING=8,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24;
 function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  if(diamondShimmerFrameAtlas&&diamondShimmerFrameTheme===themeIndex)return diamondShimmerFrameAtlas;
- if(!diamondShimmerTileCanvas){diamondShimmerTileCanvas=document.createElement("canvas");diamondShimmerTileCanvas.width=TILE;diamondShimmerTileCanvas.height=TILE;}
+ if(!diamondShimmerTileCanvas){diamondShimmerTileCanvas=document.createElement("canvas");diamondShimmerTileCanvas.width=DIAMOND_SHIMMER_FRAME_SIZE;diamondShimmerTileCanvas.height=DIAMOND_SHIMMER_FRAME_SIZE;}
  const atlas=document.createElement("canvas");
- atlas.width=DIAMOND_SHIMMER_FRAME_COLUMNS*TILE;
- atlas.height=Math.ceil(DIAMOND_SHIMMER_FRAME_COUNT/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
+ atlas.width=DIAMOND_SHIMMER_FRAME_COLUMNS*DIAMOND_SHIMMER_FRAME_SIZE;
+ atlas.height=Math.ceil(DIAMOND_SHIMMER_FRAME_COUNT/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
  const atlasCtx=atlas.getContext("2d"),effectCtx=diamondShimmerTileCanvas.getContext("2d");
- if(!diamondOutlineGlowCanvas){diamondOutlineGlowCanvas=document.createElement("canvas");diamondOutlineGlowCanvas.width=TILE;diamondOutlineGlowCanvas.height=TILE;}
+ if(!diamondOutlineGlowCanvas){diamondOutlineGlowCanvas=document.createElement("canvas");diamondOutlineGlowCanvas.width=DIAMOND_SHIMMER_FRAME_SIZE;diamondOutlineGlowCanvas.height=DIAMOND_SHIMMER_FRAME_SIZE;}
  const outlineCtx=diamondOutlineGlowCanvas.getContext("2d");
  const paletteGetter=window.__bombardeiroGetDiamondEffectPalette;
  const palette=typeof paletteGetter==="function"?paletteGetter(themeIndex):null;
@@ -17948,29 +17949,29 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  for(let frame=0;frame<DIAMOND_SHIMMER_FRAME_COUNT;frame++){
   const phase=frame/DIAMOND_SHIMMER_FRAME_COUNT,pulse=.72+.28*Math.sin(phase*Math.PI*2),travel=(phase-.5)*(TILE+40);
   effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalCompositeOperation="source-over";effectCtx.globalAlpha=1;
-  effectCtx.clearRect(0,0,TILE,TILE);effectCtx.globalAlpha=pulse;
-  effectCtx.translate(TILE*.5+travel,TILE*.5+travel);effectCtx.rotate(Math.PI/4);
-  effectCtx.drawImage(shimmerCanvas,-20,-28,40,56);
+  effectCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);effectCtx.globalAlpha=pulse;
+  effectCtx.save();effectCtx.beginPath();effectCtx.rect(DIAMOND_SHIMMER_PADDING+1,DIAMOND_SHIMMER_PADDING+1,TILE-2,TILE-2);effectCtx.clip();
+  effectCtx.translate(DIAMOND_SHIMMER_PADDING+TILE*.5+travel,DIAMOND_SHIMMER_PADDING+TILE*.5+travel);effectCtx.rotate(Math.PI/4);
+  effectCtx.drawImage(shimmerCanvas,-20,-28,40,56);effectCtx.restore();
   // A transparência real do geodo limita o brilho diagonal à silhueta do PNG.
-  effectCtx.setTransform(1,0,0,1,0,0);effectCtx.globalAlpha=1;
-  effectCtx.globalCompositeOperation="destination-in";
-  effectCtx.drawImage(sheet,288,0,96,96,0,0,TILE,TILE);
+  effectCtx.globalAlpha=1;effectCtx.globalCompositeOperation="destination-in";
+  effectCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
   effectCtx.globalCompositeOperation="source-over";
-  // Halo externo pequeno, pulsante e na cor do tema. A máscara alfa remove o interior:
-  // só resta o brilho que acompanha o contorno irregular do próprio geodo.
+  // O quadro tem margem transparente: o halo pode ultrapassar o tile sem ser cortado.
+  // A máscara alfa remove o interior e deixa somente o contorno externo colorido do tema.
   const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
   outlineCtx.setTransform(1,0,0,1,0,0);outlineCtx.globalCompositeOperation="source-over";
-  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,TILE,TILE);
-  outlineCtx.shadowColor=outlineColor;outlineCtx.shadowBlur=2.2+1.4*glowPulse;
-  outlineCtx.globalAlpha=.34+.28*glowPulse;
-  outlineCtx.drawImage(sheet,288,0,96,96,0,0,TILE,TILE);
+  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
+  outlineCtx.shadowColor=outlineColor;outlineCtx.shadowBlur=4.8+2.2*glowPulse;
+  outlineCtx.globalAlpha=.56+.26*glowPulse;
+  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
   outlineCtx.shadowBlur=0;outlineCtx.globalAlpha=1;
   outlineCtx.globalCompositeOperation="destination-out";
-  outlineCtx.drawImage(sheet,288,0,96,96,0,0,TILE,TILE);
+  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
   outlineCtx.globalCompositeOperation="source-over";
   effectCtx.drawImage(diamondOutlineGlowCanvas,0,0);
-  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
-  atlasCtx.drawImage(diamondShimmerTileCanvas,sx,sy,TILE,TILE);
+  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
+  atlasCtx.drawImage(diamondShimmerTileCanvas,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  }
  diamondShimmerFrameAtlas=atlas;diamondShimmerFrameTheme=themeIndex;
  return atlas;
@@ -17985,8 +17986,8 @@ function drawDiamondDestructibleShimmer(){
  for(const tile of destructibleTilePositions){
   const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
   const frame=Math.min(DIAMOND_SHIMMER_FRAME_COUNT-1,Math.floor(phase*DIAMOND_SHIMMER_FRAME_COUNT));
-  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*TILE;
-  ctx.drawImage(atlas,sx,sy,TILE,TILE,ox+tile.x*TILE,oy+tile.y*TILE,TILE,TILE);
+  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
+  ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,ox+tile.x*TILE-DIAMOND_SHIMMER_PADDING,oy+tile.y*TILE-DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  }
 }
 function draw(){
