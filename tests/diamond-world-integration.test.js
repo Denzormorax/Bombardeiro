@@ -35,7 +35,7 @@ test("o Mundo dos Diamantes usa apenas inimigos comuns com aparência cristalina
  assert.match(html,/hornedCount=currentWorld==="diamonds"\?0:/);
  assert.match(html,/isHunter=isSnowman\|\|\(!isBuilder&&!isMushroom&&!isHorned&&currentWorld!=="diamonds"/);
  assert.match(html,/const enemyFaceBeforeDiamonds=drawEnemyFace;/);
- assert.match(html,/if\(currentWorld==="diamonds"&&!hurt\)/);
+ assert.match(html,/drawDiamondEnemyDetails\(e,deathProgress\)/);
 });
 
 test("o desenho dos inimigos acessa os temas de diamantes somente no escopo correto",()=>{
