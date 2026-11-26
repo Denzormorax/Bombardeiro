@@ -17930,7 +17930,8 @@ function drawIndestructibleShimmer(){
 var diamondShimmerCanvases=[]; // Brilhos originais por tema.
 var diamondShimmerTileCanvas=null; // Quadro expandido reutilizado no pré-renderizador.
 var diamondOutlineGlowCanvas=null; // Máscara expandida reutilizada para o halo externo do PNG.
-var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null;
+var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null,diamondShimmerRevealStartedAt=0;
+const DIAMOND_SHIMMER_REVEAL_MS=1200;
 const DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8;
 function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
@@ -17939,11 +17940,11 @@ function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  outlineCtx.shadowColor=outlineColor;
  // Halo em três camadas, construído uma única vez por tema, não 64 vezes.
- outlineCtx.shadowBlur=14+6*glowPulse;outlineCtx.globalAlpha=.48+.10*glowPulse;
+ outlineCtx.shadowBlur=28+12*glowPulse;outlineCtx.globalAlpha=.82+.16*glowPulse;
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- outlineCtx.shadowBlur=8+4*glowPulse;outlineCtx.globalAlpha=.58+.12*glowPulse;
+ outlineCtx.shadowBlur=18+8*glowPulse;outlineCtx.globalAlpha=.90+.10*glowPulse;
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- outlineCtx.shadowBlur=4+2*glowPulse;outlineCtx.globalAlpha=.72;
+ outlineCtx.shadowBlur=9+5*glowPulse;outlineCtx.globalAlpha=1;
  outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
  outlineCtx.shadowBlur=0;outlineCtx.globalAlpha=1;
  outlineCtx.globalCompositeOperation="destination-out";
@@ -17962,7 +17963,7 @@ function renderDiamondShimmerAtlasFrame(state,frame){
  effectCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
  effectCtx.globalCompositeOperation="source-over";
  const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
- effectCtx.globalAlpha=.52+.10*glowPulse;
+ effectCtx.globalAlpha=.82+.16*glowPulse;
  effectCtx.drawImage(diamondOutlineGlowCanvas,0,0);
  effectCtx.globalAlpha=1;
  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
@@ -18006,11 +18007,7 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
   diamondShimmerFrameAtlas=atlas;diamondShimmerFrameTheme=themeIndex;diamondShimmerFrameBuild=null;
  }
  function scheduleChunk(){
-  // A contagem da fase tem prioridade: o preview já está pronto e o atlas
-  // continua a ser montado assim que a introdução terminar.
-  if(window.__bombardeiroPhaseIntroState&&window.__bombardeiroPhaseIntroState.active){
-   state.kind="timer";state.handle=setTimeout(scheduleChunk,140);return;
-  }
+  // A montagem continua em pequenos lotes ociosos durante o letreiro da fase.
   if(typeof window.requestIdleCallback==="function"){
    state.kind="idle";state.handle=window.requestIdleCallback(renderChunk,{timeout:250});
   }else{
@@ -18041,9 +18038,12 @@ function drawDiamondDestructibleShimmer(){
    const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
    const frame=Math.min(DIAMOND_SHIMMER_FRAME_COUNT-1,Math.floor(phase*DIAMOND_SHIMMER_FRAME_COUNT));
    const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
-   ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
-  }else{
-   // Até o atlas animado ficar pronto, mostra o halo temático inicial já renderizado.
+   if(!diamondShimmerRevealStartedAt)diamondShimmerRevealStartedAt=performance.now();
+   const reveal=Math.max(0,Math.min(1,(performance.now()-diamondShimmerRevealStartedAt)/DIAMOND_SHIMMER_REVEAL_MS));
+   if(preview&&reveal<1){ctx.save();ctx.globalAlpha=1-reveal;ctx.drawImage(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);ctx.globalAlpha=reveal;ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);ctx.restore();}
+   else ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
+  }else if(preview){
+   // O halo inicial permanece visível até o atlas temático estar pronto.
    ctx.drawImage(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
   }
  }
