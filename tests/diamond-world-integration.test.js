@@ -103,11 +103,11 @@ test("o contorno dos geodos recebe halo pulsante temático com margem para não 
  assert.match(builder,/paletteGetter=window\.__bombardeiroGetDiamondEffectPalette/);
  assert.match(builder,/outlineColor=palette\.glow/);
  assert.match(builder,/outlineCtx\.shadowColor=outlineColor/);
- assert.match(builder,/outlineCtx\.shadowBlur=28\+12\*glowPulse/);
- assert.match(builder,/outlineCtx\.shadowBlur=18\+8\*glowPulse/);
- assert.match(builder,/outlineCtx\.shadowBlur=9\+5\*glowPulse/);
+ assert.match(builder,/outlineCtx\.shadowBlur=14\+6\*glowPulse/);
+ assert.match(builder,/outlineCtx\.shadowBlur=8\+4\*glowPulse/);
+ assert.match(builder,/outlineCtx\.shadowBlur=4\+2\*glowPulse/);
  assert.match(builder,/Halo em três camadas/);
- assert.match(builder,/outlineCtx\.globalAlpha=\.82\+\.16\*glowPulse/);
+ assert.match(builder,/outlineCtx\.globalAlpha=\.48\+\.10\*glowPulse/);
  assert.match(builder,/outlineCtx\.globalCompositeOperation="destination-out"/);
  assert.match(builder,/outlineCtx\.drawImage\(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE\)/);
  assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
@@ -269,4 +269,14 @@ test("o rastreamento de movimento evita arrays e objetos temporários em cada qu
  assert.match(update,/updateWaterWalkers\(dt\)/);
  assert.match(walkers,/for\(const entity of enemies\)/);
  assert.doesNotMatch(walkers,/walkers=\[|enemies\.map/);
+});
+
+test("a travessia dos espirais anima o encolhimento e o crescimento do jogador e dos inimigos",()=>{
+ assert.match(html,/entity\._diamondPortalTransit=\{fromX,fromY,toX,toY,elapsed:0,duration:\.78\}/);
+ assert.match(html,/function diamondPortalTransitPose\(entity\)/);
+ assert.match(html,/Math\.cos\(local\*Math\.PI\*\.5\)/);
+ assert.match(html,/Math\.sin\(local\*Math\.PI\*\.5\)/);
+ assert.match(html,/drawPlayerBeforeDiamondTransit/);
+ assert.match(html,/drawEnemyBeforeDiamondTransit/);
+ assert.match(html,/transit\.elapsed\+=dt/);
 });
