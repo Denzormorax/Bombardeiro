@@ -20730,7 +20730,7 @@ function createDiamondPortals(){
  }
  shuffleArray(candidates);
  for(const p of candidates){
-  if(diamondPortalPositions.length>=4)break;
+  if(diamondPortalPositions.length>=10)break;
   let spaced=true;
   for(const other of diamondPortalPositions)if(distance(p.x+.5,p.y+.5,other.x+.5,other.y+.5)<4.2){spaced=false;break}
   if(!spaced)continue;
