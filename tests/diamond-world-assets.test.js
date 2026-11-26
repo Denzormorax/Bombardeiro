@@ -17,3 +17,15 @@ test("as dez fases usam exatamente o mesmo piso de terra com três pequenas gema
  assert.equal((atlas.match(/<g transform="translate\(96 \d+\)">/g)||[]).length,10,"a segunda camada deve existir nas dez fases");
  assert.equal((atlas.match(/<title>Fase \d+ — piso de terra com cristais naturais e três pedrinhas azuis<\/title>/g)||[]).length,20,"as duas camadas devem usar o piso de terra");
 });
+
+test("a camada terrainDetail repete exatamente o piso com três pedrinhas nas dez fases",()=>{
+ const details=[...atlas.matchAll(/<g transform="translate\(96 (\d+)\)">/g)];
+ assert.equal(details.length,10);
+ for(const match of details){
+  const y=Number(match[1]);
+  const groundStart=atlas.indexOf('<g transform="translate(0 '+y+')">');
+  const detail=extractSvgGroup(atlas,match.index).replace(/transform="translate\(96 \d+\)"/,'transform="translate(0 0)"').replace(/Fase \d+ — piso de terra/,"Fase N — piso de terra");
+  const ground=extractSvgGroup(atlas,groundStart).replace(/transform="translate\(0 \d+\)"/,'transform="translate(0 0)"').replace(/Fase \d+ — piso de terra/,"Fase N — piso de terra");
+  assert.equal(detail,ground,"as duas camadas devem ser idênticas na fase "+(y/96+1));
+ }
+});
