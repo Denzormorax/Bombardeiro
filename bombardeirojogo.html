@@ -17002,22 +17002,23 @@ function updatePlayer(dt){
  moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");collectCoins();
  for(const e of enemies)if(e.alive&&!e.burrowing&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
 }
-function updateWaterWalkers(dt,previousPositions){
- const walkers=[{entity:player,previous:previousPositions.player,active:true},...enemies.map((entity,index)=>({entity,previous:previousPositions.enemies[index],active:entity.alive&&!entity.burrowing&&!entity.isSwampGhost}))];
- for(const walker of walkers){
-  const entity=walker.entity,previous=walker.previous;
-  if(!walker.active||!previous){entity.waterCell=null;entity.waterSplashCooldown=0;continue}
-  entity.waterSplashCooldown=Math.max(0,(entity.waterSplashCooldown||0)-dt);
-  const moved=Math.hypot(entity.x-previous.x,entity.y-previous.y);
-  const key=cellKey(Math.floor(entity.x),Math.floor(entity.y));
-  if(moved>.001&&moved<.28&&waterPuddleCells.has(key)){
-   if(entity.waterCell!==key||entity.waterSplashCooldown<=0){
-    spawnWaterSplash(entity.x,entity.y);
-    entity.waterSplashCooldown=.16;
-   }
-   entity.waterCell=key;
-  }else if(!waterPuddleCells.has(key))entity.waterCell=null;
- }
+function updateWaterWalker(entity,dt,active){
+ const previousX=entity._previousX,previousY=entity._previousY;
+ if(!active||!Number.isFinite(previousX)||!Number.isFinite(previousY)){entity.waterCell=null;entity.waterSplashCooldown=0;return}
+ entity.waterSplashCooldown=Math.max(0,(entity.waterSplashCooldown||0)-dt);
+ const moved=Math.hypot(entity.x-previousX,entity.y-previousY);
+ const key=cellKey(Math.floor(entity.x),Math.floor(entity.y));
+ if(moved>.001&&moved<.28&&waterPuddleCells.has(key)){
+  if(entity.waterCell!==key||entity.waterSplashCooldown<=0){
+   spawnWaterSplash(entity.x,entity.y);
+   entity.waterSplashCooldown=.16;
+  }
+  entity.waterCell=key;
+ }else if(!waterPuddleCells.has(key))entity.waterCell=null;
+}
+function updateWaterWalkers(dt){
+ updateWaterWalker(player,dt,true);
+ for(const entity of enemies)updateWaterWalker(entity,dt,entity.alive&&!entity.burrowing&&!entity.isSwampGhost);
 }
 function updateWaterParticles(dt){
  for(let i=waterParticles.length-1;i>=0;i--){
@@ -17162,8 +17163,11 @@ function spawnWaterSplash(x,y){
 }
 function update(dt){
  if(!running||paused)return;
- const previousPositions={player:{x:player.x,y:player.y},enemies:enemies.map(e=>({x:e.x,y:e.y}))};
- gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);for(let i=0;i<enemies.length;i++){const e=enemies[i],p=previousPositions.enemies[i];if(e&&e.isBuilder)e._builderMoving=!!(e.alive&&!e.burrowing&&p&&Math.hypot(e.x-p.x,e.y-p.y)>.00025)}updateWaterWalkers(dt,previousPositions);updateSlidingBombs(dt);
+ player._previousX=player.x;player._previousY=player.y;
+ for(const enemy of enemies){enemy._previousX=enemy.x;enemy._previousY=enemy.y}
+ gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);
+ for(const enemy of enemies)if(enemy&&enemy.isBuilder)enemy._builderMoving=!!(enemy.alive&&!enemy.burrowing&&Number.isFinite(enemy._previousX)&&Math.hypot(enemy.x-enemy._previousX,enemy.y-enemy._previousY)>.00025);
+ updateWaterWalkers(dt);updateSlidingBombs(dt);
  for(const b of bombs){
   if(b.extinguished){for(const drop of b.waterDrips||[]){drop.y+=drop.speed*dt;if(drop.y>12){drop.y=-16;drop.x=8+(Math.random()-.5)*12}}continue}
   b.animTime+=dt;
