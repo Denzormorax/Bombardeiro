@@ -210,7 +210,7 @@ test("o rastreamento de movimento evita arrays e objetos temporários em cada qu
  const updateStart=html.indexOf("function update(dt){");
  const updateEnd=html.indexOf("\n/* DESENHO DO CENÁRIO */",updateStart);
  const update=html.slice(updateStart,updateEnd);
- const walkersStart=html.indexOf("function updateWaterWalker(");
+ const walkersStart=html.indexOf("function updateWaterWalkers(");
  const walkersEnd=html.indexOf("\nfunction ",walkersStart+12);
  const walkers=html.slice(walkersStart,walkersEnd);
  assert.match(update,/player\._previousX=player\.x;player\._previousY=player\.y/);
