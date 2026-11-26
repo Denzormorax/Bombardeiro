@@ -17034,16 +17034,6 @@ function updateWaterParticles(dt){
 const destroyedBlockVisualCache={
  desertGlow:null,volcanoGlow:null,iceGlow:null,particles:{desert:new Map(),volcano:new Map(),ice:new Map(),diamonds:new Map()}
 };
-const diamondDestroyedGlowCanvases=Array(10).fill(null);
-function buildDiamondDestroyedBlockGlow(themeIndex){
- const index=Math.max(0,Math.min(9,themeIndex|0));
- if(diamondDestroyedGlowCanvases[index])return diamondDestroyedGlowCanvases[index];
- const theme=window.__bombardeiroGetDiamondEffectPalette?window.__bombardeiroGetDiamondEffectPalette(index):{accent:"#c8f8ff",glow:"#8cecff"};const c=document.createElement("canvas");c.width=c.height=128;
- const q=c.getContext("2d"),g=q.createRadialGradient(64,64,1,64,64,63);
- g.addColorStop(0,"rgba(255,255,255,.98)");g.addColorStop(.2,theme.accent+"e8");
- g.addColorStop(.52,theme.glow+"88");g.addColorStop(1,theme.glow+"00");
- q.fillStyle=g;q.fillRect(0,0,128,128);diamondDestroyedGlowCanvases[index]=c;return c;
-}
 function buildDestroyedBlockGlow(world){
  const key=world==="desert"?"desertGlow":world==="ice"?"iceGlow":"volcanoGlow";
  if(destroyedBlockVisualCache[key])return destroyedBlockVisualCache[key];
@@ -17128,8 +17118,10 @@ function drawDestroyedBlockEffects(){
   ctx.save();ctx.globalAlpha=fade;
   // Gradientes grandes são imagens prontas; apenas o tamanho muda durante a animação.
   const radius=e.world==="desert"?9+progress*25:e.world==="ice"?12+progress*29:7+progress*31;
-  const glow=e.world==="diamonds"?buildDiamondDestroyedBlockGlow(e.themeIndex):buildDestroyedBlockGlow(e.world);
-  ctx.drawImage(glow,cx-radius,cy-radius,radius*2,radius*2);
+  if(e.world!=="diamonds"){
+   const glow=buildDestroyedBlockGlow(e.world);
+   ctx.drawImage(glow,cx-radius,cy-radius,radius*2,radius*2);
+  }
   if(e.world==="volcano"){
    ctx.strokeStyle="rgba(255,205,105,"+(fade*.98)+")";ctx.lineWidth=2.5;
    ctx.beginPath();ctx.arc(cx,cy,5+progress*26,0,Math.PI*2);ctx.stroke();
@@ -17929,26 +17921,22 @@ function drawIndestructibleShimmer(){
 }
 var diamondShimmerCanvases=[]; // Brilhos originais por tema.
 var diamondShimmerTileCanvas=null; // Quadro expandido reutilizado no pré-renderizador.
-var diamondOutlineGlowCanvas=null; // Máscara expandida reutilizada para o halo externo do PNG.
-var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFrameWhitePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null,diamondShimmerWhitePreviewCanvas=null,diamondShimmerWhiteCanvas=null,diamondShimmerRevealStartedAt=0;
-const DIAMOND_SHIMMER_REVEAL_MS=1750;
-const DIAMOND_SHIMMER_PADDING=24,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
+var diamondOutlineGlowCanvas=null; // Contorno colorido justo na silhueta do geodo.
+var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null;
+const DIAMOND_SHIMMER_PADDING=8,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8;
 function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
- const glowPulse=.5;
  outlineCtx.setTransform(1,0,0,1,0,0);outlineCtx.globalCompositeOperation="source-over";
  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
- outlineCtx.shadowColor=outlineColor;
- // Halo em três camadas, construído uma única vez por tema, não 64 vezes.
- outlineCtx.shadowBlur=28+12*glowPulse;outlineCtx.globalAlpha=.82+.16*glowPulse;
- outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- outlineCtx.shadowBlur=18+8*glowPulse;outlineCtx.globalAlpha=.90+.10*glowPulse;
- outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- outlineCtx.shadowBlur=9+5*glowPulse;outlineCtx.globalAlpha=1;
- outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- outlineCtx.shadowBlur=0;outlineCtx.globalAlpha=1;
+ const x=DIAMOND_SHIMMER_PADDING,y=DIAMOND_SHIMMER_PADDING;
+ // Contorno firme na própria silhueta, sem luz difusa atrás do geodo.
+ for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2],[-1.4,-1.4],[1.4,-1.4],[-1.4,1.4],[1.4,1.4]]){
+  outlineCtx.drawImage(sheet,288,0,96,96,x+dx,y+dy,TILE,TILE);
+ }
+ outlineCtx.globalCompositeOperation="source-in";outlineCtx.fillStyle=outlineColor;
+ outlineCtx.fillRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  outlineCtx.globalCompositeOperation="destination-out";
- outlineCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
+ outlineCtx.drawImage(sheet,288,0,96,96,x,y,TILE,TILE);
  outlineCtx.globalCompositeOperation="source-over";
 }
 function renderDiamondShimmerAtlasFrame(state,frame){
@@ -17962,8 +17950,8 @@ function renderDiamondShimmerAtlasFrame(state,frame){
  effectCtx.globalAlpha=1;effectCtx.globalCompositeOperation="destination-in";
  effectCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
  effectCtx.globalCompositeOperation="source-over";
- const glowPulse=.5+.5*Math.sin(phase*Math.PI*2);
- effectCtx.globalAlpha=.82+.16*glowPulse;
+ const glowPulse=.72+.28*Math.sin(phase*Math.PI*2);
+ effectCtx.globalAlpha=.72+.28*glowPulse;
  effectCtx.drawImage(diamondOutlineGlowCanvas,0,0);
  effectCtx.globalAlpha=1;
  const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
@@ -17983,29 +17971,15 @@ function buildDiamondShimmerFrameAtlas(themeIndex,shimmerCanvas,sheet){
  const outlineCtx=diamondOutlineGlowCanvas.getContext("2d");
  const paletteGetter=window.__bombardeiroGetDiamondEffectPalette;
  const palette=typeof paletteGetter==="function"?paletteGetter(themeIndex):null;
- // Nunca cria preview branco: espera a paleta real do tema estar disponível.
  if(!palette||typeof palette.glow!=="string"||!palette.glow)return null;
- const outlineColor=palette.glow;
  atlasCtx.imageSmoothingEnabled=false;effectCtx.imageSmoothingEnabled=false;outlineCtx.imageSmoothingEnabled=false;
- buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor);
+ buildDiamondShimmerHalo(outlineCtx,sheet,palette.glow);
  const state={themeIndex,atlas,atlasCtx,effectCtx,shimmerCanvas,sheet,frame:1,handle:0,kind:"",cancel:null};
  diamondShimmerFrameBuild=state;
- // Renderiza um quadro inicial de halo imediatamente, para o glow não esperar o atlas inteiro.
  renderDiamondShimmerAtlasFrame(state,0);
  if(!diamondShimmerPreviewCanvas){diamondShimmerPreviewCanvas=document.createElement("canvas");diamondShimmerPreviewCanvas.width=DIAMOND_SHIMMER_FRAME_SIZE;diamondShimmerPreviewCanvas.height=DIAMOND_SHIMMER_FRAME_SIZE;}
  diamondShimmerPreviewCanvas.getContext("2d").drawImage(diamondShimmerTileCanvas,0,0);
  diamondShimmerFramePreview=diamondShimmerPreviewCanvas;
- // A camada branca é independente e desaparece enquanto a cor natural ganha força.
- if(!diamondShimmerWhiteCanvas)diamondShimmerWhiteCanvas=createPillarShimmerCanvas("rgb(255,255,255)","rgba(255,255,255,.99)",1.45);
- if(!diamondShimmerWhitePreviewCanvas){diamondShimmerWhitePreviewCanvas=document.createElement("canvas");diamondShimmerWhitePreviewCanvas.width=DIAMOND_SHIMMER_FRAME_SIZE;diamondShimmerWhitePreviewCanvas.height=DIAMOND_SHIMMER_FRAME_SIZE;}
- const whiteCtx=diamondShimmerWhitePreviewCanvas.getContext("2d");
- whiteCtx.setTransform(1,0,0,1,0,0);whiteCtx.globalCompositeOperation="source-over";whiteCtx.globalAlpha=1;whiteCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
- whiteCtx.save();whiteCtx.beginPath();whiteCtx.rect(DIAMOND_SHIMMER_PADDING+1,DIAMOND_SHIMMER_PADDING+1,TILE-2,TILE-2);whiteCtx.clip();
- whiteCtx.translate(DIAMOND_SHIMMER_PADDING+TILE*.5,DIAMOND_SHIMMER_PADDING+TILE*.5);whiteCtx.rotate(Math.PI/4);whiteCtx.drawImage(diamondShimmerWhiteCanvas,-20,-28,40,56);whiteCtx.restore();
- whiteCtx.globalCompositeOperation="destination-in";whiteCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- whiteCtx.globalCompositeOperation="source-over";whiteCtx.shadowColor="#ffffff";whiteCtx.shadowBlur=34;whiteCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);
- whiteCtx.shadowBlur=0;whiteCtx.globalCompositeOperation="destination-out";whiteCtx.drawImage(sheet,288,0,96,96,DIAMOND_SHIMMER_PADDING,DIAMOND_SHIMMER_PADDING,TILE,TILE);whiteCtx.globalCompositeOperation="source-over";
- diamondShimmerFrameWhitePreview=diamondShimmerWhitePreviewCanvas;
  diamondShimmerFramePreviewTheme=themeIndex;
  function renderChunk(deadline){
   if(diamondShimmerFrameBuild!==state)return;
@@ -18037,30 +18011,20 @@ function drawDiamondDestructibleShimmer(){
  if(currentWorld!=="diamonds"||!destructibleTilePositions.length)return;
  const index=Math.max(0,Math.min(9,level-1));
  const shimmerCanvas=diamondShimmerCanvases[index],spriteGetter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof spriteGetter==="function"?spriteGetter(index):null;
- // Sem os recursos originais carregados, não desenha brilho quadrado de fallback.
  if(!shimmerCanvas||!sheet)return;
  const atlas=buildDiamondShimmerFrameAtlas(index,shimmerCanvas,sheet);
  const preview=diamondShimmerFramePreviewTheme===index?diamondShimmerFramePreview:null;
- const whitePreview=diamondShimmerFramePreviewTheme===index?diamondShimmerFrameWhitePreview:null;
- if(!atlas&&!preview&&!whitePreview)return;
- const revealTime=diamondShimmerRevealStartedAt||performance.now();
- const rawReveal=Math.max(0,Math.min(1,(performance.now()-revealTime)/DIAMOND_SHIMMER_REVEAL_MS));
- const reveal=rawReveal*rawReveal*(3-2*rawReveal);
+ if(!atlas&&!preview)return;
  const phaseBase=(gameClock*.42)%1;
  for(const tile of destructibleTilePositions){
   const dx=ox+tile.x*TILE-DIAMOND_SHIMMER_PADDING,dy=oy+tile.y*TILE-DIAMOND_SHIMMER_PADDING;
-  if(whitePreview&&preview&&reveal<1){
-   ctx.save();ctx.globalAlpha=1-reveal;ctx.drawImage(whitePreview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
-   ctx.globalAlpha=reveal;ctx.drawImage(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);ctx.restore();
-  }else if(atlas&&reveal>=1){
+  if(atlas){
    const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
    const frame=Math.min(DIAMOND_SHIMMER_FRAME_COUNT-1,Math.floor(phase*DIAMOND_SHIMMER_FRAME_COUNT));
    const sx=(frame%DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE,sy=Math.floor(frame/DIAMOND_SHIMMER_FRAME_COLUMNS)*DIAMOND_SHIMMER_FRAME_SIZE;
    ctx.drawImage(atlas,sx,sy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
-  }else if(preview){
+  }else{
    ctx.drawImage(preview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
-  }else if(whitePreview){
-   ctx.drawImage(whitePreview,0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE,dx,dy,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
   }
  }
 }
@@ -20761,7 +20725,7 @@ function prepareDiamondShimmerAtlasForLevel(n){
  const themeIndex=Math.max(0,Math.min(9,(Number(n)||1)-1)),shimmer=diamondShimmerCanvases[themeIndex],getter=window.__bombardeiroGetDiamondSpriteSheet,sheet=typeof getter==="function"?getter(themeIndex):null;
  if(shimmer&&sheet)buildDiamondShimmerFrameAtlas(themeIndex,shimmer,sheet);
 }
-startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");if(currentWorld!=="diamonds")return startBeforeDiamonds(n);const beginDiamondLevel=()=>{if(currentWorld!=="diamonds")return;prepareDiamondShimmerAtlasForLevel(n);diamondShimmerRevealStartedAt=performance.now();startBeforeDiamonds(n)};if(diamondSpriteSheet.complete&&diamondSpriteSheet.naturalWidth){beginDiamondLevel();return}diamondSpriteSheet.addEventListener("load",beginDiamondLevel,{once:true})};
+startGame=function(n=1){$("diamondPanel").style.display="none";$("diamondPanel").classList.add("hidden");if(currentWorld!=="diamonds")return startBeforeDiamonds(n);const beginDiamondLevel=()=>{if(currentWorld!=="diamonds")return;prepareDiamondShimmerAtlasForLevel(n);startBeforeDiamonds(n)};if(diamondSpriteSheet.complete&&diamondSpriteSheet.naturalWidth){beginDiamondLevel();return}diamondSpriteSheet.addEventListener("load",beginDiamondLevel,{once:true})};
 buildForestMap=function(){if(currentWorld==="diamonds")buildDiamondMap();else mapBeforeDiamonds()};
 selectMapLevel=function(i){
  if(currentWorld!=="diamonds")return selectBeforeDiamonds(i);
