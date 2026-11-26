@@ -20777,6 +20777,7 @@ function checkDiamondPortal(entity,radius,isPlayer,dt){
 function drawDiamondPortals(){
  if(currentWorld!=="diamonds"||!diamondPortalPositions.length)return;
  const frames=buildDiamondPortalFrames(diamondIndex());
+ ctx.save();
  for(const portal of diamondPortalPositions){
   const px=ox+portal.x*TILE,py=oy+portal.y*TILE;
   const frame=(Math.floor(gameClock*7.2+portal.phase)%6+6)%6;
@@ -20792,6 +20793,7 @@ function drawDiamondPortals(){
   }
   portal.flash=Math.max(0,portal.flash-.016);
  }
+ ctx.restore();
 }
 const newLevelBeforeDiamondPortals=newLevel;
 newLevel=function(preservePowerUps=false){
