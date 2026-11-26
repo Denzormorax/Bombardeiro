@@ -85,7 +85,7 @@ test("o brilho dos geodos usa quadros pré-renderizados e elimina composição a
  assert.match(html,/DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24/);
  const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
- const drawEnd=html.indexOf("\\nfunction draw(){",drawStart);
+ const drawEnd=html.indexOf("\nfunction draw(){",drawStart);
  assert.ok(buildStart>=0&&drawStart>buildStart&&drawEnd>drawStart,"pré-renderizador e renderizador localizados");
  const builder=html.slice(buildStart,drawStart),renderer=html.slice(drawStart,drawEnd);
  assert.match(builder,/effectCtx\.globalCompositeOperation="destination-in"/);
