@@ -15852,9 +15852,9 @@ const destroyedBlockEffects=[];
 const treasureChests=[],treasureEffects=[];let treasureSpawnedThisLevel=false,treasureSpawnedThisWorld=false,treasureSpawnWorld=null,treasureVisualsReady=false;
 let treasureChestBodyCanvas=null,treasureChestLidCanvas=null,treasureAuraCanvas=null,treasureGoldSparkCanvas=null,treasureBlueFlameCanvas=null,treasureBlueCoinCanvas=null,treasureRedCoinCanvas=null;
 const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[],iceWaterPuddleFrames=[];let waterPuddleFramesReady=false;
-let player={x:1.5,y:1.5,speed:4.0,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
+let player={x:1.5,y:1.5,speed:3.8,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
-let basePlayerSpeed=4.0,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
+let basePlayerSpeed=3.8,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
 let gameClock=0,lastTime=0,exit={x:-1,y:-1,found:false,spawnTime:0};
 let move={x:0,y:0},keys={},pointerMove=null,levelTransition=false,portalEnterStart=0,shopReturnPaused=false,menuReturn="main";
@@ -16245,8 +16245,8 @@ let currentWorld="forest",desertDetails=[];
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
  makeMap();createForestPuddles();rebuildStaticMapCache();bombs=[];flames=[];burningCrates.length=0;coinsOnMap=[];enemies=[];dirtParticles=[];waterParticles=[];builderBuildAnimations=[];treasureChests.length=0;treasureEffects.length=0;treasureSpawnedThisLevel=false;
- basePlayerSpeed=4.3+Math.min(level*.08,1);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
- if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35)}
+ basePlayerSpeed=3.8+Math.min(level*.06,.8);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
+ if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.45)}
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
  const count=4+Math.floor(Math.random()*3),
@@ -16817,7 +16817,7 @@ function buyPowerUp(type){
  if(coins<price){message("MOEDAS INSUFICIENTES!");return}coins-=price;
  if(type==="bomb"){bombPowerUps++;maxBombs=1+bombPowerUps;message("BOMBINHA EXTRA COMPRADA!")}
  if(type==="fire"){firePowerUps++;firePower=1+firePowerUps;message("FOGUINHO COMPRADO!")}
- if(type==="speed"){speedPowerUps++;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.35);message("BOTINHA COMPRADA!")}
+ if(type==="speed"){speedPowerUps++;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.45);message("BOTINHA COMPRADA!")}
  if(type==="heart"){lives=Math.min(3,lives+1);heartPurchases++;message("❤️ VIDA RESTAURADA!")}
  if(type==="push"){pushBombOwned=true;message("💣 BOMBA EMPURRÁVEL ATIVADA!")}playSfx("powerup");updateHUD();
 }
