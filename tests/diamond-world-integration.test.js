@@ -166,3 +166,42 @@ test("todos os blocos JavaScript embutidos no HTML passam pela análise de sinta
  assert.ok(scripts.length>=2,"scripts JavaScript inline localizados");
  scripts.forEach((source,index)=>assert.doesNotThrow(()=>new Function(source),"script inline "+(index+1)+" deve ter sintaxe válida"));
 });
+
+
+test("a busca do inimigo avalia os cinco destinos com uma única BFS",()=>{
+ const start=html.indexOf("function findEnemyRoute(");
+ const end=html.indexOf("\nfunction canSeePlayer",start);
+ const route=html.slice(start,end);
+ assert.ok(start>=0&&end>start,"busca de rota localizada");
+ assert.match(route,/goalByKey=new Map/);
+ assert.match(route,/queue=\[\{x:sx,y:sy,depth:0\}\]/);
+ assert.match(route,/parent=new Map/);
+ assert.match(route,/reconstructGridPath/);
+ assert.doesNotMatch(route,/findEnemyPath|goals\.sort|path\.concat/);
+});
+test("patrulha e fugas reconstroem apenas o caminho escolhido, sem copiar rotas por nó",()=>{
+ const patrolStart=html.indexOf("function choosePatrolPath(");
+ const patrolEnd=html.indexOf("\nfunction isBehindBombCover",patrolStart);
+ const bombStart=html.indexOf("function findBombEscapePath(");
+ const bombEnd=html.indexOf("\nfunction findBlueFlameEscapePath",bombStart);
+ const blueStart=html.indexOf("function findBlueFlameEscapePath(");
+ const blueEnd=html.indexOf("\nfunction spawnSandBuildParticles",blueStart);
+ const sections=[html.slice(patrolStart,patrolEnd),html.slice(bombStart,bombEnd),html.slice(blueStart,blueEnd)];
+ assert.ok(sections.every(section=>section.length>0),"rotinas de busca localizadas");
+ for(const section of sections){
+  assert.match(section,/parent=new Map/);
+  assert.match(section,/reconstructGridPath/);
+  assert.doesNotMatch(section,/path\.concat|safe\.sort|candidates\.sort/);
+ }
+});
+test("a IA valida cada rota em uma passagem e reutiliza a percepção visual do inimigo",()=>{
+ const start=html.indexOf("function updateEnemies(dt){");
+ const end=html.indexOf("/* BOMBAS E COMBATE */",start);
+ const update=html.slice(start,end);
+ assert.match(update,/for\(const step of enemy\.path\)/);
+ assert.doesNotMatch(update,/enemy\.path\.some/);
+ assert.match(update,/const seesPlayer=canSeePlayer\(enemy\)/);
+ assert.match(update,/enemy\.isBuilder&&enemy\.isEnraged&&seesPlayer/);
+ assert.match(update,/enemy\.isHorned&&enemy\.isEnraged&&seesPlayer/);
+ assert.doesNotMatch(update,/enemy\.isBuilder&&enemy\.isEnraged&&canSeePlayer/);
+});
