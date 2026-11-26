@@ -309,14 +309,47 @@ jobs:
           done < <(find game-assets tests -type f -name '*.js' -print0)
           echo "Sintaxe dos módulos e testes JavaScript válida."
           node --test tests/*.test.js
-      - name: Gerar APK
-        run: gradle -p android :app:assembleDebug --no-daemon --stacktrace
-      - name: Disponibilizar APK para download
+      - name: Preparar assinatura permanente
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          KEYSTORE_PATH="$RUNNER_TEMP/bombardeiro-release.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          test -s "$KEYSTORE_PATH"
+          echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+          echo "ANDROID_VERSION_CODE=$((GITHUB_RUN_NUMBER + 1))" >> "$GITHUB_ENV"
+          echo "ANDROID_VERSION_NAME=1.0.$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+          echo "Chave de assinatura carregada com segurança."
+
+      - name: Gerar APK release assinado
+        run: gradle -p android :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Verificar assinatura do APK
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Disponibilizar APK assinado
         uses: actions/upload-artifact@v4
         with:
-          name: Bombardeiro-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Bombardeiro-APK-Release
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publicar versão para download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Bombardeiro 1.0.${{ github.run_number }}
+          files: android/app/build/outputs/apk/release/app-release.apk
+          generate_release_notes: true
 
 # Game resources are packaged separately and synchronized into app-private storage on first launch.
