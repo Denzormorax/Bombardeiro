@@ -20,9 +20,9 @@ assert.ok(game.indexOf("/* AVISO TEMPORÁRIO DA FASE", mainScriptEnd) === -1,
 const marker = "/* INTRODUÇÃO DAS FASES — controlador independente do HUD.";
 const introStart = game.indexOf(marker);
 assert.notEqual(introStart, -1, "Controlador independente da introdução não encontrado");
-const introEnd = game.indexOf("\n})();", introStart);
+const introEnd = game.indexOf("\n/* MUNDO 6 — REINO DOS DIAMANTES */", introStart);
 assert.notEqual(introEnd, -1, "Fim do controlador da introdução não encontrado");
-const introCode = game.slice(introStart, introEnd + 6);
+const introCode = game.slice(introStart, introEnd) + "\n})();";
 
 function makeElement() {
   return {
