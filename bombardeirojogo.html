@@ -17889,7 +17889,7 @@ function drawIndestructibleShimmer(){
 var diamondShimmerCanvases=[]; // Cache global inicializado antes de qualquer chamada ao renderizador.
  function drawDiamondDestructibleShimmer(){
  if(currentWorld!=="diamonds"||!destructibleTilePositions.length)return;
- const shimmerCanvas=diamondShimmerCanvases[diamondIndex()],phaseBase=gameClock*.42;ctx.save();
+ const shimmerCanvas=diamondShimmerCanvases[Math.max(0,Math.min(9,level-1))],phaseBase=gameClock*.42;ctx.save();
  for(const tile of destructibleTilePositions){
   const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
   const pulse=.72+.28*Math.sin(phase*Math.PI*2),px=ox+tile.x*TILE,py=oy+tile.y*TILE;
