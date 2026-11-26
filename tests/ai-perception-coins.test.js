@@ -34,8 +34,8 @@ test("caçador e boneco de neve patrulham durante a espera da explosão", () => 
 });
 
 test("inimigos enfurecidos e foguinho azul não perseguem o jogador fora do alcance", () => {
-  assert.match(game, /enemy\.isBuilder&&enemy\.isEnraged&&canSeePlayer\(enemy\)/);
-  assert.match(game, /enemy\.isHorned&&enemy\.isEnraged&&canSeePlayer\(enemy\)/);
+  assert.match(game, /enemy\.isBuilder&&enemy\.isEnraged&&seesPlayer/);
+  assert.match(game, /enemy\.isHorned&&enemy\.isEnraged&&seesPlayer/);
   assert.match(game, /if\(!sees&&e\.mode==="chase"\)\{e\.mode="patrol"/);
   assert.match(game, /const playerVisibleAfterBomb=distance\(e\.x,e\.y,player\.x,player\.y\)<=4&&canSeePlayer\(e\)/);
 });
