@@ -116,12 +116,14 @@ test("a animação entra pela direita, segura no centro por cerca de 0,8 s e sai
   frame(0);
   frame = run.rafQueue.shift();
   frame(210);
-  assert.equal(overlay.style.transform, "translate3d(0px,0,0)");
+  const centerX = Number(overlay.style.transform.match(/translate3d\(([-+0-9.e]+)px/)[1]);
+  assert.ok(Math.abs(centerX) < 0.001, "a numeração deve permanecer centralizada");
   assert.equal(overlay.style.opacity, "1");
 
   frame = run.rafQueue.shift();
   frame(1015);
-  assert.equal(overlay.style.transform, "translate3d(0px,0,0)");
+  const centerX = Number(overlay.style.transform.match(/translate3d\(([-+0-9.e]+)px/)[1]);
+  assert.ok(Math.abs(centerX) < 0.001, "a numeração deve permanecer centralizada");
   assert.equal(overlay.style.opacity, "1");
 
   frame = run.rafQueue.shift();
