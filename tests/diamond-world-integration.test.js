@@ -81,6 +81,19 @@ test("o brilho diagonal do Mundo dos Diamantes aparece apenas nos geodos destrut
  assert.match(html,/spriteGetter=window\.__bombardeiroGetDiamondSpriteSheet[\s\S]*?typeof spriteGetter==="function"\?spriteGetter\(index\):null/);
 
 });
+test("o brilho dos geodos usa quadros pré-renderizados e elimina composição alfa por bloco a cada quadro",()=>{
+ assert.match(html,/DIAMOND_SHIMMER_FRAME_COUNT=384,DIAMOND_SHIMMER_FRAME_COLUMNS=24/);
+ const buildStart=html.indexOf("function buildDiamondShimmerFrameAtlas(");
+ const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
+ const drawEnd=html.indexOf("\\nfunction draw(){",drawStart);
+ assert.ok(buildStart>=0&&drawStart>buildStart&&drawEnd>drawStart,"pré-renderizador e renderizador localizados");
+ const builder=html.slice(buildStart,drawStart),renderer=html.slice(drawStart,drawEnd);
+ assert.match(builder,/effectCtx\.globalCompositeOperation="destination-in"/);
+ assert.match(builder,/effectCtx\.drawImage\(sheet,288,0,96,96,0,0,TILE,TILE\)/);
+ assert.match(builder,/atlasCtx\.drawImage\(diamondShimmerTileCanvas/);
+ assert.doesNotMatch(renderer,/destination-in|clearRect|createElement\("canvas"\)/,"o quadro não pode recriar máscaras nem canvases por geodo");
+ assert.match(renderer,/ctx\.drawImage\(atlas,sx,sy,TILE,TILE,ox\+tile\.x\*TILE,oy\+tile\.y\*TILE,TILE,TILE\)/);
+});
 test("a destruição dos geodos cria muitos estilhaços facetados na cor da fase com sprites e brilhos em cache",()=>{
  assert.match(html,/world==="diamonds"\?72/);
  assert.match(html,/function buildDiamondDestroyedBlockGlow\(themeIndex\)/);
