@@ -420,6 +420,8 @@ test("a bomba cristalizada arma o fusível entre patrulhas de 5 a 7 segundos e r
  assert.ok(html.includes('enemy.crystalBombState="recover";enemy.crystalBombRecover=1.05'));
  assert.ok(html.includes("range:2,activeSlotReleased:true,isCrystalBomb:true"));
  assert.ok(html.includes('for(const enemy of enemies)if(!b.isCrystalBomb&&enemy.alive'));
+ assert.ok(html.includes('if(!f.isCrystalBomb&&!f.hitEnemies.has(enemy)&&circleRectCollision'));
+ assert.ok(html.includes('if(!f.isCrystalBomb&&isInsideFlameDamage(player,{x:f.x,y:f.y}))'));
   assert.ok(html.includes('if(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol")damageEnemy(enemy)'));
  assert.ok(html.includes('enemy.crystalBombState="patrol"'));
 });
@@ -468,9 +470,13 @@ test("a bombinha infla, desinfla e explode visualmente ao receber o dano final",
  assert.ok(html.includes("if(dying&&deathProgress>=.58)"));
  assert.ok(html.includes('if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);continue}'));
  assert.ok(html.includes("const blast=ctx.createRadialGradient"));
+ assert.ok(html.includes("if(dying&&deathProgress>=.28)"));
+ assert.ok(html.includes("drawCrystalBombFlame({x:enemy.x-.5,y:enemy.y-.5"));
 });
 test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em preparo/recuperação é imune",()=>{
  assert.ok(html.includes('for(const enemy of enemies)if(!b.isCrystalBomb&&enemy.alive'));
+ assert.ok(html.includes('if(!f.isCrystalBomb&&!f.hitEnemies.has(enemy)&&circleRectCollision'));
+ assert.ok(html.includes('if(!f.isCrystalBomb&&isInsideFlameDamage(player,{x:f.x,y:f.y}))'));
   assert.ok(html.includes('if(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol")damageEnemy(enemy)'));
  assert.ok(html.includes('if(!enemy.alive||enemy.crystalBombState!=="patrol")return'));
 });
