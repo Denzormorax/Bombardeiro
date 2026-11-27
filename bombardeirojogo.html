@@ -17733,13 +17733,15 @@ function updateTreasureEffects(dt){
 }
 function drawTreasureEffects(){
  if(!treasureEffects.length)return;
- if(!treasureVisualsReady)buildTreasureVisualCache();
+ if(!treasureVisualsReady||!treasureGoldSparkCanvas||!treasureBlueFlameCanvas){treasureVisualsReady=false;buildTreasureVisualCache()}
  ctx.save();ctx.globalCompositeOperation="lighter";
  for(const effect of treasureEffects)for(const p of effect.particles){
   const fade=Math.min(1,(p.life-p.t)/Math.min(.2,p.life*.35)),px=ox+p.x*TILE,py=oy+p.y*TILE;
+  const sprite=effect.kind==="burst"?treasureBlueFlameCanvas:treasureGoldSparkCanvas;
+  if(!sprite)continue;
   ctx.globalAlpha=Math.max(0,fade)*(effect.kind==="hit"?.9:.95);
-  if(effect.kind==="burst"){const size=p.size*(1+p.t*1.2);ctx.drawImage(treasureBlueFlameCanvas,px-size*.65,py-size,size*1.3,size*2)}
-  else{const size=p.size*(1+p.t*.25);ctx.drawImage(treasureGoldSparkCanvas,px-size,py-size,size*2,size*2)}
+  if(effect.kind==="burst"){const size=p.size*(1+p.t*1.2);ctx.drawImage(sprite,px-size*.65,py-size,size*1.3,size*2)}
+  else{const size=p.size*(1+p.t*.25);ctx.drawImage(sprite,px-size,py-size,size*2,size*2)}
  }
  ctx.restore();
 }
@@ -21826,9 +21828,15 @@ drawTreasureChest=function(chest){if(chest&&chest.isSecretGreen){drawSecretGreen
 const secretDrawTreasureEffectsBase=drawTreasureEffects;
 drawTreasureEffects=function(){
  if(!secretRoom.active)return secretDrawTreasureEffectsBase();
+ // Inicializa e valida o cache compartilhado ANTES de trocar os sprites da sala secreta.
+ // Assim, o cache original nunca é criado por dentro da função enquanto os sprites verdes estão ativos.
+ if(!treasureVisualsReady||!treasureGoldSparkCanvas||!treasureBlueFlameCanvas){treasureVisualsReady=false;buildTreasureVisualCache()}
  buildSecretRoomVisuals();
+ const secretSpark=secretRoom.visuals&&secretRoom.visuals.spark;
+ const secretFlame=secretRoom.visuals&&secretRoom.visuals.flame;
+ if(!secretSpark||!secretFlame)return secretDrawTreasureEffectsBase();
  const oldSpark=treasureGoldSparkCanvas,oldFlame=treasureBlueFlameCanvas;
- treasureGoldSparkCanvas=secretRoom.visuals.spark;treasureBlueFlameCanvas=secretRoom.visuals.flame;
+ treasureGoldSparkCanvas=secretSpark;treasureBlueFlameCanvas=secretFlame;
  try{return secretDrawTreasureEffectsBase()}finally{treasureGoldSparkCanvas=oldSpark;treasureBlueFlameCanvas=oldFlame}
 };
 const secretUpdateBase=update;
