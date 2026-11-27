@@ -16873,9 +16873,9 @@ function explode(b){
   }
  }
  if(brokeBlock){rebuildStaticMapCache();}
- for(let i=treasureChests.length-1;i>=0;i--){const chest=treasureChests[i];if(!cells.some(cell=>cell.x===chest.x&&cell.y===chest.y))continue;chest.hp--;chest.hitFlash=.24;spawnTreasureEffect(chest.x+.5,chest.y+.5,"hit");if(chest.hp<=0){treasureChests.splice(i,1);spawnTreasureEffect(chest.x+.5,chest.y+.5,"burst");const reward=Math.random()<.15?"blue":"treasureRed";coinsOnMap.push({x:chest.x+.5,y:chest.y+.5,type:reward,value:coinValue(reward),phase:Math.random()*Math.PI*2,life:0})}}
+ if(!b.isCrystalBomb)for(let i=treasureChests.length-1;i>=0;i--){const chest=treasureChests[i];if(!cells.some(cell=>cell.x===chest.x&&cell.y===chest.y))continue;chest.hp--;chest.hitFlash=.24;spawnTreasureEffect(chest.x+.5,chest.y+.5,"hit");if(chest.hp<=0){treasureChests.splice(i,1);spawnTreasureEffect(chest.x+.5,chest.y+.5,"burst");const reward=Math.random()<.15?"blue":"treasureRed";coinsOnMap.push({x:chest.x+.5,y:chest.y+.5,type:reward,value:coinValue(reward),phase:Math.random()*Math.PI*2,life:0})}}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies,isCrystalBomb:!!b.isCrystalBomb,crystalThemeIndex:b.crystalThemeIndex??0});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);if(!b.isCrystalBomb&&(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol"))damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies,isCrystalBomb:!!b.isCrystalBomb,crystalThemeIndex:b.crystalThemeIndex??0});if(!b.isCrystalBomb&&player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(!b.isCrystalBomb&&enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);if(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol")damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if((e.isHunter||e.isBuilder)&&canSeePlayer(e)){e.mode="chase";e.alert=1.25;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.alert=0;e.lastSeen=null;e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
@@ -21297,7 +21297,7 @@ function updateCrystalBombEnemy(enemy,dt){
   enemy.crystalBombFuse=Math.max(0,(enemy.crystalBombFuse||0)-dt);
   if(enemy.crystalBombFuse<=0){
    enemy.crystalBombState="recover";enemy.crystalBombRecover=1.05;
-   enemy.crystalBombTimer=5+Math.random()*2;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;
+   enemy.crystalBombTimer=6+Math.random()*2;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;
    const bomb={x:Math.floor(enemy.x),y:Math.floor(enemy.y),range:2,activeSlotReleased:true,isCrystalBomb:true,crystalThemeIndex:enemy.crystalThemeIndex};
    explode(bomb);
   }
@@ -21313,7 +21313,7 @@ function updateCrystalBombEnemy(enemy,dt){
   enemy.crystalBombState="arming";enemy.crystalBombFuse=CRYSTAL_BOMB_FUSE;
   enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;return;
  }
- enemy.speed=enemy.baseSpeed;
+ enemy.speed=enemy.baseSpeed*.86;
  if(enemy.path&&enemy.path.length){followCrystalBombPath(enemy,dt);return}
  enemy.patrolWait=(enemy.patrolWait||0)-dt;
  if(enemy.patrolWait<=0){
@@ -21327,7 +21327,12 @@ updateEnemies=function(dt){
  if(!all.some(enemy=>enemy&&enemy.isCrystalBomb)){crystalBombUpdateEnemiesBase(dt);return}
  enemies=all.filter(enemy=>!enemy.isCrystalBomb);
  try{crystalBombUpdateEnemiesBase(dt)}finally{enemies=all}
- for(const enemy of all)if(enemy&&enemy.isCrystalBomb)updateCrystalBombEnemy(enemy,dt);
+ for(const enemy of all)if(enemy&&enemy.isCrystalBomb){
+  if(enemy._diamondPortalTransit){const transit=enemy._diamondPortalTransit;transit.elapsed+=dt;if(transit.elapsed>=transit.duration)enemy._diamondPortalTransit=null;continue;}
+  if(enemy.alive&&currentWorld==="diamonds"&&running)checkDiamondPortal(enemy,.25,false,dt);
+  if(enemy._diamondPortalTransit)continue;
+  updateCrystalBombEnemy(enemy,dt);
+ }
 };
 const crystalBombNewLevelBase=newLevel;
 newLevel=function(preservePowerUps=false){
@@ -21340,8 +21345,8 @@ newLevel=function(preservePowerUps=false){
   const enemy=candidates[i];
   enemy.isCrystalBomb=true;enemy.isHunter=false;enemy.isHorned=false;enemy.isBuilder=false;
   enemy.hp=3;enemy.maxHp=3;enemy.crystalThemeIndex=Math.max(0,Math.min(9,level-1));
-  enemy.crystalBombState="patrol";enemy.crystalBombTimer=5+Math.random()*2;enemy.crystalBombFuse=0;enemy.crystalBombRecover=0;
-  enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.12+Math.random()*.25;enemy.speed=enemy.baseSpeed;
+  enemy.crystalBombState="patrol";enemy.crystalBombTimer=6+Math.random()*2;enemy.crystalBombFuse=0;enemy.crystalBombRecover=0;
+  enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.12+Math.random()*.25;enemy.speed=enemy.baseSpeed*.86;
  }
 };
 const crystalBombDamageEnemyBase=damageEnemy;
