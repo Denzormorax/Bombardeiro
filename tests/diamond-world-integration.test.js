@@ -339,10 +339,10 @@ test("as funções do foguete de diamante ficam fora do escopo de sincronizaçã
  const diamondStart=html.indexOf("/* INIMIGO FOGUETE DE DIAMANTE",syncStart);
  assert.ok(syncStart>=0&&diamondStart>syncStart,"bloco do foguete deve vir depois do fechamento da sincronização");
  const syncBlock=html.slice(syncStart,diamondStart);
- assert.match(syncBlock,/controls\\.style\\.setProperty\\("--control-pause-border",theme\\.accent\\);\\s*}\\s*}\\s*;/);
- assert.doesNotMatch(syncBlock,/function (?:spawnDiamondChargerTrail|spawnDiamondChargerImpact|updateDiamondChargerParticles|drawDiamondChargerParticles)\\(/);
- assert.equal((html.match(/function drawDiamondChargerParticles\\(\\)/g)||[]).length,1);
- assert.equal((html.match(/function updateDiamondChargerParticles\\(dt\\)/g)||[]).length,1);
- assert.match(html,/function update\\(dt\\)[\\s\\S]*?updateDiamondChargerParticles\\(dt\\)/);
- assert.match(html,/function draw\\(\\)[\\s\\S]*?drawDiamondChargerParticles\\(\\)/);
+ assert.match(syncBlock,/controls\.style\.setProperty\("--control-pause-border",theme\.accent\);\s*}\s*}\s*;/);
+ assert.doesNotMatch(syncBlock,/function (?:spawnDiamondChargerTrail|spawnDiamondChargerImpact|updateDiamondChargerParticles|drawDiamondChargerParticles)\(/);
+ assert.equal((html.match(/function drawDiamondChargerParticles\(\)/g)||[]).length,1);
+ assert.equal((html.match(/function updateDiamondChargerParticles\(dt\)/g)||[]).length,1);
+ assert.match(html,/function update\(dt\)[\s\S]*?updateDiamondChargerParticles\(dt\)/);
+ assert.match(html,/function draw\(\)[\s\S]*?drawDiamondChargerParticles\(\)/);
 });
