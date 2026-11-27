@@ -50,3 +50,18 @@ test("sala secreta não substitui nem interfere no portal normal de conclusão",
   assert.match(game, /const secretSpawnExitPortalBase=spawnExitPortal/);
   assert.match(game, /if\(secretRoom\.active\)return;return secretSpawnExitPortalBase\(\)/);
 });
+
+test("efeitos da sala secreta inicializam o cache compartilhado antes de trocar os sprites e restauram as referências", () => {
+  const wrapper = game.slice(game.indexOf("const secretDrawTreasureEffectsBase"), game.indexOf("const secretUpdateBase"));
+  assert.match(wrapper, /if\(!treasureVisualsReady\|\|!treasureGoldSparkCanvas\|\|!treasureBlueFlameCanvas\)\{treasureVisualsReady=false;buildTreasureVisualCache\(\)\}/);
+  assert.match(wrapper, /const secretSpark=secretRoom\.visuals&&secretRoom\.visuals\.spark/);
+  assert.match(wrapper, /const secretFlame=secretRoom\.visuals&&secretRoom\.visuals\.flame/);
+  assert.match(wrapper, /try\{return secretDrawTreasureEffectsBase\(\)\}finally\{treasureGoldSparkCanvas=oldSpark;treasureBlueFlameCanvas=oldFlame\}/);
+});
+
+test("desenho dos efeitos do tesouro não envia uma imagem ausente para drawImage", () => {
+  const draw = game.slice(game.indexOf("function drawTreasureEffects"), game.indexOf("function drawTreasureChest"));
+  assert.match(draw, /if\(!treasureVisualsReady\|\|!treasureGoldSparkCanvas\|\|!treasureBlueFlameCanvas\)/);
+  assert.match(draw, /if\(!sprite\)continue/);
+  assert.match(draw, /ctx\.drawImage\(sprite,/);
+});
