@@ -45,7 +45,7 @@ test("o mundo é incluído na progressão sem substituir os mundos existentes",(
 test("o Mundo dos Diamantes usa apenas inimigos comuns com aparência cristalina",()=>{
  assert.match(html,/mushroomCount=currentWorld==="diamonds"\?0:/);
  assert.match(html,/hornedCount=currentWorld==="diamonds"\?0:/);
- assert.match(html,/isHunter=isSnowman\|\|\(!isBuilder&&!isMushroom&&!isHorned&&currentWorld!=="diamonds"/);
+ assert.match(html,/isHunter=isSnowman\|\|\(!isBuilder&&!isMushroom&&!isHorned&&\(level>=5&&level<=9\?true:hunterSlots\.has\(index\)\)\)/);
  assert.match(html,/const enemyFaceBeforeDiamonds=drawEnemyFace;/);
  assert.match(html,/drawDiamondEnemyDetails\(e,deathProgress\)/);
 });
@@ -260,4 +260,12 @@ test("a travessia dos espirais anima o encolhimento e o crescimento do jogador e
  assert.match(html,/drawPlayerBeforeDiamondTransit/);
  assert.match(html,/drawEnemyBeforeDiamondTransit/);
  assert.match(html,/transit\.elapsed\+=dt/);
+});
+
+test("caçador e inimigos comuns do Mundo dos Diamantes usam fragmentos de cristal da paleta de cada fase",()=>{
+ assert.match(html,/isHunter=isSnowman\|\|\(!isBuilder&&!isMushroom&&!isHorned&&\(level>=5&&level<=9\?true:hunterSlots\.has\(index\)\)\)/);
+ assert.match(html,/function drawDiamondEnemyDetails\(e,deathProgress=0\)[\s\S]*?drawEnemyRockDetails\(e,dt\.wall\[1\],dt\.wall\[0\],deathProgress\)/);
+ assert.match(html,/function drawEnemyRockDetails\(e,color,helmetColor,deathProgress=0\)/);
+ assert.match(html,/rockFill=e\.isBuilder\?"#080808":color,rockEdge=e\.isBuilder\?"#8c592f":helmetColor/);
+ assert.match(html,/currentWorld==="diamonds"\?currentForestTheme\(\)\.glow/);
 });

@@ -16288,7 +16288,7 @@ function newLevel(preservePowerUps=false){
    snowmanCount=currentWorld==="ice"&&level>=1&&level<=9?3+Math.floor(Math.random()*2):0,
    spawnPositions=createEnemySpawnPositions(count+builderCount+snowmanCount);prepareCoinDrops();
   const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),builderSlots=new Set(slots.splice(0,builderCount)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),snowmanSlots=new Set(slots.splice(0,snowmanCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
- spawnPositions.forEach((p,index)=>{const isBuilder=currentWorld!=="diamonds"&&builderSlots.has(index),isMushroom=currentWorld!=="diamonds"&&mushroomSlots.has(index),isHorned=currentWorld!=="diamonds"&&hornedSlots.has(index),isSnowman=snowmanSlots.has(index),isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned&&currentWorld!=="diamonds"&&(level>=5&&level<=9?true:hunterSlots.has(index))),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,forestColorIndex:Math.floor(Math.random()*4),speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isBuilder?1.62:isSnowman?1.55:isHorned?1.72:isHunter?1.55:1.28),isBuilder,isHunter,isHorned,isMushroom,isSnowman,isEnraged:false,hp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,maxHp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0,building:false,buildTimer:0,buildCheckTimer:0,freezingBomb:null,freezeCooldown:0})});
+ spawnPositions.forEach((p,index)=>{const isBuilder=currentWorld!=="diamonds"&&builderSlots.has(index),isMushroom=currentWorld!=="diamonds"&&mushroomSlots.has(index),isHorned=currentWorld!=="diamonds"&&hornedSlots.has(index),isSnowman=snowmanSlots.has(index),isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned&&(level>=5&&level<=9?true:hunterSlots.has(index))),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,forestColorIndex:Math.floor(Math.random()*4),speed:baseSpeed,baseSpeed,huntSpeed:baseSpeed*(isBuilder?1.62:isSnowman?1.55:isHorned?1.72:isHunter?1.55:1.28),isBuilder,isHunter,isHorned,isMushroom,isSnowman,isEnraged:false,hp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,maxHp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0,building:false,buildTimer:0,buildCheckTimer:0,freezingBomb:null,freezeCooldown:0})});
  updateHUD();
 }
 
@@ -17637,7 +17637,7 @@ function drawEnemy(e){
  }
  let bodyColor=e.isSnowman?"#eefaff":e.isBuilder?(currentWorld==="swamp"?"#806044":"#d9a04b"):e.isMushroom?(currentWorld==="swamp"?"#647b35":"#27c957"):e.isHorned?(e.isEnraged?"#8a4936":currentWorld==="swamp"?"#667b38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":currentWorld==="swamp"?"#687c43":currentWorld==="forest"?FOREST_HUNTER_BODY_PALETTE[e.forestColorIndex||0]:"#a94bd8"):(currentWorld==="volcano"?"#df6329":currentWorld==="swamp"?"#806044":currentWorld==="forest"?FOREST_COMMON_BODY_PALETTE[e.forestColorIndex||0]:"#d64c4c"),helmetColor=e.isSnowman?"#8cc9dc":e.isBuilder?(currentWorld==="swamp"?"#49382b":"#805027"):e.isMushroom?(currentWorld==="swamp"?"#394c27":"#126b31"):e.isHorned?(e.isEnraged?"#513126":currentWorld==="swamp"?"#394c27":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":currentWorld==="swamp"?"#40352a":currentWorld==="forest"?FOREST_HUNTER_HELMET_PALETTE[e.forestColorIndex||0]:"#542080"):(currentWorld==="volcano"?"#702b20":currentWorld==="swamp"?"#51402e":currentWorld==="forest"?FOREST_COMMON_HELMET_PALETTE[e.forestColorIndex||0]:"#8c2020");
  if(e.hitFlash>0&&Math.sin(gameClock*65)>.25){bodyColor=e.isHorned&&e.isEnraged?"#ff6262":"#ef7777";helmetColor="#a92727"}
- if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):currentWorld==="forest"?"#8cc77b":"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):currentWorld==="diamonds"?currentForestTheme().glow:currentWorld==="forest"?"#8cc77b":"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
  if(e.isSnowman&&!isDying)drawSnowmanBreath(e);
  if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-(e.isSnowman?43:31);ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isSnowman?(ratio>.66?"#a5edff":ratio>.33?"#64c9f2":"#3c8dbf"):e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
@@ -20637,24 +20637,11 @@ function diamondIndex(){return Math.max(0,Math.min(9,level-1))}
    neste adaptador, que fecha sobre diamondThemes e diamondIndex corretamente. */
 const enemyFaceBeforeDiamonds=drawEnemyFace;
 function drawDiamondEnemyDetails(e,deathProgress=0){
- if(!e)return;
- const px=ox+e.x*TILE,groundY=oy+e.y*TILE;
- const bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob;
- const hurt=(e.hurtTimer||0)>0||!e.alive;
- if(hurt)return;
- const deathScale=deathProgress>0?Math.max(.25,1-deathProgress*.45):1;
- const deathAlpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
- const tilt=Math.sin(gameClock*2.8+e.x)*.018;
+ if(!e||e.isSpider)return;
  const dt=diamondThemes[diamondIndex()];
- ctx.save();ctx.globalAlpha=deathAlpha;ctx.translate(px,bodyY);ctx.rotate(tilt);
- ctx.scale(1.22*deathScale,1.22*deathScale);
- ctx.globalAlpha*=.58;ctx.fillStyle=dt.accent;
- ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-3,-14);ctx.lineTo(1,-7);ctx.lineTo(-5,-3);ctx.closePath();ctx.fill();
- ctx.globalAlpha=deathAlpha*.42;ctx.fillStyle="#ffffff";
- ctx.beginPath();ctx.moveTo(4,-13);ctx.lineTo(10,-8);ctx.lineTo(6,-3);ctx.lineTo(1,-7);ctx.closePath();ctx.fill();
- ctx.globalAlpha=deathAlpha*.8;ctx.strokeStyle=dt.accent;ctx.lineWidth=1.2;
- ctx.beginPath();ctx.moveTo(-11,2);ctx.lineTo(-6,6);ctx.lineTo(-2,3);ctx.moveTo(7,2);ctx.lineTo(10,5);ctx.stroke();
- ctx.restore();
+ // Mesmo arranjo de fragmentos do Mundo do Deserto, agora em diamante:
+ // face clara da pedra e contorno escuro retirado da paleta da fase.
+ drawEnemyRockDetails(e,dt.wall[1],dt.wall[0],deathProgress);
 }
 drawEnemyFace=function(e,color,helmetColor,deathProgress=0){
  if(!e)return;
