@@ -279,12 +279,12 @@ test("novo inimigo foguete de diamante aparece de 2 a 3 vezes nas fases 2 a 6 co
  assert.ok(html.includes("for(let i=0;i<3;i++)"));
  assert.ok(html.includes('"#64e4ff"')&&html.includes('"#f18adf"')&&html.includes('"#9b70ed"'));
 });
-test("o foguete de diamante investe alinhado em até cinco blocos com linha livre e fica atordoado por sete segundos",()=>{
+test("o foguete de diamante investe alinhado em até cinco blocos com linha livre e fica atordoado por cinco segundos",()=>{
  assert.ok(html.includes("function diamondChargerLineTarget(enemy)"));
  assert.ok(html.includes("Math.abs(dx)<=5")&&html.includes("Math.abs(dy)<=5"));
  assert.ok(html.includes("tileAt(x,ey)!==0")&&html.includes("tileAt(ex,y)!==0"));
  assert.ok(html.includes("DIAMOND_CHARGER_SPEED=8.6"));
- assert.ok(html.includes('enemy.diamondStunTimer=7'));
+ assert.ok(html.includes('enemy.diamondStunTimer=5'));
  assert.ok(html.includes('enemy.diamondState==="stunned"'));
 });
 test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores fixas",()=>{
@@ -297,7 +297,23 @@ test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores 
 
 test("o inimigo de diamante fica inofensivo enquanto está atordoado e mantém as cores próprias",()=>{
  assert.ok(html.includes('!(e.isDiamondCharger&&e.diamondState==="stunned")'));
- assert.ok(html.includes('gem.addColorStop(0,"#64e4ff")'));
- assert.ok(html.includes('gem.addColorStop(.68,"#f18adf")'));
- assert.ok(html.includes('gem.addColorStop(1,"#7539bd")'));
+ assert.ok(html.includes("window.__bombardeiroGetDiamondSpriteSheet"));
+ assert.ok(html.includes("ctx.drawImage(sheet,288,0,96,96,-21,-25,42,42)"));
+ assert.ok(html.includes('ctx.globalCompositeOperation="source-atop"'));
+ assert.ok(html.includes('rgba(238,116,230,.78)'));
+});
+
+test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de investida e postura sentada",()=>{
+ const start=html.indexOf("function drawDiamondCharger(enemy){");
+ const end=html.indexOf("\\nconst diamondChargerDrawEnemyBase=drawEnemy;",start);
+ const draw=html.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.match(draw,/ctx\.moveTo\(0,-23\)/);
+ assert.match(draw,/if\(stunned\)/);
+ assert.match(draw,/else if\(charging\)/);
+ assert.match(draw,/ctx\.quadraticCurveTo\(eyeX,2,eyeX\+3,-1\)/);
+ assert.match(draw,/ctx\.lineTo\(-4,11\)/);
+ assert.match(draw,/const seatedY=stunned\?5:0/);
+ assert.match(draw,/const bodyScaleY=stunned\?\.78:1/);
+ assert.match(draw,/enemy\.diamondStunTimer=5/);
 });
