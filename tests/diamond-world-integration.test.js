@@ -507,6 +507,7 @@ test("inimigos que se encostam recalculam a rota para contornar uns aos outros",
  assert.match(html,/collisionAwareUpdateEnemiesBase\(dt\);\s*resolveEnemyContactRoutes\(\)/);
  assert.match(html,/enemy\.collisionRepathCooldown=\.48/);
  assert.match(html,/enemy\.diamondState="patrol"/);
+ assert.match(html,/if\(enemyCanRerouteAfterContact\(b\)\)rerouteEnemyAwayFromContact\(b,a,danger,all\)/);
 });
 test("a bomba cristalizada atravessa as espirais e patrulha um pouco mais devagar",()=>{
  assert.match(html,/checkCrystalBombDiamondPortal\(enemy,dt\)/);

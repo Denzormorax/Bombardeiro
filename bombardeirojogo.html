@@ -21557,11 +21557,11 @@ function resolveEnemyContactRoutes(){
   if(!enemyCanRerouteAfterContact(a)||(a.collisionRepathCooldown||0)>0)continue;
   for(let j=i+1;j<all.length;j++){
    const b=all[j];
-   if(!enemyCanRerouteAfterContact(b))continue;
+   if(!b||!b.alive||b.burrowing||b._diamondPortalTransit||b.isSwampGhost||b.isBlueFlame||b.isFlying||b.isFloating||b.isAirborne||b.isHovering||b.flying||b.floating||b.airborne)continue;
    const minDistance=enemyCollisionRadius(a)+enemyCollisionRadius(b)+.10;
    if(distance(a.x,a.y,b.x,b.y)>=minDistance)continue;
    rerouteEnemyAwayFromContact(a,b,danger,all);
-   rerouteEnemyAwayFromContact(b,a,danger,all);
+   if(enemyCanRerouteAfterContact(b))rerouteEnemyAwayFromContact(b,a,danger,all);
    break;
   }
  }
