@@ -21355,6 +21355,19 @@ damageEnemy=function(enemy){
  }
  return crystalBombDamageEnemyBase(enemy);
 };
+const CRYSTAL_BOMB_FACETS=[
+ ["accent",[[0,-18],[-7,-8],[0,1],[8,-8]]],
+ ["light",[[-18,0],[-8,-8],[0,1],[-10,10]]],
+ ["glow",[[0,-18],[8,-8],[18,0],[5,5],[0,1]]],
+ ["wall",[[-10,10],[0,1],[5,5],[8,16],[-5,18]]],
+ ["accent",[[8,-8],[18,0],[8,12],[5,5]]],
+ ["dark",[[-18,0],[-10,10],[-5,18],[-15,9]]]
+];
+function crystalBombSpherePath(){
+ ctx.beginPath();ctx.moveTo(0,-18);ctx.bezierCurveTo(10,-19,18,-10,18,0);
+ ctx.bezierCurveTo(18,11,9,18,0,18);ctx.bezierCurveTo(-11,18,-18,10,-18,0);
+ ctx.bezierCurveTo(-18,-10,-10,-19,0,-18);ctx.closePath();
+}
 function drawCrystalBombEnemy(enemy){
  const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,theme=crystalBombTheme(enemy);
  const dying=!enemy.alive,deathProgress=dying?1-Math.max(0,enemy.deathTimer||0)/ENEMY_DEATH_TIME:0;
@@ -21367,21 +21380,17 @@ function drawCrystalBombEnemy(enemy){
  const scale=dying?Math.max(.22,1-deathProgress*.55):1;
  ctx.save();ctx.globalAlpha=.3*alpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,py+15,17*scale,6*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  ctx.save();ctx.globalAlpha=alpha;ctx.translate(px+shake,py-bob+(arming?4:0));ctx.scale(scale*pulse,scale*squash*pulse);
- const sphere=()=>{ctx.beginPath();ctx.moveTo(0,-18);ctx.bezierCurveTo(10,-19,18,-10,18,0);ctx.bezierCurveTo(18,11,9,18,0,18);ctx.bezierCurveTo(-11,18,-18,10,-18,0);ctx.bezierCurveTo(-18,-10,-10,-19,0,-18);ctx.closePath()};
+ const sphere=crystalBombSpherePath;
  ctx.save();sphere();ctx.clip();
  const glass=ctx.createRadialGradient(-7,-9,1,2,2,25);
  glass.addColorStop(0,theme.accent);glass.addColorStop(.24,theme.glow);glass.addColorStop(.58,theme.wall[0]);glass.addColorStop(1,theme.near);
  ctx.fillStyle=glass;sphere();ctx.fill();
  ctx.globalCompositeOperation="source-atop";
- const facets=[
-  [theme.accent,[[0,-18],[-7,-8],[0,1],[8,-8]]],
-  [theme.wall[1],[[-18,0],[-8,-8],[0,1],[-10,10]]],
-  [theme.glow,[[0,-18],[8,-8],[18,0],[5,5],[0,1]]],
-  [theme.wall[0],[[-10,10],[0,1],[5,5],[8,16],[-5,18]]],
-  [theme.accent,[[8,-8],[18,0],[8,12],[5,5]]],
-  [theme.near,[[-18,0],[-10,10],[-5,18],[-15,9]]]
- ];
- for(const facet of facets){ctx.fillStyle=facet[0];ctx.beginPath();facet[1].forEach((point,index)=>index?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]));ctx.closePath();ctx.globalAlpha=alpha*(facet[0]===theme.accent?0.42:0.52);ctx.fill()}
+ for(const facet of CRYSTAL_BOMB_FACETS){
+  const color=facet[0]==="accent"?theme.accent:facet[0]==="light"?theme.wall[1]:facet[0]==="glow"?theme.glow:facet[0]==="wall"?theme.wall[0]:theme.near;
+  const points=facet[1];ctx.fillStyle=color;ctx.globalAlpha=alpha*(facet[0]==="accent"?.42:.52);
+  ctx.beginPath();for(let i=0;i<points.length;i++){const point=points[i];if(i===0)ctx.moveTo(point[0],point[1]);else ctx.lineTo(point[0],point[1])}ctx.closePath();ctx.fill();
+ }
  ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over";
  const shine=ctx.createLinearGradient(-15,-8,13,12);shine.addColorStop(0,"#ffffff00");shine.addColorStop(.46,"#ffffff10");shine.addColorStop(.52,"#ffffffb8");shine.addColorStop(.61,"#ffffff08");shine.addColorStop(1,"#ffffff00");
  ctx.fillStyle=shine;sphere();ctx.fill();
