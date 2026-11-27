@@ -16875,7 +16875,7 @@ function explode(b){
  if(brokeBlock){rebuildStaticMapCache();}
  for(let i=treasureChests.length-1;i>=0;i--){const chest=treasureChests[i];if(!cells.some(cell=>cell.x===chest.x&&cell.y===chest.y))continue;chest.hp--;chest.hitFlash=.24;spawnTreasureEffect(chest.x+.5,chest.y+.5,"hit");if(chest.hp<=0){treasureChests.splice(i,1);spawnTreasureEffect(chest.x+.5,chest.y+.5,"burst");const reward=Math.random()<.15?"blue":"treasureRed";coinsOnMap.push({x:chest.x+.5,y:chest.y+.5,type:reward,value:coinValue(reward),phase:Math.random()*Math.PI*2,life:0})}}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies,isCrystalBomb:!!b.isCrystalBomb,crystalThemeIndex:b.crystalThemeIndex??0});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);if(!(enemy.isCrystalBomb&&b.isCrystalBomb))damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies,isCrystalBomb:!!b.isCrystalBomb,crystalThemeIndex:b.crystalThemeIndex??0});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);if(!b.isCrystalBomb&&(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol"))damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if((e.isHunter||e.isBuilder)&&canSeePlayer(e)){e.mode="chase";e.alert=1.25;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.alert=0;e.lastSeen=null;e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
@@ -21217,7 +21217,7 @@ drawEnemy=function(enemy){if(enemy&&enemy.isDiamondCharger){drawDiamondCharger(e
 
 
 /* INIMIGO BOMBA CRISTALIZADA — patrulha, fusível próprio e explosão colorida. */
-const CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_FUSE=1.28;
+const CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.24,CRYSTAL_BOMB_FUSE=2.45;
 const crystalBombFlameCache=Array(10).fill(null);
 function crystalBombTheme(enemy){
  return diamondThemes[Math.max(0,Math.min(9,enemy.crystalThemeIndex|0))];
@@ -21296,7 +21296,7 @@ function updateCrystalBombEnemy(enemy,dt){
  if(enemy.crystalBombState==="arming"){
   enemy.crystalBombFuse=Math.max(0,(enemy.crystalBombFuse||0)-dt);
   if(enemy.crystalBombFuse<=0){
-   enemy.crystalBombState="recover";enemy.crystalBombRecover=.52;
+   enemy.crystalBombState="recover";enemy.crystalBombRecover=1.05;
    enemy.crystalBombTimer=5+Math.random()*2;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;
    const bomb={x:Math.floor(enemy.x),y:Math.floor(enemy.y),range:2,activeSlotReleased:true,isCrystalBomb:true,crystalThemeIndex:enemy.crystalThemeIndex};
    explode(bomb);
@@ -21347,7 +21347,7 @@ newLevel=function(preservePowerUps=false){
 const crystalBombDamageEnemyBase=damageEnemy;
 damageEnemy=function(enemy){
  if(enemy&&enemy.isCrystalBomb){
-  if(!enemy.alive)return;
+  if(!enemy.alive||enemy.crystalBombState!=="patrol")return;
   playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||3)-1);
   enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.28;
   if(enemy.hp<=0)killEnemy(enemy);
@@ -21373,13 +21373,13 @@ function drawCrystalBombEnemy(enemy){
  const dying=!enemy.alive,deathProgress=dying?1-Math.max(0,enemy.deathTimer||0)/ENEMY_DEATH_TIME:0;
  const alpha=dying?Math.max(0,1-deathProgress*.82):1;
  const arming=enemy.crystalBombState==="arming",recover=enemy.crystalBombState==="recover",hurt=(enemy.hurtTimer||0)>0;
- const pulse=arming?1+Math.sin(gameClock*12)*.105:1+Math.sin(gameClock*4.2+enemy.x)*.045;
- const squash=arming?.88+Math.sin(gameClock*12+Math.PI/2)*.055:recover?1-Math.max(0,enemy.crystalBombRecover||0)*.12:1;
- const bob=arming?4:Math.sin(gameClock*4+enemy.y)*1.7;
+ const pulse=arming?1+Math.sin(gameClock*6.4)*.12:1+Math.sin(gameClock*3.2+enemy.x)*.045;
+ const squash=arming?.86+Math.sin(gameClock*6.4+Math.PI/2)*.065:recover?1-Math.max(0,enemy.crystalBombRecover||0)*.12:1;
+ const bob=arming?2.5:Math.sin(gameClock*3+enemy.y)*1.7;
  const shake=hurt?Math.sin(gameClock*75)*1.5:0;
  const scale=dying?Math.max(.22,1-deathProgress*.55):1;
- ctx.save();ctx.globalAlpha=.3*alpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,py+15,17*scale,6*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
- ctx.save();ctx.globalAlpha=alpha;ctx.translate(px+shake,py-bob+(arming?4:0));ctx.scale(scale*pulse,scale*squash*pulse);
+ ctx.save();ctx.globalAlpha=.3*alpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,py+17,21*scale,7*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px+shake,py-bob+(arming?2.5:0));ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE,scale*squash*pulse*CRYSTAL_BOMB_VISUAL_SCALE);
  const sphere=crystalBombSpherePath;
  ctx.save();sphere();ctx.clip();
  const glass=ctx.createRadialGradient(-7,-9,1,2,2,25);
@@ -21394,11 +21394,15 @@ function drawCrystalBombEnemy(enemy){
  ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over";
  const shine=ctx.createLinearGradient(-15,-8,13,12);shine.addColorStop(0,"#ffffff00");shine.addColorStop(.46,"#ffffff10");shine.addColorStop(.52,"#ffffffb8");shine.addColorStop(.61,"#ffffff08");shine.addColorStop(1,"#ffffff00");
  ctx.fillStyle=shine;sphere();ctx.fill();
+ // Faixa diagonal luminosa móvel, como reflexo atravessando uma gema lapidada.
+ ctx.save();sphere();ctx.clip();const sweep=(Math.sin(gameClock*1.15+enemy.x*.7)*.5+.5)*34-17;const diagonal=ctx.createLinearGradient(-30+sweep,-24,2+sweep,25);diagonal.addColorStop(0,"#ffffff00");diagonal.addColorStop(.42,"#ffffff08");diagonal.addColorStop(.5,"#ffffffb8");diagonal.addColorStop(.58,"#ffffff12");diagonal.addColorStop(1,"#ffffff00");ctx.globalAlpha=alpha*.82;ctx.fillStyle=diagonal;ctx.fillRect(-30,-25,60,50);ctx.restore();
  ctx.restore();
  ctx.strokeStyle=theme.accent;ctx.lineWidth=1.65;ctx.lineJoin="round";sphere();ctx.stroke();
  // Pequeno cristal superior integrado ao corpo esférico.
  ctx.fillStyle=theme.accent;ctx.beginPath();ctx.moveTo(-4,-15);ctx.lineTo(-1,-23);ctx.lineTo(4,-15);ctx.lineTo(1,-12);ctx.closePath();ctx.fill();
  ctx.strokeStyle=theme.glow;ctx.lineWidth=.8;ctx.stroke();
+ // Pavio curto e chama acesa permanentemente no topo da bomba.
+ ctx.save();ctx.lineCap="round";ctx.strokeStyle="#60452f";ctx.lineWidth=2.7;ctx.beginPath();ctx.moveTo(0,-19);ctx.quadraticCurveTo(1,-24,-1,-27);ctx.stroke();ctx.strokeStyle="#f4d7a0";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-20);ctx.quadraticCurveTo(1,-24,-1,-26);ctx.stroke();const wickFlicker=1+Math.sin(gameClock*17+enemy.x)*.13;const wickGlow=ctx.createRadialGradient(-1,-30,1,-1,-30,9*wickFlicker);wickGlow.addColorStop(0,"#fffbd2");wickGlow.addColorStop(.28,"#ffe56b");wickGlow.addColorStop(.62,"#ff9b35cc");wickGlow.addColorStop(1,"#ff6a1800");ctx.fillStyle=wickGlow;ctx.beginPath();ctx.ellipse(-1,-30,5*wickFlicker,8*wickFlicker,-.16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff8cf";ctx.beginPath();ctx.ellipse(-1.5,-30,1.65,4.1,-.12,0,Math.PI*2);ctx.fill();ctx.restore();
  // Rosto sempre visível: pupilas direcionais, sobrancelhas e boquinha expressiva.
  if(hurt){
   ctx.strokeStyle=theme.near;ctx.lineWidth=2.1;ctx.lineCap="round";
