@@ -20964,9 +20964,10 @@ drawEnemy=function(enemy){
 const syncBackdropBeforeDiamondControls=syncThemedBackdrop;
 syncThemedBackdrop=function(){
  syncBackdropBeforeDiamondControls();
+ const el=$("game"),controls=$("controls");
+ if(el)el.dataset.world=currentWorld;
  if(currentWorld==="diamonds"){
-  const el=$("game"),theme=diamondThemes[diamondIndex()],controls=$("controls");
-  if(el)el.dataset.world="diamonds";
+  const theme=diamondThemes[diamondIndex()];
   if(controls){
    controls.style.setProperty("--control-main",theme.wall[0]+"dd");
    controls.style.setProperty("--control-border",theme.accent);
@@ -20978,6 +20979,8 @@ syncThemedBackdrop=function(){
    controls.style.setProperty("--control-pause",theme.wall[0]+"ee");
    controls.style.setProperty("--control-pause-border",theme.accent);
   }
+ }else if(controls){
+  for(const property of ["--control-main","--control-border","--control-knob","--control-knob-border","--control-glow","--control-pad","--control-pad-border","--control-pause","--control-pause-border"])controls.style.removeProperty(property);
  }
 };
 
