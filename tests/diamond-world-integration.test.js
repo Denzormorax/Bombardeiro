@@ -335,8 +335,8 @@ test("o impacto do foguete solta estilhaços na cor dos diamantes e a recuperaç
 });
 
 test("as funções do foguete de diamante ficam fora do escopo de sincronização dos controles",()=>{
- const syncStart=html.lastIndexOf("syncThemedBackdrop=function(){");
- const diamondStart=html.indexOf("/* INIMIGO FOGUETE DE DIAMANTE",syncStart);
+ const diamondStart=html.indexOf("/* INIMIGO FOGUETE DE DIAMANTE — cores próprias");
+ const syncStart=html.lastIndexOf("syncThemedBackdrop=function(){",diamondStart);
  assert.ok(syncStart>=0&&diamondStart>syncStart,"bloco do foguete deve vir depois do fechamento da sincronização");
  const syncBlock=html.slice(syncStart,diamondStart);
  assert.match(syncBlock,/controls\.style\.setProperty\("--control-pause-border",theme\.accent\);\s*}\s*}\s*;/);
