@@ -11,6 +11,7 @@ on:
       - "bombericon.jpg"
       - "Icone do jogo.png"
       - "game-assets/**"
+      - "botoes-mundos/**"
       - "logo-bombardeiro-transparente.png"
       - "bomba explosão.mp3"
       - "moeda.mp3"
@@ -272,6 +273,17 @@ jobs:
           PY
           mkdir -p "$GAME_ASSETS/game-assets"
           cp -R game-assets/. "$GAME_ASSETS/game-assets/"
+          mkdir -p "$GAME_ASSETS/botoes-mundos"
+          cp -R botoes-mundos/. "$GAME_ASSETS/botoes-mundos/"
+          for image in \
+            cutout_1795789029270.png \
+            cutout_1795789063374.png \
+            cutout_1795789104053.png \
+            cutout_1795789134810.png \
+            cutout_1795789184975.png \
+            cutout_1795789260946.png; do
+            test -s "$GAME_ASSETS/botoes-mundos/$image"
+          done
           cp "tela floresta.jpg" "$GAME_ASSETS/game-assets/images/forest-selection-background.jpg"
           cp "Mapa deserto.jpg" "$GAME_ASSETS/Mapa deserto.jpg"
           test -s "$GAME_ASSETS/Mapa deserto.jpg"
