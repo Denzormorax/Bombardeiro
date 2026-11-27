@@ -415,11 +415,12 @@ test("a bomba cristalizada patrulha em corredores ortogonais, centralizando o co
 });
 test("a bomba cristalizada arma o fusível entre patrulhas de 5 a 7 segundos e retorna à patrulha sem morrer ao explodir",()=>{
  assert.ok(html.includes("CRYSTAL_BOMB_FUSE=2.45"));
- assert.ok(html.includes("enemy.crystalBombTimer=5+Math.random()*2"));
+ assert.ok(html.includes("enemy.crystalBombTimer=6+Math.random()*2"));
  assert.ok(html.includes('enemy.crystalBombState==="arming"'));
  assert.ok(html.includes('enemy.crystalBombState="recover";enemy.crystalBombRecover=1.05'));
  assert.ok(html.includes("range:2,activeSlotReleased:true,isCrystalBomb:true"));
- assert.ok(html.includes('if(!b.isCrystalBomb&&(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol"))damageEnemy(enemy)'));
+ assert.ok(html.includes('if(!b.isCrystalBomb)for(const enemy of enemies)'));
+  assert.ok(html.includes('if(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol")damageEnemy(enemy)'));
  assert.ok(html.includes('enemy.crystalBombState="patrol"'));
 });
 test("a explosão da bomba cristalizada tem alcance de dois blocos e fogo animado na cor da fase",()=>{
@@ -450,7 +451,8 @@ test("bomba cristalizada: preparo lento, escala visual sem alterar colisão, bri
  assert.ok(html.includes("Faixa diagonal luminosa móvel"));
 });
 test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em preparo/recuperação é imune",()=>{
- assert.ok(html.includes('if(!b.isCrystalBomb&&(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol"))damageEnemy(enemy)'));
+ assert.ok(html.includes('if(!b.isCrystalBomb)for(const enemy of enemies)'));
+  assert.ok(html.includes('if(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol")damageEnemy(enemy)'));
  assert.ok(html.includes('if(!enemy.alive||enemy.crystalBombState!=="patrol")return'));
 });
 test("bomba cristalizada continua elegível para atravessar os portais de diamante",()=>{
