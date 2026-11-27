@@ -414,12 +414,12 @@ test("a bomba cristalizada patrulha em corredores ortogonais, centralizando o co
  assert.ok(movement.includes("canOccupy(nx,ny,CRYSTAL_BOMB_RADIUS"));
 });
 test("a bomba cristalizada arma o fusível entre patrulhas de 5 a 7 segundos e retorna à patrulha sem morrer ao explodir",()=>{
- assert.ok(html.includes("CRYSTAL_BOMB_FUSE=1.28"));
+ assert.ok(html.includes("CRYSTAL_BOMB_FUSE=2.45"));
  assert.ok(html.includes("enemy.crystalBombTimer=5+Math.random()*2"));
  assert.ok(html.includes('enemy.crystalBombState==="arming"'));
- assert.ok(html.includes('enemy.crystalBombState="recover";enemy.crystalBombRecover=.52'));
+ assert.ok(html.includes('enemy.crystalBombState="recover";enemy.crystalBombRecover=1.05'));
  assert.ok(html.includes("range:2,activeSlotReleased:true,isCrystalBomb:true"));
- assert.ok(html.includes("if(!(enemy.isCrystalBomb&&b.isCrystalBomb))damageEnemy(enemy)"));
+ assert.ok(html.includes('if(!b.isCrystalBomb&&(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol"))damageEnemy(enemy)'));
  assert.ok(html.includes('enemy.crystalBombState="patrol"'));
 });
 test("a explosão da bomba cristalizada tem alcance de dois blocos e fogo animado na cor da fase",()=>{
@@ -439,4 +439,20 @@ test("a bomba cristalizada tem corpo esférico 3D facetado, olhos, boquinha e ex
  assert.ok(html.includes("ctx.quadraticCurveTo(0,5,4,9)"));
  assert.ok(html.includes("ctx.quadraticCurveTo(0,11,4,8)"));
  assert.ok(html.includes("const crystalBombDrawEnemyBase=drawEnemy"));
+});
+
+
+test("bomba cristalizada: preparo lento, escala visual sem alterar colisão, brilho diagonal e pavio",()=>{
+ assert.ok(html.includes("CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.24,CRYSTAL_BOMB_FUSE=2.45"));
+ assert.ok(html.includes("Math.sin(gameClock*6.4)*.12"));
+ assert.ok(html.includes("ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE"));
+ assert.ok(html.includes("wickGlow=ctx.createRadialGradient"));
+ assert.ok(html.includes("Faixa diagonal luminosa móvel"));
+});
+test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em preparo/recuperação é imune",()=>{
+ assert.ok(html.includes('if(!b.isCrystalBomb&&(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol"))damageEnemy(enemy)'));
+ assert.ok(html.includes('if(!enemy.alive||enemy.crystalBombState!=="patrol")return'));
+});
+test("bomba cristalizada continua elegível para atravessar os portais de diamante",()=>{
+ assert.ok(html.includes("checkDiamondPortal(enemy,.25,false,dt)"));
 });
