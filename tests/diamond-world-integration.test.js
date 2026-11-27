@@ -444,14 +444,20 @@ test("a bomba cristalizada tem corpo esférico 3D facetado, olhos, boquinha e ex
 
 
 test("bomba cristalizada: preparo lento, escala visual sem alterar colisão, brilho diagonal e pavio",()=>{
- assert.ok(html.includes("CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.24,CRYSTAL_BOMB_FUSE=2.45"));
+ assert.ok(html.includes("CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.17,CRYSTAL_BOMB_FUSE=2.45"));
  assert.ok(html.includes("Math.sin(gameClock*6.4)*.12"));
  assert.ok(html.includes("ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE"));
  assert.ok(html.includes("function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake)"));
  assert.ok(html.includes("wickGlow=ctx.createRadialGradient"));
- assert.ok(html.includes("flameY=-39"));
+ assert.ok(html.includes("flameY=-35"));
+ assert.ok(html.includes("ctx.lineWidth=3.6"));
+ assert.ok(html.includes("sway*.35,-29"));
+ assert.ok(html.includes("sway*.35,-28"));
  assert.ok(html.includes("drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake)"));
  assert.ok(html.includes("Faixa diagonal luminosa móvel"));
+ assert.ok(html.includes("const shine=(gameClock*.62)%1,shineX=-25+shine*50"));
+ assert.ok(html.includes("createLinearGradient(shineX-12,20,shineX+12,-20)"));
+ assert.ok(html.includes("rgba(255,255,255,.82)"));
 });
 test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em preparo/recuperação é imune",()=>{
  assert.ok(html.includes('for(const enemy of enemies)if(!b.isCrystalBomb&&enemy.alive'));
@@ -464,6 +470,9 @@ test("bomba cristalizada atravessa portais de diamante com destino aleatório e 
  assert.ok(html.includes("enemy._diamondPortalTransit={fromX,fromY,toX,toY,elapsed:0,duration:.78}"));
  assert.ok(html.includes("if(checkCrystalBombDiamondPortal(enemy,dt))continue"));
  assert.ok(html.includes("if(!enemy._diamondPortalTransit)checkCrystalBombDiamondPortal(enemy,dt)"));
+ assert.match(html,/if\(enemy&&enemy\.isCrystalBomb\)\{[\s\S]*?const pose=diamondPortalTransitPose\(enemy\)/);
+ assert.match(html,/ctx\.scale\(pose\.scale,pose\.scale\)/);
+ assert.match(html,/try\{drawCrystalBombEnemy\(enemy\)\}finally\{ctx\.restore\(\);enemy\.x=oldX;enemy\.y=oldY\}/);
 });
 
 test("a explosão da bomba cristalizada só afeta blocos destrutíveis e encadeia bombas do jogador",()=>{

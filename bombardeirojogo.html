@@ -21217,7 +21217,7 @@ drawEnemy=function(enemy){if(enemy&&enemy.isDiamondCharger){drawDiamondCharger(e
 
 
 /* INIMIGO BOMBA CRISTALIZADA — patrulha, fusível próprio e explosão colorida. */
-const CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.24,CRYSTAL_BOMB_FUSE=2.45;
+const CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.17,CRYSTAL_BOMB_FUSE=2.45;
 const crystalBombFlameCache=Array(10).fill(null);
 function crystalBombTheme(enemy){
  return diamondThemes[Math.max(0,Math.min(9,enemy.crystalThemeIndex|0))];
@@ -21414,10 +21414,18 @@ function drawCrystalBombEnemy(enemy){
   ctx.beginPath();for(let i=0;i<points.length;i++){const point=points[i];if(i===0)ctx.moveTo(point[0],point[1]);else ctx.lineTo(point[0],point[1])}ctx.closePath();ctx.fill();
  }
  ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over";
- const shine=ctx.createLinearGradient(-15,-8,13,12);shine.addColorStop(0,"#ffffff00");shine.addColorStop(.46,"#ffffff10");shine.addColorStop(.52,"#ffffffb8");shine.addColorStop(.61,"#ffffff08");shine.addColorStop(1,"#ffffff00");
- ctx.fillStyle=shine;sphere();ctx.fill();
- // Faixa diagonal luminosa móvel, como reflexo atravessando uma gema lapidada.
- ctx.save();sphere();ctx.clip();const sweep=(Math.sin(gameClock*1.15+enemy.x*.7)*.5+.5)*34-17;const diagonal=ctx.createLinearGradient(-30+sweep,-24,2+sweep,25);diagonal.addColorStop(0,"#ffffff00");diagonal.addColorStop(.42,"#ffffff08");diagonal.addColorStop(.5,"#ffffffb8");diagonal.addColorStop(.58,"#ffffff12");diagonal.addColorStop(1,"#ffffff00");ctx.globalAlpha=alpha*.82;ctx.fillStyle=diagonal;ctx.fillRect(-30,-25,60,50);ctx.restore();
+ // Faixa diagonal branca móvel, igual ao reflexo do inimigo pontudo,
+ // atravessa o cristal e permanece recortada pela esfera, sem custo de canvas por quadro.
+ ctx.save();sphere();ctx.clip();
+ const shine=(gameClock*.62)%1,shineX=-25+shine*50;
+ const shineGradient=ctx.createLinearGradient(shineX-12,20,shineX+12,-20);
+ shineGradient.addColorStop(0,"rgba(255,255,255,0)");
+ shineGradient.addColorStop(.42,"rgba(255,255,255,.04)");
+ shineGradient.addColorStop(.5,"rgba(255,255,255,.82)");
+ shineGradient.addColorStop(.58,"rgba(255,255,255,.06)");
+ shineGradient.addColorStop(1,"rgba(255,255,255,0)");
+ ctx.fillStyle=shineGradient;sphere();ctx.fill();
+ ctx.restore();
  ctx.restore();
  ctx.strokeStyle=theme.accent;ctx.lineWidth=1.65;ctx.lineJoin="round";sphere();ctx.stroke();
  // Pequeno cristal superior integrado ao corpo esférico.
@@ -21451,10 +21459,10 @@ function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,sha
  ctx.save();ctx.globalAlpha=alpha;
  ctx.translate(px+shake,py-bob+(arming?2.5:0));
  ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE,scale*squash*pulse*CRYSTAL_BOMB_VISUAL_SCALE);
- ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#38251c";ctx.lineWidth=4.2;
- ctx.beginPath();ctx.moveTo(0,-16);ctx.bezierCurveTo(2,-21,-2,-26,sway*.35,-32);ctx.stroke();
- ctx.strokeStyle="#f7d9a5";ctx.lineWidth=1.35;ctx.beginPath();ctx.moveTo(.5,-18);ctx.bezierCurveTo(1.5,-22,-1,-27,sway*.35,-31);ctx.stroke();
- const flameX=sway*.35,flameY=-39+Math.sin(gameClock*22+enemy.x)*1.1;
+ ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#38251c";ctx.lineWidth=3.6;
+ ctx.beginPath();ctx.moveTo(0,-16);ctx.bezierCurveTo(2,-20,-2,-24,sway*.35,-29);ctx.stroke();
+ ctx.strokeStyle="#f7d9a5";ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(.5,-18);ctx.bezierCurveTo(1.5,-21,-1,-25,sway*.35,-28);ctx.stroke();
+ const flameX=sway*.35,flameY=-35+Math.sin(gameClock*22+enemy.x)*1.1;
  const wickGlow=ctx.createRadialGradient(flameX,flameY,1,flameX,flameY,13*flicker);
  wickGlow.addColorStop(0,"#fffde8");wickGlow.addColorStop(.2,"#fff18a");wickGlow.addColorStop(.48,"#ffb52fdd");wickGlow.addColorStop(.76,"#ff702d66");wickGlow.addColorStop(1,"#ff541000");
  ctx.fillStyle=wickGlow;ctx.beginPath();ctx.arc(flameX,flameY,13*flicker,0,Math.PI*2);ctx.fill();
@@ -21470,7 +21478,15 @@ function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,sha
 }
 const crystalBombDrawEnemyBase=drawEnemy;
 drawEnemy=function(enemy){
- if(enemy&&enemy.isCrystalBomb){drawCrystalBombEnemy(enemy);return}
+ if(enemy&&enemy.isCrystalBomb){
+  const pose=diamondPortalTransitPose(enemy);
+  if(!pose){drawCrystalBombEnemy(enemy);return}
+  const oldX=enemy.x,oldY=enemy.y;enemy.x=pose.x;enemy.y=pose.y;
+  const px=ox+pose.x*TILE,py=oy+pose.y*TILE;
+  ctx.save();ctx.translate(px,py);ctx.scale(pose.scale,pose.scale);ctx.translate(-px,-py);
+  try{drawCrystalBombEnemy(enemy)}finally{ctx.restore();enemy.x=oldX;enemy.y=oldY}
+  return;
+ }
  return crystalBombDrawEnemyBase(enemy);
 };
 
