@@ -17002,7 +17002,7 @@ function updatePlayer(dt){
  updatePlayerBlink(dt,playerMoving);
  if(pushBombOwned&&tryPushBomb(dx,dy)){collectCoins();checkWin();return}
  moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");collectCoins();
- for(const e of enemies)if(e.alive&&!e.burrowing&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
+ for(const e of enemies)if(e.alive&&!e.burrowing&&!(e.isDiamondCharger&&e.diamondState==="stunned")&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
 }
 function updateWaterWalker(entity,dt,active){
  const previousX=entity._previousX,previousY=entity._previousY;
@@ -20952,7 +20952,101 @@ syncThemedBackdrop=function(){
    controls.style.setProperty("--control-pad",theme.wall[0]+"dd");
    controls.style.setProperty("--control-pad-border",theme.accent);
    controls.style.setProperty("--control-pause",theme.wall[0]+"ee");
-   controls.style.setProperty("--control-pause-border",theme.accent);
+   controls.style.setProperty
+/* INIMIGO FOGUETE DE DIAMANTE — cores próprias, patrulha e investida em linha reta. */
+const DIAMOND_CHARGER_SPEED=8.6;
+function diamondChargerLineTarget(enemy){
+ const dx=player.x-enemy.x,dy=player.y-enemy.y,ex=Math.floor(enemy.x),ey=Math.floor(enemy.y),px=Math.floor(player.x),py=Math.floor(player.y);
+ if(ey===py&&ex!==px&&Math.abs(dx)<=5&&Math.abs(dx)>.42){const step=Math.sign(dx);for(let x=ex+step;x!==px;x+=step)if(tileAt(x,ey)!==0)return null;return {x:step,y:0}}
+ if(ex===px&&ey!==py&&Math.abs(dy)<=5&&Math.abs(dy)>.42){const step=Math.sign(dy);for(let y=ey+step;y!==py;y+=step)if(tileAt(ex,y)!==0)return null;return {x:0,y:step}}
+ return null;
+}
+function diamondChargerStun(enemy){enemy.diamondState="stunned";enemy.diamondStunTimer=7;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0}
+function updateDiamondCharger(enemy,dt,danger){
+ if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);return}
+ if(enemy.diamondState==="stunned"){
+  enemy.diamondStunTimer=Math.max(0,(enemy.diamondStunTimer||0)-dt);
+  if(enemy.diamondStunTimer<=0){enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.18;enemy.speed=enemy.baseSpeed}
+  return;
+ }
+ if(enemy.diamondState==="charge"){
+  const travel=Math.min(DIAMOND_CHARGER_SPEED*dt,.9),steps=Math.max(1,Math.ceil(travel/.035)),step=travel/steps;
+  for(let i=0;i<steps;i++){
+   if(!enemy.diamondChargeHit&&distance(enemy.x,enemy.y,player.x,player.y)<.44){if(player.inv<=0)hurtPlayer();enemy.diamondChargeHit=true;if(!running)return}
+   const nx=enemy.x+enemy.diamondChargeX*step,ny=enemy.y+enemy.diamondChargeY*step;
+   if(!canOccupy(nx,ny,ENEMY_RADIUS,"enemy",null)){diamondChargerStun(enemy);return}
+   enemy.x=nx;enemy.y=ny;
+   if(!enemy.diamondChargeHit&&distance(enemy.x,enemy.y,player.x,player.y)<.44){if(player.inv<=0)hurtPlayer();enemy.diamondChargeHit=true;if(!running)return}
+  }
+  return;
+ }
+ const target=diamondChargerLineTarget(enemy);
+ if(target){enemy.diamondState="charge";enemy.diamondChargeX=target.x;enemy.diamondChargeY=target.y;enemy.diamondChargeHit=false;enemy.path=[];enemy.patrolTarget=null;enemy.speed=DIAMOND_CHARGER_SPEED;enemy.facingX=target.x;enemy.facingY=target.y;return}
+ enemy.speed=enemy.baseSpeed;
+ if(enemy.path&&enemy.path.length){if(!followEnemyPath(enemy,dt)){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.2}}
+ else{enemy.patrolWait-=dt;if(enemy.patrolWait<=0)choosePatrolPath(enemy,danger);if(enemy.path&&enemy.path.length)followEnemyPath(enemy,dt)}
+}
+const diamondChargerUpdateEnemiesBase=updateEnemies;
+updateEnemies=function(dt){
+ const all=enemies;
+ if(!all.some(enemy=>enemy&&enemy.isDiamondCharger)){diamondChargerUpdateEnemiesBase(dt);return}
+ enemies=all.filter(enemy=>!enemy.isDiamondCharger);
+ try{diamondChargerUpdateEnemiesBase(dt)}finally{enemies=all}
+ let danger=null,dangerReady=false;
+ for(const enemy of all)if(enemy&&enemy.isDiamondCharger){
+  if(!dangerReady&&enemy.alive&&enemy.diamondState==="patrol"&&(!enemy.path||!enemy.path.length)&&enemy.patrolWait<=dt){danger=getAllBombDangerCells();dangerReady=true}
+  updateDiamondCharger(enemy,dt,danger);
+ }
+};
+const diamondChargerNewLevelBase=newLevel;
+newLevel=function(preservePowerUps=false){
+ diamondChargerNewLevelBase(preservePowerUps);
+ if(currentWorld!=="diamonds"||level<2||level>6)return;
+ const candidates=enemies.filter(enemy=>enemy&&enemy.alive&&!enemy.isSnowman&&!enemy.isBuilder&&!enemy.isMushroom&&!enemy.isHorned);
+ shuffleArray(candidates);
+ const amount=Math.min(2+Math.floor(Math.random()*2),candidates.length);
+ for(let i=0;i<amount;i++){
+  const enemy=candidates[i];enemy.isDiamondCharger=true;enemy.isHunter=false;enemy.isHorned=false;enemy.isBuilder=false;
+  enemy.hp=3;enemy.maxHp=3;enemy.diamondState="patrol";enemy.diamondStunTimer=0;
+  enemy.diamondChargeX=0;enemy.diamondChargeY=0;enemy.diamondChargeHit=false;
+  enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.15+Math.random()*.35;enemy.speed=enemy.baseSpeed;
+ }
+};
+const diamondChargerDamageEnemyBase=damageEnemy;
+damageEnemy=function(enemy){
+ if(enemy&&enemy.isDiamondCharger){if(!enemy.alive)return;playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||3)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.hp<=0)killEnemy(enemy);return}
+ return diamondChargerDamageEnemyBase(enemy);
+};
+function drawDiamondCharger(enemy){
+ const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,isDying=!enemy.alive,deathProgress=isDying?1-Math.max(0,enemy.deathTimer||0)/ENEMY_DEATH_TIME:0;
+ const alpha=isDying?Math.max(0,1-deathProgress*.8):1,scale=isDying?Math.max(.25,1-deathProgress*.45):1;
+ const stunned=enemy.diamondState==="stunned",charging=enemy.diamondState==="charge",bob=stunned?5:charging?Math.sin(gameClock*32)*1.1:Math.sin(gameClock*4+enemy.x)*2.2;
+ const angle=charging?Math.atan2(enemy.diamondChargeY,enemy.diamondChargeX)+Math.PI/2:stunned?Math.PI/2:0;
+ ctx.save();ctx.globalAlpha=.32*alpha;ctx.fillStyle="#090d25";ctx.beginPath();ctx.ellipse(px,py+13,15*scale,5.5*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py-bob);ctx.rotate(angle);ctx.scale(scale,scale);
+ const gem=ctx.createLinearGradient(-15,-20,15,18);gem.addColorStop(0,"#64e4ff");gem.addColorStop(.34,"#8b9cff");gem.addColorStop(.68,"#f18adf");gem.addColorStop(1,"#7539bd");
+ ctx.fillStyle=gem;ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(14,-7);ctx.lineTo(11,10);ctx.quadraticCurveTo(0,17,-11,10);ctx.lineTo(-14,-7);ctx.closePath();ctx.fill();
+ ctx.save();ctx.clip();
+ ctx.fillStyle="rgba(255,255,255,.35)";ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(-14,-7);ctx.lineTo(-5,1);ctx.lineTo(0,-2);ctx.closePath();ctx.fill();
+ ctx.fillStyle="rgba(77,196,255,.42)";ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(0,16);ctx.lineTo(-11,10);ctx.lineTo(-14,-7);ctx.closePath();ctx.fill();
+ ctx.fillStyle="rgba(255,115,208,.4)";ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(14,-7);ctx.lineTo(11,10);ctx.lineTo(0,16);ctx.closePath();ctx.fill();
+ ctx.fillStyle="rgba(255,255,255,.5)";ctx.beginPath();ctx.moveTo(2,-17);ctx.lineTo(10,-7);ctx.lineTo(5,-5);ctx.closePath();ctx.fill();ctx.restore();
+ ctx.strokeStyle="#35265f";ctx.lineWidth=2.2;ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(14,-7);ctx.lineTo(11,10);ctx.quadraticCurveTo(0,17,-11,10);ctx.lineTo(-14,-7);ctx.closePath();ctx.stroke();
+ if(stunned){
+  ctx.strokeStyle="#20213e";ctx.lineWidth=2.2;ctx.lineCap="round";
+  for(const x of [-5,5]){ctx.beginPath();ctx.moveTo(x-2.2,-2);ctx.lineTo(x+2.2,2.2);ctx.moveTo(x+2.2,-2);ctx.lineTo(x-2.2,2.2);ctx.stroke()}
+  ctx.beginPath();ctx.moveTo(-4,8);ctx.lineTo(4,8);ctx.stroke();
+ }else{
+  ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5,-1,3,3.8,0,0,Math.PI*2);ctx.ellipse(5,-1,3,3.8,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#18213b";ctx.beginPath();ctx.arc(-5+(charging?0:enemy.facingX*.6),-1+(charging?0:enemy.facingY*.6),1.6,0,Math.PI*2);ctx.arc(5+(charging?0:enemy.facingX*.6),-1+(charging?0:enemy.facingY*.6),1.6,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#332047";ctx.lineWidth=1.8;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-4,7);ctx.quadraticCurveTo(0,10,4,7);ctx.stroke();
+ }
+ ctx.restore();
+ if(!isDying){const colors=["#67e4ff","#f18adf","#9b70ed"],barY=py-34;for(let i=0;i<3;i++){ctx.fillStyle=i<enemy.hp?colors[i]:"#29243d";ctx.fillRect(px-12+i*9,barY,7,4);ctx.strokeStyle="#f7f3ff";ctx.lineWidth=.7;ctx.strokeRect(px-12+i*9-.35,barY-.35,7.7,4.7)}}
+}
+const diamondChargerDrawEnemyBase=drawEnemy;
+drawEnemy=function(enemy){if(enemy&&enemy.isDiamondCharger){drawDiamondCharger(enemy);return}return diamondChargerDrawEnemyBase(enemy)};
+("--control-pause-border",theme.accent);
   }
  }
 };

@@ -269,3 +269,28 @@ test("caçador e inimigos comuns do Mundo dos Diamantes usam fragmentos de crist
  assert.match(html,/rockFill=e\.isBuilder\?"#080808":color,rockEdge=e\.isBuilder\?"#8c592f":helmetColor/);
  assert.match(html,/currentWorld==="diamonds"\?currentForestTheme\(\)\.glow/);
 });
+
+ 
+test("novo inimigo foguete de diamante aparece de 2 a 3 vezes nas fases 2 a 6 com três níveis de dano",()=>{
+ assert.ok(html.includes('currentWorld!=="diamonds"||level<2||level>6'));
+ assert.ok(html.includes("2+Math.floor(Math.random()*2)"));
+ assert.ok(html.includes("enemy.isDiamondCharger=true"));
+ assert.ok(html.includes("enemy.hp=3;enemy.maxHp=3"));
+ assert.ok(html.includes("for(let i=0;i<3;i++)"));
+ assert.ok(html.includes('"#64e4ff"')&&html.includes('"#f18adf"')&&html.includes('"#9b70ed"'));
+});
+test("o foguete de diamante investe alinhado em até cinco blocos com linha livre e fica atordoado por sete segundos",()=>{
+ assert.ok(html.includes("function diamondChargerLineTarget(enemy)"));
+ assert.ok(html.includes("Math.abs(dx)<=5")&&html.includes("Math.abs(dy)<=5"));
+ assert.ok(html.includes("tileAt(x,ey)!==0")&&html.includes("tileAt(ex,y)!==0"));
+ assert.ok(html.includes("DIAMOND_CHARGER_SPEED=8.6"));
+ assert.ok(html.includes('enemy.diamondStunTimer=7'));
+ assert.ok(html.includes('enemy.diamondState==="stunned"'));
+});
+test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores fixas",()=>{
+ assert.ok(html.includes("function drawDiamondCharger(enemy)"));
+ assert.ok(html.includes("ctx.moveTo(0,-22)"));
+ assert.ok(html.includes("ctx.moveTo(x-2.2,-2)"));
+ assert.ok(html.includes("diamondChargerDrawEnemyBase=drawEnemy"));
+ assert.ok(html.includes("diamondChargerDamageEnemyBase=damageEnemy"));
+});
