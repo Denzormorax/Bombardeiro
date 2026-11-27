@@ -395,47 +395,48 @@ test("o foguete apresenta quatro barras individuais de vida",()=>{
 });
 
 
+
 test("a bomba cristalizada aparece apenas no Mundo dos Diamantes, das fases 5 a 9, junto aos inimigos existentes",()=>{
- assert.match(html,/if\\(currentWorld!==\"diamonds\"\\|\\|level<5\\|\\|level>9\\)return/);
- assert.match(html,/enemy\\.isCrystalBomb=true/);
- assert.match(html,/!enemy\\.isDiamondCharger&&!enemy\\.isSnowman&&!enemy\\.isBuilder&&!enemy\\.isMushroom&&!enemy\\.isHorned/);
- assert.match(html,/1\\+Math\\.floor\\(Math\\.random\\(\\)\\*2\\)/);
+ assert.ok(html.includes('if(currentWorld!=="diamonds"||level<5||level>9)return'));
+ assert.ok(html.includes("enemy.isCrystalBomb=true"));
+ assert.ok(html.includes("!enemy.isDiamondCharger&&!enemy.isSnowman&&!enemy.isBuilder&&!enemy.isMushroom&&!enemy.isHorned"));
+ assert.ok(html.includes("1+Math.floor(Math.random()*2)"));
 });
 test("a bomba cristalizada patrulha em corredores ortogonais, centralizando o corpo entre os blocos",()=>{
- const start=html.indexOf("function followCrystalBombPath(enemy,dt){");
- const end=html.indexOf("\\nfunction updateCrystalBombEnemy",start);
- const movement=html.slice(start,end);
- assert.ok(start>=0&&end>start);
- assert.match(movement,/const horizontal=target\\.y===Math\\.floor\\(enemy\\.y\\)&&target\\.x!==Math\\.floor\\(enemy\\.x\\)/);
- assert.match(movement,/const offset=ty-enemy\\.y/);
- assert.match(movement,/const offset=tx-enemy\\.x/);
- assert.match(movement,/enemy\\.x=tx;enemy\\.y=ty;enemy\\.path\\.shift\\(\\)/);
- assert.match(movement,/canOccupy\\(nx,ny,CRYSTAL_BOMB_RADIUS/);
+ const pathStart=html.indexOf("function followCrystalBombPath(enemy,dt){");
+ const pathEnd=html.indexOf("\nfunction updateCrystalBombEnemy",pathStart);
+ const movement=html.slice(pathStart,pathEnd);
+ assert.ok(pathStart>=0&&pathEnd>pathStart);
+ assert.ok(movement.includes("const horizontal=target.y===Math.floor(enemy.y)&&target.x!==Math.floor(enemy.x)"));
+ assert.ok(movement.includes("const offset=ty-enemy.y"));
+ assert.ok(movement.includes("const offset=tx-enemy.x"));
+ assert.ok(movement.includes("enemy.x=tx;enemy.y=ty;enemy.path.shift()"));
+ assert.ok(movement.includes("canOccupy(nx,ny,CRYSTAL_BOMB_RADIUS"));
 });
 test("a bomba cristalizada arma o fusível entre patrulhas de 5 a 7 segundos e retorna à patrulha sem morrer ao explodir",()=>{
- assert.match(html,/CRYSTAL_BOMB_FUSE=1\\.28/);
- assert.match(html,/enemy\\.crystalBombTimer=5\\+Math\\.random\\(\\)\\*2/);
- assert.match(html,/enemy\\.crystalBombState===\"arming\"/);
- assert.match(html,/enemy\\.crystalBombState=\"recover\";enemy\\.crystalBombRecover=\\.52/);
- assert.match(html,/range:2,activeSlotReleased:true,isCrystalBomb:true/);
- assert.match(html,/if\\(!\\(enemy\\.isCrystalBomb&&b\\.isCrystalBomb\\)\\)damageEnemy\\(enemy\\)/);
- assert.match(html,/enemy\\.crystalBombState=\"patrol\"/);
+ assert.ok(html.includes("CRYSTAL_BOMB_FUSE=1.28"));
+ assert.ok(html.includes("enemy.crystalBombTimer=5+Math.random()*2"));
+ assert.ok(html.includes('enemy.crystalBombState==="arming"'));
+ assert.ok(html.includes('enemy.crystalBombState="recover";enemy.crystalBombRecover=.52'));
+ assert.ok(html.includes("range:2,activeSlotReleased:true,isCrystalBomb:true"));
+ assert.ok(html.includes("if(!(enemy.isCrystalBomb&&b.isCrystalBomb))damageEnemy(enemy)"));
+ assert.ok(html.includes('enemy.crystalBombState="patrol"'));
 });
 test("a explosão da bomba cristalizada tem alcance de dois blocos e fogo animado na cor da fase",()=>{
- assert.match(html,/crystalThemeIndex:b\\.crystalThemeIndex\\?\\?0/);
- assert.match(html,/function buildCrystalBombFlameSprites\\(themeIndex\\)/);
- assert.match(html,/theme\\.accent/);
- assert.match(html,/theme\\.glow/);
- assert.match(html,/function drawCrystalBombFlame\\(flame\\)/);
- assert.match(html,/if\\(flame&&flame\\.isCrystalBomb\\)\\{drawCrystalBombFlame\\(flame\\);return\\}/);
+ assert.ok(html.includes("crystalThemeIndex:b.crystalThemeIndex??0"));
+ assert.ok(html.includes("function buildCrystalBombFlameSprites(themeIndex)"));
+ assert.ok(html.includes("theme.accent"));
+ assert.ok(html.includes("theme.glow"));
+ assert.ok(html.includes("function drawCrystalBombFlame(flame)"));
+ assert.ok(html.includes("if(flame&&flame.isCrystalBomb){drawCrystalBombFlame(flame);return}"));
 });
 test("a bomba cristalizada tem corpo esférico 3D facetado, olhos, boquinha e expressão própria ao levar dano",()=>{
- assert.match(html,/function drawCrystalBombEnemy\\(enemy\\)/);
- assert.match(html,/createRadialGradient\\(-7,-9,1,2,2,25\\)/);
- assert.match(html,/function sphere\\(\\)/);
- assert.match(html,/if\\(hurt\\)\\{/);
- assert.match(html,/ctx\\.moveTo\\(eyeX-2\\.2,-4\\)/);
- assert.match(html,/ctx\\.quadraticCurveTo\\(0,5,4,9\\)/);
- assert.match(html,/ctx\\.quadraticCurveTo\\(0,11,4,8\\)/);
- assert.match(html,/const crystalBombDrawEnemyBase=drawEnemy/);
+ assert.ok(html.includes("function drawCrystalBombEnemy(enemy)"));
+ assert.ok(html.includes("createRadialGradient(-7,-9,1,2,2,25)"));
+ assert.ok(html.includes("function sphere()"));
+ assert.ok(html.includes("if(hurt){"));
+ assert.ok(html.includes("ctx.moveTo(eyeX-2.2,-4)"));
+ assert.ok(html.includes("ctx.quadraticCurveTo(0,5,4,9)"));
+ assert.ok(html.includes("ctx.quadraticCurveTo(0,11,4,8)"));
+ assert.ok(html.includes("const crystalBombDrawEnemyBase=drawEnemy"));
 });
