@@ -21504,6 +21504,73 @@ function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,sha
  ctx.shadowBlur=0;ctx.fillStyle="#fffef0";ctx.beginPath();ctx.ellipse(flameX-.8,flameY+1,1.65,4.3,-.12,0,Math.PI*2);ctx.fill();
  ctx.restore();
 }
+/* DESVIO DE COLISÕES ENTRE INIMIGOS — recalcula rotas para evitar que fiquem presos uns nos outros. */
+function enemyCollisionRadius(enemy){
+ if(enemy&&enemy.isCrystalBomb)return CRYSTAL_BOMB_RADIUS;
+ if(enemy&&enemy.isDiamondCharger)return DIAMOND_CHARGER_RADIUS;
+ return ENEMY_RADIUS;
+}
+function enemyCanRerouteAfterContact(enemy){
+ if(!enemy||!enemy.alive||enemy.burrowing||enemy._diamondPortalTransit||enemy.isSwampGhost||enemy.isBlueFlame||enemy.isFlying||enemy.isFloating||enemy.isAirborne||enemy.isHovering||enemy.flying||enemy.floating||enemy.airborne)return false;
+ if(enemy.isCrystalBomb&&enemy.crystalBombState!=="patrol")return false;
+ if(enemy.isDiamondCharger&&["impact","stunned","aim"].includes(enemy.diamondState))return false;
+ if(enemy.isSnowman&&enemy.freezingBomb&&bombs.includes(enemy.freezingBomb)&&enemy.freezingBomb.freezing)return false;
+ return true;
+}
+function rerouteEnemyAwayFromContact(enemy,other,danger,all){
+ if(!enemyCanRerouteAfterContact(enemy))return false;
+ const blocked=new Set(danger||[]);
+ for(const occupant of all){
+  if(!occupant||occupant===enemy||!occupant.alive||occupant.burrowing||occupant._diamondPortalTransit)continue;
+  blocked.add(cellKey(Math.floor(occupant.x),Math.floor(occupant.y)));
+ }
+ const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y),otherX=other.x,otherY=other.y;
+ let best=null,bestScore=Infinity;
+ for(let y=Math.max(1,sy-4);y<=Math.min(ROWS-2,sy+4);y++)for(let x=Math.max(1,sx-4);x<=Math.min(COLS-2,sx+4);x++){
+  const manhattan=Math.abs(x-sx)+Math.abs(y-sy);
+  if(manhattan<1||manhattan>5||tileAt(x,y)!==0||bombAt(x,y)||blocked.has(cellKey(x,y)))continue;
+  const separation=distance(x+.5,y+.5,otherX,otherY);
+  if(separation<enemyCollisionRadius(enemy)+enemyCollisionRadius(other)+.22)continue;
+  const path=findGridPath(sx,sy,x,y,blocked);
+  if(!path.length)continue;
+  const score=path.length-separation*.16;
+  if(score<bestScore){bestScore=score;best=path}
+ }
+ enemy.path=best||[];
+ enemy.patrolTarget=null;enemy.repath=0;enemy.patrolWait=0;
+ enemy.collisionRepathCooldown=.48;
+ if(enemy.mode!=="evade"){enemy.mode="patrol";enemy.lastSeen=null;enemy.alert=0}
+ if(enemy.isDiamondCharger){
+  if(enemy.diamondState==="charge"){enemy.diamondState="patrol";enemy.diamondTrailTimer=0;enemy.speed=enemy.baseSpeed}
+  enemy.diamondChargeHit=false;
+ }
+ if(enemy.isCrystalBomb)enemy.speed=enemy.baseSpeed*.86;
+ else if(enemy.isDiamondCharger)enemy.speed=enemy.baseSpeed;
+ return !!(enemy.path&&enemy.path.length);
+}
+function resolveEnemyContactRoutes(){
+ if(!enemies||enemies.length<2)return;
+ const all=enemies,danger=getAllBombDangerCells();
+ for(const enemy of all)if(enemy&&enemy.collisionRepathCooldown>0)enemy.collisionRepathCooldown=Math.max(0,enemy.collisionRepathCooldown-.016);
+ for(let i=0;i<all.length;i++){
+  const a=all[i];
+  if(!enemyCanRerouteAfterContact(a)||(a.collisionRepathCooldown||0)>0)continue;
+  for(let j=i+1;j<all.length;j++){
+   const b=all[j];
+   if(!enemyCanRerouteAfterContact(b))continue;
+   const minDistance=enemyCollisionRadius(a)+enemyCollisionRadius(b)+.10;
+   if(distance(a.x,a.y,b.x,b.y)>=minDistance)continue;
+   rerouteEnemyAwayFromContact(a,b,danger,all);
+   rerouteEnemyAwayFromContact(b,a,danger,all);
+   break;
+  }
+ }
+}
+const collisionAwareUpdateEnemiesBase=updateEnemies;
+updateEnemies=function(dt){
+ collisionAwareUpdateEnemiesBase(dt);
+ resolveEnemyContactRoutes();
+};
 const crystalBombDrawEnemyBase=drawEnemy;
 drawEnemy=function(enemy){
  if(enemy&&enemy.isCrystalBomb){

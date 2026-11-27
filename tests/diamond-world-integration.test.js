@@ -497,6 +497,17 @@ test("a explosão da bomba cristalizada só afeta blocos destrutíveis e encadei
  assert.match(html,/if\(!b\.isCrystalBomb&&enemy\.alive/);
  assert.match(html,/bombs\.forEach\(other=>\{if\(other!==b&&Math\.floor\(other\.x\)===c\.x&&Math\.floor\(other\.y\)===c\.y\)/);
 });
+test("inimigos que se encostam recalculam a rota para contornar uns aos outros",()=>{
+ assert.match(html,/function enemyCanRerouteAfterContact\(enemy\)/);
+ assert.match(html,/function rerouteEnemyAwayFromContact\(enemy,other,danger,all\)/);
+ assert.match(html,/const separation=distance\(x\+\.5,y\+\.5,otherX,otherY\)/);
+ assert.match(html,/const path=findGridPath\(sx,sy,x,y,blocked\)/);
+ assert.match(html,/function resolveEnemyContactRoutes\(\)/);
+ assert.match(html,/const collisionAwareUpdateEnemiesBase=updateEnemies/);
+ assert.match(html,/collisionAwareUpdateEnemiesBase\(dt\);\s*resolveEnemyContactRoutes\(\)/);
+ assert.match(html,/enemy\.collisionRepathCooldown=\.48/);
+ assert.match(html,/enemy\.diamondState="patrol"/);
+});
 test("a bomba cristalizada atravessa as espirais e patrulha um pouco mais devagar",()=>{
  assert.match(html,/checkCrystalBombDiamondPortal\(enemy,dt\)/);
  assert.match(html,/enemy\.speed=enemy\.baseSpeed\*\.86/);
