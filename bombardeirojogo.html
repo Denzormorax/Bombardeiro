@@ -21345,7 +21345,7 @@ updateEnemies=function(dt){
  try{crystalBombUpdateEnemiesBase(dt)}finally{enemies=all}
  for(const enemy of all)if(enemy&&enemy.isCrystalBomb){
   if(enemy._diamondPortalTransit){const transit=enemy._diamondPortalTransit;transit.elapsed+=dt;if(transit.elapsed>=transit.duration)enemy._diamondPortalTransit=null;continue;}
-  if(!enemy.alive)continue;
+  if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);continue}
   if(checkCrystalBombDiamondPortal(enemy,dt))continue;
   updateCrystalBombEnemy(enemy,dt);
   if(!enemy._diamondPortalTransit)checkCrystalBombDiamondPortal(enemy,dt);
