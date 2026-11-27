@@ -289,8 +289,8 @@ test("o foguete de diamante investe alinhado em até cinco blocos com linha livr
 });
 test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores fixas",()=>{
  assert.ok(html.includes("function drawDiamondCharger(enemy)"));
- assert.ok(html.includes("ctx.moveTo(0,-22)"));
- assert.ok(html.includes("ctx.moveTo(x-2.2,-2)"));
+ assert.ok(html.includes("ctx.moveTo(0,-23)"));
+ assert.ok(html.includes("eyeX-2.2,-2.5"));
  assert.ok(html.includes("diamondChargerDrawEnemyBase=drawEnemy"));
  assert.ok(html.includes("diamondChargerDamageEnemyBase=damageEnemy"));
 });
@@ -314,6 +314,6 @@ test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de 
  assert.match(draw,/ctx\.quadraticCurveTo\(eyeX,2,eyeX\+3,-1\)/);
  assert.match(draw,/ctx\.lineTo\(-4,11\)/);
  assert.match(draw,/const seatedY=stunned\?5:0/);
- assert.ok(draw.includes("const bodyScaleY=stunned?.78:1"));
+ assert.ok(draw.includes("bodyScaleY=stunned?.78:1"));
  assert.match(draw,/enemy\.diamondStunTimer=5/);
 });
