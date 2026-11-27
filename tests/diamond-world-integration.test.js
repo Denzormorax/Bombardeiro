@@ -454,7 +454,7 @@ test("bomba cristalizada: preparo lento, escala visual sem alterar colisão, bri
  assert.ok(html.includes("sway*.35,-29"));
  assert.ok(html.includes("sway*.35,-28"));
  assert.ok(html.includes("drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake)"));
- assert.ok(html.includes("Faixa diagonal luminosa móvel"));
+ assert.ok(html.includes("Faixa diagonal branca móvel"));
  assert.ok(html.includes("const shine=(gameClock*.62)%1,shineX=-25+shine*50"));
  assert.ok(html.includes("createLinearGradient(shineX-12,20,shineX+12,-20)"));
  assert.ok(html.includes("rgba(255,255,255,.82)"));
