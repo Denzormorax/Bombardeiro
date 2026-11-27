@@ -31,6 +31,8 @@ test("a camada terrainDetail repete exatamente o piso com três pedrinhas nas de
 });
 
 test("as dez sombras dos geodos ficam um pouco maiores e mais baixas, sem alterar o contorno luminoso",()=>{
- assert.equal((atlas.match(/<ellipse cx="49" cy="84\\.2" rx="37" ry="7\\.2" fill="#050a13" opacity="\\.68"\\/>/g)||[]).length,10);
- assert.doesNotMatch(atlas,/<ellipse cx="49" cy="83" rx="34" ry="7" fill="#050a13" opacity="\\.65"\\/>/);
+ const updated='<ellipse cx="49" cy="84.2" rx="37" ry="7.2" fill="#050a13" opacity=".68"/>';
+ const original='<ellipse cx="49" cy="83" rx="34" ry="7" fill="#050a13" opacity=".65"/>';
+ assert.equal(atlas.split(updated).length-1,10);
+ assert.equal(atlas.split(original).length-1,0);
 });
