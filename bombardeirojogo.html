@@ -15966,6 +15966,7 @@ function selectMapLevel(i){
 function refreshLevelGrid(){buildForestMap()}
 
 function showMenuScreen(which){
+ $("game").style.display="none";
  $("overlay").style.display="none";
  $("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");
  $("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
@@ -16210,7 +16211,7 @@ function findFreeCoinPosition(x,y){
  return null;
 }
 function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position){const value=coinValue(type);coinsOnMap.push({x:position.x,y:position.y,type:type==="blue"?"blue":type==="treasureRed"?"treasureRed":"yellow",value,phase:Math.random()*Math.PI*2,life:0})}}
-function coinValue(type){return type==="blue"?100:type==="treasureRed"?50:type==="yellow"?2:type==="green"?4:6}
+function coinValue(type){return type==="blue"?100:type==="treasureRed"?50:type==="diamond"||type==="crystalBomb"?8:type==="yellow"?2:type==="green"?4:6}
 function updateHUD(){
  $("level").textContent=level;$("forestThemeName").textContent=currentForestTheme().name;const hearts=$("lifeHearts").children;
  for(let i=0;i<hearts.length;i++)hearts[i].classList.toggle("empty",i>=lives);
@@ -16837,7 +16838,7 @@ function placeBomb(){
  if(volcanoLava){bombs.splice(bombs.indexOf(bomb),1);explode(bomb);}
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;createCoin(enemy.x,enemy.y,enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green")}
+function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;const rewardType=enemy.isCrystalBomb?"crystalBomb":enemy.isDiamondCharger?"diamond":enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green";createCoin(enemy.x,enemy.y,rewardType)}
 function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;const visible=canSeePlayer(enemy);enemy.mode=visible?"chase":"patrol";enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null;enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
@@ -16966,7 +16967,7 @@ function gameOver(win){
 function startGame(startLevel=1){
  treasureSpawnWorld=currentWorld;treasureSpawnedThisWorld=false;treasureSpawnedThisLevel=false;
  if(mapMoveTimer){clearTimeout(mapMoveTimer);mapMoveTimer=null}
- finishPositioning();level=startLevel;selectedMapLevel=startLevel;score=0;lives=3;coins=0;
+ finishPositioning();$("game").style.display="flex";level=startLevel;selectedMapLevel=startLevel;score=0;lives=3;coins=0;
  bombPowerUps=0;firePowerUps=0;speedPowerUps=0;pushBombOwned=false;heartPurchases=0;maxBombs=1;firePower=1;
  running=true;paused=false;$("shopBtn").classList.remove("hidden");$("hud").style.display="flex";$("controls").style.display="block";
  $("menuHud").classList.add("hidden");$("menuContent").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
