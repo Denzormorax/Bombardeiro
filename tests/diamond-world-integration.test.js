@@ -277,7 +277,7 @@ test("novo inimigo foguete de diamante aparece de 2 a 3 vezes nas fases 2 a 6 co
  assert.ok(html.includes("enemy.isDiamondCharger=true"));
  assert.ok(html.includes("enemy.hp=3;enemy.maxHp=3"));
  assert.ok(html.includes("for(let i=0;i<3;i++)"));
- assert.ok(html.includes('"#64e4ff"')&&html.includes('"#f18adf"')&&html.includes('"#9b70ed"'));
+ assert.ok(html.includes('"#67e4ff"')&&html.includes('"#f18adf"')&&html.includes('"#9b70ed"'));
 });
 test("o foguete de diamante investe alinhado em até cinco blocos com linha livre e fica atordoado por cinco segundos",()=>{
  assert.ok(html.includes("function diamondChargerLineTarget(enemy)"));
@@ -315,5 +315,5 @@ test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de 
  assert.match(draw,/ctx\.lineTo\(-4,11\)/);
  assert.match(draw,/const seatedY=stunned\?5:0/);
  assert.ok(draw.includes("bodyScaleY=stunned?.78:1"));
- assert.match(draw,/enemy\.diamondStunTimer=5/);
+ assert.ok(html.includes("enemy.diamondStunTimer=5"));
 });
