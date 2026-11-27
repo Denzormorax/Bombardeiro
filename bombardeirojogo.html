@@ -17003,7 +17003,7 @@ function updatePlayer(dt){
  updatePlayerBlink(dt,playerMoving);
  if(pushBombOwned&&tryPushBomb(dx,dy)){collectCoins();checkWin();return}
  moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");collectCoins();
- for(const e of enemies)if(e.alive&&!e.burrowing&&!(e.isDiamondCharger&&e.diamondState==="stunned")&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
+ for(const e of enemies)if(e.alive&&!e.burrowing&&!(e.isDiamondCharger&&(e.diamondState==="stunned"||e.diamondState==="impact"))&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
 }
 function updateWaterWalker(entity,dt,active){
  const previousX=entity._previousX,previousY=entity._previousY;
@@ -21032,11 +21032,16 @@ function followDiamondChargerPath(enemy,dt){
  return true;
 }
 function diamondChargerStun(enemy,impactX=enemy.x,impactY=enemy.y){
- enemy.diamondState="stunned";enemy.diamondStunTimer=4;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;
+ enemy.diamondState="impact";enemy.diamondImpactTimer=.14;enemy.diamondStunTimer=0;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;
  spawnDiamondChargerImpact(impactX,impactY);
 }
 function updateDiamondCharger(enemy,dt,danger){
  if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);return}
+ if(enemy.diamondState==="impact"){
+  enemy.diamondImpactTimer=Math.max(0,(enemy.diamondImpactTimer||0)-dt);
+  if(enemy.diamondImpactTimer<=0){enemy.diamondState="stunned";enemy.diamondStunTimer=3.5;enemy.diamondImpactTimer=0}
+  return;
+ }
  if(enemy.diamondState==="stunned"){
   enemy.diamondStunTimer=Math.max(0,(enemy.diamondStunTimer||0)-dt);
   if(enemy.diamondStunTimer<=0){enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.18;enemy.speed=enemy.baseSpeed}
@@ -21054,6 +21059,12 @@ function updateDiamondCharger(enemy,dt,danger){
   for(let i=0;i<steps;i++){
    if(!enemy.diamondChargeHit&&distance(enemy.x,enemy.y,player.x,player.y)<.44){if(player.inv<=0)hurtPlayer();enemy.diamondChargeHit=true;if(!running)return}
    const nx=enemy.x+enemy.diamondChargeX*step,ny=enemy.y+enemy.diamondChargeY*step;
+   const hitBomb=bombs.find(b=>circleRectCollision(nx,ny,DIAMOND_CHARGER_RADIUS,b.x+.12,b.y+.12,.76,.76));
+   if(hitBomb){
+    enemy.x=nx;enemy.y=ny;bombs=bombs.filter(b=>b!==hitBomb);hitBomb.t=0;explode(hitBomb);
+    if(enemy.alive)diamondChargerStun(enemy,nx,ny);
+    return;
+   }
    if(!canOccupy(nx,ny,DIAMOND_CHARGER_RADIUS,"enemy",null)){diamondChargerStun(enemy,enemy.x+enemy.diamondChargeX*.16,enemy.y+enemy.diamondChargeY*.16);return}
    enemy.x=nx;enemy.y=ny;
    if(!enemy.diamondChargeHit&&distance(enemy.x,enemy.y,player.x,player.y)<.44){if(player.inv<=0)hurtPlayer();enemy.diamondChargeHit=true;if(!running)return}
@@ -21100,25 +21111,26 @@ newLevel=function(preservePowerUps=false){
  const amount=Math.min(2+Math.floor(Math.random()*2),candidates.length);
  for(let i=0;i<amount;i++){
   const enemy=candidates[i];enemy.isDiamondCharger=true;enemy.isHunter=false;enemy.isHorned=false;enemy.isBuilder=false;
-  enemy.hp=3;enemy.maxHp=3;enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.diamondAimTimer=0;enemy.diamondTrailTimer=0;
+  enemy.hp=4;enemy.maxHp=4;enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.diamondImpactTimer=0;enemy.diamondAimTimer=0;enemy.diamondTrailTimer=0;
   enemy.diamondChargeX=0;enemy.diamondChargeY=0;enemy.diamondChargeHit=false;
   enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.15+Math.random()*.35;enemy.speed=enemy.baseSpeed;
  }
 };
 const diamondChargerDamageEnemyBase=damageEnemy;
 damageEnemy=function(enemy){
- if(enemy&&enemy.isDiamondCharger){if(!enemy.alive)return;playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||3)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.hp<=0)killEnemy(enemy);return}
+ if(enemy&&enemy.isDiamondCharger){if(!enemy.alive)return;playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||4)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.hp<=0)killEnemy(enemy);return}
  return diamondChargerDamageEnemyBase(enemy);
 };
 function drawDiamondCharger(enemy){
  const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,isDying=!enemy.alive,deathProgress=isDying?1-Math.max(0,enemy.deathTimer||0)/ENEMY_DEATH_TIME:0;
  const alpha=isDying?Math.max(0,1-deathProgress*.8):1,scale=isDying?Math.max(.25,1-deathProgress*.45):1;
- const stunned=enemy.diamondState==="stunned",charging=enemy.diamondState==="charge",aiming=enemy.diamondState==="aim";
- const bob=stunned?0:aiming?-4:charging?Math.sin(gameClock*32)*1.1:Math.sin(gameClock*4+enemy.x)*2.2;
+ const stunned=enemy.diamondState==="stunned",impacting=enemy.diamondState==="impact",charging=enemy.diamondState==="charge",aiming=enemy.diamondState==="aim";
+ const bob=stunned||impacting?0:aiming?-4:charging?Math.sin(gameClock*32)*1.1:Math.sin(gameClock*4+enemy.x)*2.2;
+ const shakeX=impacting?Math.sin(gameClock*105)*2.4:0,shakeY=impacting?Math.cos(gameClock*125)*1.2:0;
  const seatedY=stunned?5:0,bodyScaleY=stunned?.78:1,bodyScale=1.34;
  const bodyAngle=(aiming||charging)?Math.atan2(enemy.diamondChargeY||0,enemy.diamondChargeX||0)+Math.PI/2:0;
  ctx.save();ctx.globalAlpha=.34*alpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,py+14,18*scale,7*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
- ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py-bob+seatedY);ctx.rotate(bodyAngle);ctx.scale(scale*bodyScale,scale*bodyScaleY*bodyScale);
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px+shakeX,py-bob+seatedY+shakeY);ctx.rotate(bodyAngle);ctx.scale(scale*bodyScale,scale*bodyScaleY*bodyScale);
  // Reaproveita a textura real do geodo destrutível. A máscara remove a sombra
  // original e recorta os cristais laterais para deixar uma única ponta superior.
  const bodyPath=()=>{ctx.beginPath();ctx.moveTo(0,-23);ctx.lineTo(7,-15);ctx.lineTo(14,-7);ctx.lineTo(15,5);ctx.lineTo(11,14);ctx.quadraticCurveTo(0,20,-11,14);ctx.lineTo(-15,5);ctx.lineTo(-14,-7);ctx.lineTo(-7,-15);ctx.closePath()};
@@ -21156,7 +21168,7 @@ function drawDiamondCharger(enemy){
  ctx.restore();
  ctx.strokeStyle="#332047";ctx.lineWidth=1.7;ctx.lineJoin="round";bodyPath();ctx.stroke();
  // Expressões usam o mesmo formato de olhos, pupilas e sobrancelhas dos inimigos comuns.
- if(stunned){
+ if(stunned||impacting){
   ctx.strokeStyle="#24101b";ctx.lineWidth=2.4;ctx.lineCap="round";
   for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-2.5);ctx.lineTo(eyeX+2.2,1.8);ctx.moveTo(eyeX+2.2,-2.5);ctx.lineTo(eyeX-2.2,1.8);ctx.stroke()}
   ctx.beginPath();ctx.moveTo(-5.5,8);ctx.lineTo(5.5,8);ctx.stroke();
@@ -21173,7 +21185,7 @@ function drawDiamondCharger(enemy){
   ctx.strokeStyle="#24101b";ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(-5.5,8);ctx.quadraticCurveTo(0,3.5,5.5,8);ctx.stroke();
  }
  ctx.restore();
- if(!isDying){const colors=["#67e4ff","#f18adf","#9b70ed"],barY=py-43;for(let i=0;i<3;i++){ctx.fillStyle=i<enemy.hp?colors[i]:"#29243d";ctx.fillRect(px-15+i*11,barY,9,5);ctx.strokeStyle="#f7f3ff";ctx.lineWidth=.8;ctx.strokeRect(px-15+i*11-.35,barY-.35,9.7,5.7)}}
+ if(!isDying){const colors=["#67e4ff","#f18adf","#9b70ed","#b8a0ff"],barY=py-43;for(let i=0;i<4;i++){ctx.fillStyle=i<enemy.hp?colors[i]:"#29243d";ctx.fillRect(px-21+i*11,barY,9,5);ctx.strokeStyle="#f7f3ff";ctx.lineWidth=.8;ctx.strokeRect(px-21+i*11-.35,barY-.35,9.7,5.7)}}
 }
 const diamondChargerDrawEnemyBase=drawEnemy;
 drawEnemy=function(enemy){if(enemy&&enemy.isDiamondCharger){drawDiamondCharger(enemy);return}return diamondChargerDrawEnemyBase(enemy)};

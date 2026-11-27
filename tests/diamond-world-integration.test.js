@@ -297,20 +297,20 @@ test("caçador e inimigos comuns do Mundo dos Diamantes usam fragmentos de crist
 });
 
  
-test("novo inimigo foguete de diamante aparece de 2 a 3 vezes nas fases 2 a 6 com três níveis de dano",()=>{
+test("novo inimigo foguete de diamante aparece de 2 a 3 vezes nas fases 2 a 6 com quatro níveis de dano",()=>{
  assert.ok(html.includes('currentWorld!=="diamonds"||level<2||level>6'));
  assert.ok(html.includes("2+Math.floor(Math.random()*2)"));
  assert.ok(html.includes("enemy.isDiamondCharger=true"));
- assert.ok(html.includes("enemy.hp=3;enemy.maxHp=3"));
- assert.ok(html.includes("for(let i=0;i<3;i++)"));
+ assert.ok(html.includes("enemy.hp=4;enemy.maxHp=4"));
+ assert.ok(html.includes("for(let i=0;i<4;i++)"));
  assert.ok(html.includes('"#67e4ff"')&&html.includes('"#f18adf"')&&html.includes('"#9b70ed"'));
 });
-test("o foguete de diamante investe alinhado em até cinco blocos com linha livre e fica atordoado por cinco segundos",()=>{
+test("o foguete de diamante investe alinhado em até cinco blocos com linha livre e fica atordoado por três segundos e meio",()=>{
  assert.ok(html.includes("function diamondChargerLineTarget(enemy)"));
  assert.ok(html.includes("Math.abs(dx)<=5")&&html.includes("Math.abs(dy)<=5"));
  assert.ok(html.includes("tileAt(x,ey)!==0")&&html.includes("tileAt(ex,y)!==0"));
  assert.ok(html.includes("DIAMOND_CHARGER_SPEED=8.6"));
- assert.ok(html.includes('enemy.diamondStunTimer=4'));
+ assert.ok(html.includes('enemy.diamondStunTimer=3.5'));
  assert.ok(html.includes('enemy.diamondState==="stunned"'));
 });
 test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores fixas",()=>{
@@ -342,7 +342,8 @@ test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de 
  assert.match(draw,/const seatedY=stunned\?5:0/);
  assert.ok(draw.includes("bodyScaleY=stunned?.78:1"));
  assert.ok(draw.includes("bodyScale=1.34"));
- assert.ok(html.includes("enemy.diamondStunTimer=4"));
+ assert.ok(draw.includes("impacting?Math.sin(gameClock*105)*2.4:0"));
+ assert.ok(html.includes("enemy.diamondStunTimer=3.5"));
 });
 
 test("o foguete de diamante levanta e aponta antes da investida, com rastro de fragmentos cristalinos",()=>{
@@ -353,10 +354,10 @@ test("o foguete de diamante levanta e aponta antes da investida, com rastro de f
  assert.match(html,/function drawDiamondChargerParticles\(\)/);
  assert.match(html,/updateDiamondChargerParticles\(dt\)/);
 });
-test("o impacto do foguete solta estilhaços na cor dos diamantes e a recuperação dura quatro segundos",()=>{
+test("o impacto do foguete solta estilhaços na cor dos diamantes e a recuperação dura três segundos e meio",()=>{
  assert.match(html,/function spawnDiamondChargerImpact\(x,y\)/);
  assert.match(html,/diamondChargerStun\(enemy,enemy\.x\+enemy\.diamondChargeX\*\.16,enemy\.y\+enemy\.diamondChargeY\*\.16\)/);
- assert.match(html,/enemy\.diamondStunTimer=4/);
+ assert.match(html,/enemy\.diamondStunTimer=3\.5/);
  assert.match(html,/DIAMOND_CHARGER_COLORS=\["#67e4ff","#f18adf","#9b70ed"/);
 });
 
@@ -371,4 +372,21 @@ test("as funções do foguete de diamante ficam fora do escopo de sincronizaçã
  assert.equal((html.match(/function updateDiamondChargerParticles\(dt\)/g)||[]).length,1);
  assert.match(html,/function update\(dt\)[\s\S]*?updateDiamondChargerParticles\(dt\)/);
  assert.match(html,/function draw\(\)[\s\S]*?drawDiamondChargerParticles\(\)/);
+});
+
+test("o foguete explode imediatamente a bomba atingida durante a investida e recebe dano da explosão",()=>{
+ assert.match(html,/const hitBomb=bombs\.find\(b=>circleRectCollision\(nx,ny,DIAMOND_CHARGER_RADIUS,b\.x\+\.12,b\.y\+\.12,\.76,\.76\)\)/);
+ assert.match(html,/bombs=bombs\.filter\(b=>b!==hitBomb\);hitBomb\.t=0;explode\(hitBomb\)/);
+ assert.match(html,/if\(enemy\.alive\)diamondChargerStun\(enemy,nx,ny\)/);
+ assert.match(html,/function explode\(b\)[\s\S]*?damageEnemy\(enemy\)/);
+});
+test("o impacto do foguete tem tremor rápido antes de sentar e retomar a patrulha após 3,5 segundos",()=>{
+ assert.match(html,/enemy\.diamondState="impact";enemy\.diamondImpactTimer=\.14/);
+ assert.match(html,/enemy\.diamondImpactTimer=Math\.max\(0,\(enemy\.diamondImpactTimer\|\|0\)-dt\)/);
+ assert.match(html,/enemy\.diamondState="stunned";enemy\.diamondStunTimer=3\.5/);
+ assert.match(html,/impacting\?Math\.sin\(gameClock\*105\)\*2\.4/);
+});
+test("o foguete apresenta quatro barras individuais de vida",()=>{
+ assert.match(html,/enemy\.hp=4;enemy\.maxHp=4/);
+ assert.match(html,/const colors=\["#67e4ff","#f18adf","#9b70ed","#b8a0ff"\],barY=py-43;for\(let i=0;i<4;i\+\+\)/);
 });
