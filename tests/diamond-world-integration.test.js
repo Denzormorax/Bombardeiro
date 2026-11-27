@@ -444,7 +444,7 @@ test("a bomba cristalizada tem corpo esférico 3D facetado, olhos, boquinha e ex
 
 
 test("bomba cristalizada: preparo lento, escala visual sem alterar colisão, brilho diagonal e pavio",()=>{
- assert.ok(html.includes("CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.17,CRYSTAL_BOMB_FUSE=2.45"));
+ assert.ok(html.includes("CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.10,CRYSTAL_BOMB_FUSE=2.45,CRYSTAL_BOMB_DEATH_TIME=.58"));
  assert.ok(html.includes("Math.sin(gameClock*6.4)*.12"));
  assert.ok(html.includes("ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE"));
  assert.ok(html.includes("function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake)"));
@@ -455,9 +455,18 @@ test("bomba cristalizada: preparo lento, escala visual sem alterar colisão, bri
  assert.ok(html.includes("sway*.35,-28"));
  assert.ok(html.includes("drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake)"));
  assert.ok(html.includes("Faixa diagonal branca móvel"));
- assert.ok(html.includes("const shine=(gameClock*.62)%1,shineX=-25+shine*50"));
- assert.ok(html.includes("createLinearGradient(shineX-12,20,shineX+12,-20)"));
- assert.ok(html.includes("rgba(255,255,255,.82)"));
+ assert.ok(html.includes("const shine=(gameClock*.82)%1,shineX=-24+shine*48"));
+ assert.ok(html.includes("createLinearGradient(-5,0,5,0)"));
+ assert.ok(html.includes("rgba(255,255,255,.96)"));
+});
+test("a bombinha infla, desinfla e explode visualmente ao receber o dano final",()=>{
+ assert.ok(html.includes("CRYSTAL_BOMB_DEATH_TIME=.58"));
+ assert.ok(html.includes("enemy.deathTimer=CRYSTAL_BOMB_DEATH_TIME"));
+ assert.ok(html.includes("enemy.crystalBombState=\"dying\""));
+ assert.ok(html.includes("1+.58*(deathProgress/.34)"));
+ assert.ok(html.includes("1.58-.88*Math.min(1,(deathProgress-.34)/.24)"));
+ assert.ok(html.includes("if(dying&&deathProgress>=.58)"));
+ assert.ok(html.includes("const blast=ctx.createRadialGradient"));
 });
 test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em preparo/recuperação é imune",()=>{
  assert.ok(html.includes('for(const enemy of enemies)if(!b.isCrystalBomb&&enemy.alive'));
