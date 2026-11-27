@@ -29,3 +29,8 @@ test("a camada terrainDetail repete exatamente o piso com três pedrinhas nas de
   assert.equal(detail,ground,"as duas camadas devem ser idênticas na fase "+(y/96+1));
  }
 });
+
+test("as dez sombras dos geodos ficam um pouco maiores e mais baixas, sem alterar o contorno luminoso",()=>{
+ assert.equal((atlas.match(/<ellipse cx="49" cy="84\\.2" rx="37" ry="7\\.2" fill="#050a13" opacity="\\.68"\\/>/g)||[]).length,10);
+ assert.doesNotMatch(atlas,/<ellipse cx="49" cy="83" rx="34" ry="7" fill="#050a13" opacity="\\.65"\\/>/);
+});
