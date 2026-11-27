@@ -21217,7 +21217,7 @@ drawEnemy=function(enemy){if(enemy&&enemy.isDiamondCharger){drawDiamondCharger(e
 
 
 /* INIMIGO BOMBA CRISTALIZADA — patrulha, fusível próprio e explosão colorida. */
-const CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.17,CRYSTAL_BOMB_FUSE=2.45;
+const CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.10,CRYSTAL_BOMB_FUSE=2.45,CRYSTAL_BOMB_DEATH_TIME=.58;
 const crystalBombFlameCache=Array(10).fill(null);
 function crystalBombTheme(enemy){
  return diamondThemes[Math.max(0,Math.min(9,enemy.crystalThemeIndex|0))];
@@ -21377,6 +21377,17 @@ damageEnemy=function(enemy){
  }
  return crystalBombDamageEnemyBase(enemy);
 };
+const crystalBombKillEnemyBase=killEnemy;
+killEnemy=function(enemy){
+ if(enemy&&enemy.isCrystalBomb){
+  if(!enemy.alive)return;
+  crystalBombKillEnemyBase(enemy);
+  enemy.deathTimer=CRYSTAL_BOMB_DEATH_TIME;
+  enemy.crystalBombState="dying";
+  return;
+ }
+ return crystalBombKillEnemyBase(enemy);
+};
 const CRYSTAL_BOMB_FACETS=[
  ["accent",[[0,-18],[-7,-8],[0,1],[8,-8]]],
  ["light",[[-18,0],[-8,-8],[0,1],[-10,10]]],
@@ -21392,14 +21403,15 @@ function crystalBombSpherePath(){
 }
 function drawCrystalBombEnemy(enemy){
  const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,theme=crystalBombTheme(enemy);
- const dying=!enemy.alive,deathProgress=dying?1-Math.max(0,enemy.deathTimer||0)/ENEMY_DEATH_TIME:0;
- const alpha=dying?Math.max(0,1-deathProgress*.82):1;
+ const dying=!enemy.alive,deathProgress=dying?1-Math.max(0,enemy.deathTimer||0)/CRYSTAL_BOMB_DEATH_TIME:0;
  const arming=enemy.crystalBombState==="arming",recover=enemy.crystalBombState==="recover",hurt=(enemy.hurtTimer||0)>0;
- const pulse=arming?1+Math.sin(gameClock*6.4)*.12:1+Math.sin(gameClock*3.2+enemy.x)*.045;
- const squash=arming?.86+Math.sin(gameClock*6.4+Math.PI/2)*.065:recover?1-Math.max(0,enemy.crystalBombRecover||0)*.12:1;
- const bob=arming?2.5:Math.sin(gameClock*3+enemy.y)*1.7;
- const shake=hurt?Math.sin(gameClock*75)*1.5:0;
- const scale=dying?Math.max(.22,1-deathProgress*.55):1;
+ const deathScale=!dying?1:deathProgress<.34?1+.58*(deathProgress/.34):1.58-.88*Math.min(1,(deathProgress-.34)/.24);
+ const alpha=dying?(deathProgress<.58?1:Math.max(0,1-(deathProgress-.58)/.12)):1;
+ const pulse=dying?1:arming?1+Math.sin(gameClock*6.4)*.12:1+Math.sin(gameClock*3.2+enemy.x)*.045;
+ const squash=dying?1:arming?.86+Math.sin(gameClock*6.4+Math.PI/2)*.065:recover?1-Math.max(0,enemy.crystalBombRecover||0)*.12:1;
+ const bob=dying?0:arming?2.5:Math.sin(gameClock*3+enemy.y)*1.7;
+ const shake=dying?Math.sin(gameClock*68)*2.2:hurt?Math.sin(gameClock*75)*1.5:0;
+ const scale=dying?Math.max(.001,deathScale):1;
  ctx.save();ctx.globalAlpha=.3*alpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,py+17,21*scale,7*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  ctx.save();ctx.globalAlpha=alpha;ctx.translate(px+shake,py-bob+(arming?2.5:0));ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE,scale*squash*pulse*CRYSTAL_BOMB_VISUAL_SCALE);
  const sphere=crystalBombSpherePath;
@@ -21414,17 +21426,20 @@ function drawCrystalBombEnemy(enemy){
   ctx.beginPath();for(let i=0;i<points.length;i++){const point=points[i];if(i===0)ctx.moveTo(point[0],point[1]);else ctx.lineTo(point[0],point[1])}ctx.closePath();ctx.fill();
  }
  ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over";
- // Faixa diagonal branca móvel, igual ao reflexo do inimigo pontudo,
- // atravessa o cristal e permanece recortada pela esfera, sem custo de canvas por quadro.
+ // Reflexo branco diagonal em forma de diamante, mais visível e varrendo o cristal.
+ // A faixa e o brilho central ficam recortados pela esfera, sem criar canvas por quadro.
  ctx.save();sphere();ctx.clip();
- const shine=(gameClock*.62)%1,shineX=-25+shine*50;
- const shineGradient=ctx.createLinearGradient(shineX-12,20,shineX+12,-20);
+ const shine=(gameClock*.82)%1,shineX=-24+shine*48;
+ ctx.translate(shineX,0);ctx.rotate(-Math.PI/4);
+ const shineGradient=ctx.createLinearGradient(-5,0,5,0);
  shineGradient.addColorStop(0,"rgba(255,255,255,0)");
- shineGradient.addColorStop(.42,"rgba(255,255,255,.04)");
- shineGradient.addColorStop(.5,"rgba(255,255,255,.82)");
- shineGradient.addColorStop(.58,"rgba(255,255,255,.06)");
+ shineGradient.addColorStop(.24,"rgba(255,255,255,.22)");
+ shineGradient.addColorStop(.5,"rgba(255,255,255,.96)");
+ shineGradient.addColorStop(.76,"rgba(255,255,255,.3)");
  shineGradient.addColorStop(1,"rgba(255,255,255,0)");
- ctx.fillStyle=shineGradient;sphere();ctx.fill();
+ ctx.fillStyle=shineGradient;ctx.fillRect(-5,-29,10,58);
+ ctx.fillStyle="rgba(255,255,255,.92)";ctx.beginPath();
+ ctx.moveTo(0,-7);ctx.lineTo(3.5,0);ctx.lineTo(0,7);ctx.lineTo(-3.5,0);ctx.closePath();ctx.fill();
  ctx.restore();
  ctx.restore();
  ctx.strokeStyle=theme.accent;ctx.lineWidth=1.65;ctx.lineJoin="round";sphere();ctx.stroke();
@@ -21452,6 +21467,17 @@ function drawCrystalBombEnemy(enemy){
  ctx.restore();
  if(!dying){for(let i=0;i<3;i++){ctx.fillStyle=i<enemy.hp?theme.glow:"#29243d";ctx.fillRect(px-16+i*11,py-28,8,3);ctx.strokeStyle=theme.accent;ctx.lineWidth=.55;ctx.strokeRect(px-16+i*11-.25,py-28-.25,8.5,3.5)}}
  drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake);
+ if(dying&&deathProgress>=.58){
+  const burst=(deathProgress-.58)/.42,radius=7+burst*29;
+  ctx.save();ctx.globalAlpha=(1-burst)*.96;
+  const blast=ctx.createRadialGradient(px,py,1,px,py,radius);
+  blast.addColorStop(0,"#ffffff");blast.addColorStop(.22,"#fff9c4");blast.addColorStop(.58,theme.glow+"dd");blast.addColorStop(1,theme.accent+"00");
+  ctx.fillStyle=blast;ctx.beginPath();ctx.arc(px,py,radius,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#fffde8";ctx.lineWidth=2.2*(1-burst);ctx.beginPath();ctx.arc(px,py,radius*.72,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=theme.accent;
+  for(let i=0;i<8;i++){const angle=i*Math.PI/4+burst*.35,inner=radius*.42,outer=radius*(.72+.18*Math.sin(i+burst*5));ctx.beginPath();ctx.moveTo(px+Math.cos(angle)*inner,py+Math.sin(angle)*inner);ctx.lineTo(px+Math.cos(angle+.13)*outer,py+Math.sin(angle+.13)*outer);ctx.lineTo(px+Math.cos(angle-.13)*outer,py+Math.sin(angle-.13)*outer);ctx.closePath();ctx.fill()}
+  ctx.restore();
+ }
 }
 function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake){
  const flicker=1+Math.sin(gameClock*18+enemy.x*2.1)*.16+Math.sin(gameClock*31+enemy.y)*.06;
