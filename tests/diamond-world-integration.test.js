@@ -322,7 +322,7 @@ test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores 
 });
 
 test("o inimigo de diamante fica inofensivo enquanto está atordoado e mantém as cores próprias",()=>{
- assert.ok(html.includes('!(e.isDiamondCharger&&e.diamondState==="stunned")'));
+ assert.ok(html.includes('!(e.isDiamondCharger&&(e.diamondState==="stunned"||e.diamondState==="impact"))'));
  assert.ok(html.includes("window.__bombardeiroGetDiamondSpriteSheet"));
  assert.ok(html.includes("ctx.drawImage(sheet,288,0,96,96,-21,-25,42,42)"));
  assert.ok(html.includes('ctx.globalCompositeOperation="source-atop"'));
@@ -335,7 +335,7 @@ test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de 
  const draw=html.slice(start,end);
  assert.ok(start>=0&&end>start);
  assert.match(draw,/ctx\.moveTo\(0,-23\)/);
- assert.match(draw,/if\(stunned\)/);
+ assert.match(draw,/if\(stunned\|\|impacting\)/);
  assert.match(draw,/else if\(charging\)/);
  assert.match(draw,/ctx\.quadraticCurveTo\(eyeX,2,eyeX\+3,-1\)/);
  assert.match(draw,/ctx\.lineTo\(-4,11\)/);
