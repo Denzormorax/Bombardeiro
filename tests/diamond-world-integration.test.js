@@ -95,7 +95,7 @@ test("a espiral dos portais cresce visualmente sem alterar a área central de co
  assert.match(html.slice(collisionStart,collisionEnd),/portal\.x\+\.5,portal\.y\+\.5\)<\.39/);
 });
 test("os geodos recebem contorno luminoso justo na silhueta, na cor do tema e sem halo externo",()=>{
- const haloStart=html.indexOf("function buildDiamondShimmerHalo(");
+ const haloStart=html.indexOf("function drawDiamondCrystalSilhouette(");
  const drawStart=html.indexOf("function drawDiamondDestructibleShimmer()");
  const builder=html.slice(haloStart,drawStart);
  assert.match(html,/DIAMOND_SHIMMER_PADDING=8,DIAMOND_SHIMMER_FRAME_SIZE=TILE\+DIAMOND_SHIMMER_PADDING\*2/);
