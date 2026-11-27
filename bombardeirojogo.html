@@ -21381,7 +21381,7 @@ function drawCrystalBombEnemy(enemy){
   [theme.accent,[[8,-8],[18,0],[8,12],[5,5]]],
   [theme.near,[[-18,0],[-10,10],[-5,18],[-15,9]]]
  ];
- for(const facet of facets){ctx.fillStyle=facet[0];ctx.beginPath();facet[1].forEach((point,index)=>index?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]));ctx.closePath();ctx.globalAlpha=alpha*(facet[0]===theme.accent?.42:.52);ctx.fill()}
+ for(const facet of facets){ctx.fillStyle=facet[0];ctx.beginPath();facet[1].forEach((point,index)=>index?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]));ctx.closePath();ctx.globalAlpha=alpha*(facet[0]===theme.accent?0.42:0.52);ctx.fill()}
  ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over";
  const shine=ctx.createLinearGradient(-15,-8,13,12);shine.addColorStop(0,"#ffffff00");shine.addColorStop(.46,"#ffffff10");shine.addColorStop(.52,"#ffffffb8");shine.addColorStop(.61,"#ffffff08");shine.addColorStop(1,"#ffffff00");
  ctx.fillStyle=shine;sphere();ctx.fill();
