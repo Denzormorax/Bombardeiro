@@ -456,3 +456,15 @@ test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em 
 test("bomba cristalizada continua elegível para atravessar os portais de diamante",()=>{
  assert.ok(html.includes("checkDiamondPortal(enemy,.25,false,dt)"));
 });
+
+test("a explosão da bomba cristalizada só afeta blocos destrutíveis e encadeia bombas do jogador",()=>{
+ assert.match(html,/if\(!b\.isCrystalBomb\)for\(let i=treasureChests\.length-1/);
+ assert.match(html,/if\(!b\.isCrystalBomb&&player\.inv<=0&&isInsideFlameDamage\(player,c\)\)hurtPlayer\(\)/);
+ assert.match(html,/if\(!b\.isCrystalBomb&&enemy\.alive/);
+ assert.match(html,/bombs\.forEach\(other=>\{if\(other!==b&&Math\.floor\(other\.x\)===c\.x&&Math\.floor\(other\.y\)===c\.y\)/);
+});
+test("a bomba cristalizada atravessa as espirais e patrulha um pouco mais devagar",()=>{
+ assert.match(html,/checkDiamondPortal\(enemy,\.25,false,dt\)/);
+ assert.match(html,/enemy\.speed=enemy\.baseSpeed\*\.86/);
+ assert.match(html,/enemy\.crystalBombTimer=6\+Math\.random\(\)\*2/);
+});
