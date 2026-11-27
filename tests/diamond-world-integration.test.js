@@ -433,7 +433,7 @@ test("a explosão da bomba cristalizada tem alcance de dois blocos e fogo animad
 test("a bomba cristalizada tem corpo esférico 3D facetado, olhos, boquinha e expressão própria ao levar dano",()=>{
  assert.ok(html.includes("function drawCrystalBombEnemy(enemy)"));
  assert.ok(html.includes("createRadialGradient(-7,-9,1,2,2,25)"));
- assert.ok(html.includes("function sphere()"));
+ assert.ok(html.includes("const sphere=()=>"));
  assert.ok(html.includes("if(hurt){"));
  assert.ok(html.includes("ctx.moveTo(eyeX-2.2,-4)"));
  assert.ok(html.includes("ctx.quadraticCurveTo(0,5,4,9)"));
