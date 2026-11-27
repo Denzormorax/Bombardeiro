@@ -197,7 +197,7 @@ test("o foguete aumenta visualmente sem ampliar o raio de colisão",()=>{
 });
 test("a patrulha do foguete centraliza o eixo transversal antes de avançar pelo corredor",()=>{
  const start=html.indexOf("function followDiamondChargerPath(enemy,dt){");
- const end=html.indexOf("\\nfunction diamondChargerStun",start);
+ const end=html.indexOf("\nfunction diamondChargerStun",start);
  const move=html.slice(start,end);
  assert.ok(start>=0&&end>start);
  assert.match(move,/const horizontal=target\.y===Math\.floor\(enemy\.y\)&&target\.x!==Math\.floor\(enemy\.x\)/);
@@ -208,7 +208,7 @@ test("a patrulha do foguete centraliza o eixo transversal antes de avançar pelo
 test("a investida espera o alinhamento exato no centro da faixa e percorre uma linha livre",()=>{
  assert.match(html,/const lane=ey\+\.5;return \{x:step,y:0,axis:"x",lane,aligned:Math\.abs\(enemy\.y-lane\)<=\.012\}/);
  assert.match(html,/const lane=ex\+\.5;return \{x:0,y:step,axis:"y",lane,aligned:Math\.abs\(enemy\.x-lane\)<=\.012\}/);
- assert.match(html,/if\(!target\.aligned\)[\s\S]*?diamondChargerLineTarget/);
+ assert.match(html,/diamondChargerLineTarget\(enemy\);[\s\S]*?if\(!target\.aligned\)/);
  assert.match(html,/if\(target\.axis==="x"\)enemy\.y=target\.lane;else enemy\.x=target\.lane/);
 });
 test("o corpo do foguete recebe um brilho branco diagonal animado e recortado na silhueta",()=>{
