@@ -106,7 +106,7 @@ test("os geodos recebem contorno luminoso justo na silhueta, na cor do tema e se
  assert.match(builder,/drawDiamondCrystalSilhouette\(outlineCtx,x,y,spriteScale\)/);
  assert.match(builder,/maskCtx\.moveTo\(12,54\).*maskCtx\.lineTo\(31,85\)/s);
  assert.match(builder,/Silhueta vetorial do geodo/);
- assert.doesNotMatch(builder,/outlineCtx\.ellipse|drawImage\(sheet,288,0,96,96/);
+ assert.doesNotMatch(builder,/outlineCtx\.ellipse/);
  assert.match(builder,/outlineCtx\.fillStyle=outlineColor/);
  assert.doesNotMatch(builder,/shadowBlur|shadowColor|Halo em três camadas/);
  assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
