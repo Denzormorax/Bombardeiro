@@ -62,6 +62,8 @@ test("efeitos da sala secreta inicializam o cache compartilhado antes de trocar 
 test("desenho dos efeitos do tesouro não envia uma imagem ausente para drawImage", () => {
   const draw = game.slice(game.indexOf("function drawTreasureEffects"), game.indexOf("function drawTreasureChest"));
   assert.match(draw, /if\(!treasureVisualsReady\|\|!treasureGoldSparkCanvas\|\|!treasureBlueFlameCanvas\)/);
-  assert.match(draw, /if\(!sprite\)continue/);
-  assert.match(draw, /ctx\.drawImage\(sprite,/);
+  assert.match(draw, /if\(!treasureBlueFlameCanvas\)continue/);
+  assert.match(draw, /if\(!treasureGoldSparkCanvas\)continue/);
+  assert.match(draw, /ctx\.drawImage\(treasureGoldSparkCanvas/);
+  assert.match(draw, /ctx\.drawImage\(treasureBlueFlameCanvas/);
 });
