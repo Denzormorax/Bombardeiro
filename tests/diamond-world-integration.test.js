@@ -314,6 +314,6 @@ test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de 
  assert.match(draw,/ctx\.quadraticCurveTo\(eyeX,2,eyeX\+3,-1\)/);
  assert.match(draw,/ctx\.lineTo\(-4,11\)/);
  assert.match(draw,/const seatedY=stunned\?5:0/);
- assert.match(draw,/const bodyScaleY=stunned\?\.78:1/);
+ assert.ok(draw.includes("const bodyScaleY=stunned?.78:1"));
  assert.match(draw,/enemy\.diamondStunTimer=5/);
 });
