@@ -466,6 +466,7 @@ test("a bombinha infla, desinfla e explode visualmente ao receber o dano final",
  assert.ok(html.includes("1+.58*(deathProgress/.34)"));
  assert.ok(html.includes("1.58-.88*Math.min(1,(deathProgress-.34)/.24)"));
  assert.ok(html.includes("if(dying&&deathProgress>=.58)"));
+ assert.ok(html.includes('if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);continue}'));
  assert.ok(html.includes("const blast=ctx.createRadialGradient"));
 });
 test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em preparo/recuperação é imune",()=>{
