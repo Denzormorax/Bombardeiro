@@ -395,6 +395,12 @@ test("o foguete retoma uma rota de patrulha após levantar do atordoamento",()=>
  assert.match(html,/enemy\.diamondRecoveryPatrolTimer=Math\.max\(enemy\.diamondRecoveryPatrolTimer\|\|0,\.8\)/);
  assert.match(html,/enemy\.diamondRecoveryPatrolTimer=0/);
 });
+test("o dano da bomba do jogador derruba o diamante e inicia recuperação com retorno à patrulha",()=>{
+ assert.match(html,/else if\(enemy\.diamondState!==\"impact\"&&enemy\.diamondState!==\"stunned\"\)diamondChargerStun\(enemy\)/);
+ assert.match(html,/function diamondChargerStun\(enemy,impactX=enemy\.x,impactY=enemy\.y\)\{\s*if\(enemy\.diamondState===\"impact\"\|\|enemy\.diamondState===\"stunned\"\)return/);
+ assert.match(html,/enemy\.diamondRecoveryPatrolTimer=1\.35/);
+ assert.match(html,/if\(\(enemy\.diamondRecoveryPatrolTimer\|\|0\)>0\)\{[\s\S]*?choosePatrolPath\(enemy,danger\)[\s\S]*?followDiamondChargerPath\(enemy,dt\)/);
+});
 test("o foguete apresenta quatro barras individuais de vida",()=>{
  assert.match(html,/enemy\.hp=4;enemy\.maxHp=4/);
  assert.match(html,/const colors=\["#67e4ff","#f18adf","#9b70ed","#b8a0ff"\],barY=py-43;for\(let i=0;i<4;i\+\+\)/);

@@ -21057,6 +21057,7 @@ function followDiamondChargerPath(enemy,dt){
  return true;
 }
 function diamondChargerStun(enemy,impactX=enemy.x,impactY=enemy.y){
+ if(enemy.diamondState==="impact"||enemy.diamondState==="stunned")return;
  enemy.diamondState="impact";enemy.diamondImpactTimer=.14;enemy.diamondStunTimer=0;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;
  spawnDiamondChargerImpact(impactX,impactY);
 }
@@ -21155,7 +21156,13 @@ newLevel=function(preservePowerUps=false){
 };
 const diamondChargerDamageEnemyBase=damageEnemy;
 damageEnemy=function(enemy){
- if(enemy&&enemy.isDiamondCharger){if(!enemy.alive)return;playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||4)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.hp<=0)killEnemy(enemy);return}
+ if(enemy&&enemy.isDiamondCharger){
+  if(!enemy.alive)return;
+  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||4)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;
+  if(enemy.hp<=0)killEnemy(enemy);
+  else if(enemy.diamondState!=="impact"&&enemy.diamondState!=="stunned")diamondChargerStun(enemy);
+  return;
+ }
  return diamondChargerDamageEnemyBase(enemy);
 };
 function drawDiamondCharger(enemy){
