@@ -447,7 +447,10 @@ test("bomba cristalizada: preparo lento, escala visual sem alterar colisão, bri
  assert.ok(html.includes("CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_VISUAL_SCALE=1.24,CRYSTAL_BOMB_FUSE=2.45"));
  assert.ok(html.includes("Math.sin(gameClock*6.4)*.12"));
  assert.ok(html.includes("ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE"));
+ assert.ok(html.includes("function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake)"));
  assert.ok(html.includes("wickGlow=ctx.createRadialGradient"));
+ assert.ok(html.includes("flameY=-39"));
+ assert.ok(html.includes("drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake)"));
  assert.ok(html.includes("Faixa diagonal luminosa móvel"));
 });
 test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em preparo/recuperação é imune",()=>{
@@ -455,8 +458,12 @@ test("explosão cristalizada não causa dano aos inimigos e bomba cristalina em 
   assert.ok(html.includes('if(!enemy.isCrystalBomb||enemy.crystalBombState==="patrol")damageEnemy(enemy)'));
  assert.ok(html.includes('if(!enemy.alive||enemy.crystalBombState!=="patrol")return'));
 });
-test("bomba cristalizada continua elegível para atravessar os portais de diamante",()=>{
- assert.ok(html.includes("checkDiamondPortal(enemy,.25,false,dt)"));
+test("bomba cristalizada atravessa portais de diamante com destino aleatório e transição animada",()=>{
+ assert.ok(html.includes("function checkCrystalBombDiamondPortal(enemy,dt)"));
+ assert.ok(html.includes("findDiamondPortalDestination(enemy,inside,CRYSTAL_BOMB_RADIUS,false)"));
+ assert.ok(html.includes("enemy._diamondPortalTransit={fromX,fromY,toX,toY,elapsed:0,duration:.78}"));
+ assert.ok(html.includes("if(checkCrystalBombDiamondPortal(enemy,dt))continue"));
+ assert.ok(html.includes("if(!enemy._diamondPortalTransit)checkCrystalBombDiamondPortal(enemy,dt)"));
 });
 
 test("a explosão da bomba cristalizada só afeta blocos destrutíveis e encadeia bombas do jogador",()=>{
@@ -466,7 +473,7 @@ test("a explosão da bomba cristalizada só afeta blocos destrutíveis e encadei
  assert.match(html,/bombs\.forEach\(other=>\{if\(other!==b&&Math\.floor\(other\.x\)===c\.x&&Math\.floor\(other\.y\)===c\.y\)/);
 });
 test("a bomba cristalizada atravessa as espirais e patrulha um pouco mais devagar",()=>{
- assert.match(html,/checkDiamondPortal\(enemy,\.25,false,dt\)/);
+ assert.match(html,/checkCrystalBombDiamondPortal\(enemy,dt\)/);
  assert.match(html,/enemy\.speed=enemy\.baseSpeed\*\.86/);
  assert.match(html,/enemy\.crystalBombTimer=6\+Math\.random\(\)\*2/);
 });

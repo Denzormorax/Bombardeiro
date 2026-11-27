@@ -21321,6 +21321,22 @@ function updateCrystalBombEnemy(enemy,dt){
   if(enemy.path&&enemy.path.length)followCrystalBombPath(enemy,dt);
  }
 }
+function checkCrystalBombDiamondPortal(enemy,dt){
+ if(currentWorld!=="diamonds"||!running||!enemy||!enemy.alive||enemy._diamondPortalTransit||!diamondPortalPositions.length)return false;
+ if((enemy.diamondPortalCooldown||0)>0)enemy.diamondPortalCooldown=Math.max(0,enemy.diamondPortalCooldown-(Number(dt)||1/60));
+ let inside=null;
+ for(const portal of diamondPortalPositions)if(distance(enemy.x,enemy.y,portal.x+.5,portal.y+.5)<.52){inside=portal;break}
+ if(!inside){enemy._diamondPortalInside=null;return false}
+ if(enemy._diamondPortalInside===inside||enemy.diamondPortalCooldown>0)return false;
+ const destination=findDiamondPortalDestination(enemy,inside,CRYSTAL_BOMB_RADIUS,false);
+ if(!destination)return false;
+ const fromX=enemy.x,fromY=enemy.y,toX=destination.x+.5,toY=destination.y+.5;
+ enemy._diamondPortalTransit={fromX,fromY,toX,toY,elapsed:0,duration:.78};
+ enemy.x=toX;enemy.y=toY;enemy._diamondPortalInside=destination;enemy.diamondPortalCooldown=.85;
+ enemy.path=[];enemy.repath=0;enemy.patrolTarget=null;enemy.lastSeen=null;enemy.mode="patrol";
+ inside.flash=1;destination.flash=1;
+ return true;
+}
 const crystalBombUpdateEnemiesBase=updateEnemies;
 updateEnemies=function(dt){
  const all=enemies;
@@ -21329,9 +21345,10 @@ updateEnemies=function(dt){
  try{crystalBombUpdateEnemiesBase(dt)}finally{enemies=all}
  for(const enemy of all)if(enemy&&enemy.isCrystalBomb){
   if(enemy._diamondPortalTransit){const transit=enemy._diamondPortalTransit;transit.elapsed+=dt;if(transit.elapsed>=transit.duration)enemy._diamondPortalTransit=null;continue;}
-  if(enemy.alive&&currentWorld==="diamonds"&&running)checkDiamondPortal(enemy,.25,false,dt);
-  if(enemy._diamondPortalTransit)continue;
+  if(!enemy.alive)continue;
+  if(checkCrystalBombDiamondPortal(enemy,dt))continue;
   updateCrystalBombEnemy(enemy,dt);
+  if(!enemy._diamondPortalTransit)checkCrystalBombDiamondPortal(enemy,dt);
  }
 };
 const crystalBombNewLevelBase=newLevel;
@@ -21406,8 +21423,7 @@ function drawCrystalBombEnemy(enemy){
  // Pequeno cristal superior integrado ao corpo esférico.
  ctx.fillStyle=theme.accent;ctx.beginPath();ctx.moveTo(-4,-15);ctx.lineTo(-1,-23);ctx.lineTo(4,-15);ctx.lineTo(1,-12);ctx.closePath();ctx.fill();
  ctx.strokeStyle=theme.glow;ctx.lineWidth=.8;ctx.stroke();
- // Pavio curto e chama acesa permanentemente no topo da bomba.
- ctx.save();ctx.lineCap="round";ctx.strokeStyle="#60452f";ctx.lineWidth=2.7;ctx.beginPath();ctx.moveTo(0,-19);ctx.quadraticCurveTo(1,-24,-1,-27);ctx.stroke();ctx.strokeStyle="#f4d7a0";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-20);ctx.quadraticCurveTo(1,-24,-1,-26);ctx.stroke();const wickFlicker=1+Math.sin(gameClock*17+enemy.x)*.13;const wickGlow=ctx.createRadialGradient(-1,-30,1,-1,-30,9*wickFlicker);wickGlow.addColorStop(0,"#fffbd2");wickGlow.addColorStop(.28,"#ffe56b");wickGlow.addColorStop(.62,"#ff9b35cc");wickGlow.addColorStop(1,"#ff6a1800");ctx.fillStyle=wickGlow;ctx.beginPath();ctx.ellipse(-1,-30,5*wickFlicker,8*wickFlicker,-.16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff8cf";ctx.beginPath();ctx.ellipse(-1.5,-30,1.65,4.1,-.12,0,Math.PI*2);ctx.fill();ctx.restore();
+ // Pavio e chama são desenhados por último, acima da barra de vida.
  // Rosto sempre visível: pupilas direcionais, sobrancelhas e boquinha expressiva.
  if(hurt){
   ctx.strokeStyle=theme.near;ctx.lineWidth=2.1;ctx.lineCap="round";
@@ -21427,6 +21443,30 @@ function drawCrystalBombEnemy(enemy){
  if(hurt){ctx.globalCompositeOperation="source-atop";ctx.fillStyle="#ffffff";ctx.globalAlpha=.36;sphere();ctx.fill();ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over"}
  ctx.restore();
  if(!dying){for(let i=0;i<3;i++){ctx.fillStyle=i<enemy.hp?theme.glow:"#29243d";ctx.fillRect(px-16+i*11,py-28,8,3);ctx.strokeStyle=theme.accent;ctx.lineWidth=.55;ctx.strokeRect(px-16+i*11-.25,py-28-.25,8.5,3.5)}}
+ drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake);
+}
+function drawCrystalBombWick(enemy,px,py,alpha,bob,arming,scale,pulse,squash,shake){
+ const flicker=1+Math.sin(gameClock*18+enemy.x*2.1)*.16+Math.sin(gameClock*31+enemy.y)*.06;
+ const sway=Math.sin(gameClock*9+enemy.x)*1.25;
+ ctx.save();ctx.globalAlpha=alpha;
+ ctx.translate(px+shake,py-bob+(arming?2.5:0));
+ ctx.scale(scale*pulse*CRYSTAL_BOMB_VISUAL_SCALE,scale*squash*pulse*CRYSTAL_BOMB_VISUAL_SCALE);
+ ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#38251c";ctx.lineWidth=4.2;
+ ctx.beginPath();ctx.moveTo(0,-16);ctx.bezierCurveTo(2,-21,-2,-26,sway*.35,-32);ctx.stroke();
+ ctx.strokeStyle="#f7d9a5";ctx.lineWidth=1.35;ctx.beginPath();ctx.moveTo(.5,-18);ctx.bezierCurveTo(1.5,-22,-1,-27,sway*.35,-31);ctx.stroke();
+ const flameX=sway*.35,flameY=-39+Math.sin(gameClock*22+enemy.x)*1.1;
+ const wickGlow=ctx.createRadialGradient(flameX,flameY,1,flameX,flameY,13*flicker);
+ wickGlow.addColorStop(0,"#fffde8");wickGlow.addColorStop(.2,"#fff18a");wickGlow.addColorStop(.48,"#ffb52fdd");wickGlow.addColorStop(.76,"#ff702d66");wickGlow.addColorStop(1,"#ff541000");
+ ctx.fillStyle=wickGlow;ctx.beginPath();ctx.arc(flameX,flameY,13*flicker,0,Math.PI*2);ctx.fill();
+ ctx.shadowColor="#ffb52f";ctx.shadowBlur=10;
+ const flame=ctx.createLinearGradient(flameX,flameY-10,flameX,flameY+8);
+ flame.addColorStop(0,"#fffef0");flame.addColorStop(.3,"#fff06b");flame.addColorStop(.72,"#ff922d");flame.addColorStop(1,"#e94b20");
+ ctx.fillStyle=flame;ctx.beginPath();ctx.moveTo(flameX-4.8,flameY+6);
+ ctx.quadraticCurveTo(flameX-7,flameY-2,flameX-1.2,flameY-11*flicker);
+ ctx.quadraticCurveTo(flameX+.2,flameY-7,flameX+2.1,flameY-13*flicker);
+ ctx.quadraticCurveTo(flameX+8,flameY-3,flameX+4.4,flameY+6);ctx.closePath();ctx.fill();
+ ctx.shadowBlur=0;ctx.fillStyle="#fffef0";ctx.beginPath();ctx.ellipse(flameX-.8,flameY+1,1.65,4.3,-.12,0,Math.PI*2);ctx.fill();
+ ctx.restore();
 }
 const crystalBombDrawEnemyBase=drawEnemy;
 drawEnemy=function(enemy){
