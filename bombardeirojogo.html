@@ -17925,25 +17925,41 @@ var diamondOutlineGlowCanvas=null; // Contorno colorido justo na silhueta do geo
 var diamondShimmerFrameAtlas=null,diamondShimmerFrameTheme=-1,diamondShimmerFrameBuild=null,diamondShimmerFramePreview=null,diamondShimmerFramePreviewTheme=-1,diamondShimmerPreviewCanvas=null;
 const DIAMOND_SHIMMER_PADDING=8,DIAMOND_SHIMMER_FRAME_SIZE=TILE+DIAMOND_SHIMMER_PADDING*2;
 const DIAMOND_SHIMMER_FRAME_COUNT=64,DIAMOND_SHIMMER_FRAME_COLUMNS=8;
+function drawDiamondCrystalSilhouette(maskCtx,px,py,spriteScale){
+ maskCtx.save();
+ maskCtx.translate(px,py);
+ maskCtx.scale(spriteScale*1.1,spriteScale*1.1);
+ maskCtx.translate(-4.8,-4.8);
+ maskCtx.fillStyle="#fff";maskCtx.strokeStyle="#fff";
+ // Silhueta vetorial do geodo: somente o cristal, sem a elipse de sombra
+ // do chão e sem a sombra projetada pelo filtro do sprite.
+ maskCtx.beginPath();
+ maskCtx.moveTo(12,54);maskCtx.lineTo(17,32);maskCtx.lineTo(32,24);maskCtx.lineTo(42,12);maskCtx.lineTo(54,23);maskCtx.lineTo(70,20);maskCtx.lineTo(84,38);maskCtx.lineTo(80,66);maskCtx.lineTo(62,83);maskCtx.lineTo(31,85);maskCtx.lineTo(14,72);maskCtx.closePath();
+ maskCtx.lineWidth=2.5;maskCtx.lineJoin="bevel";maskCtx.fill();maskCtx.stroke();
+ maskCtx.beginPath();
+ maskCtx.moveTo(27,29);maskCtx.lineTo(34,8);maskCtx.lineTo(43,27);maskCtx.lineTo(39,48);maskCtx.closePath();
+ maskCtx.lineWidth=1.5;maskCtx.fill();maskCtx.stroke();
+ maskCtx.beginPath();
+ maskCtx.moveTo(56,25);maskCtx.lineTo(67,7);maskCtx.lineTo(73,31);maskCtx.lineTo(63,43);maskCtx.closePath();
+ maskCtx.lineWidth=1.5;maskCtx.fill();maskCtx.stroke();
+ maskCtx.beginPath();
+ maskCtx.moveTo(68,53);maskCtx.lineTo(88,43);maskCtx.lineTo(80,67);maskCtx.lineTo(62,73);maskCtx.closePath();
+ maskCtx.lineWidth=1.5;maskCtx.fill();maskCtx.stroke();
+ maskCtx.restore();
+}
 function buildDiamondShimmerHalo(outlineCtx,sheet,outlineColor){
  outlineCtx.setTransform(1,0,0,1,0,0);outlineCtx.globalCompositeOperation="source-over";
  outlineCtx.globalAlpha=1;outlineCtx.clearRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
- const x=DIAMOND_SHIMMER_PADDING,y=DIAMOND_SHIMMER_PADDING;
- // Contorno firme na própria silhueta, sem luz difusa atrás do geodo.
+ const x=DIAMOND_SHIMMER_PADDING,y=DIAMOND_SHIMMER_PADDING,spriteScale=TILE/96;
+ // Expande apenas a geometria do cristal. A sombra continua no sprite do mapa,
+ // mas não participa da máscara luminosa.
  for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2],[-1.4,-1.4],[1.4,-1.4],[-1.4,1.4],[1.4,1.4]]){
-  outlineCtx.drawImage(sheet,288,0,96,96,x+dx,y+dy,TILE,TILE);
+  drawDiamondCrystalSilhouette(outlineCtx,x+dx,y+dy,spriteScale);
  }
  outlineCtx.globalCompositeOperation="source-in";outlineCtx.fillStyle=outlineColor;
  outlineCtx.fillRect(0,0,DIAMOND_SHIMMER_FRAME_SIZE,DIAMOND_SHIMMER_FRAME_SIZE);
  outlineCtx.globalCompositeOperation="destination-out";
- outlineCtx.drawImage(sheet,288,0,96,96,x,y,TILE,TILE);
- // O atlas inclui uma elipse de sombra no chão (centro 49,83; raio 34,7).
- // Removemos essa área apenas da máscara do contorno, mantendo o geodo original intacto.
- outlineCtx.globalCompositeOperation="destination-out";
- const spriteScale=TILE/96;
- outlineCtx.beginPath();
- outlineCtx.ellipse(x+49.1*spriteScale,y+86.5*spriteScale,37.4*spriteScale,7.7*spriteScale,0,0,Math.PI*2);
- outlineCtx.fill();
+ drawDiamondCrystalSilhouette(outlineCtx,x,y,spriteScale);
  outlineCtx.globalCompositeOperation="source-over";
 }
 function renderDiamondShimmerAtlasFrame(state,frame){

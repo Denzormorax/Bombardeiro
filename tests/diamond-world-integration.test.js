@@ -102,8 +102,11 @@ test("os geodos recebem contorno luminoso justo na silhueta, na cor do tema e se
  assert.match(builder,/outlineColor/);
  assert.match(builder,/outlineCtx\.globalCompositeOperation="source-in"/);
  assert.match(builder,/outlineCtx\.globalCompositeOperation="destination-out"/);
- assert.match(builder,/outlineCtx\.ellipse\(x\+49\.1\*spriteScale,y\+86\.5\*spriteScale,37\.4\*spriteScale,7\.7\*spriteScale,0,0,Math\.PI\*2\)/);
- assert.match(builder,/O atlas inclui uma elipse de sombra no chão/);
+ assert.match(builder,/drawDiamondCrystalSilhouette\(outlineCtx,x\+dx,y\+dy,spriteScale\)/);
+ assert.match(builder,/drawDiamondCrystalSilhouette\(outlineCtx,x,y,spriteScale\)/);
+ assert.match(builder,/maskCtx\.moveTo\(12,54\).*maskCtx\.lineTo\(31,85\)/s);
+ assert.match(builder,/Silhueta vetorial do geodo/);
+ assert.doesNotMatch(builder,/outlineCtx\.ellipse|drawImage\(sheet,288,0,96,96/);
  assert.match(builder,/outlineCtx\.fillStyle=outlineColor/);
  assert.doesNotMatch(builder,/shadowBlur|shadowColor|Halo em três camadas/);
  assert.match(builder,/effectCtx\.drawImage\(diamondOutlineGlowCanvas,0,0\)/);
