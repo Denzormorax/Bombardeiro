@@ -305,7 +305,7 @@ test("o inimigo de diamante fica inofensivo enquanto está atordoado e mantém a
 
 test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de investida e postura sentada",()=>{
  const start=html.indexOf("function drawDiamondCharger(enemy){");
- const end=html.indexOf("\\nconst diamondChargerDrawEnemyBase=drawEnemy;",start);
+ const end=html.indexOf("const diamondChargerDrawEnemyBase=drawEnemy;",start);
  const draw=html.slice(start,end);
  assert.ok(start>=0&&end>start);
  assert.match(draw,/ctx\.moveTo\(0,-23\)/);
