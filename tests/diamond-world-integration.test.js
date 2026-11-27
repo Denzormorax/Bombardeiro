@@ -509,6 +509,15 @@ test("a explosão da bomba cristalizada só afeta blocos destrutíveis e encadei
  assert.match(html,/if\(!b\.isCrystalBomb&&enemy\.alive/);
  assert.match(html,/bombs\.forEach\(other=>\{if\(other!==b&&Math\.floor\(other\.x\)===c\.x&&Math\.floor\(other\.y\)===c\.y\)/);
 });
+test("a bombinha e o diamante pontudo concedem oito moedas ao serem derrotados",()=>{
+ assert.match(html,/enemy\.isCrystalBomb\?"crystalBomb":enemy\.isDiamondCharger\?"diamond"/);
+ assert.match(html,/type===\"diamond\"\|\|type===\"crystalBomb\"\?8/);
+ assert.match(html,/const value=coinValue\(type\);coinsOnMap\.push/);
+});
+test("a tela de jogo fica oculta durante a seleção de mundos e reaparece ao iniciar uma fase",()=>{
+ assert.match(html,/function showMenuScreen\(which\)\{\s*\$\(\"game\"\)\.style\.display=\"none\"/);
+ assert.match(html,/finishPositioning\(\);\$\(\"game\"\)\.style\.display=\"flex\";level=startLevel/);
+});
 test("inimigos que se encostam recalculam a rota para contornar uns aos outros",()=>{
  assert.match(html,/function enemyCanRerouteAfterContact\(enemy\)/);
  assert.match(html,/function rerouteEnemyAwayFromContact\(enemy,other,danger,all\)/);
