@@ -16875,7 +16875,7 @@ function explode(b){
  if(brokeBlock){rebuildStaticMapCache();}
  for(let i=treasureChests.length-1;i>=0;i--){const chest=treasureChests[i];if(!cells.some(cell=>cell.x===chest.x&&cell.y===chest.y))continue;chest.hp--;chest.hitFlash=.24;spawnTreasureEffect(chest.x+.5,chest.y+.5,"hit");if(chest.hp<=0){treasureChests.splice(i,1);spawnTreasureEffect(chest.x+.5,chest.y+.5,"burst");const reward=Math.random()<.15?"blue":"treasureRed";coinsOnMap.push({x:chest.x+.5,y:chest.y+.5,type:reward,value:coinValue(reward),phase:Math.random()*Math.PI*2,life:0})}}
  const hitEnemies=new Set();
- for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
+ for(const c of cells){flames.push({x:c.x,y:c.y,t:.48,age:0,phase:Math.random()*Math.PI*2,hitEnemies,isCrystalBomb:!!b.isCrystalBomb,crystalThemeIndex:b.crystalThemeIndex??0});if(player.inv<=0&&isInsideFlameDamage(player,c))hurtPlayer();for(const enemy of enemies)if(enemy.alive&&!enemy.burrowing&&circleRectCollision(enemy.x,enemy.y,ENEMY_RADIUS,c.x,c.y,1,1)&&!hitEnemies.has(enemy)){hitEnemies.add(enemy);if(!(enemy.isCrystalBomb&&b.isCrystalBomb))damageEnemy(enemy)}bombs.forEach(other=>{if(other!==b&&Math.floor(other.x)===c.x&&Math.floor(other.y)===c.y){if(other.freezing||other.frozen||other.extinguished){other.chainTriggered=true;other.t=0}else other.t=Math.min(other.t,.05)}})}
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if((e.isHunter||e.isBuilder)&&canSeePlayer(e)){e.mode="chase";e.alert=1.25;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.alert=0;e.lastSeen=null;e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
@@ -21214,6 +21214,207 @@ function drawDiamondCharger(enemy){
 }
 const diamondChargerDrawEnemyBase=drawEnemy;
 drawEnemy=function(enemy){if(enemy&&enemy.isDiamondCharger){drawDiamondCharger(enemy);return}return diamondChargerDrawEnemyBase(enemy)};
+
+
+/* INIMIGO BOMBA CRISTALIZADA — patrulha, fusível próprio e explosão colorida. */
+const CRYSTAL_BOMB_RADIUS=.20,CRYSTAL_BOMB_FUSE=1.28;
+const crystalBombFlameCache=Array(10).fill(null);
+function crystalBombTheme(enemy){
+ return diamondThemes[Math.max(0,Math.min(9,enemy.crystalThemeIndex|0))];
+}
+function buildCrystalBombFlameSprites(themeIndex){
+ const theme=diamondThemes[Math.max(0,Math.min(9,themeIndex|0))],frames=[];
+ const variants=[[-1.4,1.1],[0,-1.2],[1.4,0]];
+ for(const [flicker,flicker2] of variants){
+  const sprite=document.createElement("canvas"),scale=2,size=TILE;
+  sprite.width=Math.ceil(size*1.36*scale);sprite.height=Math.ceil(size*1.24*scale);
+  const c=sprite.getContext("2d"),px=0,py=0,cx=px+size/2,baseY=py+size-3;
+  c.scale(scale,scale);c.translate(size*.18,size*.12);
+  const glow=c.createRadialGradient(cx,py+size*.56,3,cx,py+size*.56,size*.78);
+  glow.addColorStop(0,theme.accent+"cc");glow.addColorStop(.3,theme.glow+"bb");glow.addColorStop(.72,theme.wall[1]+"66");glow.addColorStop(1,"#00000000");
+  c.fillStyle=glow;c.fillRect(px-size*.18,py-size*.12,size*1.36,size*1.24);
+  const outer=c.createLinearGradient(cx,py+size*.08,cx,baseY);
+  outer.addColorStop(0,theme.accent);outer.addColorStop(.42,theme.glow);outer.addColorStop(1,theme.wall[0]);
+  c.shadowColor=theme.glow;c.shadowBlur=11;c.fillStyle=outer;c.beginPath();
+  c.moveTo(px+7,baseY);c.bezierCurveTo(px+2,py+size*.67,px+13+flicker*2,py+size*.43,px+size*.27,py+size*.22);
+  c.bezierCurveTo(px+size*.22,py+size*.47,px+size*.43,py+size*.43,px+size*.48,py+size*.08+flicker*2);
+  c.bezierCurveTo(px+size*.59,py+size*.37,px+size*.78,py+size*.43,px+size*.76,py+size*.2+flicker2*2);
+  c.bezierCurveTo(px+size*.99,py+size*.53,px+size-2,py+size*.76,px+size-7,baseY);c.closePath();c.fill();
+  const middle=c.createLinearGradient(cx,py+size*.3,cx,baseY);
+  middle.addColorStop(0,theme.accent);middle.addColorStop(.55,theme.glow);middle.addColorStop(1,theme.wall[1]);
+  c.shadowBlur=7;c.fillStyle=middle;c.beginPath();c.moveTo(px+10,baseY);
+  c.quadraticCurveTo(px+size*.12,py+size*.58,px+size*.3,py+size*.42+flicker*2);
+  c.quadraticCurveTo(px+size*.38,py+size*.73,px+size*.42,baseY);c.closePath();c.fill();
+  c.beginPath();c.moveTo(px+size*.57,baseY);c.quadraticCurveTo(px+size*.7,py+size*.62,px+size*.78,py+size*.39+flicker2*2);
+  c.quadraticCurveTo(px+size*.9,py+size*.72,px+size-10,baseY);c.closePath();c.fill();
+  c.shadowBlur=3;c.fillStyle="#ffffff";c.globalAlpha=.78;c.beginPath();c.moveTo(px+size*.39,baseY);
+  c.quadraticCurveTo(px+size*.4,py+size*.62,cx+flicker2*2,py+size*.48);
+  c.quadraticCurveTo(px+size*.62,py+size*.68,px+size*.61,baseY);c.closePath();c.fill();c.globalAlpha=1;
+  frames.push(sprite);
+ }
+ return frames;
+}
+function drawCrystalBombFlame(flame){
+ const themeIndex=Math.max(0,Math.min(9,flame.crystalThemeIndex|0));
+ let frames=crystalBombFlameCache[themeIndex];
+ if(!frames)crystalBombFlameCache[themeIndex]=frames=buildCrystalBombFlameSprites(themeIndex);
+ const px=ox+flame.x*TILE,py=oy+flame.y*TILE,age=flame.age||0,phase=flame.phase||0;
+ const frame=Math.floor(age*17+phase*1.7)%frames.length,fade=Math.min(1,flame.t*2.4),pulse=1+Math.sin(age*19+phase)*.025;
+ ctx.save();ctx.globalAlpha=fade;ctx.drawImage(frames[frame],px-TILE*.18,py-TILE*.12,TILE*1.36*pulse,TILE*1.24*pulse);ctx.restore();
+}
+const crystalBombDrawFlameBase=drawFlame;
+drawFlame=function(flame){
+ if(flame&&flame.isCrystalBomb){drawCrystalBombFlame(flame);return}
+ return crystalBombDrawFlameBase(flame);
+};
+function followCrystalBombPath(enemy,dt){
+ if(!enemy.path||!enemy.path.length)return false;
+ const target=enemy.path[0],tx=target.x+.5,ty=target.y+.5,step=Math.max(0,enemy.speed*dt);
+ const horizontal=target.y===Math.floor(enemy.y)&&target.x!==Math.floor(enemy.x);
+ let nx=enemy.x,ny=enemy.y;
+ if(horizontal){
+  const offset=ty-enemy.y;
+  if(Math.abs(offset)>.0005)ny=Math.abs(offset)<=step?ty:enemy.y+Math.sign(offset)*step;
+  else{const along=tx-enemy.x;nx=Math.abs(along)<=step?tx:enemy.x+Math.sign(along)*step}
+ }else{
+  const offset=tx-enemy.x;
+  if(Math.abs(offset)>.0005)nx=Math.abs(offset)<=step?tx:enemy.x+Math.sign(offset)*step;
+  else{const along=ty-enemy.y;ny=Math.abs(along)<=step?ty:enemy.y+Math.sign(along)*step}
+ }
+ const oldX=enemy.x,oldY=enemy.y;
+ if(canOccupy(nx,ny,CRYSTAL_BOMB_RADIUS,"enemy",null)){enemy.x=nx;enemy.y=ny}
+ else{enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.2;return false}
+ if(Math.abs(enemy.x-oldX)>.0001){enemy.facingX=Math.sign(enemy.x-oldX);enemy.facingY=0}
+ if(Math.abs(enemy.y-oldY)>.0001){enemy.facingX=0;enemy.facingY=Math.sign(enemy.y-oldY)}
+ if(Math.abs(enemy.x-tx)<.0005&&Math.abs(enemy.y-ty)<.0005){enemy.x=tx;enemy.y=ty;enemy.path.shift()}
+ return true;
+}
+function updateCrystalBombEnemy(enemy,dt){
+ if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);return}
+ enemy.hitFlash=Math.max(0,(enemy.hitFlash||0)-dt);
+ enemy.hurtTimer=Math.max(0,(enemy.hurtTimer||0)-dt);
+ if(enemy.crystalBombState==="arming"){
+  enemy.crystalBombFuse=Math.max(0,(enemy.crystalBombFuse||0)-dt);
+  if(enemy.crystalBombFuse<=0){
+   enemy.crystalBombState="recover";enemy.crystalBombRecover=.52;
+   enemy.crystalBombTimer=5+Math.random()*2;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;
+   const bomb={x:Math.floor(enemy.x),y:Math.floor(enemy.y),range:2,activeSlotReleased:true,isCrystalBomb:true,crystalThemeIndex:enemy.crystalThemeIndex};
+   explode(bomb);
+  }
+  return;
+ }
+ if(enemy.crystalBombState==="recover"){
+  enemy.crystalBombRecover=Math.max(0,(enemy.crystalBombRecover||0)-dt);
+  if(enemy.crystalBombRecover<=0){enemy.crystalBombState="patrol";enemy.speed=enemy.baseSpeed;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.12}
+  return;
+ }
+ enemy.crystalBombTimer-=dt;
+ if(enemy.crystalBombTimer<=0){
+  enemy.crystalBombState="arming";enemy.crystalBombFuse=CRYSTAL_BOMB_FUSE;
+  enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;return;
+ }
+ enemy.speed=enemy.baseSpeed;
+ if(enemy.path&&enemy.path.length){followCrystalBombPath(enemy,dt);return}
+ enemy.patrolWait=(enemy.patrolWait||0)-dt;
+ if(enemy.patrolWait<=0){
+  choosePatrolPath(enemy,getAllBombDangerCells());
+  if(enemy.path&&enemy.path.length)followCrystalBombPath(enemy,dt);
+ }
+}
+const crystalBombUpdateEnemiesBase=updateEnemies;
+updateEnemies=function(dt){
+ const all=enemies;
+ if(!all.some(enemy=>enemy&&enemy.isCrystalBomb)){crystalBombUpdateEnemiesBase(dt);return}
+ enemies=all.filter(enemy=>!enemy.isCrystalBomb);
+ try{crystalBombUpdateEnemiesBase(dt)}finally{enemies=all}
+ for(const enemy of all)if(enemy&&enemy.isCrystalBomb)updateCrystalBombEnemy(enemy,dt);
+};
+const crystalBombNewLevelBase=newLevel;
+newLevel=function(preservePowerUps=false){
+ crystalBombNewLevelBase(preservePowerUps);
+ if(currentWorld!=="diamonds"||level<5||level>9)return;
+ const candidates=enemies.filter(enemy=>enemy&&enemy.alive&&!enemy.isDiamondCharger&&!enemy.isSnowman&&!enemy.isBuilder&&!enemy.isMushroom&&!enemy.isHorned);
+ shuffleArray(candidates);
+ const amount=Math.min(1+Math.floor(Math.random()*2),candidates.length);
+ for(let i=0;i<amount;i++){
+  const enemy=candidates[i];
+  enemy.isCrystalBomb=true;enemy.isHunter=false;enemy.isHorned=false;enemy.isBuilder=false;
+  enemy.hp=3;enemy.maxHp=3;enemy.crystalThemeIndex=Math.max(0,Math.min(9,level-1));
+  enemy.crystalBombState="patrol";enemy.crystalBombTimer=5+Math.random()*2;enemy.crystalBombFuse=0;enemy.crystalBombRecover=0;
+  enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.12+Math.random()*.25;enemy.speed=enemy.baseSpeed;
+ }
+};
+const crystalBombDamageEnemyBase=damageEnemy;
+damageEnemy=function(enemy){
+ if(enemy&&enemy.isCrystalBomb){
+  if(!enemy.alive)return;
+  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||3)-1);
+  enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.28;
+  if(enemy.hp<=0)killEnemy(enemy);
+  return;
+ }
+ return crystalBombDamageEnemyBase(enemy);
+};
+function drawCrystalBombEnemy(enemy){
+ const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,theme=crystalBombTheme(enemy);
+ const dying=!enemy.alive,deathProgress=dying?1-Math.max(0,enemy.deathTimer||0)/ENEMY_DEATH_TIME:0;
+ const alpha=dying?Math.max(0,1-deathProgress*.82):1;
+ const arming=enemy.crystalBombState==="arming",recover=enemy.crystalBombState==="recover",hurt=(enemy.hurtTimer||0)>0;
+ const pulse=arming?1+Math.sin(gameClock*12)*.105:1+Math.sin(gameClock*4.2+enemy.x)*.045;
+ const squash=arming?.88+Math.sin(gameClock*12+Math.PI/2)*.055:recover?1-Math.max(0,enemy.crystalBombRecover||0)*.12:1;
+ const bob=arming?4:Math.sin(gameClock*4+enemy.y)*1.7;
+ const shake=hurt?Math.sin(gameClock*75)*1.5:0;
+ const scale=dying?Math.max(.22,1-deathProgress*.55):1;
+ ctx.save();ctx.globalAlpha=.3*alpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,py+15,17*scale,6*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px+shake,py-bob+(arming?4:0));ctx.scale(scale*pulse,scale*squash*pulse);
+ const sphere=()=>{ctx.beginPath();ctx.moveTo(0,-18);ctx.bezierCurveTo(10,-19,18,-10,18,0);ctx.bezierCurveTo(18,11,9,18,0,18);ctx.bezierCurveTo(-11,18,-18,10,-18,0);ctx.bezierCurveTo(-18,-10,-10,-19,0,-18);ctx.closePath()};
+ ctx.save();sphere();ctx.clip();
+ const glass=ctx.createRadialGradient(-7,-9,1,2,2,25);
+ glass.addColorStop(0,theme.accent);glass.addColorStop(.24,theme.glow);glass.addColorStop(.58,theme.wall[0]);glass.addColorStop(1,theme.near);
+ ctx.fillStyle=glass;sphere();ctx.fill();
+ ctx.globalCompositeOperation="source-atop";
+ const facets=[
+  [theme.accent,[[0,-18],[-7,-8],[0,1],[8,-8]]],
+  [theme.wall[1],[[-18,0],[-8,-8],[0,1],[-10,10]]],
+  [theme.glow,[[0,-18],[8,-8],[18,0],[5,5],[0,1]]],
+  [theme.wall[0],[[-10,10],[0,1],[5,5],[8,16],[-5,18]]],
+  [theme.accent,[[8,-8],[18,0],[8,12],[5,5]]],
+  [theme.near,[[-18,0],[-10,10],[-5,18],[-15,9]]]
+ ];
+ for(const facet of facets){ctx.fillStyle=facet[0];ctx.beginPath();facet[1].forEach((point,index)=>index?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]));ctx.closePath();ctx.globalAlpha=alpha*(facet[0]===theme.accent?.42:.52);ctx.fill()}
+ ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over";
+ const shine=ctx.createLinearGradient(-15,-8,13,12);shine.addColorStop(0,"#ffffff00");shine.addColorStop(.46,"#ffffff10");shine.addColorStop(.52,"#ffffffb8");shine.addColorStop(.61,"#ffffff08");shine.addColorStop(1,"#ffffff00");
+ ctx.fillStyle=shine;sphere();ctx.fill();
+ ctx.restore();
+ ctx.strokeStyle=theme.accent;ctx.lineWidth=1.65;ctx.lineJoin="round";sphere();ctx.stroke();
+ // Pequeno cristal superior integrado ao corpo esférico.
+ ctx.fillStyle=theme.accent;ctx.beginPath();ctx.moveTo(-4,-15);ctx.lineTo(-1,-23);ctx.lineTo(4,-15);ctx.lineTo(1,-12);ctx.closePath();ctx.fill();
+ ctx.strokeStyle=theme.glow;ctx.lineWidth=.8;ctx.stroke();
+ // Rosto sempre visível: pupilas direcionais, sobrancelhas e boquinha expressiva.
+ if(hurt){
+  ctx.strokeStyle=theme.near;ctx.lineWidth=2.1;ctx.lineCap="round";
+  for(const eyeX of [-6,6]){ctx.beginPath();ctx.moveTo(eyeX-2.2,-4);ctx.lineTo(eyeX+2.2,0);ctx.moveTo(eyeX+2.2,-4);ctx.lineTo(eyeX-2.2,0);ctx.stroke()}
+  ctx.beginPath();ctx.moveTo(-4,9);ctx.quadraticCurveTo(0,5,4,9);ctx.stroke();
+ }else if(arming){
+  ctx.strokeStyle=theme.near;ctx.lineWidth=2.1;ctx.lineCap="round";
+  for(const eyeX of [-6,6]){ctx.beginPath();ctx.moveTo(eyeX-3,-2);ctx.quadraticCurveTo(eyeX,1,eyeX+3,-2);ctx.stroke()}
+  ctx.fillStyle=theme.near;ctx.beginPath();ctx.ellipse(0,8,3.4,4.2,0,0,Math.PI*2);ctx.fill();
+ }else{
+  const shiftX=(enemy.facingX||0)*1.5,shiftY=(enemy.facingY||0)*1.5;
+  ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-6+shiftX,-2+shiftY,3.3,4.2,0,0,Math.PI*2);ctx.ellipse(6+shiftX,-2+shiftY,3.3,4.2,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=theme.near;ctx.beginPath();ctx.arc(-6+shiftX+(enemy.facingX||0),-2+shiftY+(enemy.facingY||0),1.8,0,Math.PI*2);ctx.arc(6+shiftX+(enemy.facingX||0),-2+shiftY+(enemy.facingY||0),1.8,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=theme.near;ctx.lineWidth=1.5;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-9,-7);ctx.lineTo(-5,-5.5);ctx.moveTo(9,-7);ctx.lineTo(5,-5.5);ctx.stroke();
+  ctx.strokeStyle=theme.near;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(-4,8);ctx.quadraticCurveTo(0,11,4,8);ctx.stroke();
+ }
+ if(hurt){ctx.globalCompositeOperation="source-atop";ctx.fillStyle="#ffffff";ctx.globalAlpha=.36;sphere();ctx.fill();ctx.globalAlpha=alpha;ctx.globalCompositeOperation="source-over"}
+ ctx.restore();
+ if(!dying){for(let i=0;i<3;i++){ctx.fillStyle=i<enemy.hp?theme.glow:"#29243d";ctx.fillRect(px-16+i*11,py-28,8,3);ctx.strokeStyle=theme.accent;ctx.lineWidth=.55;ctx.strokeRect(px-16+i*11-.25,py-28-.25,8.5,3.5)}}
+}
+const crystalBombDrawEnemyBase=drawEnemy;
+drawEnemy=function(enemy){
+ if(enemy&&enemy.isCrystalBomb){drawCrystalBombEnemy(enemy);return}
+ return crystalBombDrawEnemyBase(enemy);
+};
 
 })();
 </script>
