@@ -32,8 +32,8 @@ test("portal de retorno e baú verde aparecem quando os dois inimigos forem derr
 
 test("baú secreto mantém quatro explosões e usa visual verde sem contorno dourado", () => {
   assert.match(game, /function drawSecretGreenChest\(chest\)/);
-  assert.match(game, /secretRoom\.visuals\.body/);
-  assert.match(game, /secretRoom\.visuals\.lid/);
+  assert.match(game, /secretRoom\.visuals=\{body,lid,aura,spark,flame,portalAura,portalCore,reward\}/);
+  assert.match(game, /function drawSecretGreenChest\(chest\)/);
   assert.match(game, /chest\.hp--;chest\.hitFlash=\.24/);
   assert.match(game, /if\(chest\.hp<=0\)\{treasureChests\.splice\(i,1\)/);
 });
