@@ -284,7 +284,7 @@ test("o foguete de diamante investe alinhado em até cinco blocos com linha livr
  assert.ok(html.includes("Math.abs(dx)<=5")&&html.includes("Math.abs(dy)<=5"));
  assert.ok(html.includes("tileAt(x,ey)!==0")&&html.includes("tileAt(ex,y)!==0"));
  assert.ok(html.includes("DIAMOND_CHARGER_SPEED=8.6"));
- assert.ok(html.includes('enemy.diamondStunTimer=5'));
+ assert.ok(html.includes('enemy.diamondStunTimer=4'));
  assert.ok(html.includes('enemy.diamondState==="stunned"'));
 });
 test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores fixas",()=>{
@@ -315,5 +315,21 @@ test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de 
  assert.match(draw,/ctx\.lineTo\(-4,11\)/);
  assert.match(draw,/const seatedY=stunned\?5:0/);
  assert.ok(draw.includes("bodyScaleY=stunned?.78:1"));
- assert.ok(html.includes("enemy.diamondStunTimer=5"));
+ assert.ok(draw.includes("bodyScale=1.25"));
+ assert.ok(html.includes("enemy.diamondStunTimer=4"));
+});
+
+test("o foguete de diamante levanta e aponta antes da investida, com rastro de fragmentos cristalinos",()=>{
+ assert.match(html,/enemy\.diamondState="aim";enemy\.diamondAimTimer=\.28/);
+ assert.match(html,/enemy\.diamondState==="aim"/);
+ assert.match(html,/ctx\.rotate\(bodyAngle\)/);
+ assert.match(html,/spawnDiamondChargerTrail\(enemy\)/);
+ assert.match(html,/function drawDiamondChargerParticles\(\)/);
+ assert.match(html,/updateDiamondChargerParticles\(dt\)/);
+});
+test("o impacto do foguete solta estilhaços na cor dos diamantes e a recuperação dura quatro segundos",()=>{
+ assert.match(html,/function spawnDiamondChargerImpact\(x,y\)/);
+ assert.match(html,/diamondChargerStun\(enemy,enemy\.x\+enemy\.diamondChargeX\*\.16,enemy\.y\+enemy\.diamondChargeY\*\.16\)/);
+ assert.match(html,/enemy\.diamondStunTimer=4/);
+ assert.match(html,/DIAMOND_CHARGER_COLORS=\["#67e4ff","#f18adf","#9b70ed"/);
 });
