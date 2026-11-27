@@ -20954,7 +20954,11 @@ syncThemedBackdrop=function(){
    controls.style.setProperty("--control-pad",theme.wall[0]+"dd");
    controls.style.setProperty("--control-pad-border",theme.accent);
    controls.style.setProperty("--control-pause",theme.wall[0]+"ee");
-   controls.style.setProperty
+   controls.style.setProperty("--control-pause-border",theme.accent);
+  }
+ }
+};
+
 /* INIMIGO FOGUETE DE DIAMANTE — cores próprias, patrulha e investida em linha reta. */
 const DIAMOND_CHARGER_SPEED=8.6;
 function diamondChargerLineTarget(enemy){
@@ -21140,10 +21144,6 @@ function drawDiamondCharger(enemy){
 }
 const diamondChargerDrawEnemyBase=drawEnemy;
 drawEnemy=function(enemy){if(enemy&&enemy.isDiamondCharger){drawDiamondCharger(enemy);return}return diamondChargerDrawEnemyBase(enemy)};
-("--control-pause-border",theme.accent);
-  }
- }
-};
 
 })();
 </script>
