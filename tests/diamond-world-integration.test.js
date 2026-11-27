@@ -389,6 +389,12 @@ test("o impacto do foguete tem tremor rápido antes de sentar e retomar a patrul
  assert.match(html,/enemy\.diamondState="stunned";enemy\.diamondStunTimer=3\.5/);
  assert.match(html,/impacting\?Math\.sin\(gameClock\*105\)\*2\.4/);
 });
+test("o foguete retoma uma rota de patrulha após levantar do atordoamento",()=>{
+ assert.match(html,/enemy\.diamondState="patrol";enemy\.diamondStunTimer=0;enemy\.path=\[\];enemy\.patrolTarget=null;enemy\.patrolWait=0;enemy\.speed=enemy\.baseSpeed;enemy\.diamondRecoveryPatrolTimer=1\.35/);
+ assert.match(html,/if\(\(enemy\.diamondRecoveryPatrolTimer\|\|0\)>0\)\{[\s\S]*?choosePatrolPath\(enemy,danger\)[\s\S]*?followDiamondChargerPath\(enemy,dt\)/);
+ assert.match(html,/enemy\.diamondRecoveryPatrolTimer=Math\.max\(enemy\.diamondRecoveryPatrolTimer\|\|0,\.8\)/);
+ assert.match(html,/enemy\.diamondRecoveryPatrolTimer=0/);
+});
 test("o foguete apresenta quatro barras individuais de vida",()=>{
  assert.match(html,/enemy\.hp=4;enemy\.maxHp=4/);
  assert.match(html,/const colors=\["#67e4ff","#f18adf","#9b70ed","#b8a0ff"\],barY=py-43;for\(let i=0;i<4;i\+\+\)/);

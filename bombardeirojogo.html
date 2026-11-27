@@ -21069,7 +21069,19 @@ function updateDiamondCharger(enemy,dt,danger){
  }
  if(enemy.diamondState==="stunned"){
   enemy.diamondStunTimer=Math.max(0,(enemy.diamondStunTimer||0)-dt);
-  if(enemy.diamondStunTimer<=0){enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.18;enemy.speed=enemy.baseSpeed}
+  if(enemy.diamondStunTimer<=0){enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=0;enemy.speed=enemy.baseSpeed;enemy.diamondRecoveryPatrolTimer=1.35}
+  return;
+ }
+ if((enemy.diamondRecoveryPatrolTimer||0)>0){
+  enemy.diamondRecoveryPatrolTimer=Math.max(0,enemy.diamondRecoveryPatrolTimer-dt);
+  enemy.diamondState="patrol";enemy.speed=enemy.baseSpeed;
+  if(enemy.path&&enemy.path.length){
+   if(!followDiamondChargerPath(enemy,dt)){enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=0}
+  }else{
+   enemy.patrolWait=Math.max(0,(enemy.patrolWait||0)-dt);
+   if(enemy.patrolWait<=0)choosePatrolPath(enemy,danger);
+   if(enemy.path&&enemy.path.length)followDiamondChargerPath(enemy,dt);
+  }
   return;
  }
  if(enemy.diamondState==="aim"){
@@ -21103,7 +21115,7 @@ function updateDiamondCharger(enemy,dt,danger){
    const delta=target.lane-(target.axis==="x"?enemy.y:enemy.x),step=Math.max(0,enemy.speed*dt),move=Math.abs(delta)<=step?delta:Math.sign(delta)*step;
    const nx=target.axis==="x"?enemy.x:enemy.x+move,ny=target.axis==="x"?enemy.y+move:enemy.y;
    if(canOccupy(nx,ny,DIAMOND_CHARGER_RADIUS,"enemy",null)){enemy.x=nx;enemy.y=ny}
-   else{enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.18}
+   else{enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=0;enemy.diamondRecoveryPatrolTimer=Math.max(enemy.diamondRecoveryPatrolTimer||0,.8)}
    return;
   }
   // A investida só começa depois de o centro do inimigo coincidir com o
@@ -21136,7 +21148,7 @@ newLevel=function(preservePowerUps=false){
  const amount=Math.min(2+Math.floor(Math.random()*2),candidates.length);
  for(let i=0;i<amount;i++){
   const enemy=candidates[i];enemy.isDiamondCharger=true;enemy.isHunter=false;enemy.isHorned=false;enemy.isBuilder=false;
-  enemy.hp=4;enemy.maxHp=4;enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.diamondImpactTimer=0;enemy.diamondAimTimer=0;enemy.diamondTrailTimer=0;
+  enemy.hp=4;enemy.maxHp=4;enemy.diamondState="patrol";enemy.diamondStunTimer=0;enemy.diamondImpactTimer=0;enemy.diamondAimTimer=0;enemy.diamondTrailTimer=0;enemy.diamondRecoveryPatrolTimer=0;
   enemy.diamondChargeX=0;enemy.diamondChargeY=0;enemy.diamondChargeHit=false;
   enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.15+Math.random()*.35;enemy.speed=enemy.baseSpeed;
  }
