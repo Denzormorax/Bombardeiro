@@ -191,6 +191,32 @@ test("o renderizador dos diamantes acessa o spritesheet por uma ponte global seg
  assert.match(html.slice(diamondStart,outerClose),/const diamondSpriteSheet=new Image\(\),diamondThemedSpriteSheets=Array\(10\)\.fill\(null\)/);
 });
 
+test("o foguete aumenta visualmente sem ampliar o raio de colisão",()=>{
+ assert.match(html,/const DIAMOND_CHARGER_RADIUS=\.17/);
+ assert.match(html,/bodyScale=1\.34/);
+});
+test("a patrulha do foguete centraliza o eixo transversal antes de avançar pelo corredor",()=>{
+ const start=html.indexOf("function followDiamondChargerPath(enemy,dt){");
+ const end=html.indexOf("\\nfunction diamondChargerStun",start);
+ const move=html.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.match(move,/const horizontal=target\.y===Math\.floor\(enemy\.y\)&&target\.x!==Math\.floor\(enemy\.x\)/);
+ assert.match(move,/const offset=ty-enemy\.y/);
+ assert.match(move,/const offset=tx-enemy\.x/);
+ assert.match(move,/enemy\.x=tx;enemy\.y=ty;enemy\.path\.shift\(\)/);
+});
+test("a investida espera o alinhamento exato no centro da faixa e percorre uma linha livre",()=>{
+ assert.match(html,/const lane=ey\+\.5;return \{x:step,y:0,axis:"x",lane,aligned:Math\.abs\(enemy\.y-lane\)<=\.012\}/);
+ assert.match(html,/const lane=ex\+\.5;return \{x:0,y:step,axis:"y",lane,aligned:Math\.abs\(enemy\.x-lane\)<=\.012\}/);
+ assert.match(html,/if\(!target\.aligned\)[\s\S]*?diamondChargerLineTarget/);
+ assert.match(html,/if\(target\.axis==="x"\)enemy\.y=target\.lane;else enemy\.x=target\.lane/);
+});
+test("o corpo do foguete recebe um brilho branco diagonal animado e recortado na silhueta",()=>{
+ assert.match(html,/const shine=\(gameClock\*\.62\)%1,shineX=-25\+shine\*50/);
+ assert.match(html,/createLinearGradient\(shineX-12,20,shineX\+12,-20\)/);
+ assert.match(html,/rgba\(255,255,255,\.82\)/);
+ assert.match(html,/shineGradient;bodyPath\(\);ctx\.fill\(\)/);
+});
 test("todos os blocos JavaScript embutidos no HTML passam pela análise de sintaxe",()=>{
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
   .map(match=>match[1]).filter(source=>source.trim());
@@ -315,7 +341,7 @@ test("o foguete de diamante usa a textura do geodo com uma ponta, expressão de 
  assert.match(draw,/ctx\.lineTo\(-4,11\)/);
  assert.match(draw,/const seatedY=stunned\?5:0/);
  assert.ok(draw.includes("bodyScaleY=stunned?.78:1"));
- assert.ok(draw.includes("bodyScale=1.25"));
+ assert.ok(draw.includes("bodyScale=1.34"));
  assert.ok(html.includes("enemy.diamondStunTimer=4"));
 });
 

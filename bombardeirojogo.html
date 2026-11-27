@@ -20963,8 +20963,14 @@ syncThemedBackdrop=function(){
 const DIAMOND_CHARGER_SPEED=8.6;
 function diamondChargerLineTarget(enemy){
  const dx=player.x-enemy.x,dy=player.y-enemy.y,ex=Math.floor(enemy.x),ey=Math.floor(enemy.y),px=Math.floor(player.x),py=Math.floor(player.y);
- if(ey===py&&ex!==px&&Math.abs(dx)<=5&&Math.abs(dx)>.42){const step=Math.sign(dx);for(let x=ex+step;x!==px;x+=step)if(tileAt(x,ey)!==0)return null;return {x:step,y:0}}
- if(ex===px&&ey!==py&&Math.abs(dy)<=5&&Math.abs(dy)>.42){const step=Math.sign(dy);for(let y=ey+step;y!==py;y+=step)if(tileAt(ex,y)!==0)return null;return {x:0,y:step}}
+ if(ey===py&&ex!==px&&Math.abs(dx)<=5&&Math.abs(dx)>.42){
+  const step=Math.sign(dx);for(let x=ex+step;x!==px;x+=step)if(tileAt(x,ey)!==0)return null;
+  const lane=ey+.5;return {x:step,y:0,axis:"x",lane,aligned:Math.abs(enemy.y-lane)<=.012};
+ }
+ if(ex===px&&ey!==py&&Math.abs(dy)<=5&&Math.abs(dy)>.42){
+  const step=Math.sign(dy);for(let y=ey+step;y!==py;y+=step)if(tileAt(ex,y)!==0)return null;
+  const lane=ex+.5;return {x:0,y:step,axis:"y",lane,aligned:Math.abs(enemy.x-lane)<=.012};
+ }
  return null;
 }
 const DIAMOND_CHARGER_RADIUS=.17;
@@ -21002,21 +21008,27 @@ function drawDiamondChargerParticles(){
 }
 function followDiamondChargerPath(enemy,dt){
  if(!enemy.path||!enemy.path.length)return false;
- const target=enemy.path[0],tx=target.x+.5,ty=target.y+.5,dx=tx-enemy.x,dy=ty-enemy.y;
- if(Math.abs(dx)<.025&&Math.abs(dy)<.025){enemy.x=tx;enemy.y=ty;enemy.path.shift();return true}
- let mx=0,my=0;
- if(Math.abs(dx)>Math.abs(dy)){
-  if(Math.abs(dy)>.006)my=Math.sign(dy)*Math.min(Math.abs(dy),enemy.speed*dt);
-  else mx=Math.sign(dx)*Math.min(Math.abs(dx),enemy.speed*dt);
+ const target=enemy.path[0],tx=target.x+.5,ty=target.y+.5,dx=tx-enemy.x,dy=ty-enemy.y,step=Math.max(0,enemy.speed*dt);
+ if(Math.abs(dx)<.0005&&Math.abs(dy)<.0005){enemy.x=tx;enemy.y=ty;enemy.path.shift();return true}
+ // A rota da BFS é ortogonal. Centraliza primeiro o eixo transversal do corredor
+ // e só depois avança no eixo da rota; não deixa resíduos laterais nas quinas.
+ const horizontal=target.y===Math.floor(enemy.y)&&target.x!==Math.floor(enemy.x);
+ let nx=enemy.x,ny=enemy.y;
+ if(horizontal){
+  const offset=ty-enemy.y;
+  if(Math.abs(offset)>.0005)ny=Math.abs(offset)<=step?ty:enemy.y+Math.sign(offset)*step;
+  else{const along=tx-enemy.x;nx=Math.abs(along)<=step?tx:enemy.x+Math.sign(along)*step}
  }else{
-  if(Math.abs(dx)>.006)mx=Math.sign(dx)*Math.min(Math.abs(dx),enemy.speed*dt);
-  else my=Math.sign(dy)*Math.min(Math.abs(dy),enemy.speed*dt);
+  const offset=tx-enemy.x;
+  if(Math.abs(offset)>.0005)nx=Math.abs(offset)<=step?tx:enemy.x+Math.sign(offset)*step;
+  else{const along=ty-enemy.y;ny=Math.abs(along)<=step?ty:enemy.y+Math.sign(along)*step}
  }
- const nx=enemy.x+mx,ny=enemy.y+my,oldX=enemy.x,oldY=enemy.y;
+ const oldX=enemy.x,oldY=enemy.y;
  if(canOccupy(nx,ny,DIAMOND_CHARGER_RADIUS,"enemy",null)){enemy.x=nx;enemy.y=ny}
  else{enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.16;return false}
  if(Math.abs(enemy.x-oldX)>.0001){enemy.facingX=Math.sign(enemy.x-oldX);enemy.facingY=0}
  if(Math.abs(enemy.y-oldY)>.0001){enemy.facingX=0;enemy.facingY=Math.sign(enemy.y-oldY)}
+ if(Math.abs(enemy.x-tx)<.0005&&Math.abs(enemy.y-ty)<.0005){enemy.x=tx;enemy.y=ty;enemy.path.shift()}
  return true;
 }
 function diamondChargerStun(enemy,impactX=enemy.x,impactY=enemy.y){
@@ -21050,6 +21062,17 @@ function updateDiamondCharger(enemy,dt,danger){
  }
  const target=diamondChargerLineTarget(enemy);
  if(target){
+  if(!target.aligned){
+   enemy.speed=enemy.baseSpeed;
+   const delta=target.lane-(target.axis==="x"?enemy.y:enemy.x),step=Math.max(0,enemy.speed*dt),move=Math.abs(delta)<=step?delta:Math.sign(delta)*step;
+   const nx=target.axis==="x"?enemy.x:enemy.x+move,ny=target.axis==="x"?enemy.y+move:enemy.y;
+   if(canOccupy(nx,ny,DIAMOND_CHARGER_RADIUS,"enemy",null)){enemy.x=nx;enemy.y=ny}
+   else{enemy.path=[];enemy.patrolTarget=null;enemy.patrolWait=.18}
+   return;
+  }
+  // A investida só começa depois de o centro do inimigo coincidir com o
+  // centro exato da faixa livre entre os blocos.
+  if(target.axis==="x")enemy.y=target.lane;else enemy.x=target.lane;
   enemy.diamondState="aim";enemy.diamondAimTimer=.28;enemy.diamondChargeX=target.x;enemy.diamondChargeY=target.y;enemy.diamondChargeHit=false;enemy.path=[];enemy.patrolTarget=null;enemy.speed=0;enemy.facingX=target.x;enemy.facingY=target.y;return;
  }
  enemy.speed=enemy.baseSpeed;
@@ -21092,7 +21115,7 @@ function drawDiamondCharger(enemy){
  const alpha=isDying?Math.max(0,1-deathProgress*.8):1,scale=isDying?Math.max(.25,1-deathProgress*.45):1;
  const stunned=enemy.diamondState==="stunned",charging=enemy.diamondState==="charge",aiming=enemy.diamondState==="aim";
  const bob=stunned?0:aiming?-4:charging?Math.sin(gameClock*32)*1.1:Math.sin(gameClock*4+enemy.x)*2.2;
- const seatedY=stunned?5:0,bodyScaleY=stunned?.78:1,bodyScale=1.25;
+ const seatedY=stunned?5:0,bodyScaleY=stunned?.78:1,bodyScale=1.34;
  const bodyAngle=(aiming||charging)?Math.atan2(enemy.diamondChargeY||0,enemy.diamondChargeX||0)+Math.PI/2:0;
  ctx.save();ctx.globalAlpha=.34*alpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,py+14,18*scale,7*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py-bob+seatedY);ctx.rotate(bodyAngle);ctx.scale(scale*bodyScale,scale*bodyScaleY*bodyScale);
@@ -21119,6 +21142,16 @@ function drawDiamondCharger(enemy){
   ["rgba(116,77,220,.72)",[[-5,-8],[2,-3],[0,9],[-10,5]]]
  ];
  for(const facet of facets){ctx.fillStyle=facet[0];ctx.beginPath();facet[1].forEach((pt,i)=>i?ctx.lineTo(pt[0],pt[1]):ctx.moveTo(pt[0],pt[1]));ctx.closePath();ctx.fill()}
+ // Faixa de luz branca diagonal que atravessa o cristal, sempre recortada
+ // pela silhueta e animada sem criar canvases nem objetos por quadro.
+ const shine=(gameClock*.62)%1,shineX=-25+shine*50;
+ const shineGradient=ctx.createLinearGradient(shineX-12,20,shineX+12,-20);
+ shineGradient.addColorStop(0,"rgba(255,255,255,0)");
+ shineGradient.addColorStop(.42,"rgba(255,255,255,.04)");
+ shineGradient.addColorStop(.5,"rgba(255,255,255,.82)");
+ shineGradient.addColorStop(.58,"rgba(255,255,255,.06)");
+ shineGradient.addColorStop(1,"rgba(255,255,255,0)");
+ ctx.fillStyle=shineGradient;bodyPath();ctx.fill();
  ctx.globalCompositeOperation="source-over";
  ctx.restore();
  ctx.strokeStyle="#332047";ctx.lineWidth=1.7;ctx.lineJoin="round";bodyPath();ctx.stroke();
