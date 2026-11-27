@@ -294,3 +294,10 @@ test("o foguete de diamante tem desenho facetado próprio, olhos zonzos e cores 
  assert.ok(html.includes("diamondChargerDrawEnemyBase=drawEnemy"));
  assert.ok(html.includes("diamondChargerDamageEnemyBase=damageEnemy"));
 });
+
+test("o inimigo de diamante fica inofensivo enquanto está atordoado e mantém as cores próprias",()=>{
+ assert.ok(html.includes('!(e.isDiamondCharger&&e.diamondState==="stunned")'));
+ assert.ok(html.includes('gem.addColorStop(0,"#64e4ff")'));
+ assert.ok(html.includes('gem.addColorStop(.68,"#f18adf")'));
+ assert.ok(html.includes('gem.addColorStop(1,"#7539bd")'));
+});
