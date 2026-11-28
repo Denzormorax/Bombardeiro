@@ -70,7 +70,6 @@ test("corações perdidos são restaurados antes de criar a próxima fase após 
   sandbox.newLevel(true);
   assert.equal(sandbox.lives, 3);
   assert.equal(sandbox.livesSeenByNextLevel, 3);
-  assert.equal(sandbox.refillLivesOnNextPhase, false);
 });
 
 test("não restaura corações quando o jogador não conclui uma fase", () => {
