@@ -22141,12 +22141,20 @@ draw=function(){
 };
 
 
-/* FASE 10 — ARENA BOSS: somente o piso e os blocos indestrutíveis. */
+/* FASE 10 — ARENA COMPLETA: piso e blocos indestrutíveis em todos os mundos. */
+function buildPhaseTenArena(){
+ map=Array.from({length:ROWS},(_,y)=>
+  Array.from({length:COLS},(_,x)=>isFixedPillar(x,y)?1:0)
+ );
+ // Preserva exatamente as células seguras usadas pela arena normal.
+ for(let y=1;y<=2;y++)for(let x=1;x<=2;x++)map[y][x]=0;
+ map[1][3]=0;map[3][1]=0;
+}
 const bossArenaNewLevelBase=newLevel;
 newLevel=function(preservePowerUps=false){
  bossArenaNewLevelBase(preservePowerUps);
  if(level!==TOTAL_LEVELS)return;
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)map[y][x]=0;
+ buildPhaseTenArena();
  bombs=[];flames=[];enemies=[];coinsOnMap=[];coinDrops={};
  dirtParticles=[];waterPuddles=[];waterParticles=[];builderBuildAnimations=[];
  destroyedBlockEffects.length=0;burningCrates.length=0;
@@ -22657,6 +22665,25 @@ function drawForestIndestructibleDecorations(){
  }
 }
 /* FIM DO MUNDO 7 — os mundos anteriores e suas regras permanecem intactos. */
+
+/* REGRAS GLOBAIS DE PROGRESSÃO — valem para todos os mundos atuais e futuros. */
+let refillLivesOnNextPhase=false;
+const phaseAdvanceCheckWinBase=checkWin;
+checkWin=function(){
+ const isCompletingPhase=!levelTransition&&exit&&exit.found&&
+  allEnemiesDefeated()&&
+  Math.floor(player.x)===exit.x&&Math.floor(player.y)===exit.y;
+ phaseAdvanceCheckWinBase();
+ if(isCompletingPhase&&levelTransition)refillLivesOnNextPhase=true;
+};
+const phaseAdvanceNewLevelBase=newLevel;
+newLevel=function(preservePowerUps=false){
+ if(refillLivesOnNextPhase){
+  lives=3;
+  refillLivesOnNextPhase=false;
+ }
+ return phaseAdvanceNewLevelBase(preservePowerUps);
+};
 
 })();
 </script>
