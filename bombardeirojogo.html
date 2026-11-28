@@ -16870,7 +16870,7 @@ function explode(b){
    const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen||other.extinguished)&&Math.floor(other.x)===x&&Math.floor(other.y)===y);
    if(frozenBomb){frozenBomb.chainTriggered=true;frozenBomb.t=0;break}
    if(treasureChests.some(chest=>chest.x===x&&chest.y===y))break;
-   if(tile===2){if(currentWorld==="diamonds")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice"||currentWorld==="swamp")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math.random()<.006){treasureSpawnedThisLevel=true;treasureSpawnedThisWorld=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0,sparkTimer:0,ambientParticles:[]});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
+   if(tile===2){if(currentWorld==="temples")spawnTempleBlockDebris(x+.5,y+.5);else if(currentWorld==="diamonds")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice"||currentWorld==="swamp")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math.random()<.006){treasureSpawnedThisLevel=true;treasureSpawnedThisWorld=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0,sparkTimer:0,ambientParticles:[]});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
   }
  }
  if(brokeBlock){rebuildStaticMapCache();}
@@ -17219,7 +17219,7 @@ function update(dt){
  }
  for(const c of coinsOnMap)c.life+=dt;
  for(const chest of treasureChests){chest.animTime+=dt;chest.hitFlash=Math.max(0,chest.hitFlash-dt)}
-  updateDirtParticles(dt);updateWaterParticles(dt);updateDestroyedBlockEffects(dt);updateTreasureEffects(dt);updateDiamondChargerParticles(dt);
+  updateDirtParticles(dt);updateWaterParticles(dt);updateDestroyedBlockEffects(dt);if(currentWorld==="temples")updateTempleBlockDebris(dt);updateTreasureEffects(dt);updateDiamondChargerParticles(dt);
   spawnExitPortal();
 }
 
@@ -18099,6 +18099,7 @@ function draw(){
  drawDesertDuneAnimation();
  drawBuilderBuildAnimations();
  drawDestroyedBlockEffects();
+ if(currentWorld==="temples"){drawTempleDestructibleBlocks();drawTempleBlockDebris()}
  drawIndestructibleShimmer();
  drawDiamondDestructibleShimmer();
  drawTreasureEffects();
@@ -21973,6 +21974,7 @@ drawForestBackground=function(target){
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="temples")return tileBeforeTemples(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index];
+ if(type===1||type===2){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.87,TILE*.35,TILE*.105,0,0,Math.PI*2);target.fill();target.restore()}
  if(sheet){
   const column=type===1?2:type===2?3:(((x*7+y*11+level)%5===0)?1:0);
   target.drawImage(sheet,column*128,0,128,128,px,py,TILE,TILE);
@@ -21989,6 +21991,39 @@ buildBurningCrateSprite=function(){
  }
  crateBeforeTemples();
 };
+const templeBlockDebrisEffects=[];
+function spawnTempleBlockDebris(x,y){
+ const t=templeThemes[templeThemeIndex()],colors=[t.wall[1],t.accent,t.wall[0],t.sky[1]],angles=[-2.35,-.78,.78,2.35],sizes=[.27,.24,.16,.15];
+ const effect={x,y,age:0,duration:.72,particles:[]};
+ for(let i=0;i<4;i++){const speed=1.75+(i%2)*.42;effect.particles.push({x,y,vx:Math.cos(angles[i])*speed,vy:Math.sin(angles[i])*speed-1.05,size:sizes[i],angle:(i%2)*.35,spin:(i%2?1:-1)*(4.5+i*.45),color:colors[i]})}
+ if(templeBlockDebrisEffects.length>=12)templeBlockDebrisEffects.shift();templeBlockDebrisEffects.push(effect);
+}
+function updateTempleBlockDebris(dt){
+ for(let i=templeBlockDebrisEffects.length-1;i>=0;i--){const e=templeBlockDebrisEffects[i];e.age+=dt;for(const p of e.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-1.35*dt);p.vy+=4.2*dt;p.angle+=p.spin*dt}if(e.age>=e.duration)templeBlockDebrisEffects.splice(i,1)}
+}
+function drawTempleBlockDebris(){
+ if(currentWorld!=="temples"||!templeBlockDebrisEffects.length)return;
+ ctx.save();
+ for(const e of templeBlockDebrisEffects){const alpha=Math.max(0,1-e.age/e.duration);for(const p of e.particles){const px=ox+p.x*TILE,py=oy+p.y*TILE,size=p.size*TILE;ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.fillRect(-size/2,-size/2,size,size);ctx.fillStyle="#ffffff";ctx.globalAlpha=alpha*.38;ctx.fillRect(-size/2,-size/2,size*.72,Math.max(1,size*.13));ctx.strokeStyle="rgba(75,58,35,.42)";ctx.lineWidth=1;ctx.strokeRect(-size/2,-size/2,size,size);ctx.restore()}}
+ ctx.restore();
+}
+function drawTempleDestructibleBlocks(){
+ if(currentWorld!=="temples"||!destructibleTilePositions.length)return;
+ const sheet=templeThemedSpriteSheets[templeThemeIndex()];if(!sheet)return;
+ for(const tile of destructibleTilePositions){
+  if(!map[tile.y]||map[tile.y][tile.x]!==2)continue;
+  const px=ox+tile.x*TILE,py=oy+tile.y*TILE,baseColumn=((tile.x*7+tile.y*11+level)%5===0)?1:0;
+  ctx.drawImage(sheet,baseColumn*128,0,128,128,px,py,TILE,TILE);
+  ctx.save();ctx.fillStyle="rgba(20,17,12,.30)";ctx.beginPath();ctx.ellipse(px+TILE*.5,py+TILE*.87,TILE*.35,TILE*.105,0,0,Math.PI*2);ctx.fill();
+  const cycle=gameClock%2,turnDuration=.64,angle=cycle<turnDuration?(cycle/turnDuration)*Math.PI*2:0;
+  const widthScale=cycle<turnDuration?Math.max(.12,Math.abs(Math.cos(angle))):1;
+  ctx.translate(px+TILE*.5,py+TILE*.5);
+  if(cycle<turnDuration&&widthScale<.34){ctx.fillStyle="rgba(112,91,59,.88)";ctx.fillRect(-TILE*.055,-TILE*.43,TILE*.11,TILE*.86)}
+  ctx.scale(widthScale,1);ctx.globalAlpha=cycle<turnDuration&&Math.cos(angle)<0?.88:1;
+  ctx.drawImage(sheet,384,0,128,128,-TILE*.5,-TILE*.5,TILE,TILE);
+  ctx.restore();
+ }
+}
 function buildTempleMap(){
  const nodes=$("templeLevelNodes");nodes.innerHTML="";
  for(let i=1;i<=TOTAL_LEVELS;i++){
