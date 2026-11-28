@@ -18109,10 +18109,10 @@ function draw(){
  drawDiamondChargerParticles();
  for(let y=0;y<ROWS;y++){
   for(const crate of burningCrates)if(crate.y===y&&currentWorld!=="desert"&&currentWorld!=="volcano")drawBurningCrate(crate);
-  if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const d of spiderDisguises)if(Math.floor(d.renderY??d.y)===y)drawSpiderDisguise(d);for(const chest of treasureChests)if(chest.y===y)drawTreasureChest(chest);for(const b of bombs)if(Math.floor(b.y)===y)drawBomb(b);for(const f of flames)if(f.y===y)drawFlame(f);
-  if(currentWorld==="volcano"){for(const e of enemyDrawRows[y])drawEnemy(e)}
-  else{for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e)}}
-  if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0))drawPlayer();
+  if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const d of spiderDisguises)if(Math.floor(d.renderY??d.y)===y)drawSpiderDisguise(d);for(const chest of treasureChests)if(chest.y===y)drawTreasureChest(chest);for(const b of bombs)if(Math.floor(b.y)===y){drawBomb(b);drawTempleForegroundGrass(b.x+.5,b.y+.5,b.animTime||0)}for(const f of flames)if(f.y===y)drawFlame(f);
+  if(currentWorld==="volcano"){for(const e of enemyDrawRows[y]){drawEnemy(e);if(!e.isBuilder&&!e.isHunter&&!e.isHorned&&!e.isMushroom&&!e.isSnowman)drawTempleForegroundGrass(e.x,e.y,e.x*17+e.y)}}
+  else{for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e);if(!e.isBuilder&&!e.isHunter&&!e.isHorned&&!e.isMushroom&&!e.isSnowman)drawTempleForegroundGrass(e.x,e.y,e.x*17+e.y)}}
+  if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0)){drawPlayer();drawTempleForegroundGrass(player.x,player.y,player.x*13+player.y)}
  }
  drawDirtParticles();drawWaterParticles();
  ctx.fillStyle="#ffffffaa";ctx.font="12px Arial";ctx.textAlign="center";ctx.fillText("BOMBER QUEST",W/2,H-5);
@@ -22203,6 +22203,34 @@ function drawTempleGrassTufts(){
   const frame=(frameBase+tuft.phase)%TEMPLE_GRASS_FRAMES;
   ctx.drawImage(frames[frame],ox+tuft.x*TILE-TEMPLE_GRASS_BLEED,oy+tuft.y*TILE-TEMPLE_GRASS_BLEED,TILE+TEMPLE_GRASS_BLEED*2,TILE+TEMPLE_GRASS_BLEED*2);
  }
+}
+function drawTempleForegroundGrass(x,y,phase=0){
+ if(currentWorld!=="temples"||!templeGrassTufts.length)return;
+ const tx=Math.floor(x),ty=Math.floor(y);
+ let tuft=null;
+ for(const item of templeGrassTufts){if(item.x===tx&&item.y===ty){tuft=item;break}}
+ if(!tuft)return;
+ const cx=ox+(tx+.5)*TILE,baseY=oy+(ty+.5)*TILE+13;
+ const sway=gameClock*3.1+(tuft.phase||phase)*.37;
+ ctx.save();
+ ctx.lineCap="round";ctx.lineJoin="round";
+ const blades=[[-12,2,-15,-5],[-7,1,-9,-9],[-2,2,-3,-7],[4,2,6,-10],[10,2,14,-6],[0,3,2,-12]];
+ for(let i=0;i<blades.length;i++){
+  const b=blades[i],wave=Math.sin(sway+i*1.31)*1.7;
+  ctx.strokeStyle=i%2===0?"#245b32":"#397c3d";
+  ctx.lineWidth=i===2||i===3?2.5:2.1;
+  ctx.beginPath();ctx.moveTo(cx+b[0],baseY+b[1]);ctx.quadraticCurveTo(cx+b[0]+wave,baseY-3,cx+b[2]+wave,baseY+b[3]);ctx.stroke();
+  ctx.strokeStyle=i%2===0?"#91b85b":"#b1cc72";ctx.lineWidth=.85;
+  ctx.beginPath();ctx.moveTo(cx+b[0]+.5,baseY+b[1]-1);ctx.quadraticCurveTo(cx+b[0]+wave,baseY-3,cx+b[2]+wave,baseY+b[3]+2);ctx.stroke();
+ }
+ // Pequenas pétalas largas na base dão volume sem formar uma camada opaca.
+ ctx.globalAlpha=.92;
+ for(let i=0;i<3;i++){
+  const px=cx+(i-1)*7+Math.sin(sway+i*2)*1.2,py=baseY-1+Math.cos(sway*.8+i)*.8;
+  ctx.fillStyle=i===1?"#6f9d43":"#4e8539";
+  ctx.beginPath();ctx.ellipse(px,py,3.1,1.55,(i-1)*.22,0,Math.PI*2);ctx.fill();
+ }
+ ctx.restore();
 }
 function drawTempleIndestructibleShadows(){
  if(currentWorld!=="temples"||!indestructibleTilePositions.length)return;
