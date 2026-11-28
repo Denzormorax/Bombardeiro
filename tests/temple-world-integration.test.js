@@ -132,7 +132,7 @@ test("inimigos comuns das fases 1 a 9 recebem armadura 3D e paleta do tema de ca
  assert.match(html,/const TEMPLE_COMMON_ENEMY_PALETTES=\[/);
  assert.equal((html.match(/light:"#[0-9a-f]{6}",body:"#[0-9a-f]{6}"/g)||[]).length,11);
  assert.match(html,/function templeCommonEnemyPalette\(\)\{return TEMPLE_COMMON_ENEMY_PALETTES\[Math\.max\(0,Math\.min\(8,\(level\|\|1\)-1\)\)\]\}/);
- assert.match(html,/function drawTempleCommonEnemyDetails\(e\)/);
+ assert.match(html,/function drawTempleCommonEnemyDetails\(e,palette=templeCommonEnemyPalette\(\)\)/);
  assert.match(html,/drawTempleCommonEnemyDetails\(e\)/);
  assert.match(html,/currentWorld==="temples"&&level>=1&&level<=9&&!e\.isSnowman&&!e\.isBuilder&&!e\.isMushroom&&!e\.isHorned&&!e\.isHunter/);
  assert.match(html,/ctx\.createRadialGradient\(-5,-8,2,0,1,19\)/);
