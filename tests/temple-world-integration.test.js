@@ -130,7 +130,7 @@ test("a grama dos Templos cria pequenas folhas frontais sobre jogador, inimigos 
 
 test("inimigos comuns das fases 1 a 9 recebem armadura 3D e paleta do tema de cada templo",()=>{
  assert.match(html,/const TEMPLE_COMMON_ENEMY_PALETTES=\[/);
- assert.equal((html.match(/light:"#[0-9a-f]{6}",body:"#[0-9a-f]{6}"/g)||[]).length,9);
+ assert.equal((html.match(/light:"#[0-9a-f]{6}",body:"#[0-9a-f]{6}"/g)||[]).length,11);
  assert.match(html,/function templeCommonEnemyPalette\(\)\{return TEMPLE_COMMON_ENEMY_PALETTES\[Math\.max\(0,Math\.min\(8,\(level\|\|1\)-1\)\)\]\}/);
  assert.match(html,/function drawTempleCommonEnemyDetails\(e\)/);
  assert.match(html,/drawTempleCommonEnemyDetails\(e\)/);

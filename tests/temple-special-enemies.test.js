@@ -33,7 +33,7 @@ test("o guardião tem paleta distinta, braços grandes animados e acabamento met
 
 test("os braços não alteram a colisão: o movimento usa o mesmo caminho centralizado por blocos",()=>{
  assert.match(html,/moveEntity\(enemy,dx\/dist\*amount,dy\/dist\*amount,ENEMY_RADIUS,"enemy"\)/);
- assert.match(html,/const tx=target\.x\+\.5,ty=target\.y\+\.5/);
+ assert.match(html,/const target=enemy\.path\[0\],tx=target\.x\+\.5,ty=target\.y\+\.5/);
  assert.match(html,/enemy\._templeBruteMoving=Math\.hypot\(movedX,movedY\)>.0005/);
  assert.match(html,/enemy\._templeBruteMoving=false/);
 });
