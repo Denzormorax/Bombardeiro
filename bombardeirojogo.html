@@ -17925,7 +17925,7 @@ function drawVolcanoCraterAnimation(){
  ctx.restore();
 }
 function drawIndestructibleShimmer(){
- if(currentWorld==="diamonds")return;
+ if(currentWorld==="temples"||currentWorld==="diamonds")return;
  if(!indestructibleTilePositions.length)return;
  // A faixa diagonal recupera o brilho difuso e assume a cor temática de cada mundo.
  const shimmerCanvas=pillarShimmerCanvases[currentWorld]||pillarShimmerCanvases.forest;
@@ -22135,7 +22135,7 @@ if(!worldOrder.includes("temples"))worldOrder.push("temples");
 
 /* Grama densa em quadrados completos: sprites animados pré-renderizados e reutilizados. */
 const templeGrassTufts=[];
-const TEMPLE_GRASS_VARIANTS=4,TEMPLE_GRASS_FRAMES=12;
+const TEMPLE_GRASS_VARIANTS=4,TEMPLE_GRASS_FRAMES=12,TEMPLE_GRASS_BLEED=16;
 const templeGrassSpriteVariants=[];
 function buildTempleGrassSpriteCache(){
  if(templeGrassSpriteVariants.length)return;
@@ -22143,31 +22143,37 @@ function buildTempleGrassSpriteCache(){
  for(let variant=0;variant<TEMPLE_GRASS_VARIANTS;variant++){
   const frames=[];
   for(let frame=0;frame<TEMPLE_GRASS_FRAMES;frame++){
-   const canvas=document.createElement("canvas");canvas.width=TILE;canvas.height=TILE;
-   const q=canvas.getContext("2d");
+   const canvas=document.createElement("canvas");canvas.width=TILE+TEMPLE_GRASS_BLEED*2;canvas.height=TILE+TEMPLE_GRASS_BLEED*2;
+   const q=canvas.getContext("2d"),B=TEMPLE_GRASS_BLEED;
    let seed=0x51f15e+variant*7919;
    const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
    const wind=Math.sin(frame/TEMPLE_GRASS_FRAMES*Math.PI*2);
-   q.fillStyle="#173f26";q.fillRect(0,0,TILE,TILE);
-   const base=q.createLinearGradient(0,0,0,TILE);
+   q.fillStyle="#173f26";q.fillRect(B,B,TILE,TILE);
+   const base=q.createLinearGradient(0,B,0,B+TILE);
    base.addColorStop(0,"#285d32");base.addColorStop(.55,"#20512d");base.addColorStop(1,"#123c25");
-   q.fillStyle=base;q.fillRect(0,0,TILE,TILE);
+   q.fillStyle=base;q.fillRect(B,B,TILE,TILE);
    for(let patch=0;patch<26;patch++){
-    const x=rand()*TILE,y=rand()*TILE;
+    const x=B+rand()*TILE,y=B+rand()*TILE;
     q.globalAlpha=.16+rand()*.18;q.fillStyle=palette[Math.floor(rand()*5)];
     q.beginPath();q.ellipse(x,y,4+rand()*8,3+rand()*5,rand()*Math.PI,0,Math.PI*2);q.fill();
    }
    q.globalAlpha=1;q.lineCap="round";q.lineJoin="round";
    for(let blade=0;blade<190;blade++){
-    const x=rand()*TILE,y=rand()*TILE,height=8+rand()*18,lean=(rand()-.5)*8;
-    const sway=wind*(1.1+height*.16)*(0.55+rand()*.7),tipX=Math.max(-3,Math.min(TILE+3,x+lean+sway)),tipY=y-height;
-    q.strokeStyle=palette[Math.floor(rand()*palette.length)];q.globalAlpha=.68+rand()*.32;q.lineWidth=.9+rand()*1.25;
-    q.beginPath();q.moveTo(x,y);q.quadraticCurveTo(x+lean*.42+sway*.35,y-height*.48,tipX,tipY);q.stroke();
-    if(blade%3===0){q.globalAlpha=.58;q.strokeStyle=rand()>.5?"#c5e6b6":"#edf3d9";q.lineWidth=.65;q.beginPath();q.moveTo(x+lean*.18,y-height*.28);q.lineTo(x+lean*.34+sway*.35,tipY+height*.2);q.stroke()}
+    const edge=blade%4;
+    const x=edge===0?B+rand()*10:edge===1?B+TILE-rand()*10:B+rand()*TILE;
+    const y=blade%5===0?B+rand()*12:B+rand()*TILE;
+    const height=12+rand()*22;
+    const lean=edge===0?-7-rand()*8:edge===1?7+rand()*8:(rand()-.5)*9;
+    const sway=wind*(1.4+height*.19)*(0.55+rand()*.7);
+    const tipX=Math.max(1,Math.min(canvas.width-1,x+lean+sway)),tipY=Math.max(1,y-height);
+    const width=.8+rand()*1.8;
+    q.fillStyle=palette[Math.floor(rand()*palette.length)];q.globalAlpha=.72+rand()*.28;
+    q.beginPath();q.moveTo(x-width*.5,y);q.quadraticCurveTo(x+lean*.5+sway*.25-width*.3,y-height*.52,tipX,tipY);q.quadraticCurveTo(x+lean*.5+sway*.25+width*.35,y-height*.48,x+width*.5,y);q.closePath();q.fill();
+    if(blade%3===0){q.globalAlpha=.62;q.strokeStyle=rand()>.5?"#c5e6b6":"#edf3d9";q.lineWidth=.7;q.beginPath();q.moveTo(x+lean*.18,y-height*.28);q.quadraticCurveTo(x+lean*.3+sway*.3,y-height*.45,tipX,tipY+height*.16);q.stroke()}
    }
    q.globalAlpha=1;
    for(let tuft=0;tuft<34;tuft++){
-    const x=rand()*TILE,y=rand()*TILE,angle=(rand()-.5)*.9;
+    const x=B+rand()*TILE,y=B+rand()*TILE,angle=(rand()-.5)*.9;
     q.fillStyle=palette[1+Math.floor(rand()*8)];q.globalAlpha=.48+rand()*.32;
     q.beginPath();q.ellipse(x,y,2+rand()*4,1.1+rand()*2.2,angle,0,Math.PI*2);q.fill();
    }
@@ -22195,7 +22201,7 @@ function drawTempleGrassTufts(){
   const frames=templeGrassSpriteVariants[tuft.variant];
   if(!frames)continue;
   const frame=(frameBase+tuft.phase)%TEMPLE_GRASS_FRAMES;
-  ctx.drawImage(frames[frame],ox+tuft.x*TILE,oy+tuft.y*TILE,TILE,TILE);
+  ctx.drawImage(frames[frame],ox+tuft.x*TILE-TEMPLE_GRASS_BLEED,oy+tuft.y*TILE-TEMPLE_GRASS_BLEED,TILE+TEMPLE_GRASS_BLEED*2,TILE+TEMPLE_GRASS_BLEED*2);
  }
 }
 function drawTempleIndestructibleShadows(){
