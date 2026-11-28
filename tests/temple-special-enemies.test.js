@@ -17,9 +17,9 @@ test("dois ou três Guardiões aparecem somente das fases 3 a 6 do Reino dos Tem
  assert.match(html,/templeBruteCount=currentWorld==="temples"&&level>=3&&level<=6\?2\+Math\.floor\(Math\.random\(\)\*2\):0/);
  assert.match(html,/createEnemySpawnPositions\(count\+builderCount\+snowmanCount\+templeBruteCount\)/);
  assert.match(html,/templeBruteSlots=new Set\(slots\.splice\(0,templeBruteCount\)\)/);
- assert.match(html,/isBrute=templeBruteSlots\.has\(index\)/);
+ assert.match(html,/templeEliteSlots=new Set\(slots\.splice\(0,templeEliteCount\)\)/);\n assert.match(html,/isTempleElite=templeEliteSlots\.has\(index\),isBrute=templeBruteSlots\.has\(index\)\|\|isTempleElite/);
  assert.match(html,/isBrute,isEnraged:false/);
- assert.match(html,/hp:isSnowman\?3:isBuilder\?3:isBrute\?4/);
+ assert.match(html,/hp:isTempleElite\?5:isSnowman\?3:isBuilder\?3:isBrute\?4/);\n assert.match(html,/templeEliteCount=currentWorld==="temples"&&level>=5&&level<=9\?2:0/);\n assert.match(html,/maxHp:isTempleElite\?5/);
 });
 
 test("o guardião tem paleta distinta, braços grandes animados e acabamento metálico",()=>{
@@ -45,7 +45,7 @@ test("o Guardião percebe o jogador a sete blocos, ergue os braços por 1,5 segu
  assert.ok(html.includes('enemy.templeBruteAttackState="idle"'));assert.ok(html.includes("directions=[{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}]"));
 });
 test("o impacto usa fumaça branca, prata e azulada que cresce e desaparece suavemente",()=>{
- for(const fragment of ["function buildTempleBruteSmokeSprite(variant){","rgba(255,255,255,.82)","rgba(220,232,243,.64)","rgba(169,196,220,.36)","function drawTempleBruteSmokeCell(cell){","const scale=.42+progress*.92","Math.pow(Math.sin(Math.PI*progress),.72)","life:.72,age:0,phase:Math.random()*Math.PI*2","drawTempleBruteSmokeCell(cell)"])assert.ok(html.includes(fragment),fragment);
+ for(const fragment of ["function buildTempleBruteSmokeSprite(variant,isTempleElite=false){","rgba(255,255,255,.82)","rgba(220,232,243,.64)","rgba(169,196,220,.36)","function drawTempleBruteSmokeCell(cell){","const scale=.42+progress*.92","Math.pow(Math.sin(Math.PI*progress),.72)","life:.72,age:0,phase:Math.random()*Math.PI*2","drawTempleBruteSmokeCell(cell)"])assert.ok(html.includes(fragment),fragment);
  assert.ok(!html.includes("buildTempleBruteFireSprite"));assert.ok(!html.includes("drawTempleBruteFireCell"));assert.ok(html.includes("remaining:7"));assert.ok(html.includes("tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)"));
 });
 test("a patrulha do Guardião recalcula rotas e caça o jogador sem pausas longas",()=>{
@@ -71,4 +71,27 @@ test("o Guardião dos Braços Fortes explode em fragmentos da própria paleta ao
  assert.ok(html.includes("function spawnTempleBruteDeathFragments(x,y)"));
  assert.ok(html.includes("p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep"));
  assert.ok(html.includes("pushTempleDebrisEffect(x,y,[p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep],30,1.02"));
+});
+
+test("dois Guardiões Elite aparecem das fases 5 a 9, têm cinco golpes de vida e preservam os demais inimigos",()=>{
+ assert.match(html,/templeEliteCount=currentWorld==="temples"&&level>=5&&level<=9\?2:0/);
+ assert.match(html,/isTempleElite,isEnraged:false,hp:isTempleElite\?5/);
+ assert.match(html,/maxHp:isTempleElite\?5/);
+ assert.match(html,/isBrute=templeBruteSlots\.has\(index\)\|\|isTempleElite/);
+ assert.match(html,/templeBruteCount=currentWorld==="temples"&&level>=3&&level<=6\?2\+Math\.floor\(Math\.random\(\)\*2\):0/);
+});
+test("Guardião Elite é maior, usa armadura dourada e mantém o comportamento de ataque do Guardião",()=>{
+ assert.match(html,/TEMPLE_ELITE_ENEMY_PALETTE=\{light:"#fff6bd",body:"#e5ad19"/);
+ assert.match(html,/e\.isTempleElite\?1\.38:1\.22/);
+ assert.match(html,/enemy\.isTempleElite\?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE/);
+ assert.match(html,/enemy\.isTempleElite\?\(level<5\|\|level>9\)/);
+});
+test("impacto do Guardião Elite cobre instantaneamente os oito quadrados ao redor com fumaça dourada brilhante",()=>{
+ assert.match(html,/for\(let dy=-1;dy<=1;dy\+\+\)for\(let dx=-1;dx<=1;dx\+\+\)if\(dx!==0\|\|dy!==0\)ring\.push/);
+ assert.match(html,/isTempleElite:true/);
+ assert.match(html,/templeBruteFireWaves\.push\(\{remaining:0,clock:0,cells\}\);return/);
+ assert.match(html,/rgba\(255,213,72,\.94\)/);
+ assert.match(html,/rgba\(255,166,0,\.76\)/);
+ assert.match(html,/ctx\.shadowColor="#ffd700";ctx\.shadowBlur=18/);
+ assert.match(html,/const templeBruteSmokeSpriteCache=\[\],templeEliteSmokeSpriteCache=\[\]/);
 });
