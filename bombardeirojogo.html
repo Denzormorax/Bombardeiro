@@ -17693,7 +17693,7 @@ const TEMPLE_COMMON_ENEMY_PALETTES=[
 function templeCommonEnemyPalette(){return TEMPLE_COMMON_ENEMY_PALETTES[Math.max(0,Math.min(8,(level||1)-1))]}
 const TEMPLE_HUNTER_ENEMY_PALETTE={light:"#f1fbff",body:"#527b8d",shadow:"#1d3545",crown:"#294b60",metal:"#d28b4b",gem:"#5de0d0",deep:"#142b39"};
 const TEMPLE_BRUTE_ENEMY_PALETTE={light:"#ead7ff",body:"#76508f",shadow:"#291b3c",crown:"#432956",metal:"#df8a43",gem:"#58d8c3",deep:"#180f25"};
-const TEMPLE_ELITE_ENEMY_PALETTE={light:"#fff6bd",body:"#e5ad19",shadow:"#704000",crown:"#bd7900",metal:"#fff0a3",gem:"#fffbe0",deep:"#4b2b00"};
+const TEMPLE_ELITE_ENEMY_PALETTE={light:"#fffbe0",body:"#f2bd22",shadow:"#c98a00",crown:"#a96d00",metal:"#fff2a6",gem:"#ffffff",deep:"#8a5900"};
 function templeHunterEnemyPalette(){return TEMPLE_HUNTER_ENEMY_PALETTE}
 function drawTempleCommonEnemyDetails(e,palette=templeCommonEnemyPalette()){
  const p=palette,phase=gameClock*2.2+(e.x||0)*.7;
