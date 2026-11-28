@@ -49,8 +49,8 @@ test("a regra de fase 10 limpa inimigos e reconstrói o cache com a arena comple
 
 test("corações perdidos são restaurados antes de criar a próxima fase após concluir o portal", () => {
   const start = game.indexOf("/* REGRAS GLOBAIS DE PROGRESSÃO — valem para todos os mundos atuais e futuros. */");
-  const end = game.indexOf("\n})();", start);
-  assert.ok(start !== -1 && end > start, "Regras globais de progressão não encontradas");
+  const end = game.indexOf("\n/* INIMIGOS ESPECIAIS — MINHOCA DA FLORESTA E FURACÃO DO DESERTO.", start);
+  assert.ok(start !== -1 && end > start, "Bloco isolado de regras globais de progressão não encontrado");
   const code = game.slice(start, end);
 
   const sandbox = {
@@ -74,7 +74,8 @@ test("corações perdidos são restaurados antes de criar a próxima fase após 
 
 test("não restaura corações quando o jogador não conclui uma fase", () => {
   const start = game.indexOf("/* REGRAS GLOBAIS DE PROGRESSÃO — valem para todos os mundos atuais e futuros. */");
-  const end = game.indexOf("\n})();", start);
+  const end = game.indexOf("\n/* INIMIGOS ESPECIAIS — MINHOCA DA FLORESTA E FURACÃO DO DESERTO.", start);
+  assert.ok(start !== -1 && end > start, "Bloco isolado de regras globais de progressão não encontrado");
   const code = game.slice(start, end);
   const sandbox = {
     levelTransition: false,
