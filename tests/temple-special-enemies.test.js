@@ -84,7 +84,7 @@ test("dois Guardiões Elite aparecem das fases 5 a 9, têm cinco golpes de vida 
  assert.match(html,/templeBruteCount=currentWorld==="temples"&&level>=3&&level<=6\?2\+Math\.floor\(Math\.random\(\)\*2\):0/);
 });
 test("Guardião Elite é maior, usa armadura dourada e mantém o comportamento de ataque do Guardião",()=>{
- assert.match(html,/TEMPLE_ELITE_ENEMY_PALETTE=\{light:"#fff6bd",body:"#e5ad19"/);
+ assert.match(html,/TEMPLE_ELITE_ENEMY_PALETTE=\{light:"#fffbe0",body:"#f2bd22"/);
  assert.match(html,/e\.isTempleElite\?1\.38:1\.22/);
  assert.match(html,/e\.isTempleElite\?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE/);
  assert.match(html,/enemy\.isTempleElite&&\(level<5\|\|level>9\)/);
