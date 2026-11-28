@@ -15972,6 +15972,7 @@ function refreshLevelGrid(){buildForestMap()}
    As imagens são carregadas e decodificadas antes de revelar o painel,
    evitando que os botões apareçam parcialmente durante a primeira pintura. */
 let worldMenuImagesPromise=null;
+let worldMenuImagesReady=false;
 function preloadWorldMenuImages(){
  if(worldMenuImagesPromise)return worldMenuImagesPromise;
  const assets=[
@@ -16000,8 +16001,12 @@ function preloadWorldMenuImages(){
  return worldMenuImagesPromise;
 }
 
-async function showMenuScreen(which){
- if(which==="worlds")await preloadWorldMenuImages();
+function showMenuScreen(which){
+ $("game").style.display="none";
+ if(which==="worlds"&&!worldMenuImagesReady){
+  preloadWorldMenuImages().then(()=>{worldMenuImagesReady=true;showMenuScreen(which)});
+  return;
+ }
  $("game").style.display="none";
  $("overlay").style.display="none";
  $("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");
