@@ -15968,7 +15968,40 @@ function selectMapLevel(i){
 }
 function refreshLevelGrid(){buildForestMap()}
 
-function showMenuScreen(which){
+/* PRÉ-CARREGAMENTO DA TELA DE MUNDOS
+   As imagens são carregadas e decodificadas antes de revelar o painel,
+   evitando que os botões apareçam parcialmente durante a primeira pintura. */
+let worldMenuImagesPromise=null;
+function preloadWorldMenuImages(){
+ if(worldMenuImagesPromise)return worldMenuImagesPromise;
+ const assets=[
+  "./game-assets/images/forest-selection-background.jpg",
+  "./botoes-mundos/cutout_1795789104053.png",
+  "./botoes-mundos/cutout_1795789134810.png",
+  "./botoes-mundos/cutout_1795789029270.png",
+  "./botoes-mundos/cutout_1795789260946.png",
+  "./botoes-mundos/cutout_1795789184975.png",
+  "./botoes-mundos/cutout_1795789063374.png"
+ ];
+ worldMenuImagesPromise=Promise.all(assets.map(src=>new Promise(resolve=>{
+  const image=new Image();
+  let settled=false;
+  const finish=()=>{
+   if(settled)return;
+   settled=true;
+   if(typeof image.decode==="function")image.decode().catch(()=>{}).then(resolve);
+   else resolve();
+  };
+  image.onload=finish;
+  image.onerror=()=>{if(!settled){settled=true;resolve()}};
+  image.src=src;
+  if(image.complete&&image.naturalWidth>0)finish();
+ })));
+ return worldMenuImagesPromise;
+}
+
+async function showMenuScreen(which){
+ if(which==="worlds")await preloadWorldMenuImages();
  $("game").style.display="none";
  $("overlay").style.display="none";
  $("worldsPanel").classList.add("hidden");$("forestPanel").classList.add("hidden");
