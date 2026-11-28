@@ -18728,11 +18728,11 @@ function specialEnemyMove(enemy,dt,speed){
   else ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
  }else if(Math.abs(dx)>.001)nx+=Math.sign(dx)*Math.min(step,Math.abs(dx));
  else if(Math.abs(dy)>.001)ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
- const tx=Math.floor(nx),ty=Math.floor(ny);
+ const tx=Math.floor(nx),ty=Math.floor(ny),movedX=Math.abs(nx-enemy.x)>.000001,movedY=Math.abs(ny-enemy.y)>.000001;
  if(specialEnemyCellOpen(tx,ty)|| (tx===Math.floor(enemy.x)&&ty===Math.floor(enemy.y))){
   enemy.x=nx;enemy.y=ny;
-  if(Math.abs(nx-enemy.x)>.000001)enemy.facingX=Math.sign(dx);
-  if(Math.abs(ny-enemy.y)>.000001)enemy.facingY=Math.sign(dy);
+  if(movedX){enemy.facingX=Math.sign(dx);enemy.facingY=0}
+  if(movedY){enemy.facingY=Math.sign(dy);enemy.facingX=0}
  }else{enemy.path=[];enemy.repath=0}
 }
 function specialEnemySpawnOne(kind){
@@ -18890,7 +18890,7 @@ function updateDesertWhirlwindBombs(dt){
    if(p>=1){
     delete b.tornadoSucked;
     const dx=player.x-(b.x+.5),dy=player.y-(b.y+.5),len=Math.hypot(dx,dy)||1;
-    b.tornadoTravel={dx:dx/len,dy:dy/len,speed:8.6};b.t=9999;
+    b.tornadoTravel={dx:dx/len,dy:dy/len,speed:8.6,source:enemy};b.t=9999;
     if(enemy){enemy.suctionBomb=null;enemy.suctionTimer=0}
    }
    continue;
