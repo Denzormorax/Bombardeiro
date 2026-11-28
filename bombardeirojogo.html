@@ -22470,6 +22470,59 @@ createForestPuddles=function(){
  waterPuddles=[];waterPuddleCells.clear();createTempleGrassTufts();
 };
 
+
+/* MUNDO 1 — blocos indestrutíveis com tufos PNG animados e duas pedras.
+   Não há estado de fogo nem interação com explosões: são decoração permanente. */
+const forestRockGrassCache=Array.from({length:10},()=>Array.from({length:TEMPLE_GRASS_VARIANTS},()=>Array(TEMPLE_GRASS_FRAMES).fill(null)));
+const forestRockPairCache=Array(10).fill(null);
+function buildForestRockDecorations(){
+ buildTempleGrassSpriteCache();
+ for(let themeIndex=0;themeIndex<forestThemes.length;themeIndex++){
+  const theme=forestThemes[themeIndex];
+  const tint=theme.accent||theme.near||"#6aa85b";
+  for(let variant=0;variant<TEMPLE_GRASS_VARIANTS;variant++)for(let frame=0;frame<TEMPLE_GRASS_FRAMES;frame++){
+   if(forestRockGrassCache[themeIndex][variant][frame])continue;
+   const source=templeGrassSpriteVariants[variant][frame],canvas=document.createElement("canvas");
+   canvas.width=source.width;canvas.height=source.height;
+   const c=canvas.getContext("2d");c.drawImage(source,0,0);
+   c.globalCompositeOperation="source-atop";
+   const shade=c.createLinearGradient(0,0,0,canvas.height);
+   shade.addColorStop(0,theme.glow||tint);shade.addColorStop(.42,tint);shade.addColorStop(1,theme.near||tint);
+   c.fillStyle=shade;c.fillRect(0,0,canvas.width,canvas.height);
+   c.globalCompositeOperation="source-over";forestRockGrassCache[themeIndex][variant][frame]=canvas;
+  }
+  if(!forestRockPairCache[themeIndex]){
+   const canvas=document.createElement("canvas");canvas.width=96;canvas.height=96;
+   const c=canvas.getContext("2d");
+   function rock(x,y,w,h,light,dark){
+    c.save();c.translate(x,y);
+    c.fillStyle="rgba(0,0,0,.28)";c.beginPath();c.ellipse(1,h*.43,w*.58,h*.22,0,0,Math.PI*2);c.fill();
+    const g=c.createLinearGradient(-w*.4,-h*.5,w*.35,h*.5);g.addColorStop(0,light);g.addColorStop(1,dark);
+    c.fillStyle=g;c.strokeStyle=dark;c.lineWidth=2;
+    c.beginPath();c.moveTo(-w*.52,h*.22);c.lineTo(-w*.43,-h*.12);c.lineTo(-w*.13,-h*.48);c.lineTo(w*.24,-h*.43);c.lineTo(w*.53,-h*.06);c.lineTo(w*.43,h*.3);c.lineTo(w*.05,h*.43);c.closePath();c.fill();c.stroke();
+    c.fillStyle="rgba(255,255,255,.24)";c.beginPath();c.moveTo(-w*.35,-h*.12);c.lineTo(-w*.1,-h*.39);c.lineTo(w*.16,-h*.34);c.lineTo(-w*.02,-h*.12);c.closePath();c.fill();
+    c.restore();
+   }
+   rock(36,51,37,29,"#c5c9b7","#58665a");rock(63,54,32,25,"#aeb9a7","#46594b");
+   forestRockPairCache[themeIndex]=canvas;
+  }
+ }
+}
+const drawTileToBeforeForestRock=drawTileTo;
+drawTileTo=function(target,x,y,type,offsetY=0){
+ drawTileToBeforeForestRock(target,x,y,type,offsetY);
+ if(currentWorld!=="forest"||type!==1||!forestSpriteSheet.complete||!forestSpriteSheet.naturalWidth)return;
+ buildForestRockDecorations();
+ const themeIndex=Math.max(0,Math.min(forestThemes.length-1,level-1));
+ const variant=(x*13+y*7+level)%TEMPLE_GRASS_VARIANTS;
+ const frame=(Math.floor(gameClock*12)+(x*3+y*5))%TEMPLE_GRASS_FRAMES;
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY;
+ const grass=forestRockGrassCache[themeIndex][variant][frame];
+ if(grass)target.drawImage(grass,px-TEMPLE_GRASS_BLEED,py-TEMPLE_GRASS_BLEED,TILE+TEMPLE_GRASS_BLEED*2,TILE+TEMPLE_GRASS_BLEED*2);
+ const rocks=forestRockPairCache[themeIndex];
+ if(rocks)target.drawImage(rocks,px,py,TILE,TILE);
+};
+
 /* FIM DO MUNDO 7 — os mundos anteriores e suas regras permanecem intactos. */
 
 })();
