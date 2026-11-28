@@ -98,6 +98,20 @@ test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas
  assert.match(html,/createPuddlesBeforeTempleGrass/);
 });
 
+test("gramados das nove fases do Reino dos Templos pegam fogo com muitos focos e ficam carbonizados",()=>{
+ assert.match(html,/const TEMPLE_GRASS_FIRE_DURATION=6\.7,TEMPLE_GRASS_FIRE_POINTS=28/);
+ assert.match(html,/function igniteTempleGrass\(cells\)/);
+ assert.match(html,/for\(let i=0;i<TEMPLE_GRASS_FIRE_POINTS;i\+\+\)points\.push/);
+ assert.match(html,/if\(currentWorld==="temples"&&level>=1&&level<=9\)igniteTempleGrass\(cells\)/);
+ assert.match(html,/function updateTempleGrassFire\(dt\)/);
+ assert.match(html,/tuft\.charAlpha=Math\.min\(\.94,Math\.max\(0,/);
+ assert.match(html,/if\(tuft\.fireAge>=TEMPLE_GRASS_FIRE_DURATION\)\{tuft\.burning=false;tuft\.burnt=true;tuft\.charAlpha=\.94/);
+ assert.match(html,/function drawTempleGrassFire\(tuft,px,py\)/);
+ assert.match(html,/fade=Math\.max\(0,1-Math\.max\(0,tuft\.fireAge-5\.25\)\/1\.45\)/);
+ assert.match(html,/drawTempleGrassFire\(tuft,px,py\)/);
+ assert.match(html,/if\(currentWorld==="temples"\)updateTempleGrassFire\(dt\)/);
+ assert.match(html,/if\(currentWorld!=="temples"\|\|level<1\|\|level>9\|\|!map\|\|!map\.length\)return/);
+});
 test("as sombras dos dois tipos de bloco ficam junto aos pés, sem acompanhar a flutuação",()=>{
  assert.match(html,/ellipse\(px\+TILE\*\.5,py\+TILE\*\.955,TILE\*\.43,TILE\*\.075/);
  assert.match(html,/ctx\.drawImage\(shadow,px,py\+TILE\*\.12,TILE,TILE\)/);
