@@ -17,9 +17,12 @@ test("dois ou três Guardiões aparecem somente das fases 3 a 6 do Reino dos Tem
  assert.match(html,/templeBruteCount=currentWorld==="temples"&&level>=3&&level<=6\?2\+Math\.floor\(Math\.random\(\)\*2\):0/);
  assert.match(html,/createEnemySpawnPositions\(count\+builderCount\+snowmanCount\+templeBruteCount\)/);
  assert.match(html,/templeBruteSlots=new Set\(slots\.splice\(0,templeBruteCount\)\)/);
- assert.match(html,/templeEliteSlots=new Set\(slots\.splice\(0,templeEliteCount\)\)/);\n assert.match(html,/isTempleElite=templeEliteSlots\.has\(index\),isBrute=templeBruteSlots\.has\(index\)\|\|isTempleElite/);
+ assert.match(html,/templeEliteSlots=new Set\(slots\.splice\(0,templeEliteCount\)\)/);
+ assert.match(html,/isTempleElite=templeEliteSlots\.has\(index\),isBrute=templeBruteSlots\.has\(index\)\|\|isTempleElite/);
  assert.match(html,/isBrute,isEnraged:false/);
- assert.match(html,/hp:isTempleElite\?5:isSnowman\?3:isBuilder\?3:isBrute\?4/);\n assert.match(html,/templeEliteCount=currentWorld==="temples"&&level>=5&&level<=9\?2:0/);\n assert.match(html,/maxHp:isTempleElite\?5/);
+ assert.match(html,/hp:isTempleElite\?5:isSnowman\?3:isBuilder\?3:isBrute\?4/);
+ assert.match(html,/templeEliteCount=currentWorld==="temples"&&level>=5&&level<=9\?2:0/);
+ assert.match(html,/maxHp:isTempleElite\?5/);
 });
 
 test("o guardião tem paleta distinta, braços grandes animados e acabamento metálico",()=>{
