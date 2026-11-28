@@ -61,7 +61,7 @@ test("o fogo do Guardião usa o mesmo desenho e tamanho da chama da bomba, mudan
  assert.ok(brute.includes('"#829db8"'));
  assert.ok(!brute.includes("for(let i=0;i<4;i++)"));
  const draw=html.slice(html.indexOf("function drawTempleBruteFireCell(cell){"),html.indexOf("function updateEnemies(dt){"));
- assert.ok(draw.includes("const w=TILE*1.36*pulse,h=TILE*1.24*pulse"));
+ assert.ok(draw.includes("w=TILE*1.36*pulse,h=TILE*1.24*pulse"));
  assert.ok(html.includes("remaining:7"));
  assert.ok(html.includes("directions=[{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}]"));
  assert.ok(html.includes("tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)"));
