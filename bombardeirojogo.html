@@ -21911,6 +21911,163 @@ const bossLevelNodeObserver=new MutationObserver(records=>{
 });
 bossLevelNodeObserver.observe(document.body,{childList:true,subtree:true});
 
+
+/* MUNDO 7 — REINO DOS TEMPLOS: integração temática independente. */
+const templeWorldProgressKey="bomberquest-temples-unlocked";
+const templeThemes=[
+ {name:"Carrara Imperial",sky:["#fffdf8","#d8d5ce","#9e9a91"],floor:"rgba(239,237,231,.96)",floor2:"rgba(255,255,255,.28)",wall:["#d8d5ce","#fffefa","#9e9a91"],far:"#c5c0b6",near:"#918a7e",glow:"#fff2cf",accent:"#c6a86d",style:"carrara"},
+ {name:"Calacatta Aurum",sky:["#fff8e9","#e8d6b4","#a58a5c"],floor:"rgba(244,235,216,.96)",floor2:"rgba(255,235,190,.28)",wall:["#e6d7bb","#fffaf0","#a58a5c"],far:"#c9b58f",near:"#92764d",glow:"#ffe6a8",accent:"#c49a51",style:"calacatta"},
+ {name:"Statuario Ice",sky:["#f7fcff","#d4e2eb","#8196a7"],floor:"rgba(229,238,244,.96)",floor2:"rgba(255,255,255,.3)",wall:["#d4e1e9","#ffffff","#8196a7"],far:"#b5c7d2",near:"#71899a",glow:"#e5f8ff",accent:"#9eb8c7",style:"statuario"},
+ {name:"Rosa Aurora",sky:["#fff8fa","#efdce2","#aa8490"],floor:"rgba(245,231,235,.96)",floor2:"rgba(255,255,255,.28)",wall:["#ead7dc","#fffafa","#aa8490"],far:"#d4b7c0",near:"#96717f",glow:"#ffe5ef",accent:"#d4a9b7",style:"rosa"},
+ {name:"Jade Alabastro",sky:["#f7fff9","#d8e9df","#829e8c"],floor:"rgba(231,241,234,.96)",floor2:"rgba(255,255,255,.28)",wall:["#d6e8dc","#fbfffc","#829e8c"],far:"#b5d0c0",near:"#708d7c",glow:"#e5fff0",accent:"#9bbba7",style:"jade"},
+ {name:"Azul Celeste",sky:["#f5fcff","#d3e7ef","#7c9eae"],floor:"rgba(225,239,245,.96)",floor2:"rgba(255,255,255,.3)",wall:["#d2e5ed","#fbfeff","#7c9eae"],far:"#afcbd8",near:"#698b9d",glow:"#e2f8ff",accent:"#94bdcf",style:"azul"},
+ {name:"Ametista Névoa",sky:["#fffaff","#e5dced","#9a87ae"],floor:"rgba(238,230,244,.96)",floor2:"rgba(255,255,255,.3)",wall:["#e5d9ee","#fefcff","#9a87ae"],far:"#c9b8d8",near:"#88739d",glow:"#f7eaff",accent:"#b8a0ce",style:"ametista"},
+ {name:"Marfim Real",sky:["#fffef7","#e9e2cd","#9e9274"],floor:"rgba(241,237,222,.97)",floor2:"rgba(255,255,255,.3)",wall:["#e8e1ce","#fffef9","#9e9274"],far:"#d1c7aa",near:"#8d8061",glow:"#fff4d2",accent:"#c2ad79",style:"marfim"},
+ {name:"Champagne Nobre",sky:["#fffaf0","#e9dcc3","#a18a63"],floor:"rgba(244,236,220,.97)",floor2:"rgba(255,255,255,.3)",wall:["#e9ddc8","#fffefa","#a18a63"],far:"#d4c19e",near:"#8e7853",glow:"#ffedc6",accent:"#c7a66c",style:"champagne"},
+ {name:"Opala Boreal",sky:["#f8fffd","#d7e8e2","#809b94"],floor:"rgba(232,241,237,.97)",floor2:"rgba(255,255,255,.3)",wall:["#d8e8e2","#ffffff","#809b94"],far:"#b8d0c8",near:"#718b83",glow:"#e6fff7",accent:"#a0c3b7",style:"opala"}
+];
+const templeSpriteImage=new Image(),templeThemedSpriteSheets=Array(10).fill(null);
+function templeThemeIndex(){return Math.max(0,Math.min(9,(Number(level)||1)-1))}
+function buildTempleSpriteSheets(){
+ if(!templeSpriteImage.complete||!templeSpriteImage.naturalWidth)return;
+ for(let i=0;i<10;i++){
+  const canvas=document.createElement("canvas");canvas.width=512;canvas.height=128;
+  const q=canvas.getContext("2d");q.imageSmoothingEnabled=false;
+  q.drawImage(templeSpriteImage,0,i*128,512,128,0,0,512,128);
+  templeThemedSpriteSheets[i]=canvas;
+ }
+ if(currentWorld==="temples"){buildBurningCrateSprite();rebuildStaticMapCache()}
+}
+templeSpriteImage.onload=buildTempleSpriteSheets;
+templeSpriteImage.src="game-assets/sprites/temple_marble_themes.svg";
+const themeBeforeTemples=currentForestTheme,loadBeforeTemples=loadProgress,saveBeforeTemples=saveProgress;
+const numberBeforeTemples=worldLevelNumber,backgroundBeforeTemples=drawForestBackground;
+const tileBeforeTemples=drawTileTo,crateBeforeTemples=buildBurningCrateSprite;
+const mapBeforeTemples=buildForestMap,selectBeforeTemples=selectMapLevel;
+const menuBeforeTemples=showMenuScreen,startBeforeTemples=startGame;
+const hudBeforeTemples=updateHUD,overBeforeTemples=gameOver,backBeforeTemples=window.handleAndroidBack;
+currentForestTheme=function(){return currentWorld==="temples"?templeThemes[templeThemeIndex()]:themeBeforeTemples()};
+loadProgress=function(){
+ if(currentWorld==="temples"){try{const n=Number(localStorage.getItem(templeWorldProgressKey)||1);unlockedLevel=Math.max(1,Math.min(TOTAL_LEVELS,n||1))}catch(e){unlockedLevel=1}}
+ else loadBeforeTemples();
+};
+saveProgress=function(){if(currentWorld==="temples"){try{localStorage.setItem(templeWorldProgressKey,String(unlockedLevel))}catch(e){}}else saveBeforeTemples()};
+worldLevelNumber=function(){return currentWorld==="temples"?level+60:numberBeforeTemples()};
+drawForestBackground=function(target){
+ if(currentWorld!=="temples")return backgroundBeforeTemples(target);
+ const c=target||ctx,t=templeThemes[templeThemeIndex()],g=c.createLinearGradient(0,0,0,H);
+ syncThemedBackdrop();
+ const gameElement=$("game");
+ if(gameElement.dataset.theme!==t.name){gameElement.style.background="linear-gradient(180deg,"+t.sky[0]+","+t.sky[1]+" 52%,"+t.sky[2]+")";gameElement.dataset.theme=t.name}
+ g.addColorStop(0,t.sky[0]);g.addColorStop(.5,t.sky[1]);g.addColorStop(1,t.sky[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
+ const halo=c.createRadialGradient(W*.5,H*.24,4,W*.5,H*.24,Math.max(W,H)*.72);halo.addColorStop(0,t.glow+"77");halo.addColorStop(1,"#ffffff00");c.fillStyle=halo;c.fillRect(0,0,W,H);
+ // Silhuetas arquitetônicas simples; os detalhes de piso e blocos vêm do atlas em cache.
+ c.save();c.globalAlpha=.32;c.fillStyle=t.far;
+ for(let i=0;i<5;i++){const x=i*W/4-W*.08,base=H*.76,w=W*.19;c.fillRect(x+w*.12,H*.35,w*.76,base-H*.35);c.beginPath();c.moveTo(x, H*.38);c.lineTo(x+w*.5,H*.16);c.lineTo(x+w,H*.38);c.closePath();c.fill();c.fillStyle=t.sky[0];c.fillRect(x+w*.39,H*.43,w*.22,H*.33);c.fillStyle=t.far}
+ c.restore();
+ c.fillStyle=t.near;c.fillRect(0,H*.77,W,H*.23);
+ c.save();c.globalAlpha=.26;c.strokeStyle=t.accent;c.lineWidth=2;
+ for(let i=0;i<10;i++){const x=i*W/9;c.beginPath();c.moveTo(x,H*.78);c.lineTo(x,H*.42);c.stroke();c.beginPath();c.moveTo(x-7,H*.43);c.lineTo(x,H*.39);c.lineTo(x+7,H*.43);c.stroke()}
+ c.restore();
+};
+drawTileTo=function(target,x,y,type,offsetY=0){
+ if(currentWorld!=="temples")return tileBeforeTemples(target,x,y,type,offsetY);
+ const px=ox+x*TILE,py=oy+y*TILE-offsetY,index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index];
+ if(sheet){
+  const column=type===1?2:type===2?3:(((x*7+y*11+level)%5===0)?1:0);
+  target.drawImage(sheet,column*128,0,128,128,px,py,TILE,TILE);
+ }else{
+  const t=templeThemes[index];target.fillStyle=type===1?t.wall[0]:type===2?t.wall[1]:t.floor;target.fillRect(px,py,TILE,TILE);
+  target.strokeStyle=t.accent;target.globalAlpha=.38;target.lineWidth=2;target.strokeRect(px+2,py+2,TILE-4,TILE-4);target.globalAlpha=1;
+ }
+};
+buildBurningCrateSprite=function(){
+ if(currentWorld==="temples"){
+  const sheet=templeThemedSpriteSheets[templeThemeIndex()];if(!sheet)return;
+  for(let f=0;f<BURNING_CRATE_FRAMES;f++){const c=burningCrateCanvases[templeThemeIndex()][f].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(sheet,384,0,128,128,4,5,56,56)}
+  burningCrateReady=true;return;
+ }
+ crateBeforeTemples();
+};
+function buildTempleMap(){
+ const nodes=$("templeLevelNodes");nodes.innerHTML="";
+ for(let i=1;i<=TOTAL_LEVELS;i++){
+  const p=mapPoint(i),n=document.createElement("button");n.type="button";n.className="mapNode";n.dataset.level=String(i);n.style.left=p.x+"%";n.style.top=p.y+"%";n.style.pointerEvents="auto";n.style.touchAction="manipulation";n.textContent=i;
+  if(i<unlockedLevel){n.classList.add("completed");n.innerHTML="✓"}else if(i===unlockedLevel)n.classList.add("available");else{n.classList.add("locked");n.innerHTML=i+'<span style="position:absolute;font-size:10px;right:-2px;top:-5px">🔒</span>';n.disabled=true}
+  n.addEventListener("click",()=>selectMapLevel(i));nodes.appendChild(n);
+ }
+ const p=mapPoint(Math.min(Math.max(1,selectedMapLevel),unlockedLevel)),m=$("templeMapMascot");m.style.left=p.x+"%";m.style.top=p.y+"%";
+ $("templeProgressText").textContent="FASES CONCLUÍDAS: "+(unlockedLevel-1)+"/10";
+}
+function addTempleWorldUI(){
+ if(!$("templesBtn")){
+  const card=$("diamondsBtn").cloneNode(true);card.id="templesBtn";card.className="worldCard templeWorldCard";
+  card.querySelector(".worldName").textContent="🏛️ REINO DOS TEMPLOS";
+  const art=card.querySelector(".diamondArt")||card.querySelector(".swampArt")||card.querySelector("span");
+  if(art){art.className="templeArt";art.style.cssText="position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#fffdf5 0%,#e7dfca 48%,#9e8a64 100%)";art.innerHTML='<svg viewBox="0 0 240 150" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="templeCardStone" x2="0" y2="1"><stop stop-color="#fffefa"/><stop offset=".55" stop-color="#e7dfcd"/><stop offset="1" stop-color="#b6a47e"/></linearGradient></defs><path d="M18 58L120 13 222 58Z" fill="url(#templeCardStone)" stroke="#a8894f" stroke-width="3"/><path d="M27 62H213V74H27Z" fill="#c5a96d"/><path d="M38 76H55V130H38ZM84 76H101V130H84ZM139 76H156V130H139ZM185 76H202V130H185Z" fill="url(#templeCardStone)" stroke="#9f895e" stroke-width="2"/><path d="M30 131H210V143H30Z" fill="#a98e59"/><path d="M60 76V130M106 76V130M161 76V130" stroke="#fff" stroke-width="3" opacity=".7"/><circle cx="120" cy="43" r="8" fill="#e3c47d" stroke="#fff8e8" stroke-width="2"/></svg>'}
+  card.style.cssText="border:2px solid #f4dfae;border-radius:18px;background:linear-gradient(180deg,#fffdf6 0%,#d7c49a 55%,#8e7449 100%);box-shadow:0 7px 0 #6d5635,0 12px 18px #0008;overflow:hidden";
+  $("diamondsBtn").parentNode.appendChild(card);card.addEventListener("click",()=>showMenuScreen("temples"));
+ }
+ if(!$("templePanel")){
+  const panel=$("swampPanel").cloneNode(true);panel.id="templePanel";
+  const ids={"swampBackArrowBtn":"templeBackArrowBtn","swampMap":"templeMap","swampPath":"templePath","swampLevelNodes":"templeLevelNodes","swampMapMascot":"templeMapMascot","swampProgressText":"templeProgressText"};
+  panel.querySelectorAll("[id]").forEach(el=>{if(ids[el.id])el.id=ids[el.id]});
+  panel.querySelector(".menuTitle").textContent="🏛️ REINO DOS TEMPLOS";
+  panel.querySelector("#templeProgressText").textContent="FASES CONCLUÍDAS: 0/10";
+  const mascot=panel.querySelector("#templeMapMascot");if(mascot)mascot.innerHTML='<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><path d="M8 24L32 8 56 24Z" fill="#d8bd80" stroke="#785d31" stroke-width="2"/><path d="M12 26H52V32H12Z" fill="#fff4d8" stroke="#9d7b43" stroke-width="2"/><path d="M17 33H23V53H17ZM29 33H35V53H29ZM41 33H47V53H41Z" fill="#f8efd9" stroke="#a88d59" stroke-width="1.5"/><path d="M10 54H54V60H10Z" fill="#c4a76d" stroke="#785d31" stroke-width="2"/></svg>';
+  panel.style.cssText="";
+  $("swampPanel").parentNode.appendChild(panel);
+  $("templeBackArrowBtn").onclick=()=>showMenuScreen("worlds");
+ }
+ const style=document.createElement("style");
+ style.textContent="#templePanel{position:fixed;inset:0;z-index:12;width:100%;height:100dvh;margin:0;padding:clamp(12px,2vh,18px) clamp(12px,3vw,35px);border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;background:radial-gradient(ellipse at 50% 78%,#fff9e9 0%,#d9ceb4 48%,#9b8a6b 100%)}#templePanel:before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(90deg,transparent 0 11%,#fff 11.3% 11.7%,transparent 12% 24%)}#templePanel>*{position:relative;z-index:1}#templePanel .menuTitle{margin:3px 0 8px;color:#fff9e9;text-shadow:0 2px 0 #80643b,0 0 16px #fff0c2}#templeBackArrowBtn{position:absolute;top:12px;left:12px;z-index:10;width:43px;height:43px;border:2px solid #f0dca9;border-radius:12px;background:linear-gradient(145deg,#fff8e6,#b69a63);color:#654b2c;font-size:29px;box-shadow:0 4px 12px #59462988}#templeMap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,1100px);height:min(48vh,290px);min-height:170px;overflow:hidden}#templePath{position:absolute;inset:0;width:100%;height:100%}#templePath .pathShadow{fill:none;stroke:#79613b;stroke-width:24;stroke-linecap:round}#templePath .pathBase{fill:none;stroke:#c3a66a;stroke-width:15;stroke-linecap:round}#templePath .pathCenter{fill:none;stroke:#fff6df;stroke-width:3;stroke-dasharray:5 10}#templeLevelNodes{position:absolute;inset:0}#templeMapMascot{position:absolute;width:clamp(43px,7vw,65px);height:clamp(43px,7vw,65px);left:0;top:0;transform:translate(-50%,-112%);z-index:8;pointer-events:none;transition:left .38s,top .38s;filter:drop-shadow(0 5px 3px #57462a)}#templeLevelNodes .mapNode{border-color:#fff0c7;background:radial-gradient(circle at 30% 22%,#fffefa,#e6d6b0 58%,#b18e50);box-shadow:0 4px 0 #80643b,0 0 13px #fff0c2;color:#654923}#templeLevelNodes .mapNode.available{animation:templePulse 1.8s ease-in-out infinite}#templeLevelNodes .mapNode.completed{background:linear-gradient(145deg,#fff8e5,#c9aa69);color:#654923}#templeLevelNodes .mapNode.locked{background:linear-gradient(145deg,#d7cdb7,#96866b);color:#f9f3e5}#templeLevelNodes .mapNode.selected{outline:3px solid #fff7dc;outline-offset:3px;transform:translate(-50%,-50%) scale(1.12)}#templeProgressText{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:8px 16px;border:1px solid #fff0c7;border-radius:18px;background:#fff8e6cc;color:#654923;font-weight:900;text-shadow:0 1px #fff;white-space:nowrap}@keyframes templePulse{0%,100%{box-shadow:0 4px 0 #80643b,0 0 10px #fff0c2;filter:brightness(1)}50%{box-shadow:0 4px 0 #80643b,0 0 22px #fff7d8;filter:brightness(1.12)}}";
+ document.head.appendChild(style);
+}
+addTempleWorldUI();
+showMenuScreen=function(which){
+ if(which==="temples"){
+  $("overlay").style.display="none";$("worldsPanel").classList.add("hidden");
+  ["forestPanel","desertPanel","volcanoPanel","icePanel","swampPanel","diamondPanel"].forEach(id=>{const el=$(id);if(el)el.classList.add("hidden")});
+  $("templePanel").classList.remove("hidden");$("templePanel").style.display="flex";
+  $("menuContent").classList.add("hidden");$("menuHud").classList.add("hidden");$("menuBackdrop").classList.add("hidden");
+  $("hud").style.display="none";$("controls").style.display="none";
+  currentWorld="temples";loadProgress();selectedMapLevel=Math.min(Math.max(1,selectedMapLevel),unlockedLevel);buildTempleMap();buildBurningCrateSprite();menuReturn="temples";return;
+ }
+ $("templePanel").style.display="none";$("templePanel").classList.add("hidden");
+ return menuBeforeTemples(which);
+};
+startGame=function(n=1){
+ $("templePanel").style.display="none";$("templePanel").classList.add("hidden");
+ if(currentWorld!=="temples")return startBeforeTemples(n);
+ const beginTempleLevel=()=>{if(currentWorld!=="temples")return;buildBurningCrateSprite();startBeforeTemples(n)};
+ if(templeSpriteImage.complete&&templeSpriteImage.naturalWidth){beginTempleLevel();return}
+ templeSpriteImage.addEventListener("load",beginTempleLevel,{once:true});
+ templeSpriteImage.addEventListener("error",beginTempleLevel,{once:true});
+};
+buildForestMap=function(){if(currentWorld==="temples")buildTempleMap();else mapBeforeTemples()};
+selectMapLevel=function(i){
+ if(currentWorld!=="temples")return selectBeforeTemples(i);
+ if(i>unlockedLevel||i<1)return;
+ if(mapMoveTimer)clearTimeout(mapMoveTimer);selectedMapLevel=i;
+ document.querySelectorAll("#templeLevelNodes .mapNode").forEach(n=>n.classList.toggle("selected",Number(n.dataset.level)===i));
+ const p=mapPoint(i),m=$("templeMapMascot");m.style.left=p.x+"%";m.style.top=p.y+"%";
+ mapMoveTimer=setTimeout(()=>{mapMoveTimer=null;startGame(i)},430);
+};
+updateHUD=function(){hudBeforeTemples();if(currentWorld==="temples")$("level").textContent=worldLevelNumber()};
+gameOver=function(win){overBeforeTemples(win);if(currentWorld==="temples")$("endText").textContent=win?"Parabéns! Você completou as 10 fases do Reino dos Templos! Pontuação: "+score+" -- Moedas: "+coins:"Pontuação: "+score+" -- Fase: "+worldLevelNumber()+" -- Moedas: "+coins};
+window.handleAndroidBack=function(){if($("templePanel")&&!$("templePanel").classList.contains("hidden")){showMenuScreen("worlds");return true}return backBeforeTemples()};
+const syncBackdropBeforeTemples=syncThemedBackdrop;
+syncThemedBackdrop=function(){
+ syncBackdropBeforeTemples();
+ const el=$("game"),controls=$("controls");if(el)el.dataset.world=currentWorld;
+ if(currentWorld==="temples"){
+  const t=templeThemes[templeThemeIndex()];
+  if(controls){controls.style.setProperty("--control-main",t.wall[0]+"dd");controls.style.setProperty("--control-border",t.accent);controls.style.setProperty("--control-knob",t.glow+"cc");controls.style.setProperty("--control-knob-border","#fffdf6");controls.style.setProperty("--control-glow",t.glow);controls.style.setProperty("--control-pad",t.wall[0]+"dd");controls.style.setProperty("--control-pad-border",t.accent);controls.style.setProperty("--control-pause",t.wall[0]+"ee");controls.style.setProperty("--control-pause-border",t.accent)}
+ }
+};
+if(!worldOrder.includes("temples"))worldOrder.push("temples");
+/* FIM DO MUNDO 7 — os mundos anteriores e suas regras permanecem intactos. */
+
 })();
 </script>
 
