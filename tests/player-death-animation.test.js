@@ -27,7 +27,7 @@ test("durante a morte o mundo e os controles ficam bloqueados até o fade e o re
  assert.match(html,/pauseBtn"\)\.onclick=\(\)=>\{if\(!running\|\|customizing\|\|playerDeathAnimation\)return/);
  assert.match(html,/if\(playerDeathAnimation\)return true/);
  assert.match(html,/if\(playerDeathAnimation\)\{\s*const death=playerDeathAnimation;death\.time\+=dt;gameClock\+=dt;/);
- assert.match(html,/player\.x=1\.5;player\.y=1\.5;player\.passBomb=null;player\.inv=2\.2;death\.respawned=true/);
+ assert.match(html,/restorePlayerAtSafeSpawn\(\);player\.passBomb=null;player\.inv=2\.2;death\.respawned=true/);
  assert.match(html,/death\.time>=\.76&&death\.time<\.96/);
  assert.match(html,/death\.time>=\.96\)screenFadeAlpha/);
  assert.match(html,/ctx\.fillRect\(0,0,W,H\)/);
