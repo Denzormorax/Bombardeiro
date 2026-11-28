@@ -18089,6 +18089,7 @@ function draw(){
  // As poças ficam inteiramente atrás de todos os elementos móveis, sem cortes por ordenação de linhas.
  for(let y=0;y<ROWS;y++)ctx.drawImage(staticRowCanvases[y],0,oy+y*TILE);
  for(const puddle of waterPuddles)drawWaterPuddle(puddle);
+ if(currentWorld==="temples")drawTempleFloatingBlocks();
  if(currentWorld==="diamonds")drawDiamondPortals();
  // Folhas e tentáculos do cenário ficam atrás de todos os elementos móveis.
  if(currentWorld==="swamp")drawSwampAmbientDetails();
@@ -18529,6 +18530,23 @@ drawForestBackground=function(target){
  if(t.style==="moon"){c.globalAlpha=.7;c.fillStyle="#eee0c4";c.beginPath();c.arc(W*.78,H*.19,30,0,Math.PI*2);c.fill();for(let i=0;i<38;i++){c.globalAlpha=.35+(i%3)*.12;c.fillStyle="#f6e8c8";c.fillRect((i*113+31)%W,(i*67+17)%(H*.55),2,2)}}
  c.restore();c.globalAlpha=1;
 };
+function drawTempleFloatingBlocks(){
+ if(currentWorld!=="temples"||!destructibleTilePositions.length)return;
+ const index=templeThemeIndex(),block=templeDestructibleBlockSprites[index],shadow=templeDestructibleBlockShadows[index];
+ if(!block||!shadow)return;
+ ctx.save();
+ for(const tile of destructibleTilePositions){
+  const px=ox+tile.x*TILE,py=oy+tile.y*TILE;
+  ctx.drawImage(shadow,px,py,TILE,TILE);
+  const phase=tile.x*1.73+tile.y*2.19;
+  const bob=(Math.sin(gameClock*2.55+phase)+1)*2.15;
+  const seesaw=Math.sin(gameClock*1.7+phase)*.055;
+  ctx.save();ctx.translate(px+TILE*.5,py+TILE*.5-bob);ctx.rotate(seesaw);
+  ctx.drawImage(block,-TILE*.54,-TILE*.54,TILE*1.08,TILE*1.08);
+  ctx.restore();
+ }
+ ctx.restore();
+}
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="desert")return drawTileOriginal(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,sheet=desertSpriteSheet,tiles=desertThemedSpriteSheets,theme=currentForestTheme();
@@ -21927,7 +21945,7 @@ const templeThemes=[
  {name:"Champagne Nobre",sky:["#fffaf0","#e9dcc3","#a18a63"],floor:"rgba(244,236,220,.97)",floor2:"rgba(255,255,255,.3)",wall:["#e9ddc8","#fffefa","#a18a63"],far:"#d4c19e",near:"#8e7853",glow:"#ffedc6",accent:"#c7a66c",style:"champagne"},
  {name:"Opala Boreal",sky:["#f8fffd","#d7e8e2","#809b94"],floor:"rgba(232,241,237,.97)",floor2:"rgba(255,255,255,.3)",wall:["#d8e8e2","#ffffff","#809b94"],far:"#b8d0c8",near:"#718b83",glow:"#e6fff7",accent:"#a0c3b7",style:"opala"}
 ];
-const templeSpriteImage=new Image(),templeThemedSpriteSheets=Array(10).fill(null),templeDestructibleBlockSprites=Array(10).fill(null);
+const templeSpriteImage=new Image(),templeThemedSpriteSheets=Array(10).fill(null),templeDestructibleBlockSprites=Array(10).fill(null),templeDestructibleBlockPngs=Array(10).fill(null),templeDestructibleBlockShadows=Array(10).fill(null),templeDestructibleBlockShadowPngs=Array(10).fill(null);
 function templeThemeIndex(){return Math.max(0,Math.min(9,(Number(level)||1)-1))}
 function buildTempleSpriteSheets(){
  if(!templeSpriteImage.complete||!templeSpriteImage.naturalWidth)return;
@@ -21936,13 +21954,22 @@ function buildTempleSpriteSheets(){
   const q=canvas.getContext("2d");q.imageSmoothingEnabled=false;
   q.drawImage(templeSpriteImage,0,i*128,512,128,0,0,512,128);
   templeThemedSpriteSheets[i]=canvas;
-  // PNG rasterizado com canal alfa: mantém o bloco inteiro recortado,
-  // sem fundo, sem a sombra (desenhada separadamente) e sem qualquer animação.
+  // PNG transparente independente para o bloco destrutível.
   const blockCanvas=document.createElement("canvas");blockCanvas.width=128;blockCanvas.height=128;
   const b=blockCanvas.getContext("2d");b.clearRect(0,0,128,128);b.imageSmoothingEnabled=true;
   b.drawImage(canvas,256,0,128,128,0,0,128,128);
-  blockCanvas.toDataURL("image/png");
+  templeDestructibleBlockPngs[i]=blockCanvas.toDataURL("image/png");
   templeDestructibleBlockSprites[i]=blockCanvas;
+  // PNG transparente separado para a sombra fixa no piso.
+  const shadowCanvas=document.createElement("canvas");shadowCanvas.width=128;shadowCanvas.height=128;
+  const sh=shadowCanvas.getContext("2d");sh.clearRect(0,0,128,128);
+  const shadowGradient=sh.createRadialGradient(64,88,2,64,88,46);
+  shadowGradient.addColorStop(0,"rgba(18,14,10,.48)");
+  shadowGradient.addColorStop(.48,"rgba(18,14,10,.30)");
+  shadowGradient.addColorStop(1,"rgba(18,14,10,0)");
+  sh.fillStyle=shadowGradient;sh.beginPath();sh.ellipse(64,88,46,17,0,0,Math.PI*2);sh.fill();
+  templeDestructibleBlockShadowPngs[i]=shadowCanvas.toDataURL("image/png");
+  templeDestructibleBlockShadows[i]=shadowCanvas;
  }
  if(currentWorld==="temples"){buildBurningCrateSprite();rebuildStaticMapCache()}
 }
@@ -21981,13 +22008,8 @@ drawForestBackground=function(target){
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="temples")return tileBeforeTemples(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index];
- if(type===1||type===2){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.88,TILE*.43,TILE*.12,0,0,Math.PI*2);target.fill();target.restore()}
- if(type===2){
-  const block=templeDestructibleBlockSprites[index];
-  if(block)target.drawImage(block,0,0,128,128,px-TILE*.04,py-TILE*.06,TILE*1.08,TILE*1.08);
-  else if(sheet)target.drawImage(sheet,256,0,128,128,px-TILE*.04,py-TILE*.06,TILE*1.08,TILE*1.08);
-  return;
- }
+ if(type===1){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.88,TILE*.43,TILE*.12,0,0,Math.PI*2);target.fill();target.restore()}
+ if(type===2)return;
  if(sheet){
   const column=type===1?2:(((x*7+y*11+level)%5===0)?1:0);
   target.drawImage(sheet,column*128,0,128,128,px,py,TILE,TILE);

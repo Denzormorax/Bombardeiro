@@ -52,7 +52,7 @@ test("a seleção das fases usa tema de mármore claro e dourado sem alterar os 
 
 test("blocos do Reino dos Templos usam PNG transparente estático, maior e com sombra",()=>{
  assert.match(html,/blockCanvas\.toDataURL\("image\/png"\)/);
- assert.match(html,/if\(type===1\|\|type===2\)/);
+ assert.match(html,/if\(type===1\)/);
  assert.match(html,/TILE\*1\.08,TILE\*1\.08/);
  assert.doesNotMatch(html,/function drawTempleDestructibleBlocks\(\)/);
  assert.doesNotMatch(html,/const angle=gameClock\*\(Math\.PI\*2\/3\.2\)/);
@@ -65,4 +65,17 @@ test("a destruição de blocos dos Templos lança quatro fragmentos quadrados co
  assert.match(html,/if\(currentWorld==="temples"\)spawnTempleBlockDebris\(x\+\.5,y\+\.5\)/);
  assert.match(html,/function updateTempleBlockDebris\(dt\)/);
  assert.match(html,/function drawTempleBlockDebris\(\)/);
+});
+
+test("blocos destrutíveis flutuam e fazem gangorra com sombra PNG separada e fixa no chão",()=>{
+ assert.match(html,/templeDestructibleBlockPngs=Array\(10\)\.fill\(null\)/);
+ assert.match(html,/templeDestructibleBlockShadowPngs=Array\(10\)\.fill\(null\)/);
+ assert.match(html,/templeDestructibleBlockPngs\[i\]=blockCanvas\.toDataURL\("image\/png"\)/);
+ assert.match(html,/templeDestructibleBlockShadowPngs\[i\]=shadowCanvas\.toDataURL\("image\/png"\)/);
+ assert.match(html,/function drawTempleFloatingBlocks\(\)/);
+ assert.match(html,/ctx\.drawImage\(shadow,px,py,TILE,TILE\)/);
+ assert.match(html,/Math\.sin\(gameClock\*2\.55\+phase\)/);
+ assert.match(html,/Math\.sin\(gameClock\*1\.7\+phase\)\*\.055/);
+ assert.match(html,/if\(currentWorld==="temples"\)drawTempleFloatingBlocks\(\)/);
+ assert.match(html,/if\(type===2\)return/);
 });
