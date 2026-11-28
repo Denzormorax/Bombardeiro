@@ -61,8 +61,8 @@ test("corações perdidos são restaurados antes de criar a próxima fase após 
     hudUpdates: 0,
     allEnemiesDefeated() { return true; },
     updateHUD() { this.hudUpdates++; },
-    checkWin() { this.levelTransition = true; },
-    newLevel() { this.livesSeenByNextLevel = this.lives; }
+    checkWin() { sandbox.levelTransition = true; },
+    newLevel() { sandbox.livesSeenByNextLevel = sandbox.lives; }
   };
   vm.runInNewContext(code, sandbox);
   sandbox.checkWin();
@@ -85,7 +85,7 @@ test("não restaura corações quando o jogador não conclui uma fase", () => {
     allEnemiesDefeated() { return false; },
     updateHUD() {},
     checkWin() {},
-    newLevel() { this.livesSeenByNextLevel = this.lives; }
+    newLevel() { sandbox.livesSeenByNextLevel = sandbox.lives; }
   };
   vm.runInNewContext(code, sandbox);
   sandbox.checkWin();
