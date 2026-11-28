@@ -18537,7 +18537,7 @@ function drawTempleFloatingBlocks(){
  ctx.save();
  for(const tile of destructibleTilePositions){
   const px=ox+tile.x*TILE,py=oy+tile.y*TILE;
-  ctx.drawImage(shadow,px,py,TILE,TILE);
+  ctx.drawImage(shadow,px,py+TILE*.12,TILE,TILE);
   const phase=tile.x*1.73+tile.y*2.19;
   const bob=(Math.sin(gameClock*2.55+phase)+1)*2.15;
   const seesaw=Math.sin(gameClock*1.7+phase)*.055;
@@ -21954,20 +21954,27 @@ function buildTempleSpriteSheets(){
   const q=canvas.getContext("2d");q.imageSmoothingEnabled=false;
   q.drawImage(templeSpriteImage,0,i*128,512,128,0,0,512,128);
   templeThemedSpriteSheets[i]=canvas;
-  // PNG transparente independente para o bloco destrutível.
+ }
+ if(currentWorld==="temples")rebuildStaticMapCache();
+}
+const templeDestructibleAtlasImage=new Image();
+function buildTempleDestructibleSprites(){
+ if(!templeDestructibleAtlasImage.complete||!templeDestructibleAtlasImage.naturalWidth)return;
+ for(let i=0;i<10;i++){
+  // O atlas novo tem dez células independentes: cinco colunas por duas linhas.
   const blockCanvas=document.createElement("canvas");blockCanvas.width=128;blockCanvas.height=128;
-  const b=blockCanvas.getContext("2d");b.clearRect(0,0,128,128);b.imageSmoothingEnabled=true;
-  b.drawImage(canvas,256,0,128,128,0,0,128,128);
+  const b=blockCanvas.getContext("2d");b.clearRect(0,0,128,128);b.imageSmoothingEnabled=true;b.imageSmoothingQuality="high";
+  b.drawImage(templeDestructibleAtlasImage,(i%5)*256,Math.floor(i/5)*256,256,256,0,0,128,128);
   templeDestructibleBlockPngs[i]=blockCanvas.toDataURL("image/png");
   templeDestructibleBlockSprites[i]=blockCanvas;
-  // PNG transparente separado para a sombra fixa no piso.
+  // PNG de sombra separado, com o centro próximo aos pés do bloco.
   const shadowCanvas=document.createElement("canvas");shadowCanvas.width=128;shadowCanvas.height=128;
   const sh=shadowCanvas.getContext("2d");sh.clearRect(0,0,128,128);
-  const shadowGradient=sh.createRadialGradient(64,88,2,64,88,46);
-  shadowGradient.addColorStop(0,"rgba(18,14,10,.48)");
-  shadowGradient.addColorStop(.48,"rgba(18,14,10,.30)");
+  const shadowGradient=sh.createRadialGradient(64,103,2,64,103,43);
+  shadowGradient.addColorStop(0,"rgba(18,14,10,.50)");
+  shadowGradient.addColorStop(.52,"rgba(18,14,10,.30)");
   shadowGradient.addColorStop(1,"rgba(18,14,10,0)");
-  sh.fillStyle=shadowGradient;sh.beginPath();sh.ellipse(64,88,46,17,0,0,Math.PI*2);sh.fill();
+  sh.fillStyle=shadowGradient;sh.beginPath();sh.ellipse(64,103,43,14,0,0,Math.PI*2);sh.fill();
   templeDestructibleBlockShadowPngs[i]=shadowCanvas.toDataURL("image/png");
   templeDestructibleBlockShadows[i]=shadowCanvas;
  }
@@ -21975,6 +21982,8 @@ function buildTempleSpriteSheets(){
 }
 templeSpriteImage.onload=buildTempleSpriteSheets;
 templeSpriteImage.src="game-assets/sprites/temple_marble_themes.svg";
+templeDestructibleAtlasImage.onload=buildTempleDestructibleSprites;
+templeDestructibleAtlasImage.src="game-assets/sprites/temple_destructible_blocks.svg";
 const themeBeforeTemples=currentForestTheme,loadBeforeTemples=loadProgress,saveBeforeTemples=saveProgress;
 const numberBeforeTemples=worldLevelNumber,backgroundBeforeTemples=drawForestBackground;
 const tileBeforeTemples=drawTileTo,crateBeforeTemples=buildBurningCrateSprite;
@@ -22008,7 +22017,7 @@ drawForestBackground=function(target){
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="temples")return tileBeforeTemples(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index];
- if(type===1){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.88,TILE*.43,TILE*.12,0,0,Math.PI*2);target.fill();target.restore()}
+ if(type===1){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.82,TILE*.43,TILE*.12,0,0,Math.PI*2);target.fill();target.restore()}
  if(type===2)return;
  if(sheet){
   const column=type===1?2:(((x*7+y*11+level)%5===0)?1:0);

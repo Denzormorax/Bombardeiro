@@ -5,6 +5,7 @@ const path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const html=fs.readFileSync(path.join(root,"bombardeirojogo.html"),"utf8");
 const atlas=fs.readFileSync(path.join(root,"game-assets/sprites/temple_marble_themes.svg"),"utf8");
+const destructibleAtlas=fs.readFileSync(path.join(root,"game-assets/sprites/temple_destructible_blocks.svg"),"utf8");
 const world=JSON.parse(fs.readFileSync(path.join(root,"game-assets/worlds/temple-world.json"),"utf8"));
 
 test("Reino dos Templos é o Mundo 7 e possui dez fases",()=>{
@@ -52,6 +53,10 @@ test("a seleção das fases usa tema de mármore claro e dourado sem alterar os 
 
 test("blocos do Reino dos Templos usam PNG transparente estático, maior e com sombra",()=>{
  assert.match(html,/blockCanvas\.toDataURL\("image\/png"\)/);
+ assert.match(html,/templeDestructibleAtlasImage\.src="game-assets\/sprites\/temple_destructible_blocks\.svg"/);
+ assert.match(html,/drawImage\(templeDestructibleAtlasImage,\(i%5\)\*256,Math\.floor\(i\/5\)\*256,256,256,0,0,128,128\)/);
+ assert.match(destructibleAtlas,/width="1280" height="512"/);
+ assert.match(destructibleAtlas,/viewBox="0 0 1280 512"/);
  assert.match(html,/if\(type===1\)/);
  assert.match(html,/TILE\*1\.08,TILE\*1\.08/);
  assert.doesNotMatch(html,/function drawTempleDestructibleBlocks\(\)/);
@@ -73,9 +78,16 @@ test("blocos destrutíveis flutuam e fazem gangorra com sombra PNG separada e fi
  assert.match(html,/templeDestructibleBlockPngs\[i\]=blockCanvas\.toDataURL\("image\/png"\)/);
  assert.match(html,/templeDestructibleBlockShadowPngs\[i\]=shadowCanvas\.toDataURL\("image\/png"\)/);
  assert.match(html,/function drawTempleFloatingBlocks\(\)/);
- assert.match(html,/ctx\.drawImage\(shadow,px,py,TILE,TILE\)/);
+ assert.match(html,/ctx\.drawImage\(shadow,px,py\+TILE\*\.12,TILE,TILE\)/);
+ assert.match(html,/py\+TILE\*\.82/);
  assert.match(html,/Math\.sin\(gameClock\*2\.55\+phase\)/);
  assert.match(html,/Math\.sin\(gameClock\*1\.7\+phase\)\*\.055/);
  assert.match(html,/if\(currentWorld==="temples"\)drawTempleFloatingBlocks\(\)/);
  assert.match(html,/if\(type===2\)return/);
+});
+
+test("as sombras dos dois tipos de bloco ficam junto aos pés, sem acompanhar a flutuação",()=>{
+ assert.match(html,/ellipse\(px\+TILE\*\.5,py\+TILE\*\.82,TILE\*\.43,TILE\*\.12/);
+ assert.match(html,/ctx\.drawImage\(shadow,px,py\+TILE\*\.12,TILE,TILE\)/);
+ assert.match(html,/ellipse\(64,103,43,14/);
 });
