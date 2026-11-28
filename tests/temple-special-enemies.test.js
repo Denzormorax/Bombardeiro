@@ -15,11 +15,11 @@ test("Caçadores do Reino dos Templos usam armadura 3D com paleta exclusiva",()=
 
 test("dois ou três Guardiões aparecem somente das fases 3 a 6 do Reino dos Templos",()=>{
  assert.match(html,/templeBruteCount=currentWorld==="temples"&&level>=3&&level<=6\?2\+Math\.floor\(Math\.random\(\)\*2\):0/);
- assert.match(html,/createEnemySpawnPositions\(count\+builderCount\+snowmanCount\+templeBruteCount\)/);
+ assert.match(html,/createEnemySpawnPositions\(count\+builderCount\+snowmanCount\+templeBruteCount\+templeEliteCount\)/);
  assert.match(html,/templeBruteSlots=new Set\(slots\.splice\(0,templeBruteCount\)\)/);
  assert.match(html,/templeEliteSlots=new Set\(slots\.splice\(0,templeEliteCount\)\)/);
  assert.match(html,/isTempleElite=templeEliteSlots\.has\(index\),isBrute=templeBruteSlots\.has\(index\)\|\|isTempleElite/);
- assert.match(html,/isBrute,isEnraged:false/);
+ assert.match(html,/isBrute,isTempleElite,isEnraged:false/);
  assert.match(html,/hp:isTempleElite\?5:isSnowman\?3:isBuilder\?3:isBrute\?4/);
  assert.match(html,/templeEliteCount=currentWorld==="temples"&&level>=5&&level<=9\?2:0/);
  assert.match(html,/maxHp:isTempleElite\?5/);
@@ -48,7 +48,7 @@ test("o Guardião percebe o jogador a sete blocos, ergue os braços por 1,5 segu
  assert.ok(html.includes('enemy.templeBruteAttackState="idle"'));assert.ok(html.includes("directions=[{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}]"));
 });
 test("o impacto usa fumaça branca, prata e azulada que cresce e desaparece suavemente",()=>{
- for(const fragment of ["function buildTempleBruteSmokeSprite(variant,isTempleElite=false){","rgba(255,255,255,.82)","rgba(220,232,243,.64)","rgba(169,196,220,.36)","function drawTempleBruteSmokeCell(cell){","const scale=.42+progress*.92","Math.pow(Math.sin(Math.PI*progress),.72)","life:.72,age:0,phase:Math.random()*Math.PI*2","drawTempleBruteSmokeCell(cell)"])assert.ok(html.includes(fragment),fragment);
+ for(const fragment of ["function buildTempleBruteSmokeSprite(variant,isTempleElite=false){","rgba(255,255,255,.82)","rgba(220,232,243,.64)","rgba(169,196,220,.36)","function drawTempleBruteSmokeCell(cell){",":.42+progress*.92","Math.pow(Math.sin(Math.PI*progress),.72)","life:.72,age:0,phase:Math.random()*Math.PI*2","drawTempleBruteSmokeCell(cell)"])assert.ok(html.includes(fragment),fragment);
  assert.ok(!html.includes("buildTempleBruteFireSprite"));assert.ok(!html.includes("drawTempleBruteFireCell"));assert.ok(html.includes("remaining:7"));assert.ok(html.includes("tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)"));
 });
 test("a patrulha do Guardião recalcula rotas e caça o jogador sem pausas longas",()=>{
@@ -86,7 +86,7 @@ test("dois Guardiões Elite aparecem das fases 5 a 9, têm cinco golpes de vida 
 test("Guardião Elite é maior, usa armadura dourada e mantém o comportamento de ataque do Guardião",()=>{
  assert.match(html,/TEMPLE_ELITE_ENEMY_PALETTE=\{light:"#fff6bd",body:"#e5ad19"/);
  assert.match(html,/e\.isTempleElite\?1\.38:1\.22/);
- assert.match(html,/enemy\.isTempleElite\?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE/);
+ assert.match(html,/e\.isTempleElite\?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE/);
  assert.match(html,/enemy\.isTempleElite&&\(level<5\|\|level>9\)/);
 });
 test("impacto do Guardião Elite cobre instantaneamente os oito quadrados ao redor com fumaça dourada brilhante",()=>{
