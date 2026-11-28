@@ -21865,6 +21865,52 @@ draw=function(){
  drawSecretTransition();
 };
 
+
+/* FASE 10 — ARENA BOSS: somente o piso e os blocos indestrutíveis. */
+const bossArenaNewLevelBase=newLevel;
+newLevel=function(preservePowerUps=false){
+ bossArenaNewLevelBase(preservePowerUps);
+ if(level!==TOTAL_LEVELS)return;
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y][x]!==1)map[y][x]=0;
+ bombs=[];flames=[];enemies=[];coinsOnMap=[];coinDrops={};
+ dirtParticles=[];waterPuddles=[];waterParticles=[];builderBuildAnimations=[];
+ destroyedBlockEffects.length=0;burningCrates.length=0;
+ treasureChests.length=0;treasureEffects.length=0;
+ waterPuddleCells.clear();diamondChargerParticles.length=0;
+ if(typeof spiderDisguises!=="undefined")spiderDisguises=[];
+ if(typeof swampGhostParticles!=="undefined")swampGhostParticles.length=0;
+ if(typeof diamondPortalPositions!=="undefined")diamondPortalPositions.length=0;
+ rebuildStaticMapCache();
+ updateHUD();
+};
+const bossArenaAllEnemiesDefeatedBase=allEnemiesDefeated;
+allEnemiesDefeated=function(){
+ return level===TOTAL_LEVELS||bossArenaAllEnemiesDefeatedBase();
+};
+
+/* Ícone SVG próprio da fase 10 — caveirinha simpática do Boss. */
+const bossLevelSkullSvg='<svg class="bossSkullIcon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M32 5C17.5 5 7 15.8 7 29.7c0 9.3 4.4 15.7 11.2 19.2V55c0 2.2 1.8 4 4 4h19.6c2.2 0 4-1.8 4-4v-6.1C52.6 45.2 57 39 57 29.7 57 15.8 46.5 5 32 5Z" fill="#fff0cf" stroke="#513323" stroke-width="3" stroke-linejoin="round"/><path d="M10 23.5C15 10.5 24 7 32 7s17 3.5 22 16.5c-7.3-2.2-13.4-5.1-18.4-9.1-6.4 5.4-14.7 8.5-25.6 9.1Z" fill="#b83d39" stroke="#513323" stroke-width="2.5" stroke-linejoin="round"/><path d="M19 30c0-5.1 3.1-8.3 7.1-8.3 4.2 0 6.2 3.5 6.2 8.2 0 4.1-2.3 7-6.4 7-4.1 0-6.9-2.8-6.9-6.9Zm18.7-.1c0-4.7 2-8.2 6.2-8.2 4 0 7.1 3.2 7.1 8.3 0 4.1-2.8 6.9-6.9 6.9-4.1 0-6.4-2.9-6.4-7Z" fill="#34251f"/><path d="m32 34-4 6.2c-.6 1 .1 2.3 1.3 2.3h5.4c1.2 0 1.9-1.3 1.3-2.3L32 34Z" fill="#8d5140"/><path d="M21 46.5h22v8.2c0 1.3-1 2.3-2.3 2.3H23.3c-1.3 0-2.3-1-2.3-2.3v-8.2Z" fill="#f4d9aa" stroke="#513323" stroke-width="2.2" stroke-linejoin="round"/><path d="M28.3 47v9.6M35.7 47v9.6" stroke="#9b7052" stroke-width="1.8"/><path d="M16.2 39.5c2.1 1.5 4.1 1.5 6.1 0m19.4 0c2 1.5 4 1.5 6.1 0" fill="none" stroke="#e7a18c" stroke-width="2.2" stroke-linecap="round"/><path d="m21 13 2.2 3.3 3.8.5-2.8 2.7.7 3.8-3.9-1.8-3.3 1.8.6-3.8-2.8-2.7 3.8-.5L21 13Z" fill="#ffe8a4" stroke="#7a452b" stroke-width="1"/></svg>';
+const bossLevelStyle=document.createElement("style");
+bossLevelStyle.textContent='.mapNode.bossLevelNode{display:flex;align-items:center;justify-content:center;padding:0;overflow:visible;background:radial-gradient(circle at 30% 22%,#fff0cf 0%,#d9a44f 57%,#754126 100%)!important;border-color:#ffe3a1!important;box-shadow:0 4px 0 #4b291d,0 0 15px #ffc45d99!important;color:#fff!important}.mapNode.bossLevelNode .bossSkullIcon{display:block;width:72%;height:72%;overflow:visible;filter:drop-shadow(0 1px 1px #24140e);pointer-events:none}.mapNode.bossLevelNode .bossLevelLock{position:absolute;right:-5px;top:-7px;z-index:3;font-size:10px;line-height:1.1;padding:1px 2px;border-radius:6px;background:#30201a;border:1px solid #ffe3a1;pointer-events:none}';
+document.head.appendChild(bossLevelStyle);
+function decorateBossLevelNode(node){
+ if(!node||!node.matches||!node.matches('.mapNode[data-level="10"]')||node.dataset.bossDecorated==="1")return;
+ const locked=node.disabled||node.classList.contains("locked");
+ node.dataset.bossDecorated="1";node.classList.add("bossLevelNode");
+ node.innerHTML=bossLevelSkullSvg+(locked?'<span class="bossLevelLock" aria-hidden="true">🔒</span>':"");
+ node.setAttribute("aria-label","Fase 10 — Boss");node.title="Fase 10 — Boss";
+}
+function scanBossLevelNodes(root){
+ if(!root)return;
+ if(root.nodeType===1)decorateBossLevelNode(root);
+ if(root.querySelectorAll)root.querySelectorAll('.mapNode[data-level="10"]').forEach(decorateBossLevelNode);
+}
+scanBossLevelNodes(document);
+const bossLevelNodeObserver=new MutationObserver(records=>{
+ for(const record of records)for(const node of record.addedNodes)scanBossLevelNodes(node);
+});
+bossLevelNodeObserver.observe(document.body,{childList:true,subtree:true});
+
 })();
 </script>
 
