@@ -50,29 +50,14 @@ test("a seleção das fases usa tema de mármore claro e dourado sem alterar os 
  assert.match(html,/currentWorld!=="temples"\)return tileBeforeTemples/);
 });
 
-test("blocos do Reino dos Templos têm sombra e rotação 3D periódica sem alterar colisões",()=>{
- assert.match(html,/ctx\.ellipse\(px\+TILE\*\.5,py\+TILE\*\.88,TILE\*\.43,TILE\*\.12/);
- assert.match(html,/function drawTempleDestructibleBlocks\(\)/);
- assert.match(html,/const angle=gameClock\*\(Math\.PI\*2\/3\.2\)/);
- assert.match(html,/face=Math\.cos\(angle\),side=Math\.sin\(angle\)/);
- assert.match(html,/const sideGradient=ctx\.createLinearGradient/);
- assert.match(html,/drawTempleDestructibleBlocks\(\)/);
- assert.doesNotMatch(html,/ctx\.scale\(widthScale,1\)/);
-});
-test("blocos destrutíveis do Reino dos Templos giram como cubos 3D com troca de faces",()=>{
- const start=html.indexOf("function drawTempleDestructibleBlocks()");
- const end=html.indexOf("\nfunction buildTempleMap()",start);
- const draw=html.slice(start,end);
- assert.ok(start>=0&&end>start,"renderizador 3D dos blocos localizado");
- assert.match(draw,/const angle=gameClock\*\(Math\.PI\*2\/3\.2\)/);
- assert.match(draw,/face=Math\.cos\(angle\),side=Math\.sin\(angle\)/);
- assert.match(draw,/frontWidth=.*Math\.abs\(face\)/);
- assert.match(draw,/sideWidth=Math\.abs\(side\)\*TILE/);
- assert.match(draw,/const sideGradient=ctx\.createLinearGradient/);
- assert.match(draw,/ctx\.lineTo\(edge,-half\+skew\)/);
- assert.match(draw,/if\(face<0\)ctx\.scale\(-1,1\)/);
- assert.doesNotMatch(draw,/ctx\.scale\(widthScale,1\)/);
- assert.doesNotMatch(draw,/turnDuration/);
+test("blocos do Reino dos Templos usam PNG transparente estático, maior e com sombra",()=>{
+ assert.match(html,/blockCanvas\.toDataURL\("image\/png"\)/);
+ assert.match(html,/if\(type===1\|\|type===2\)/);
+ assert.match(html,/TILE\*1\.08,TILE\*1\.08/);
+ assert.doesNotMatch(html,/function drawTempleDestructibleBlocks\(\)/);
+ assert.doesNotMatch(html,/const angle=gameClock\*\(Math\.PI\*2\/3\.2\)/);
+ assert.doesNotMatch(html,/face=Math\.cos\(angle\),side=Math\.sin\(angle\)/);
+ assert.match(html,/drawTempleBlockDebris\(\)/);
 });
 test("a destruição de blocos dos Templos lança quatro fragmentos quadrados com duas escalas",()=>{
  assert.match(html,/function spawnTempleBlockDebris\(x,y\)/);
