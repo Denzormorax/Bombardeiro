@@ -65,7 +65,7 @@ test("o desenho dos inimigos acessa os temas de diamantes somente no escopo corr
 
 test("o brilho diagonal do Mundo dos Diamantes aparece apenas nos geodos destrutíveis e usa as dez cores",()=>{
  assert.match(html,/function drawDiamondDestructibleShimmer\(\)/);
- assert.match(html,/if\(currentWorld==="diamonds"\)return;[\s\S]*?function drawDiamondDestructibleShimmer/);
+ assert.match(html,/if\(currentWorld==="temples"\|\|currentWorld==="diamonds"\)return;[\s\S]*?function drawDiamondDestructibleShimmer/);
  assert.match(html,/destructibleTilePositions\.push\(\{x,y\}\)/);
  assert.match(html,/diamondShimmerCanvases=diamondThemes\.map/);
  assert.match(html,/drawDiamondDestructibleShimmer\(\)/);
