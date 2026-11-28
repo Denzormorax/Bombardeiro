@@ -90,7 +90,8 @@ test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas
  assert.match(html,/function createTempleGrassTufts\(\)/);
  assert.match(html,/candidates\.slice\(0,20\)/);
  assert.match(html,/function drawTempleGrassTufts\(\)/);
- assert.match(html,/Math\.sin\(gameClock\*1\.65\+tuft\.phase\)/);
+ assert.match(html,/Math\.sin\(frame\/TEMPLE_GRASS_FRAMES\*Math\.PI\*2\)/);
+ assert.match(html,/Math\.floor\(gameClock\*12\)%TEMPLE_GRASS_FRAMES/);
  assert.match(html,/#174b2b/);assert.match(html,/#edf3d9/);
  assert.match(html,/if\(currentWorld==="temples"\)drawTempleGrassTufts\(\)/);
  assert.match(html,/createPuddlesBeforeTempleGrass/);
