@@ -18242,7 +18242,7 @@ function draw(){
  if(currentWorld==="temples")drawTempleIndestructibleShadows();
  for(const puddle of waterPuddles)drawWaterPuddle(puddle);
  if(currentWorld==="temples")drawTempleGrassTufts();
- if(currentWorld==="forest")drawForestIndestructibleDecorations();
+ if(currentWorld==="forest"&&running)drawForestIndestructibleDecorations();
  if(currentWorld==="temples")drawTempleFloatingBlocks();
  if(currentWorld==="diamonds")drawDiamondPortals();
  // Folhas e tentáculos do cenário ficam atrás de todos os elementos móveis.
