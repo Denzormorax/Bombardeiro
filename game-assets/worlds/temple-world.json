@@ -1,0 +1,166 @@
+{
+  "world": 7,
+  "id": "temples",
+  "name": "Reino dos Templos",
+  "phaseCount": 10,
+  "tileAtlas": "game-assets/sprites/temple_marble_themes.svg",
+  "columns": [
+    "ground",
+    "ornamentalFloor",
+    "indestructibleBlock",
+    "destructibleBlock"
+  ],
+  "rendering": "Renderizar o piso e os efeitos do cenário antes de personagens, inimigos, bombas e demais entidades em primeiro plano.",
+  "performance": "Carregar o atlas SVG uma única vez, preparar dez spritesheets em cache e reutilizar o cache estático do mapa. Não alterar física, colisões, IA, bombas, dano ou regras dos blocos.",
+  "indestructibleBlock": {
+    "type": "marble_temple_wall",
+    "description": "Bloco maciço de mármore claro, com placas facetadas, moldura arquitetônica, chanfros, veios minerais e faces laterais sombreadas."
+  },
+  "destructibleBlock": {
+    "type": "cracked_marble_crate",
+    "sameGameplayAsExistingDestructibleBlocks": true,
+    "description": "Bloco destrutível de mármore claro com rachaduras profundas, fragmentos minerais e núcleo luminoso. Mantém integralmente o comportamento dos blocos destrutíveis atuais."
+  },
+  "phases": [
+    {
+      "number": 1,
+      "name": "Carrara Imperial",
+      "subtitle": "Santuário Branco",
+      "environment": "Salões de mármore branco Carrara, veios cinza suaves e colunas clássicas.",
+      "palette": {
+        "light": "#fffdf8",
+        "highlight": "#eeeae2",
+        "primary": "#c7c0b4",
+        "shadow": "#aaa294",
+        "spark": "#fff7e5"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 2,
+      "name": "Calacatta Aurum",
+      "subtitle": "Templo Dourado",
+      "environment": "Templo de mármore branco com veios dourados e molduras de ouro claro.",
+      "palette": {
+        "light": "#fff8e9",
+        "highlight": "#f0e4cd",
+        "primary": "#d6b97d",
+        "shadow": "#a88a50",
+        "spark": "#fff0c5"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 3,
+      "name": "Statuario Ice",
+      "subtitle": "Palácio Glacial",
+      "environment": "Galerias de mármore branco frio, veios prateados e luz azulada.",
+      "palette": {
+        "light": "#f7fcff",
+        "highlight": "#e4edf2",
+        "primary": "#b6c9d4",
+        "shadow": "#8da4b2",
+        "spark": "#e8f8ff"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 4,
+      "name": "Rosa Aurora",
+      "subtitle": "Pavilhão Rosé",
+      "environment": "Pavilhões de mármore branco com veios rosa pálido e detalhes rosados.",
+      "palette": {
+        "light": "#fff8fa",
+        "highlight": "#f1e3e7",
+        "primary": "#d6b1bc",
+        "shadow": "#b88f9b",
+        "spark": "#ffeaf1"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 5,
+      "name": "Jade Alabastro",
+      "subtitle": "Jardim de Alabastro",
+      "environment": "Claustros de mármore branco com veios verdes suaves e jardins de jade.",
+      "palette": {
+        "light": "#f7fff9",
+        "highlight": "#e4efe7",
+        "primary": "#b3d0bd",
+        "shadow": "#8cac98",
+        "spark": "#e8fff0"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 6,
+      "name": "Azul Celeste",
+      "subtitle": "Templo das Águas",
+      "environment": "Salões de mármore branco com veios azul-celeste e reflexos aquáticos.",
+      "palette": {
+        "light": "#f5fcff",
+        "highlight": "#e1eef3",
+        "primary": "#b4d0dc",
+        "shadow": "#88adbd",
+        "spark": "#e5f9ff"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 7,
+      "name": "Ametista Névoa",
+      "subtitle": "Catedral Violeta",
+      "environment": "Catedral de mármore branco com veios lilases e ornamentos ametista.",
+      "palette": {
+        "light": "#fffaff",
+        "highlight": "#eee7f3",
+        "primary": "#c5b4d5",
+        "shadow": "#9d88b3",
+        "spark": "#f7edff"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 8,
+      "name": "Marfim Real",
+      "subtitle": "Palácio Imperial",
+      "environment": "Galerias de mármore marfim, relevos clássicos e detalhes bege-dourados.",
+      "palette": {
+        "light": "#fffef7",
+        "highlight": "#f0ebdc",
+        "primary": "#d1c5a7",
+        "shadow": "#a99a77",
+        "spark": "#fff4d8"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 9,
+      "name": "Champagne Nobre",
+      "subtitle": "Templo das Coroas",
+      "environment": "Salões de mármore champagne claro, molduras douradas e luz quente.",
+      "palette": {
+        "light": "#fffaf0",
+        "highlight": "#f1e7d5",
+        "primary": "#d6c29b",
+        "shadow": "#b49a6a",
+        "spark": "#fff0cf"
+      },
+      "bossPhase": false
+    },
+    {
+      "number": 10,
+      "name": "Opala Boreal",
+      "subtitle": "Santuário Supremo",
+      "environment": "Santuário de mármore branco opalino, reflexos perolados e veios minerais multicoloridos suaves.",
+      "palette": {
+        "light": "#f8fffd",
+        "highlight": "#e7f0ec",
+        "primary": "#c0d5cd",
+        "shadow": "#91aaa1",
+        "spark": "#effff8"
+      },
+      "bossPhase": true
+    }
+  ]
+}
