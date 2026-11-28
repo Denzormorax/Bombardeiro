@@ -16679,6 +16679,7 @@ function updateDirtParticles(dt){
  for(let i=builderBuildAnimations.length-1;i>=0;i--){builderBuildAnimations[i].age+=dt;if(builderBuildAnimations[i].age>=builderBuildAnimations[i].duration)builderBuildAnimations.splice(i,1)}
 }
 const templeBruteFireWaves=[];
+const templeBruteFireSpriteCache=[];
 function templeBruteAttackLane(enemy){
  if(currentWorld!=="temples"||level<1||level>9||!enemy.isBrute)return null;
  const ex=Math.floor(enemy.x),ey=Math.floor(enemy.y),px=Math.floor(player.x),py=Math.floor(player.y);
@@ -16691,8 +16692,8 @@ function templeBruteAttackLane(enemy){
  return {dx,dy};
 }
 function spawnTempleBruteFireWave(enemy){
- const dx=enemy.facingX||0,dy=enemy.facingY||0;if(!dx&&!dy)return;
- templeBruteFireWaves.push({x:Math.floor(enemy.x)+dx,y:Math.floor(enemy.y)+dy,dx,dy,remaining:7,clock:0,cells:[]});
+ const directions=[{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}],ex=Math.floor(enemy.x),ey=Math.floor(enemy.y);
+ for(const direction of directions)templeBruteFireWaves.push({x:ex+direction.dx,y:ey+direction.dy,dx:direction.dx,dy:direction.dy,remaining:7,clock:0,cells:[]});
 }
 function updateTempleBruteFireWaves(dt){
  for(let i=templeBruteFireWaves.length-1;i>=0;i--){
@@ -16706,23 +16707,48 @@ function updateTempleBruteFireWaves(dt){
   while(wave.clock>=.075&&wave.remaining>0){
    wave.clock-=.075;
    if(tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)){wave.remaining=0;break}
-   wave.cells.push({x:wave.x,y:wave.y,life:.27,age:0,hitPlayer:false});
+   wave.cells.push({x:wave.x,y:wave.y,dx:wave.dx,dy:wave.dy,life:.27,age:0,hitPlayer:false});
    if(Math.floor(player.x)===wave.x&&Math.floor(player.y)===wave.y){wave.cells[wave.cells.length-1].hitPlayer=true;hurtPlayer()}
    wave.x+=wave.dx;wave.y+=wave.dy;wave.remaining--;
   }
   if(wave.remaining<=0&&!wave.cells.length)templeBruteFireWaves.splice(i,1);
  }
 }
+function buildTempleBruteFireSprite(variant){
+ const sprite=document.createElement("canvas"),scale=2,size=TILE;
+ sprite.width=Math.ceil(size*1.36*scale);sprite.height=Math.ceil(size*1.24*scale);
+ const c=sprite.getContext("2d"),px=0,py=0,flicker=[-1.5,0,1.5][variant],flicker2=[1.2,-1.2,0][variant],cx=size/2,baseY=size-3;
+ c.scale(scale,scale);c.translate(size*.18,size*.12);
+ const glow=c.createRadialGradient(cx,py+size*.56,2,cx,py+size*.56,size*.78);
+ glow.addColorStop(0,"rgba(255,255,255,1)");glow.addColorStop(.28,"rgba(220,239,255,.96)");glow.addColorStop(.68,"rgba(133,171,205,.56)");glow.addColorStop(1,"rgba(63,83,111,0)");
+ c.fillStyle=glow;c.fillRect(px-size*.18,py-size*.12,size*1.36,size*1.24);
+ c.shadowColor="#d9f2ff";c.shadowBlur=12;c.fillStyle="#a9c7df";c.beginPath();
+ c.moveTo(px+7,baseY);c.bezierCurveTo(px+2,py+size*.67,px+13+flicker*2,py+size*.43,px+size*.27,py+size*.22);
+ c.bezierCurveTo(px+size*.22,py+size*.47,px+size*.43,py+size*.43,px+size*.48,py+size*.08+flicker*2);
+ c.bezierCurveTo(px+size*.59,py+size*.37,px+size*.78,py+size*.43,px+size*.76,py+size*.2+flicker2*2);
+ c.bezierCurveTo(px+size*.99,py+size*.53,px+size-2,py+size*.76,px+size-7,baseY);c.closePath();c.fill();
+ c.shadowColor="#ffffff";c.shadowBlur=9;c.fillStyle="#eaf8ff";c.beginPath();c.moveTo(px+10,baseY);
+ c.quadraticCurveTo(px+size*.12,py+size*.58,px+size*.3,py+size*.42+flicker*2);
+ c.quadraticCurveTo(px+size*.38,py+size*.73,px+size*.42,baseY);c.closePath();c.fill();
+ c.beginPath();c.moveTo(px+size*.57,baseY);c.quadraticCurveTo(px+size*.7,py+size*.62,px+size*.78,py+size*.39+flicker2*2);
+ c.quadraticCurveTo(px+size*.9,py+size*.72,px+size-10,baseY);c.closePath();c.fill();
+ c.shadowBlur=7;c.fillStyle="#ffffff";c.beginPath();c.moveTo(px+size*.22,baseY);
+ c.bezierCurveTo(px+size*.25,py+size*.66,px+size*.38,py+size*.48,px+size*.49,py+size*.31+flicker*1.5);
+ c.bezierCurveTo(px+size*.55,py+size*.52,px+size*.76,py+size*.65,px+size*.78,baseY);c.closePath();c.fill();
+ c.shadowBlur=3;c.fillStyle="#ffffff";c.beginPath();c.moveTo(px+size*.39,baseY);
+ c.quadraticCurveTo(px+size*.4,py+size*.62,cx+flicker2*2,py+size*.48);
+ c.quadraticCurveTo(px+size*.62,py+size*.68,px+size*.61,baseY);c.closePath();c.fill();
+ c.shadowBlur=0;
+ for(let i=0;i<4;i++){const sx=size*(.22+i*.18),sy=size*(.25+(i%2)*.19);c.globalAlpha=.72;c.fillStyle="#ffffff";c.beginPath();c.arc(sx,sy,1.1+(i%2)*.5,0,Math.PI*2);c.fill()}
+ return sprite;
+}
 function drawTempleBruteFireCell(cell){
- const px=ox+cell.x*TILE,py=oy+cell.y*TILE,fade=Math.min(1,cell.life/.09),pulse=Math.sin(gameClock*38+cell.x*2.1+cell.y)*.08;
- ctx.save();ctx.globalAlpha=Math.min(1,fade)*.96;
- const glow=ctx.createRadialGradient(px+TILE*.5,py+TILE*.52,2,px+TILE*.5,py+TILE*.52,TILE*.72);
- glow.addColorStop(0,"rgba(255,255,255,.98)");glow.addColorStop(.32,"rgba(226,230,235,.94)");glow.addColorStop(.7,"rgba(151,159,170,.76)");glow.addColorStop(1,"rgba(74,82,94,0)");
- ctx.fillStyle=glow;ctx.fillRect(px-TILE*.18,py-TILE*.18,TILE*1.36,TILE*1.36);
- const flame=ctx.createLinearGradient(0,py+TILE,0,py-TILE*.16);
- flame.addColorStop(0,"#5d6570");flame.addColorStop(.28,"#aeb5bf");flame.addColorStop(.62,"#e5e8ed");flame.addColorStop(1,"#ffffff");
- ctx.fillStyle=flame;ctx.beginPath();ctx.moveTo(px+TILE*.12,py+TILE*.88);ctx.quadraticCurveTo(px-TILE*.04,py+TILE*.55,px+TILE*.29,py+TILE*.26);ctx.quadraticCurveTo(px+TILE*.32,py+TILE*.08,px+TILE*.5,py+TILE*.2);ctx.quadraticCurveTo(px+TILE*.73,py-TILE*.04,px+TILE*.78,py+TILE*.35);ctx.quadraticCurveTo(px+TILE*1.08,py+TILE*.55,px+TILE*.88,py+TILE*.9);ctx.closePath();ctx.fill();
- ctx.globalAlpha*=.72;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.ellipse(px+TILE*(.48+pulse),py+TILE*.69,TILE*.2,TILE*.12,-.12,0,Math.PI*2);ctx.fill();ctx.restore();
+ if(!templeBruteFireSpriteCache.length)for(let i=0;i<3;i++)templeBruteFireSpriteCache.push(buildTempleBruteFireSprite(i));
+ const px=ox+(cell.x+.5)*TILE,py=oy+(cell.y+.5)*TILE,age=cell.age||0,phase=(cell.x*7+cell.y*13)%3;
+ const frame=Math.floor(age*17+phase)%templeBruteFireSpriteCache.length,fade=Math.min(1,cell.life/.09),pulse=1+Math.sin(gameClock*19+phase)*.025;
+ const sprite=templeBruteFireSpriteCache[frame],w=TILE*1.36*pulse,h=TILE*1.24*pulse;
+ let angle=0;if(cell.dx===1)angle=Math.PI/2;else if(cell.dx===-1)angle=-Math.PI/2;else if(cell.dy===1)angle=Math.PI;
+ ctx.save();ctx.globalAlpha=fade;ctx.translate(px,py);ctx.rotate(angle);ctx.drawImage(sprite,-w/2,-h/2,w,h);ctx.restore();
 }
 function updateEnemies(dt){
  const danger=getAllBombDangerCells();
@@ -16847,7 +16873,7 @@ function updateEnemies(dt){
    }
    const attackLane=templeBruteAttackLane(enemy);
    if(attackLane){
-    enemy.facingX=attackLane.dx;enemy.facingY=attackLane.dy;enemy.templeBruteAttackState="windup";enemy.templeBruteAttackTimer=4;
+    enemy.facingX=attackLane.dx;enemy.facingY=attackLane.dy;enemy.templeBruteAttackState="windup";enemy.templeBruteAttackTimer=2;
     enemy.speed=0;enemy.path=[];enemy.patrolTarget=null;enemy.mode="patrol";continue;
    }
   }
