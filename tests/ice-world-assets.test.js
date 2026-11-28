@@ -110,7 +110,7 @@ test("brilho dos blocos indestrutíveis tem maior intensidade sem perder o cache
   assert.ok(game.includes('"rgba(255,232,185,.96)"'));
   assert.ok(game.includes('"rgba(255,195,150,.95)"'));
   assert.ok(game.includes('"rgba(245,253,255,1)"'));
-  assert.ok(game.includes("const pulse=.68+.32*Math.sin(phase*Math.PI*2)"));
+  assert.ok(game.includes(": .68+.32*Math.sin(phase*Math.PI*2)"));
 });
 
 
