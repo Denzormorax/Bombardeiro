@@ -21936,11 +21936,13 @@ function buildTempleSpriteSheets(){
   const q=canvas.getContext("2d");q.imageSmoothingEnabled=false;
   q.drawImage(templeSpriteImage,0,i*128,512,128,0,0,512,128);
   templeThemedSpriteSheets[i]=canvas;
-  // Recorta a silhueta do bloco; o fundo do atlas fica transparente e não gira.
+  // Extrai SOMENTE uma face de mármore do cubo do atlas. As outras faces,
+  // a sombra e o fundo ficam fora do PNG que recebe a rotação.
   const blockCanvas=document.createElement("canvas");blockCanvas.width=128;blockCanvas.height=128;
-  const b=blockCanvas.getContext("2d");b.save();b.beginPath();
-  b.moveTo(13,37);b.lineTo(61,12);b.lineTo(111,37);b.lineTo(111,91);b.lineTo(61,116);b.lineTo(13,91);b.closePath();b.clip();
-  b.drawImage(canvas,384,0,128,128,0,0,128,128);b.restore();
+  const b=blockCanvas.getContext("2d");b.save();
+  b.setTransform(128/42,0,128*20/(42*50),128/50,-61*(128/42)-58*(128*20/(42*50)),-58*(128/50));
+  b.beginPath();b.moveTo(61,58);b.lineTo(103,38);b.lineTo(103,87);b.lineTo(61,108);b.closePath();b.clip();
+  b.drawImage(canvas,0,0);b.restore();
   templeDestructibleBlockSprites[i]=blockCanvas;
  }
  if(currentWorld==="temples"){buildBurningCrateSprite();rebuildStaticMapCache()}
