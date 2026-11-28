@@ -49,3 +49,18 @@ test("a seleção das fases usa tema de mármore claro e dourado sem alterar os 
  assert.match(html,/Carrara Imperial/);
  assert.match(html,/currentWorld!=="temples"\)return tileBeforeTemples/);
 });
+
+test("blocos do Reino dos Templos têm sombra e rotação 3D periódica sem alterar colisões",()=>{
+ assert.match(html,/target\.ellipse\(px\+TILE\*\.5,py\+TILE\*\.87,TILE\*\.35,TILE\*\.105/);
+ assert.match(html,/function drawTempleDestructibleBlocks\(\)/);
+ assert.match(html,/const cycle=gameClock%2,turnDuration=\.64/);
+ assert.match(html,/ctx\.scale\(widthScale,1\)/);
+ assert.match(html,/drawTempleDestructibleBlocks\(\)/);
+});
+test("a destruição de blocos dos Templos lança quatro fragmentos quadrados com duas escalas",()=>{
+ assert.match(html,/function spawnTempleBlockDebris\(x,y\)/);
+ assert.match(html,/sizes=\[\.27,\.24,\.16,\.15\]/);
+ assert.match(html,/if\(currentWorld==="temples"\)spawnTempleBlockDebris\(x\+\.5,y\+\.5\)/);
+ assert.match(html,/function updateTempleBlockDebris\(dt\)/);
+ assert.match(html,/function drawTempleBlockDebris\(\)/);
+});
