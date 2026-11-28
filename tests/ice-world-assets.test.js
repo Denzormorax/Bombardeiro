@@ -122,8 +122,8 @@ test("Boneco de Neve aparece em 3 ou 4 unidades nas fases 1 a 9 do Gelo", () => 
 
 test("Boneco de Neve usa a perseguição do Caçador e precisa de três acertos", () => {
   assert.ok(game.includes('isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned'));
-  assert.ok(game.includes('hp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1'));
-  assert.ok(game.includes('enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame'));
+  assert.ok(game.includes('hp:isSnowman?3:isBuilder?3:isBrute?4:isHunter||isHorned?2:1'));
+  assert.ok(game.includes('enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBrute||enemy.isBlueFlame'));
   assert.ok(game.includes('if(e.isSnowman){'));
   assert.ok(game.includes('faceYOffset=e.isSnowman?-17:0'));
   assert.ok(game.includes('function drawSnowmanBreath(e)'));
