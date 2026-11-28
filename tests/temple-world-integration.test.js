@@ -99,17 +99,17 @@ test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas
 });
 
 test("gramados das nove fases do Reino dos Templos pegam fogo com muitos focos e ficam carbonizados",()=>{
- assert.match(html,/const TEMPLE_GRASS_FIRE_DURATION=6\.7,TEMPLE_GRASS_FIRE_POINTS=84/);
+ assert.match(html,/const TEMPLE_GRASS_FIRE_DURATION=6\.7,TEMPLE_GRASS_FIRE_POINTS=64/);
  assert.match(html,/function igniteTempleGrass\(cells\)/);
  assert.match(html,/for\(let i=0;i<TEMPLE_GRASS_FIRE_POINTS;i\+\+\)points\.push/);
  assert.match(html,/if\(currentWorld==="temples"&&level>=1&&level<=9\)igniteTempleGrass\(cells\)/);
  assert.match(html,/function updateTempleGrassFire\(dt\)/);
  assert.match(html,/tuft\.charAlpha=Math\.min\(\.88/);
  assert.match(html,/if\(tuft\.fireAge>=TEMPLE_GRASS_FIRE_DURATION\)\{tuft\.burning=false;tuft\.burnt=true;tuft\.charAlpha=\.88/);
- assert.match(html,/ctx\.globalCompositeOperation="source-atop"/);
+ assert.match(html,/cq\.globalCompositeOperation="source-atop"/);
  assert.match(html,/tuft\.charAlpha=Math\.min\(\.88/);
  assert.doesNotMatch(html,/ctx\.fillStyle="#100d0b";ctx\.fillRect\(px,py,TILE,TILE\)/);
- assert.match(html,/size:2\+Math\.random\(\)\*2\.5/);
+ assert.match(html,/size:4\.2\+Math\.random\(\)\*3\.1/);
  assert.match(html,/function drawTempleGrassFire\(tuft,px,py\)/);
  assert.match(html,/fade=Math\.max\(0,1-Math\.max\(0,tuft\.fireAge-5\.25\)\/1\.45\)/);
  assert.match(html,/drawTempleGrassFire\(tuft,px,py\)/);
@@ -126,7 +126,7 @@ test("o brilho diagonal dos blocos indestrutíveis é totalmente desativado apen
  assert.match(html,/function drawIndestructibleShimmer\(\)\{\s*if\(currentWorld==="temples"\|\|currentWorld==="diamonds"\)return;/);
 });
 test("a grama do Reino dos Templos tem folhas reais que ultrapassam topo e laterais sem perder o cache",()=>{
- assert.match(html,/TEMPLE_GRASS_BLEED=5/);
+ assert.match(html,/templeGrassCharredSpriteVariants/);\n assert.match(html,/q\.clearRect\(0,0,canvas\.width,canvas\.height\)/);\n assert.doesNotMatch(html,/q\.fillRect\(B,B,TILE,TILE\)/);\n assert.match(html,/cq\.globalCompositeOperation="source-atop"/);\n assert.match(html,/TEMPLE_GRASS_BLEED=5/);
  assert.match(html,/canvas\.width=TILE\+TEMPLE_GRASS_BLEED\*2/);
  assert.match(html,/edge=blade%4/);
  assert.match(html,/edge===0\?B\+rand\(\)\*10:edge===1\?B\+TILE-rand\(\)\*10/);
