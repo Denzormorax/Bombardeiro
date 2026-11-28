@@ -51,11 +51,13 @@ test("a seleção das fases usa tema de mármore claro e dourado sem alterar os 
 });
 
 test("blocos do Reino dos Templos têm sombra e rotação 3D periódica sem alterar colisões",()=>{
- assert.match(html,/target\.ellipse\(px\+TILE\*\.5,py\+TILE\*\.87,TILE\*\.35,TILE\*\.105/);
+ assert.match(html,/ctx\.ellipse\(px\+TILE\*\.5,py\+TILE\*\.88,TILE\*\.43,TILE\*\.12/);
  assert.match(html,/function drawTempleDestructibleBlocks\(\)/);
- assert.match(html,/const cycle=gameClock%2,turnDuration=\.64/);
- assert.match(html,/ctx\.scale\(widthScale,1\)/);
+ assert.match(html,/const angle=gameClock\*\(Math\.PI\*2\/3\.2\)/);
+ assert.match(html,/face=Math\.cos\(angle\),side=Math\.sin\(angle\)/);
+ assert.match(html,/const sideGradient=ctx\.createLinearGradient/);
  assert.match(html,/drawTempleDestructibleBlocks\(\)/);
+ assert.doesNotMatch(html,/ctx\.scale\(widthScale,1\)/);
 });
 test("blocos destrutíveis do Reino dos Templos giram como cubos 3D com troca de faces",()=>{
  const start=html.indexOf("function drawTempleDestructibleBlocks()");
