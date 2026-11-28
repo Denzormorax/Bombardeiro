@@ -16313,7 +16313,7 @@ function newLevel(preservePowerUps=false){
    templeBruteCount=currentWorld==="temples"&&level>=1&&level<=9?1:0,
    spawnPositions=createEnemySpawnPositions(count+builderCount+snowmanCount);prepareCoinDrops();
   const slots=shuffleArray(Array.from({length:spawnPositions.length},(_,i)=>i)),builderSlots=new Set(slots.splice(0,builderCount)),mushroomSlots=new Set(slots.splice(0,mushroomCount)),hornedSlots=new Set(slots.splice(0,hornedCount)),snowmanSlots=new Set(slots.splice(0,snowmanCount)),templeBruteSlots=new Set(slots.splice(0,templeBruteCount)),hunterSlots=new Set(slots.slice(0,Math.min(3,slots.length)));
- spawnPositions.forEach((p,index)=>{const isBuilder=currentWorld!=="diamonds"&&builderSlots.has(index),isMushroom=currentWorld!=="diamonds"&&mushroomSlots.has(index),isHorned=currentWorld!=="diamonds"&&hornedSlots.has(index),isSnowman=snowmanSlots.has(index),isBrute=templeBruteSlots.has(index),isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned&&(level>=5&&level<=9?true:hunterSlots.has(index))),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,forestColorIndex:Math.floor(Math.random()*4),speed:baseSpeed*(isBrute?.92:1),baseSpeed:baseSpeed*(isBrute?.92:1),huntSpeed:baseSpeed*(isBuilder?1.62:isSnowman?1.55:isHorned?1.72:isHunter&&!isBrute?1.55:isBrute?1.35:1.28),isBuilder,isHunter:isHunter&&!isBrute,isHorned,isMushroom,isSnowman,isBrute,isEnraged:false,hp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,maxHp:isSnowman?3:isBuilder?3:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0,building:false,buildTimer:0,buildCheckTimer:0,freezingBomb:null,freezeCooldown:0});if(isBrute){const brute=enemies[enemies.length-1];brute.hp=brute.maxHp=3}});
+ spawnPositions.forEach((p,index)=>{const isBuilder=currentWorld!=="diamonds"&&builderSlots.has(index),isMushroom=currentWorld!=="diamonds"&&mushroomSlots.has(index),isHorned=currentWorld!=="diamonds"&&hornedSlots.has(index),isSnowman=snowmanSlots.has(index),isBrute=templeBruteSlots.has(index),isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned&&(level>=5&&level<=9?true:hunterSlots.has(index))),baseSpeed=1.35+Math.min(level*.07,.9);enemies.push({x:p.x+.5,y:p.y+.5,forestColorIndex:Math.floor(Math.random()*4),speed:baseSpeed*(isBrute?.92:1),baseSpeed:baseSpeed*(isBrute?.92:1),huntSpeed:baseSpeed*(isBuilder?1.62:isSnowman?1.55:isHorned?1.72:isHunter&&!isBrute?1.55:isBrute?1.35:1.28),isBuilder,isHunter:isHunter&&!isBrute,isHorned,isMushroom,isSnowman,isBrute,isEnraged:false,hp:isSnowman?3:isBuilder?3:isBrute?4:isHunter||isHorned?2:1,maxHp:isSnowman?3:isBuilder?3:isBrute?4:isHunter||isHorned?2:1,hitFlash:0,hurtTimer:0,deathTimer:0,facingX:0,facingY:1,path:[],repath:0,alive:true,mode:"patrol",alert:0,lastSeen:null,patrolTarget:null,patrolWait:Math.random()*.8,patrolDirection:Math.random()<.5?1:-1,visionTimer:Math.random()*.08,seesPlayer:false,teleportTimer:7+Math.random()*5,burrowTimer:0,burrowDuration:.72,emergeTimer:0,burrowing:false,evadeTimer:0,evadeRepath:0,bombEscapePending:false,bombReactionTimer:0,building:false,buildTimer:0,buildCheckTimer:0,freezingBomb:null,freezeCooldown:0,templeBruteAttackState:"idle",templeBruteAttackTimer:0})});
  updateHUD();
 }
 
@@ -16678,6 +16678,52 @@ function updateDirtParticles(dt){
  for(let i=dirtParticles.length-1;i>=0;i--){const p=dirtParticles[i];p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=2.1*dt;if(p.t<=0)dirtParticles.splice(i,1)}
  for(let i=builderBuildAnimations.length-1;i>=0;i--){builderBuildAnimations[i].age+=dt;if(builderBuildAnimations[i].age>=builderBuildAnimations[i].duration)builderBuildAnimations.splice(i,1)}
 }
+const templeBruteFireWaves=[];
+function templeBruteAttackLane(enemy){
+ if(currentWorld!=="temples"||level<1||level>9||!enemy.isBrute)return null;
+ const ex=Math.floor(enemy.x),ey=Math.floor(enemy.y),px=Math.floor(player.x),py=Math.floor(player.y);
+ let dx=0,dy=0,range=0;
+ if(ey===py&&Math.abs(player.y-enemy.y)<.58){dx=Math.sign(player.x-enemy.x);range=Math.abs(px-ex)}
+ else if(ex===px&&Math.abs(player.x-enemy.x)<.58){dy=Math.sign(player.y-enemy.y);range=Math.abs(py-ey)}
+ else return null;
+ if((!dx&&!dy)||range<1||range>7)return null;
+ for(let step=1;step<=range;step++){const x=ex+dx*step,y=ey+dy*step;if(tileAt(x,y)!==0||bombAt(x,y))return null}
+ return {dx,dy};
+}
+function spawnTempleBruteFireWave(enemy){
+ const dx=enemy.facingX||0,dy=enemy.facingY||0;if(!dx&&!dy)return;
+ templeBruteFireWaves.push({x:Math.floor(enemy.x)+dx,y:Math.floor(enemy.y)+dy,dx,dy,remaining:7,clock:0,cells:[]});
+}
+function updateTempleBruteFireWaves(dt){
+ for(let i=templeBruteFireWaves.length-1;i>=0;i--){
+  const wave=templeBruteFireWaves[i];
+  for(let j=wave.cells.length-1;j>=0;j--){
+   const cell=wave.cells[j];cell.life-=dt;cell.age+=dt;
+   if(cell.life<=0)wave.cells.splice(j,1);
+   else if(!cell.hitPlayer&&Math.floor(player.x)===cell.x&&Math.floor(player.y)===cell.y){cell.hitPlayer=true;hurtPlayer()}
+  }
+  wave.clock+=dt;
+  while(wave.clock>=.075&&wave.remaining>0){
+   wave.clock-=.075;
+   if(tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)){wave.remaining=0;break}
+   wave.cells.push({x:wave.x,y:wave.y,life:.27,age:0,hitPlayer:false});
+   if(Math.floor(player.x)===wave.x&&Math.floor(player.y)===wave.y){wave.cells[wave.cells.length-1].hitPlayer=true;hurtPlayer()}
+   wave.x+=wave.dx;wave.y+=wave.dy;wave.remaining--;
+  }
+  if(wave.remaining<=0&&!wave.cells.length)templeBruteFireWaves.splice(i,1);
+ }
+}
+function drawTempleBruteFireCell(cell){
+ const px=ox+cell.x*TILE,py=oy+cell.y*TILE,fade=Math.min(1,cell.life/.09),pulse=Math.sin(gameClock*38+cell.x*2.1+cell.y)*.08;
+ ctx.save();ctx.globalAlpha=Math.min(1,fade)*.96;
+ const glow=ctx.createRadialGradient(px+TILE*.5,py+TILE*.52,2,px+TILE*.5,py+TILE*.52,TILE*.72);
+ glow.addColorStop(0,"rgba(255,255,255,.98)");glow.addColorStop(.32,"rgba(226,230,235,.94)");glow.addColorStop(.7,"rgba(151,159,170,.76)");glow.addColorStop(1,"rgba(74,82,94,0)");
+ ctx.fillStyle=glow;ctx.fillRect(px-TILE*.18,py-TILE*.18,TILE*1.36,TILE*1.36);
+ const flame=ctx.createLinearGradient(0,py+TILE,0,py-TILE*.16);
+ flame.addColorStop(0,"#5d6570");flame.addColorStop(.28,"#aeb5bf");flame.addColorStop(.62,"#e5e8ed");flame.addColorStop(1,"#ffffff");
+ ctx.fillStyle=flame;ctx.beginPath();ctx.moveTo(px+TILE*.12,py+TILE*.88);ctx.quadraticCurveTo(px-TILE*.04,py+TILE*.55,px+TILE*.29,py+TILE*.26);ctx.quadraticCurveTo(px+TILE*.32,py+TILE*.08,px+TILE*.5,py+TILE*.2);ctx.quadraticCurveTo(px+TILE*.73,py-TILE*.04,px+TILE*.78,py+TILE*.35);ctx.quadraticCurveTo(px+TILE*1.08,py+TILE*.55,px+TILE*.88,py+TILE*.9);ctx.closePath();ctx.fill();
+ ctx.globalAlpha*=.72;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.ellipse(px+TILE*(.48+pulse),py+TILE*.69,TILE*.2,TILE*.12,-.12,0,Math.PI*2);ctx.fill();ctx.restore();
+}
 function updateEnemies(dt){
  const danger=getAllBombDangerCells();
  for(const enemy of enemies){
@@ -16787,6 +16833,24 @@ function updateEnemies(dt){
    enemy.repath=0;
   }
 
+  if(enemy.isBrute&&currentWorld==="temples"&&level>=1&&level<=9){
+   const attackState=enemy.templeBruteAttackState||"idle";
+   if(attackState==="windup"){
+    enemy.speed=0;enemy.path=[];enemy.patrolTarget=null;enemy.templeBruteAttackTimer-=dt;
+    if(enemy.templeBruteAttackTimer<=0){enemy.templeBruteAttackState="slam";enemy.templeBruteAttackTimer=2;spawnTempleBruteFireWave(enemy)}
+    continue;
+   }
+   if(attackState==="slam"){
+    enemy.speed=0;enemy.path=[];enemy.patrolTarget=null;enemy.templeBruteAttackTimer-=dt;
+    if(enemy.templeBruteAttackTimer<=0){enemy.templeBruteAttackState="idle";enemy.templeBruteAttackTimer=0;enemy.patrolWait=.18;enemy.repath=0}
+    continue;
+   }
+   const attackLane=templeBruteAttackLane(enemy);
+   if(attackLane){
+    enemy.facingX=attackLane.dx;enemy.facingY=attackLane.dy;enemy.templeBruteAttackState="windup";enemy.templeBruteAttackTimer=4;
+    enemy.speed=0;enemy.path=[];enemy.patrolTarget=null;enemy.mode="patrol";continue;
+   }
+  }
   // Azul: antes de ser atingido patrulha; após o primeiro dano, persegue sem desistir.
   const seesPlayer=canSeePlayer(enemy);
   if(enemy.isBuilder&&enemy.isEnraged&&seesPlayer){
@@ -16841,8 +16905,8 @@ function placeBomb(){
  if(volcanoLava){bombs.splice(bombs.indexOf(bomb),1);explode(bomb);}
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;const rewardType=enemy.isCrystalBomb?"crystalBomb":enemy.isDiamondCharger?"diamond":enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder?"red":"green";createCoin(enemy.x,enemy.y,rewardType)}
-function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;const visible=canSeePlayer(enemy);enemy.mode=visible?"chase":"patrol";enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null;enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
+function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;const rewardType=enemy.isCrystalBomb?"crystalBomb":enemy.isDiamondCharger?"diamond":enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder||enemy.isBrute?"red":"green";createCoin(enemy.x,enemy.y,rewardType)}
+function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBrute||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;const visible=canSeePlayer(enemy);enemy.mode=visible?"chase":"patrol";enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null;enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
  for(const b of bombs){if(b.ownerPass||b.slide||b.freezing||b.frozen||b.extinguished)continue;const cx=b.x+.5,cy=b.y+.5,vx=cx-player.x,vy=cy-player.y,dot=vx*dirX+vy*dirY,cross=Math.abs(vx*dirY-vy*dirX);if(dot<=0||dot>.95||cross>.42)continue;b.slide={dx:dirX,dy:dirY};b.slideClock=0;return true}return false;
@@ -17186,7 +17250,7 @@ function update(dt){
  if(!running||paused)return;
  player._previousX=player.x;player._previousY=player.y;
  for(const enemy of enemies){enemy._previousX=enemy.x;enemy._previousY=enemy.y}
- gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);
+ gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);if(currentWorld==="temples")updateTempleBruteFireWaves(dt);
  for(const enemy of enemies)if(enemy&&enemy.isBuilder)enemy._builderMoving=!!(enemy.alive&&!enemy.burrowing&&Number.isFinite(enemy._previousX)&&Math.hypot(enemy.x-enemy._previousX,enemy.y-enemy._previousY)>.00025);
  updateWaterWalkers(dt);updateSlidingBombs(dt);
  for(const b of bombs){
@@ -17657,19 +17721,22 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   }
   ctx.restore();
  }
- // Braços musculosos do guardião: ficam dentro da largura do próprio bloco.
+ // Braços musculosos ampliados: ultrapassam a silhueta da cabeça e do tronco.
  if(e.isBrute&&currentWorld==="temples"&&level>=1&&level<=9){
-  const p=TEMPLE_BRUTE_ENEMY_PALETTE,swing=e._templeBruteMoving?Math.sin(gameClock*13.5+(e.x||0)*2.1)*.34:Math.sin(gameClock*2.4+(e.y||0))* .035;
+  const p=TEMPLE_BRUTE_ENEMY_PALETTE,state=e.templeBruteAttackState||"idle";
+  const walking=e._templeBruteMoving?Math.sin(gameClock*13.5+(e.x||0)*2.1)*.27:Math.sin(gameClock*2.4+(e.y||0))*.025;
+  const raised=state==="windup",slam=state==="slam";
   ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
   for(const side of [-1,1]){
-   ctx.save();ctx.translate(side*10,-1);ctx.rotate(side*swing);
-   const arm=ctx.createLinearGradient(0,-1,side*10,11);arm.addColorStop(0,p.light);arm.addColorStop(.38,p.body);arm.addColorStop(.78,p.crown);arm.addColorStop(1,p.shadow);
-   ctx.strokeStyle=p.deep;ctx.lineWidth=9.2;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(side*7,-1,side*9,5);ctx.quadraticCurveTo(side*10,8,side*10,10);ctx.stroke();
-   ctx.strokeStyle=arm;ctx.lineWidth=6.4;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(side*7,-1,side*9,5);ctx.quadraticCurveTo(side*10,8,side*10,10);ctx.stroke();
-   ctx.fillStyle=p.deep;ctx.beginPath();ctx.ellipse(side*10.5,10,5.1,5.6,side*.12,0,Math.PI*2);ctx.fill();
-   ctx.fillStyle=arm;ctx.beginPath();ctx.ellipse(side*10.5,9.5,4,4.5,side*.12,0,Math.PI*2);ctx.fill();
-   ctx.strokeStyle=p.metal;ctx.lineWidth=1.35;ctx.beginPath();ctx.moveTo(side*6,3);ctx.lineTo(side*11,5);ctx.stroke();
-   ctx.fillStyle=p.gem;ctx.beginPath();ctx.arc(side*10.5,9.5,1.25,0,Math.PI*2);ctx.fill();
+   ctx.save();ctx.translate(side*10,-2);ctx.rotate(raised?-side*1.12:slam?side*.16:side*walking);
+   const arm=ctx.createLinearGradient(0,-3,side*14,14);arm.addColorStop(0,p.light);arm.addColorStop(.32,p.body);arm.addColorStop(.72,p.crown);arm.addColorStop(1,p.shadow);
+   ctx.strokeStyle=p.deep;ctx.lineWidth=16;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(side*9,-3,side*12,6);ctx.quadraticCurveTo(side*15,10,side*14,14);ctx.stroke();
+   ctx.strokeStyle=arm;ctx.lineWidth=12.2;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(side*9,-3,side*12,6);ctx.quadraticCurveTo(side*15,10,side*14,14);ctx.stroke();
+   ctx.strokeStyle=p.light;ctx.lineWidth=2.1;ctx.beginPath();ctx.moveTo(side*5,-1);ctx.quadraticCurveTo(side*9,1,side*11,6);ctx.stroke();
+   ctx.fillStyle=p.deep;ctx.beginPath();ctx.ellipse(side*14.5,14,6.8,7.2,side*.12,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle=arm;ctx.beginPath();ctx.ellipse(side*14.5,13.5,5.4,5.8,side*.12,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle=p.metal;ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(side*9,4);ctx.lineTo(side*15,7);ctx.stroke();
+   ctx.fillStyle=p.gem;ctx.beginPath();ctx.arc(side*14.5,13.5,1.7,0,Math.PI*2);ctx.fill();
    ctx.restore();
   }
   ctx.restore();
@@ -17727,7 +17794,7 @@ function drawEnemy(e){
  if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):currentWorld==="diamonds"?currentForestTheme().glow:currentWorld==="forest"?"#8cc77b":"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
  if(e.isSnowman&&!isDying)drawSnowmanBreath(e);
- if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-(e.isSnowman?43:31);ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isSnowman?(ratio>.66?"#a5edff":ratio>.33?"#64c9f2":"#3c8dbf"):e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
+ if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder||e.isBrute)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-(e.isSnowman?43:e.isBrute?36:31);ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isSnowman?(ratio>.66?"#a5edff":ratio>.33?"#64c9f2":"#3c8dbf"):e.isBrute?(ratio>.5?"#b9f5e8":ratio>.25?"#7ed7c8":"#4b9e9c"):e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
 }
 
 
@@ -18172,7 +18239,7 @@ function draw(){
  drawDiamondChargerParticles();
  for(let y=0;y<ROWS;y++){
   for(const crate of burningCrates)if(crate.y===y&&currentWorld!=="desert"&&currentWorld!=="volcano")drawBurningCrate(crate);
-  if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const d of spiderDisguises)if(Math.floor(d.renderY??d.y)===y)drawSpiderDisguise(d);for(const chest of treasureChests)if(chest.y===y)drawTreasureChest(chest);for(const b of bombs)if(Math.floor(b.y)===y){drawBomb(b);drawTempleForegroundGrass(b.x+.5,b.y+.5,b.animTime||0)}for(const f of flames)if(f.y===y)drawFlame(f);
+  if(exit.y===y)drawExit();for(const c of coinsOnMap)if(Math.floor(c.y)===y)drawCoin(c);for(const d of spiderDisguises)if(Math.floor(d.renderY??d.y)===y)drawSpiderDisguise(d);for(const chest of treasureChests)if(chest.y===y)drawTreasureChest(chest);for(const b of bombs)if(Math.floor(b.y)===y){drawBomb(b);drawTempleForegroundGrass(b.x+.5,b.y+.5,b.animTime||0)}for(const f of flames)if(f.y===y)drawFlame(f);if(currentWorld==="temples")for(const wave of templeBruteFireWaves)for(const cell of wave.cells)if(cell.y===y)drawTempleBruteFireCell(cell);
   if(currentWorld==="volcano"){for(const e of enemyDrawRows[y]){drawEnemy(e);if(!e.isBuilder&&!e.isHunter&&!e.isHorned&&!e.isMushroom&&!e.isSnowman)drawTempleForegroundGrass(e.x,e.y,e.x*17+e.y)}}
   else{for(const e of enemies){if(Math.floor(e.y)!==y)continue;if(!e.alive&&(e.deathTimer||0)<=0)continue;drawEnemy(e);if(!e.isBuilder&&!e.isHunter&&!e.isHorned&&!e.isMushroom&&!e.isSnowman)drawTempleForegroundGrass(e.x,e.y,e.x*17+e.y)}}
   if(Math.floor(player.y)===y&&(player.inv<=0||Math.floor(gameClock*12)%2===0||player.hurtTimer>0)){drawPlayer();drawTempleForegroundGrass(player.x,player.y,player.x*13+player.y)}
