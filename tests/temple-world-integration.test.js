@@ -107,7 +107,7 @@ test("o brilho diagonal dos blocos indestrutíveis é totalmente desativado apen
  assert.match(html,/function drawIndestructibleShimmer\(\)\{\s*if\(currentWorld==="temples"\|\|currentWorld==="diamonds"\)return;/);
 });
 test("a grama do Reino dos Templos tem folhas reais que ultrapassam topo e laterais sem perder o cache",()=>{
- assert.match(html,/TEMPLE_GRASS_BLEED=16/);
+ assert.match(html,/TEMPLE_GRASS_BLEED=12/);
  assert.match(html,/canvas\.width=TILE\+TEMPLE_GRASS_BLEED\*2/);
  assert.match(html,/edge=blade%4/);
  assert.match(html,/edge===0\?B\+rand\(\)\*10:edge===1\?B\+TILE-rand\(\)\*10/);
