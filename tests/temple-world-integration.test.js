@@ -64,13 +64,14 @@ test("blocos do Reino dos Templos usam PNG transparente estático, maior e com s
  assert.doesNotMatch(html,/face=Math\.cos\(angle\),side=Math\.sin\(angle\)/);
  assert.match(html,/drawTempleBlockDebris\(\)/);
 });
-test("a destruição de blocos dos Templos lança quatro fragmentos quadrados com duas escalas",()=>{
- assert.match(html,/function spawnTempleBlockDebris\(x,y\)/);
- assert.match(html,/sizes=\[\.27,\.24,\.16,\.15\]/);
- assert.match(html,/if\(currentWorld==="temples"\)spawnTempleBlockDebris\(x\+\.5,y\+\.5\)/);
+test("a destruição de blocos dos Templos lança muitos fragmentos facetados com a paleta da fase",()=>{
+ assert.match(html,/function spawnTempleBlockDebris\(x,y,world=currentWorld\)/);
+ assert.match(html,/getDestructibleBlockFragmentColors\(world\)/);
+ assert.match(html,/pushTempleDebrisEffect\(x,y,getDestructibleBlockFragmentColors\(world\),22/);
+ assert.match(html,/spawnTempleBlockDebris\(x\+\.5,y\+\.5,currentWorld\)/);
  assert.match(html,/function updateTempleBlockDebris\(dt\)/);
  assert.match(html,/function drawTempleBlockDebris\(\)/);
-});
+});;
 
 test("blocos destrutíveis flutuam e fazem gangorra com sombra PNG separada e fixa no chão",()=>{
  assert.match(html,/templeDestructibleBlockPngs=Array\(10\)\.fill\(null\)/);
