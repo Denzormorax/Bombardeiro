@@ -32,5 +32,5 @@ test("durante a morte o mundo e os controles ficam bloqueados até o fade e o re
 
 test("a animação é limpa ao preparar uma nova fase e mantém o encerramento na última vida",()=>{
  assert.match(html,/playerDeathAnimation=null;screenFadeAlpha=0;heartPurchases=0/);
- assert.match(html,/if\(lives<=0\)\{playerDeathAnimation=null;screenFadeAlpha=0;gameOver\(false\);return\}/);
+ assert.match(html,/if\(lives<=0\)\{playerDeathAnimation=null;screenFadeAlpha=1;gameOver\(false\);return\}/);
 });
