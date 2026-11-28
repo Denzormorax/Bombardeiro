@@ -16717,29 +16717,28 @@ function updateTempleBruteFireWaves(dt){
 function buildTempleBruteFireSprite(variant){
  const sprite=document.createElement("canvas"),scale=2,size=TILE;
  sprite.width=Math.ceil(size*1.36*scale);sprite.height=Math.ceil(size*1.24*scale);
- const c=sprite.getContext("2d"),px=0,py=0,flicker=[-1.5,0,1.5][variant],flicker2=[1.2,-1.2,0][variant],cx=size/2,baseY=size-3;
+ const c=sprite.getContext("2d"),px=0,py=0;
+ const flicker=[-1.5,0,1.5][variant],flicker2=[1.2,-1.2,0][variant],cx=px+size/2,baseY=py+size-3;
  c.scale(scale,scale);c.translate(size*.18,size*.12);
- const glow=c.createRadialGradient(cx,py+size*.56,2,cx,py+size*.56,size*.78);
- glow.addColorStop(0,"rgba(255,255,255,1)");glow.addColorStop(.28,"rgba(220,239,255,.96)");glow.addColorStop(.68,"rgba(133,171,205,.56)");glow.addColorStop(1,"rgba(63,83,111,0)");
+ const glow=c.createRadialGradient(cx,py+size*.56,3,cx,py+size*.56,size*.78);
+ glow.addColorStop(0,"#ffffff");glow.addColorStop(.28,"#e9f6ff");glow.addColorStop(.68,"#a9c4dc88");glow.addColorStop(1,"#7c9db000");
  c.fillStyle=glow;c.fillRect(px-size*.18,py-size*.12,size*1.36,size*1.24);
- c.shadowColor="#d9f2ff";c.shadowBlur=12;c.fillStyle="#a9c7df";c.beginPath();
+ c.shadowColor="#c9eaff";c.shadowBlur=10;c.fillStyle="#829db8";c.beginPath();
  c.moveTo(px+7,baseY);c.bezierCurveTo(px+2,py+size*.67,px+13+flicker*2,py+size*.43,px+size*.27,py+size*.22);
  c.bezierCurveTo(px+size*.22,py+size*.47,px+size*.43,py+size*.43,px+size*.48,py+size*.08+flicker*2);
  c.bezierCurveTo(px+size*.59,py+size*.37,px+size*.78,py+size*.43,px+size*.76,py+size*.2+flicker2*2);
  c.bezierCurveTo(px+size*.99,py+size*.53,px+size-2,py+size*.76,px+size-7,baseY);c.closePath();c.fill();
- c.shadowColor="#ffffff";c.shadowBlur=9;c.fillStyle="#eaf8ff";c.beginPath();c.moveTo(px+10,baseY);
+ c.shadowBlur=8;c.fillStyle="#c5d9eb";c.beginPath();c.moveTo(px+10,baseY);
  c.quadraticCurveTo(px+size*.12,py+size*.58,px+size*.3,py+size*.42+flicker*2);
  c.quadraticCurveTo(px+size*.38,py+size*.73,px+size*.42,baseY);c.closePath();c.fill();
  c.beginPath();c.moveTo(px+size*.57,baseY);c.quadraticCurveTo(px+size*.7,py+size*.62,px+size*.78,py+size*.39+flicker2*2);
  c.quadraticCurveTo(px+size*.9,py+size*.72,px+size-10,baseY);c.closePath();c.fill();
- c.shadowBlur=7;c.fillStyle="#ffffff";c.beginPath();c.moveTo(px+size*.22,baseY);
+ c.shadowColor="#ffffff";c.shadowBlur=8;c.fillStyle="#f2faff";c.beginPath();c.moveTo(px+size*.22,baseY);
  c.bezierCurveTo(px+size*.25,py+size*.66,px+size*.38,py+size*.48,px+size*.49,py+size*.31+flicker*1.5);
  c.bezierCurveTo(px+size*.55,py+size*.52,px+size*.76,py+size*.65,px+size*.78,baseY);c.closePath();c.fill();
- c.shadowBlur=3;c.fillStyle="#ffffff";c.beginPath();c.moveTo(px+size*.39,baseY);
+ c.shadowBlur=4;c.fillStyle="#ffffff";c.beginPath();c.moveTo(px+size*.39,baseY);
  c.quadraticCurveTo(px+size*.4,py+size*.62,cx+flicker2*2,py+size*.48);
  c.quadraticCurveTo(px+size*.62,py+size*.68,px+size*.61,baseY);c.closePath();c.fill();
- c.shadowBlur=0;
- for(let i=0;i<4;i++){const sx=size*(.22+i*.18),sy=size*(.25+(i%2)*.19);c.globalAlpha=.72;c.fillStyle="#ffffff";c.beginPath();c.arc(sx,sy,1.1+(i%2)*.5,0,Math.PI*2);c.fill()}
  return sprite;
 }
 function drawTempleBruteFireCell(cell){

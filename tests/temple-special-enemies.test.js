@@ -45,19 +45,25 @@ test("o Guardião prepara o golpe por dois segundos e mantém dois segundos de r
  assert.ok(html.includes('enemy.templeBruteAttackState="slam";enemy.templeBruteAttackTimer=2'));
  assert.ok(html.includes('enemy.templeBruteAttackState="idle"'));
 });
-test("o fogo cintilante avança em cruz, só atinge o jogador e não afeta blocos ou inimigos",()=>{
- assert.ok(html.includes("function spawnTempleBruteFireWave(enemy)"));
- assert.ok(html.includes("remaining:7"));
- assert.ok(html.includes("directions=[{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}]"));
- assert.ok(html.includes("wave.clock>=.075"));
- assert.ok(html.includes("tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)"));
- assert.ok(html.includes("Math.floor(player.x)===wave.x&&Math.floor(player.y)===wave.y"));
- assert.ok(html.includes("hurtPlayer()"));
- assert.ok(html.includes("function drawTempleBruteFireCell(cell)"));
- assert.ok(html.includes("function buildTempleBruteFireSprite(variant)"));
- assert.ok(html.includes("#d9f2ff"));
- assert.ok(html.includes("rgba(255,255,255,1)"));
- assert.ok(html.includes("#ffffff"));
+test("o fogo do Guardião usa o mesmo desenho e tamanho da chama da bomba, mudando apenas as cores",()=>{
+ const bomb=html.slice(html.indexOf("function buildFlameSpriteVariant(variant){"),html.indexOf("\nfunction drawFlame(f){"));
+ const brute=html.slice(html.indexOf("function buildTempleBruteFireSprite(variant){"),html.indexOf("\nfunction drawTempleBruteFireCell(cell){"));
+ for(const fragment of [
+  "sprite.width=Math.ceil(size*1.36*scale);sprite.height=Math.ceil(size*1.24*scale)",
+  "c.moveTo(px+7,baseY)",
+  "c.bezierCurveTo(px+size*.99,py+size*.53,px+size-2,py+size*.76,px+size-7,baseY)",
+  "c.quadraticCurveTo(px+size*.12,py+size*.58,px+size*.3,py+size*.42+flicker*2)",
+  "c.bezierCurveTo(px+size*.25,py+size*.66,px+size*.38,py+size*.48,px+size*.49,py+size*.31+flicker*1.5)",
+  "c.quadraticCurveTo(px+size*.4,py+size*.62,cx+flicker2*2,py+size*.48)"
+ ]){assert.ok(bomb.includes(fragment),`chama da bomba sem geometria esperada: ${fragment}`);assert.ok(brute.includes(fragment),`fogo do Guardião difere da bomba: ${fragment}`)}
+ assert.ok(brute.includes('"#ffffff"'));
+ assert.ok(brute.includes('"#c5d9eb"'));
+ assert.ok(brute.includes('"#829db8"'));
+ assert.ok(!brute.includes("for(let i=0;i<4;i++)"));
+ assert.ok(brute.includes("const w=TILE*1.36*pulse,h=TILE*1.24*pulse"));
+ assert.ok(brute.includes("remaining:7"));
+ assert.ok(brute.includes("directions=[{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}]"));
+ assert.ok(brute.includes("tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)"));
 });
 test("a onda de fogo do Guardião é atualizada e desenhada somente no Reino dos Templos",()=>{
  assert.match(html,/if\(currentWorld==="temples"\)updateTempleBruteFireWaves\(dt\)/);
