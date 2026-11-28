@@ -18675,269 +18675,6 @@ const swampLogAllEnemiesBase=allEnemiesDefeated;
 allEnemiesDefeated=function(){return swampLogAllEnemiesBase()};
 
 
-/* INIMIGOS ESPECIAIS — MINHOCA DA FLORESTA E FURACÃO DO DESERTO.
-   Controladores isolados: patrulha ortogonal centralizada, sem alterar a IA dos demais inimigos. */
-const specialEnemyTuning={wormSpeed:1.02,whirlwindSpeed:.86,turnPause:.12};
-function specialEnemyCellOpen(x,y){
- if(x<1||y<1||x>=COLS-1||y>=ROWS-1||tileAt(x,y)!==0)return false;
- if(bombAt(x,y)||treasureChests.some(c=>c.x===x&&c.y===y))return false;
- return true;
-}
-function specialEnemyRoute(enemy,targetX,targetY){
- const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y);
- if(sx===targetX&&sy===targetY)return [];
- const queue=[{x:sx,y:sy,parent:-1}],seen=new Set([cellKey(sx,sy)]);let head=0,goal=-1;
- while(head<queue.length&&head<COLS*ROWS){
-  const p=queue[head];
-  if(p.x===targetX&&p.y===targetY){goal=head;break}
-  for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
-   const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
-   if(seen.has(key)||!specialEnemyCellOpen(x,y))continue;
-   if(enemies.some(other=>other!==enemy&&other.alive&&!other.isForestWorm&&!other.isDesertWhirlwind&&distance(x+.5,y+.5,other.x,other.y)<.62))continue;
-   seen.add(key);queue.push({x,y,parent:head});
-  }
-  head++;
- }
- if(goal<0)return [];
- const path=[];for(let i=goal;i>0;i=queue[i].parent)path.push({x:queue[i].x+.5,y:queue[i].y+.5});
- return path.reverse();
-}
-function specialEnemyChooseRoute(enemy){
- const candidates=[];
- for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  if(!specialEnemyCellOpen(x,y)||distance(x+.5,y+.5,enemy.x,enemy.y)<2.1||
-     distance(x+.5,y+.5,player.x,player.y)<2.2)continue;
-  if(enemies.some(other=>other!==enemy&&other.alive&&distance(x+.5,y+.5,other.x,other.y)<1.05))continue;
-  candidates.push({x,y});
- }
- for(let tries=0;tries<Math.min(24,candidates.length);tries++){
-  const pick=candidates.splice(Math.floor(Math.random()*candidates.length),1)[0];
-  const route=specialEnemyRoute(enemy,pick.x,pick.y);
-  if(route.length){enemy.path=route;return true}
- }
- enemy.path=[];return false;
-}
-function specialEnemyMove(enemy,dt,speed){
- const target=enemy.path&&enemy.path[0];if(!target)return;
- const dx=target.x-enemy.x,dy=target.y-enemy.y,d=Math.hypot(dx,dy);
- if(d<.025){enemy.x=target.x;enemy.y=target.y;enemy.path.shift();return}
- const step=Math.min(d,speed*dt);let nx=enemy.x,ny=enemy.y;
- // Um único eixo por vez: o centro do corredor nunca deriva para os lados.
- if(Math.abs(dx)>.001&&Math.abs(dy)>.001){
-  if(Math.abs(dx)<=Math.abs(dy))nx+=Math.sign(dx)*Math.min(step,Math.abs(dx));
-  else ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
- }else if(Math.abs(dx)>.001)nx+=Math.sign(dx)*Math.min(step,Math.abs(dx));
- else if(Math.abs(dy)>.001)ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
- const tx=Math.floor(nx),ty=Math.floor(ny),movedX=Math.abs(nx-enemy.x)>.000001,movedY=Math.abs(ny-enemy.y)>.000001;
- if(specialEnemyCellOpen(tx,ty)|| (tx===Math.floor(enemy.x)&&ty===Math.floor(enemy.y))){
-  enemy.x=nx;enemy.y=ny;
-  if(movedX){enemy.facingX=Math.sign(dx);enemy.facingY=0}
-  if(movedY){enemy.facingY=Math.sign(dy);enemy.facingX=0}
- }else{enemy.path=[];enemy.repath=0}
-}
-function specialEnemySpawnOne(kind){
- const spots=[];
- for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  if(!specialEnemyCellOpen(x,y)||distance(x+.5,y+.5,player.x,player.y)<4.1)continue;
-  if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.55))continue;
-  if(waterPuddleCells.has(cellKey(x,y)))continue;
-  spots.push({x,y});
- }
- if(!spots.length)return false;
- const p=spots[Math.floor(Math.random()*spots.length)];
- const worm=kind==="worm";
- enemies.push({
-  isHunter:true,isForestWorm:worm,isDesertWhirlwind:!worm,
-  x:p.x+.5,y:p.y+.5,speed:worm?specialEnemyTuning.wormSpeed:specialEnemyTuning.whirlwindSpeed,
-  hp:worm?2:3,maxHp:worm?2:3,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,
-  facingX:Math.random()<.5?1:-1,facingY:0,path:[],repath:.2+Math.random()*.35,
-  patrolWait:0,anim:Math.random()*Math.PI*2,phase:Math.random()*Math.PI*2,
-  suctionBomb:null,suctionTimer:0,turnTimer:0
- });
- return true;
-}
-function specialEnemySpawn(){
- if(currentWorld==="forest"&&level>=3&&level<=9){
-  const count=1+Math.floor(Math.random()*2);
-  for(let i=0;i<count;i++)if(!specialEnemySpawnOne("worm"))break;
- }
- if(currentWorld==="desert"&&level>=4&&level<=9){
-  const count=2+Math.floor(Math.random()*2);
-  for(let i=0;i<count;i++)if(!specialEnemySpawnOne("whirlwind"))break;
- }
-}
-function specialEnemyHasClearLine(ax,ay,bx,by){
- const dx=bx-ax,dy=by-ay,steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)*8));
- for(let i=1;i<steps;i++){const t=i/steps;if(tileAt(Math.floor(ax+dx*t),Math.floor(ay+dy*t))!==0)return false}
- return true;
-}
-function specialEnemyEatBomb(enemy,bomb){
- if(!bomb||!bombs.includes(bomb))return;
- if(!bomb.activeSlotReleased)activeBombs=Math.max(0,activeBombs-1);
- bomb.activeSlotReleased=true;
- if(player.passBomb===bomb)player.passBomb=null;
- bombs=bombs.filter(b=>b!==bomb);
- enemy.suctionBomb=null;enemy.path=[];enemy.repath=.12;
- playSfx("enemyHit");
-}
-function updateSpecialEnemy(enemy,dt){
- if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);return}
- enemy.hitFlash=Math.max(0,(enemy.hitFlash||0)-dt);enemy.hurtTimer=Math.max(0,(enemy.hurtTimer||0)-dt);
- enemy.anim=(enemy.anim||0)+dt*(enemy.isForestWorm?7.2:3.8);
- enemy.repath=(enemy.repath||0)-dt;enemy.turnTimer=Math.max(0,(enemy.turnTimer||0)-dt);
- if(enemy.isForestWorm){
-  // A minhoca percebe bombas na mesma faixa, vira a cabeça e as engole sem explodir.
-  let target=null,best=1.28;
-  for(const b of bombs){
-   if(b.tornadoSucked||b.tornadoTravel||b.freezing||b.frozen||b.extinguished)continue;
-   const bx=b.x+.5,by=b.y+.5,dx=bx-enemy.x,dy=by-enemy.y;
-   const aligned=Math.abs(dx)<.24||Math.abs(dy)<.24;
-   const d=Math.abs(dx)+Math.abs(dy);
-   if(aligned&&d<best){best=d;target=b}
-  }
-  if(target){
-   const dx=target.x+.5-enemy.x,dy=target.y+.5-enemy.y;
-   if(Math.abs(dx)>=Math.abs(dy)){enemy.facingX=Math.sign(dx);enemy.facingY=0}
-   else{enemy.facingX=0;enemy.facingY=Math.sign(dy)}
-   enemy.path=[];
-   if(distance(enemy.x,enemy.y,target.x+.5,target.y+.5)<=.72){specialEnemyEatBomb(enemy,target);return}
-   const step=specialEnemyTuning.wormSpeed*1.65*dt;
-   if(enemy.facingX)enemy.x+=enemy.facingX*step;else enemy.y+=enemy.facingY*step;
-   return;
-  }
- }
- if(enemy.isDesertWhirlwind){
-  if(!enemy.suctionBomb){
-   let target=null,best=2.35;
-   for(const b of bombs){
-    if(b.tornadoSucked||b.tornadoTravel||b.freezing||b.frozen||b.extinguished)continue;
-    const bx=b.x+.5,by=b.y+.5,d=distance(enemy.x,enemy.y,bx,by);
-    if(d<best&&specialEnemyHasClearLine(enemy.x,enemy.y,bx,by)){best=d;target=b}
-   }
-   if(target){
-    enemy.suctionBomb=target;enemy.suctionTimer=.24;target.tornadoSucked={enemy,t:0,duration:.24,startX:target.x,startY:target.y};
-    enemy.path=[];enemy.turnTimer=.24;
-   }
-  }
- }
- if(enemy.repath<=0||!enemy.path.length){
-  enemy.repath=.65+Math.random()*.65;
-  specialEnemyChooseRoute(enemy);
- }
- if(enemy.path.length)specialEnemyMove(enemy,dt,enemy.isForestWorm?specialEnemyTuning.wormSpeed:specialEnemyTuning.whirlwindSpeed);
-}
-function updateSpecialEnemies(dt){
- for(const enemy of enemies)if(enemy&&(enemy.isForestWorm||enemy.isDesertWhirlwind))updateSpecialEnemy(enemy,dt);
-}
-function drawSpecialEnemyEyesAndMouth(kind){
- ctx.fillStyle="#fff7df";ctx.beginPath();ctx.ellipse(-5,-4,3.1,4,0,0,Math.PI*2);ctx.ellipse(5,-4,3.1,4,0,0,Math.PI*2);ctx.fill();
- ctx.fillStyle="#252018";ctx.beginPath();ctx.arc(-4.6,-3.5,1.45,0,Math.PI*2);ctx.arc(5.4,-3.5,1.45,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle=kind==="worm"?"#174b24":"#70400e";ctx.lineWidth=2.2;ctx.lineCap="round";ctx.beginPath();
- if(kind==="worm"){ctx.moveTo(-4,5);ctx.quadraticCurveTo(0,8,4,5)}else{ctx.moveTo(-4,5);ctx.quadraticCurveTo(0,9,4,5)}
- ctx.stroke();
-}
-function drawForestWorm(enemy){
- const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,dx=enemy.facingX||0,dy=enemy.facingY||0;
- const horizontal=dx!==0,dir=horizontal?dx:dy||1,alpha=enemy.alive?1:Math.max(0,(enemy.deathTimer||0)/ENEMY_DEATH_TIME);
- const wave=Math.sin(enemy.anim),compress=.82+.18*Math.sin(enemy.anim*1.4);
- ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);
- ctx.fillStyle="rgba(9,35,17,.32)";ctx.beginPath();ctx.ellipse(0,13,horizontal?22:10,horizontal?7:22,0,0,Math.PI*2);ctx.fill();
- // Corpo segmentado: a onda percorre o dorso enquanto a minhoca se estica.
- for(let i=6;i>=0;i--){
-  const along=(i-3)*5.1*compress,phase=enemy.anim-i*.78,offset=Math.sin(phase)*2.5;
-  const bx=horizontal?-dir*along:offset,by=horizontal?offset:-dir*along;
-  const radius=7.3-(i*.24),g=ctx.createRadialGradient(bx-2,by-3,1,bx,by,radius+2);
-  g.addColorStop(0,"#b7f27b");g.addColorStop(.38,"#55bd43");g.addColorStop(.82,"#238a37");g.addColorStop(1,"#14552b");
-  ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(bx,by,horizontal?radius+1:radius*.88,horizontal?radius*.88:radius+1,0,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="rgba(13,77,34,.65)";ctx.lineWidth=1;ctx.stroke();
-  ctx.strokeStyle="rgba(210,255,155,.55)";ctx.lineWidth=1.2;ctx.beginPath();
-  if(horizontal){ctx.moveTo(bx-2,by-4);ctx.quadraticCurveTo(bx,by-6,bx+2,by-3)}
-  else{ctx.moveTo(bx-4,by-2);ctx.quadraticCurveTo(bx-6,by,bx-3,by+2)}
-  ctx.stroke();
- }
- const hx=horizontal?dir*12:0,hy=horizontal?0:dir*12;
- ctx.save();ctx.translate(hx,hy);ctx.rotate(horizontal?(dir<0?Math.PI:0):(dir<0?-Math.PI/2:Math.PI/2));
- const head=ctx.createRadialGradient(-3,-5,1,0,0,12);head.addColorStop(0,"#c9ff8d");head.addColorStop(.45,"#65cf4c");head.addColorStop(1,"#1d7733");
- ctx.fillStyle=head;ctx.beginPath();ctx.ellipse(0,0,11,9.2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#155c2b";ctx.lineWidth=1.3;ctx.stroke();
- drawSpecialEnemyEyesAndMouth("worm");ctx.restore();ctx.restore();
- if(enemy.alive){ctx.fillStyle="rgba(5,24,12,.8)";ctx.fillRect(px-12,py-29,24,4);ctx.fillStyle="#8de65a";ctx.fillRect(px-11,py-28,11*(enemy.hp/2),2)}
- ctx.restore();
-}
-function drawDesertWhirlwind(enemy){
- const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,alpha=enemy.alive?1:Math.max(0,(enemy.deathTimer||0)/ENEMY_DEATH_TIME),spin=enemy.anim*2.7;
- ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);
- ctx.fillStyle="rgba(76,43,12,.28)";ctx.beginPath();ctx.ellipse(0,15,22,7,0,0,Math.PI*2);ctx.fill();
- // Poeira dourada girando em camadas ao redor do funil.
- for(let ring=0;ring<3;ring++){
-  const r=7+ring*4,angle=spin*(ring%2?-.8:1)+ring*1.8;
-  ctx.strokeStyle=ring===0?"rgba(255,241,165,.9)":ring===1?"rgba(235,174,62,.9)":"rgba(177,111,29,.82)";
-  ctx.lineWidth=3.1-ring*.55;ctx.beginPath();ctx.ellipse(Math.cos(angle)*2,Math.sin(angle)*2,r,r*.52,angle,Math.PI*.12,Math.PI*1.82);ctx.stroke();
- }
- const funnel=ctx.createLinearGradient(0,-23,0,15);funnel.addColorStop(0,"rgba(255,238,154,.96)");funnel.addColorStop(.28,"rgba(239,180,67,.95)");funnel.addColorStop(.7,"rgba(194,125,35,.94)");funnel.addColorStop(1,"rgba(128,78,25,.9)");
- ctx.fillStyle=funnel;ctx.beginPath();ctx.moveTo(-3,-23);ctx.quadraticCurveTo(-12,-11,-13,0);ctx.quadraticCurveTo(-14,10,-22,14);ctx.quadraticCurveTo(-7,20,0,13);ctx.quadraticCurveTo(7,20,22,14);ctx.quadraticCurveTo(14,9,13,0);ctx.quadraticCurveTo(12,-12,3,-23);ctx.quadraticCurveTo(0,-27,-3,-23);ctx.closePath();ctx.fill();
- ctx.strokeStyle="#9a601f";ctx.lineWidth=1.3;ctx.stroke();
- for(let i=0;i<5;i++){const a=spin+i*1.256,r=7+(i%3)*3;ctx.fillStyle=i%2?"rgba(255,231,139,.88)":"rgba(177,111,29,.82)";ctx.beginPath();ctx.arc(Math.cos(a)*r,Math.sin(a)*r*.55-2,1.8+(i%2),0,Math.PI*2);ctx.fill()}
- ctx.save();ctx.translate(0,-3);drawSpecialEnemyEyesAndMouth("whirlwind");ctx.restore();
- ctx.restore();
- if(enemy.alive){ctx.fillStyle="rgba(58,34,12,.8)";ctx.fillRect(px-13,py-31,26,4);ctx.fillStyle="#e6ad3e";ctx.fillRect(px-12,py-30,24*(enemy.hp/3),2)}
-}
-function updateDesertWhirlwindBombs(dt){
- for(const b of bombs){
-  if(b.tornadoSucked){
-   const s=b.tornadoSucked;s.t+=dt;const enemy=s.enemy;
-   const p=Math.min(1,s.t/s.duration),tx=enemy&&enemy.alive?enemy.x-.5:b.x,ty=enemy&&enemy.alive?enemy.y-.5:b.y;
-   b.x=s.startX+(tx-s.startX)*p;b.y=s.startY+(ty-s.startY)*p;b.t=9999;
-   if(p>=1){
-    delete b.tornadoSucked;
-    const dx=player.x-(b.x+.5),dy=player.y-(b.y+.5),len=Math.hypot(dx,dy)||1;
-    b.tornadoTravel={dx:dx/len,dy:dy/len,speed:8.6,source:enemy};b.t=9999;
-    if(enemy){enemy.suctionBomb=null;enemy.suctionTimer=0}
-   }
-   continue;
-  }
-  if(!b.tornadoTravel)continue;
-  const v=b.tornadoTravel,step=v.speed*dt,nx=b.x+v.dx*step,ny=b.y+v.dy*step,tx=Math.floor(nx),ty=Math.floor(ny);
-  if(tx<0||ty<0||tx>=COLS||ty>=ROWS||tileAt(tx,ty)!==0){
-   delete b.tornadoTravel;b.t=.01;continue;
-  }
-  const hitPlayer=distance(nx+.5,ny+.5,player.x,player.y)<.43;
-  const hitEnemy=enemies.find(e=>e.alive&&!e.burrowing&&e!==v.source&&distance(nx+.5,ny+.5,e.x,e.y)<.34);
-  const otherBomb=bombs.find(other=>other!==b&&distance(nx+.5,ny+.5,other.x+.5,other.y+.5)<.48);
-  b.x=nx;b.y=ny;
-  if(hitPlayer||hitEnemy||otherBomb){delete b.tornadoTravel;b.t=.01}
-  else b.t=9999;
- }
-}
-const specialEnemyNewLevelBase=newLevel;
-newLevel=function(preservePowerUps=false){specialEnemyNewLevelBase(preservePowerUps);specialEnemySpawn()};
-const specialEnemyUpdateEnemiesBase=updateEnemies;
-updateEnemies=function(dt){
- const all=enemies;enemies=all.filter(e=>!e.isForestWorm&&!e.isDesertWhirlwind);
- try{specialEnemyUpdateEnemiesBase(dt)}finally{enemies=all}
- updateSpecialEnemies(dt);
-};
-const specialEnemyDrawBase=drawEnemy;
-drawEnemy=function(e){
- if(e&&e.isForestWorm){drawForestWorm(e);return}
- if(e&&e.isDesertWhirlwind){drawDesertWhirlwind(e);return}
- specialEnemyDrawBase(e);
-};
-const specialEnemyDamageBase=damageEnemy;
-damageEnemy=function(enemy){
- if(enemy&&(enemy.isForestWorm||enemy.isDesertWhirlwind)){
-  if(!enemy.alive)return;
-  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||1)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.3;
-  if(enemy.hp<=0)killEnemy(enemy);
-  return;
- }
- return specialEnemyDamageBase(enemy);
-};
-const specialEnemyUpdateBase=update;
-update=function(dt){
- if(running&&!paused&&!playerDeathAnimation)updateDesertWhirlwindBombs(dt);
- return specialEnemyUpdateBase(dt);
-};
-
 /* BOMBARDEIRO_RUNTIME_DIAGNOSTIC_V1
    Captura erros do WebView para impedir tela branca sem explicação. */
 (function(){
@@ -22979,6 +22716,270 @@ newLevel=function(preservePowerUps=false){
  }
  if(logo.complete)processar();else logo.addEventListener("load",processar,{once:true});
 })();
+/* INIMIGOS ESPECIAIS — MINHOCA DA FLORESTA E FURACÃO DO DESERTO.
+   Controladores isolados: patrulha ortogonal centralizada, sem alterar a IA dos demais inimigos. */
+const specialEnemyTuning={wormSpeed:1.02,whirlwindSpeed:.86,turnPause:.12};
+function specialEnemyCellOpen(x,y){
+ if(x<1||y<1||x>=COLS-1||y>=ROWS-1||tileAt(x,y)!==0)return false;
+ if(bombAt(x,y)||treasureChests.some(c=>c.x===x&&c.y===y))return false;
+ return true;
+}
+function specialEnemyRoute(enemy,targetX,targetY){
+ const sx=Math.floor(enemy.x),sy=Math.floor(enemy.y);
+ if(sx===targetX&&sy===targetY)return [];
+ const queue=[{x:sx,y:sy,parent:-1}],seen=new Set([cellKey(sx,sy)]);let head=0,goal=-1;
+ while(head<queue.length&&head<COLS*ROWS){
+  const p=queue[head];
+  if(p.x===targetX&&p.y===targetY){goal=head;break}
+  for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
+   const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
+   if(seen.has(key)||!specialEnemyCellOpen(x,y))continue;
+   if(enemies.some(other=>other!==enemy&&other.alive&&!other.isForestWorm&&!other.isDesertWhirlwind&&distance(x+.5,y+.5,other.x,other.y)<.62))continue;
+   seen.add(key);queue.push({x,y,parent:head});
+  }
+  head++;
+ }
+ if(goal<0)return [];
+ const path=[];for(let i=goal;i>0;i=queue[i].parent)path.push({x:queue[i].x+.5,y:queue[i].y+.5});
+ return path.reverse();
+}
+function specialEnemyChooseRoute(enemy){
+ const candidates=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(!specialEnemyCellOpen(x,y)||distance(x+.5,y+.5,enemy.x,enemy.y)<2.1||
+     distance(x+.5,y+.5,player.x,player.y)<2.2)continue;
+  if(enemies.some(other=>other!==enemy&&other.alive&&distance(x+.5,y+.5,other.x,other.y)<1.05))continue;
+  candidates.push({x,y});
+ }
+ for(let tries=0;tries<Math.min(24,candidates.length);tries++){
+  const pick=candidates.splice(Math.floor(Math.random()*candidates.length),1)[0];
+  const route=specialEnemyRoute(enemy,pick.x,pick.y);
+  if(route.length){enemy.path=route;return true}
+ }
+ enemy.path=[];return false;
+}
+function specialEnemyMove(enemy,dt,speed){
+ const target=enemy.path&&enemy.path[0];if(!target)return;
+ const dx=target.x-enemy.x,dy=target.y-enemy.y,d=Math.hypot(dx,dy);
+ if(d<.025){enemy.x=target.x;enemy.y=target.y;enemy.path.shift();return}
+ const step=Math.min(d,speed*dt);let nx=enemy.x,ny=enemy.y;
+ // Um único eixo por vez: o centro do corredor nunca deriva para os lados.
+ if(Math.abs(dx)>.001&&Math.abs(dy)>.001){
+  if(Math.abs(dx)<=Math.abs(dy))nx+=Math.sign(dx)*Math.min(step,Math.abs(dx));
+  else ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
+ }else if(Math.abs(dx)>.001)nx+=Math.sign(dx)*Math.min(step,Math.abs(dx));
+ else if(Math.abs(dy)>.001)ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
+ const tx=Math.floor(nx),ty=Math.floor(ny),movedX=Math.abs(nx-enemy.x)>.000001,movedY=Math.abs(ny-enemy.y)>.000001;
+ if(specialEnemyCellOpen(tx,ty)|| (tx===Math.floor(enemy.x)&&ty===Math.floor(enemy.y))){
+  enemy.x=nx;enemy.y=ny;
+  if(movedX){enemy.facingX=Math.sign(dx);enemy.facingY=0}
+  if(movedY){enemy.facingY=Math.sign(dy);enemy.facingX=0}
+ }else{enemy.path=[];enemy.repath=0}
+}
+function specialEnemySpawnOne(kind){
+ const spots=[];
+ for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+  if(!specialEnemyCellOpen(x,y)||distance(x+.5,y+.5,player.x,player.y)<4.1)continue;
+  if(enemies.some(e=>e.alive&&distance(x+.5,y+.5,e.x,e.y)<1.55))continue;
+  if(waterPuddleCells.has(cellKey(x,y)))continue;
+  spots.push({x,y});
+ }
+ if(!spots.length)return false;
+ const p=spots[Math.floor(Math.random()*spots.length)];
+ const worm=kind==="worm";
+ enemies.push({
+  isHunter:true,isForestWorm:worm,isDesertWhirlwind:!worm,
+  x:p.x+.5,y:p.y+.5,speed:worm?specialEnemyTuning.wormSpeed:specialEnemyTuning.whirlwindSpeed,
+  hp:worm?2:3,maxHp:worm?2:3,alive:true,deathTimer:0,hitFlash:0,hurtTimer:0,
+  facingX:Math.random()<.5?1:-1,facingY:0,path:[],repath:.2+Math.random()*.35,
+  patrolWait:0,anim:Math.random()*Math.PI*2,phase:Math.random()*Math.PI*2,
+  suctionBomb:null,suctionTimer:0,turnTimer:0
+ });
+ return true;
+}
+function specialEnemySpawn(){
+ if(currentWorld==="forest"&&level>=3&&level<=9){
+  const count=1+Math.floor(Math.random()*2);
+  for(let i=0;i<count;i++)if(!specialEnemySpawnOne("worm"))break;
+ }
+ if(currentWorld==="desert"&&level>=4&&level<=9){
+  const count=2+Math.floor(Math.random()*2);
+  for(let i=0;i<count;i++)if(!specialEnemySpawnOne("whirlwind"))break;
+ }
+}
+function specialEnemyHasClearLine(ax,ay,bx,by){
+ const dx=bx-ax,dy=by-ay,steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)*8));
+ for(let i=1;i<steps;i++){const t=i/steps;if(tileAt(Math.floor(ax+dx*t),Math.floor(ay+dy*t))!==0)return false}
+ return true;
+}
+function specialEnemyEatBomb(enemy,bomb){
+ if(!bomb||!bombs.includes(bomb))return;
+ if(!bomb.activeSlotReleased)activeBombs=Math.max(0,activeBombs-1);
+ bomb.activeSlotReleased=true;
+ if(player.passBomb===bomb)player.passBomb=null;
+ bombs=bombs.filter(b=>b!==bomb);
+ enemy.suctionBomb=null;enemy.path=[];enemy.repath=.12;
+ playSfx("enemyHit");
+}
+function updateSpecialEnemy(enemy,dt){
+ if(!enemy.alive){enemy.deathTimer=Math.max(0,(enemy.deathTimer||0)-dt);return}
+ enemy.hitFlash=Math.max(0,(enemy.hitFlash||0)-dt);enemy.hurtTimer=Math.max(0,(enemy.hurtTimer||0)-dt);
+ enemy.anim=(enemy.anim||0)+dt*(enemy.isForestWorm?7.2:3.8);
+ enemy.repath=(enemy.repath||0)-dt;enemy.turnTimer=Math.max(0,(enemy.turnTimer||0)-dt);
+ if(enemy.isForestWorm){
+  // A minhoca percebe bombas na mesma faixa, vira a cabeça e as engole sem explodir.
+  let target=null,best=1.28;
+  for(const b of bombs){
+   if(b.tornadoSucked||b.tornadoTravel||b.freezing||b.frozen||b.extinguished)continue;
+   const bx=b.x+.5,by=b.y+.5,dx=bx-enemy.x,dy=by-enemy.y;
+   const aligned=Math.abs(dx)<.24||Math.abs(dy)<.24;
+   const d=Math.abs(dx)+Math.abs(dy);
+   if(aligned&&d<best){best=d;target=b}
+  }
+  if(target){
+   const dx=target.x+.5-enemy.x,dy=target.y+.5-enemy.y;
+   if(Math.abs(dx)>=Math.abs(dy)){enemy.facingX=Math.sign(dx);enemy.facingY=0}
+   else{enemy.facingX=0;enemy.facingY=Math.sign(dy)}
+   enemy.path=[];
+   if(distance(enemy.x,enemy.y,target.x+.5,target.y+.5)<=.72){specialEnemyEatBomb(enemy,target);return}
+   const step=specialEnemyTuning.wormSpeed*1.65*dt;
+   if(enemy.facingX)enemy.x+=enemy.facingX*step;else enemy.y+=enemy.facingY*step;
+   return;
+  }
+ }
+ if(enemy.isDesertWhirlwind){
+  if(!enemy.suctionBomb){
+   let target=null,best=2.35;
+   for(const b of bombs){
+    if(b.tornadoSucked||b.tornadoTravel||b.freezing||b.frozen||b.extinguished)continue;
+    const bx=b.x+.5,by=b.y+.5,d=distance(enemy.x,enemy.y,bx,by);
+    if(d<best&&specialEnemyHasClearLine(enemy.x,enemy.y,bx,by)){best=d;target=b}
+   }
+   if(target){
+    enemy.suctionBomb=target;enemy.suctionTimer=.24;target.tornadoSucked={enemy,t:0,duration:.24,startX:target.x,startY:target.y};
+    enemy.path=[];enemy.turnTimer=.24;
+   }
+  }
+ }
+ if(enemy.repath<=0||!enemy.path.length){
+  enemy.repath=.65+Math.random()*.65;
+  specialEnemyChooseRoute(enemy);
+ }
+ if(enemy.path.length)specialEnemyMove(enemy,dt,enemy.isForestWorm?specialEnemyTuning.wormSpeed:specialEnemyTuning.whirlwindSpeed);
+}
+function updateSpecialEnemies(dt){
+ for(const enemy of enemies)if(enemy&&(enemy.isForestWorm||enemy.isDesertWhirlwind))updateSpecialEnemy(enemy,dt);
+}
+function drawSpecialEnemyEyesAndMouth(kind){
+ ctx.fillStyle="#fff7df";ctx.beginPath();ctx.ellipse(-5,-4,3.1,4,0,0,Math.PI*2);ctx.ellipse(5,-4,3.1,4,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#252018";ctx.beginPath();ctx.arc(-4.6,-3.5,1.45,0,Math.PI*2);ctx.arc(5.4,-3.5,1.45,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle=kind==="worm"?"#174b24":"#70400e";ctx.lineWidth=2.2;ctx.lineCap="round";ctx.beginPath();
+ if(kind==="worm"){ctx.moveTo(-4,5);ctx.quadraticCurveTo(0,8,4,5)}else{ctx.moveTo(-4,5);ctx.quadraticCurveTo(0,9,4,5)}
+ ctx.stroke();
+}
+function drawForestWorm(enemy){
+ const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,dx=enemy.facingX||0,dy=enemy.facingY||0;
+ const horizontal=dx!==0,dir=horizontal?dx:dy||1,alpha=enemy.alive?1:Math.max(0,(enemy.deathTimer||0)/ENEMY_DEATH_TIME);
+ const wave=Math.sin(enemy.anim),compress=.82+.18*Math.sin(enemy.anim*1.4);
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);
+ ctx.fillStyle="rgba(9,35,17,.32)";ctx.beginPath();ctx.ellipse(0,13,horizontal?22:10,horizontal?7:22,0,0,Math.PI*2);ctx.fill();
+ // Corpo segmentado: a onda percorre o dorso enquanto a minhoca se estica.
+ for(let i=6;i>=0;i--){
+  const along=(i-3)*5.1*compress,phase=enemy.anim-i*.78,offset=Math.sin(phase)*2.5;
+  const bx=horizontal?-dir*along:offset,by=horizontal?offset:-dir*along;
+  const radius=7.3-(i*.24),g=ctx.createRadialGradient(bx-2,by-3,1,bx,by,radius+2);
+  g.addColorStop(0,"#b7f27b");g.addColorStop(.38,"#55bd43");g.addColorStop(.82,"#238a37");g.addColorStop(1,"#14552b");
+  ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(bx,by,horizontal?radius+1:radius*.88,horizontal?radius*.88:radius+1,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="rgba(13,77,34,.65)";ctx.lineWidth=1;ctx.stroke();
+  ctx.strokeStyle="rgba(210,255,155,.55)";ctx.lineWidth=1.2;ctx.beginPath();
+  if(horizontal){ctx.moveTo(bx-2,by-4);ctx.quadraticCurveTo(bx,by-6,bx+2,by-3)}
+  else{ctx.moveTo(bx-4,by-2);ctx.quadraticCurveTo(bx-6,by,bx-3,by+2)}
+  ctx.stroke();
+ }
+ const hx=horizontal?dir*12:0,hy=horizontal?0:dir*12;
+ ctx.save();ctx.translate(hx,hy);ctx.rotate(horizontal?(dir<0?Math.PI:0):(dir<0?-Math.PI/2:Math.PI/2));
+ const head=ctx.createRadialGradient(-3,-5,1,0,0,12);head.addColorStop(0,"#c9ff8d");head.addColorStop(.45,"#65cf4c");head.addColorStop(1,"#1d7733");
+ ctx.fillStyle=head;ctx.beginPath();ctx.ellipse(0,0,11,9.2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#155c2b";ctx.lineWidth=1.3;ctx.stroke();
+ drawSpecialEnemyEyesAndMouth("worm");ctx.restore();ctx.restore();
+ if(enemy.alive){ctx.fillStyle="rgba(5,24,12,.8)";ctx.fillRect(px-12,py-29,24,4);ctx.fillStyle="#8de65a";ctx.fillRect(px-11,py-28,11*(enemy.hp/2),2)}
+ ctx.restore();
+}
+function drawDesertWhirlwind(enemy){
+ const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,alpha=enemy.alive?1:Math.max(0,(enemy.deathTimer||0)/ENEMY_DEATH_TIME),spin=enemy.anim*2.7;
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);
+ ctx.fillStyle="rgba(76,43,12,.28)";ctx.beginPath();ctx.ellipse(0,15,22,7,0,0,Math.PI*2);ctx.fill();
+ // Poeira dourada girando em camadas ao redor do funil.
+ for(let ring=0;ring<3;ring++){
+  const r=7+ring*4,angle=spin*(ring%2?-.8:1)+ring*1.8;
+  ctx.strokeStyle=ring===0?"rgba(255,241,165,.9)":ring===1?"rgba(235,174,62,.9)":"rgba(177,111,29,.82)";
+  ctx.lineWidth=3.1-ring*.55;ctx.beginPath();ctx.ellipse(Math.cos(angle)*2,Math.sin(angle)*2,r,r*.52,angle,Math.PI*.12,Math.PI*1.82);ctx.stroke();
+ }
+ const funnel=ctx.createLinearGradient(0,-23,0,15);funnel.addColorStop(0,"rgba(255,238,154,.96)");funnel.addColorStop(.28,"rgba(239,180,67,.95)");funnel.addColorStop(.7,"rgba(194,125,35,.94)");funnel.addColorStop(1,"rgba(128,78,25,.9)");
+ ctx.fillStyle=funnel;ctx.beginPath();ctx.moveTo(-3,-23);ctx.quadraticCurveTo(-12,-11,-13,0);ctx.quadraticCurveTo(-14,10,-22,14);ctx.quadraticCurveTo(-7,20,0,13);ctx.quadraticCurveTo(7,20,22,14);ctx.quadraticCurveTo(14,9,13,0);ctx.quadraticCurveTo(12,-12,3,-23);ctx.quadraticCurveTo(0,-27,-3,-23);ctx.closePath();ctx.fill();
+ ctx.strokeStyle="#9a601f";ctx.lineWidth=1.3;ctx.stroke();
+ for(let i=0;i<5;i++){const a=spin+i*1.256,r=7+(i%3)*3;ctx.fillStyle=i%2?"rgba(255,231,139,.88)":"rgba(177,111,29,.82)";ctx.beginPath();ctx.arc(Math.cos(a)*r,Math.sin(a)*r*.55-2,1.8+(i%2),0,Math.PI*2);ctx.fill()}
+ ctx.save();ctx.translate(0,-3);drawSpecialEnemyEyesAndMouth("whirlwind");ctx.restore();
+ ctx.restore();
+ if(enemy.alive){ctx.fillStyle="rgba(58,34,12,.8)";ctx.fillRect(px-13,py-31,26,4);ctx.fillStyle="#e6ad3e";ctx.fillRect(px-12,py-30,24*(enemy.hp/3),2)}
+}
+function updateDesertWhirlwindBombs(dt){
+ for(const b of bombs){
+  if(b.tornadoSucked){
+   const s=b.tornadoSucked;s.t+=dt;const enemy=s.enemy;
+   const p=Math.min(1,s.t/s.duration),tx=enemy&&enemy.alive?enemy.x-.5:b.x,ty=enemy&&enemy.alive?enemy.y-.5:b.y;
+   b.x=s.startX+(tx-s.startX)*p;b.y=s.startY+(ty-s.startY)*p;b.t=9999;
+   if(p>=1){
+    delete b.tornadoSucked;
+    const dx=player.x-(b.x+.5),dy=player.y-(b.y+.5),len=Math.hypot(dx,dy)||1;
+    b.tornadoTravel={dx:dx/len,dy:dy/len,speed:8.6,source:enemy};b.t=9999;
+    if(enemy){enemy.suctionBomb=null;enemy.suctionTimer=0}
+   }
+   continue;
+  }
+  if(!b.tornadoTravel)continue;
+  const v=b.tornadoTravel,step=v.speed*dt,nx=b.x+v.dx*step,ny=b.y+v.dy*step,tx=Math.floor(nx),ty=Math.floor(ny);
+  if(tx<0||ty<0||tx>=COLS||ty>=ROWS||tileAt(tx,ty)!==0){
+   delete b.tornadoTravel;b.t=.01;continue;
+  }
+  const hitPlayer=distance(nx+.5,ny+.5,player.x,player.y)<.43;
+  const hitEnemy=enemies.find(e=>e.alive&&!e.burrowing&&e!==v.source&&distance(nx+.5,ny+.5,e.x,e.y)<.34);
+  const otherBomb=bombs.find(other=>other!==b&&distance(nx+.5,ny+.5,other.x+.5,other.y+.5)<.48);
+  b.x=nx;b.y=ny;
+  if(hitPlayer||hitEnemy||otherBomb){delete b.tornadoTravel;b.t=.01}
+  else b.t=9999;
+ }
+}
+const specialEnemyNewLevelBase=newLevel;
+newLevel=function(preservePowerUps=false){specialEnemyNewLevelBase(preservePowerUps);specialEnemySpawn()};
+const specialEnemyUpdateEnemiesBase=updateEnemies;
+updateEnemies=function(dt){
+ const all=enemies;enemies=all.filter(e=>!e.isForestWorm&&!e.isDesertWhirlwind);
+ try{specialEnemyUpdateEnemiesBase(dt)}finally{enemies=all}
+ updateSpecialEnemies(dt);
+};
+const specialEnemyDrawBase=drawEnemy;
+drawEnemy=function(e){
+ if(e&&e.isForestWorm){drawForestWorm(e);return}
+ if(e&&e.isDesertWhirlwind){drawDesertWhirlwind(e);return}
+ specialEnemyDrawBase(e);
+};
+const specialEnemyDamageBase=damageEnemy;
+damageEnemy=function(enemy){
+ if(enemy&&(enemy.isForestWorm||enemy.isDesertWhirlwind)){
+  if(!enemy.alive)return;
+  playSfx("enemyHit");enemy.hp=Math.max(0,(enemy.hp||1)-1);enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.3;
+  if(enemy.hp<=0)killEnemy(enemy);
+  return;
+ }
+ return specialEnemyDamageBase(enemy);
+};
+const specialEnemyUpdateBase=update;
+update=function(dt){
+ if(running&&!paused&&!playerDeathAnimation)updateDesertWhirlwindBombs(dt);
+ return specialEnemyUpdateBase(dt);
+};
+
+
 
 
 </script>
