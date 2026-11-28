@@ -16924,7 +16924,7 @@ function placeBomb(){
  if(volcanoLava){bombs.splice(bombs.indexOf(bomb),1);explode(bomb);}
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;const rewardType=enemy.isCrystalBomb?"crystalBomb":enemy.isDiamondCharger?"diamond":enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder||enemy.isBrute?"red":"green";createCoin(enemy.x,enemy.y,rewardType)}
+function killEnemy(enemy){if(!enemy.alive)return;if(enemy.isBrute&&currentWorld==="temples")spawnTempleBruteDeathFragments(enemy.x,enemy.y);if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;const rewardType=enemy.isCrystalBomb?"crystalBomb":enemy.isDiamondCharger?"diamond":enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder||enemy.isBrute?"red":"green";createCoin(enemy.x,enemy.y,rewardType)}
 function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBrute||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;const visible=canSeePlayer(enemy);enemy.mode=visible?"chase":"patrol";enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null;enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
@@ -16956,7 +16956,7 @@ function explode(b){
    const frozenBomb=bombs.find(other=>other!==b&&(other.freezing||other.frozen||other.extinguished)&&Math.floor(other.x)===x&&Math.floor(other.y)===y);
    if(frozenBomb){frozenBomb.chainTriggered=true;frozenBomb.t=0;break}
    if(treasureChests.some(chest=>chest.x===x&&chest.y===y))break;
-   if(tile===2){if(currentWorld==="temples")spawnTempleBlockDebris(x+.5,y+.5);else if(currentWorld==="diamonds")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else if(currentWorld==="desert"||currentWorld==="volcano"||currentWorld==="ice"||currentWorld==="swamp")spawnDestroyedBlockEffect(x+.5,y+.5,currentWorld);else burningCrates.push({x,y,t:.78,total:.78,phase:Math.random()*Math.PI*2});map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math.random()<.006){treasureSpawnedThisLevel=true;treasureSpawnedThisWorld=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0,sparkTimer:0,ambientParticles:[]});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
+   if(tile===2){spawnTempleBlockDebris(x+.5,y+.5,currentWorld);map[y][x]=0;brokeBlock=true;const key=cellKey(x,y);if(level>=1&&level<=9&&treasureSpawnWorld===currentWorld&&!treasureSpawnedThisWorld&&Math.random()<.006){treasureSpawnedThisLevel=true;treasureSpawnedThisWorld=true;treasureChests.push({x,y,hp:4,maxHp:4,animTime:0,phase:Math.random()*Math.PI*2,hitFlash:0,sparkTimer:0,ambientParticles:[]});spawnTreasureEffect(x+.5,y+.5,"reveal");delete coinDrops[key]}else if(coinDrops[key]){createCoin(x+.5,y+.5,coinDrops[key]);delete coinDrops[key]}break}
   }
  }
  if(brokeBlock){rebuildStaticMapCache();}
@@ -17305,7 +17305,7 @@ function update(dt){
  }
  for(const c of coinsOnMap)c.life+=dt;
  for(const chest of treasureChests){chest.animTime+=dt;chest.hitFlash=Math.max(0,chest.hitFlash-dt)}
-  updateDirtParticles(dt);updateWaterParticles(dt);updateDestroyedBlockEffects(dt);if(currentWorld==="temples")updateTempleBlockDebris(dt);updateTreasureEffects(dt);updateDiamondChargerParticles(dt);
+  updateDirtParticles(dt);updateWaterParticles(dt);updateDestroyedBlockEffects(dt);updateTempleBlockDebris(dt);updateTreasureEffects(dt);updateDiamondChargerParticles(dt);
   spawnExitPortal();
 }
 
@@ -18251,7 +18251,7 @@ function draw(){
  drawDesertDuneAnimation();
  drawBuilderBuildAnimations();
  drawDestroyedBlockEffects();
- if(currentWorld==="temples"){drawTempleBlockDebris()}
+ drawTempleBlockDebris();
  drawIndestructibleShimmer();
  drawDiamondDestructibleShimmer();
  drawTreasureEffects();
@@ -22187,19 +22187,47 @@ buildBurningCrateSprite=function(){
  crateBeforeTemples();
 };
 const templeBlockDebrisEffects=[];
-function spawnTempleBlockDebris(x,y){
- const t=templeThemes[templeThemeIndex()],colors=[t.wall[1],t.accent,t.wall[0],t.sky[1]],angles=[-2.35,-.78,.78,2.35],sizes=[.27,.24,.16,.15];
- const effect={x,y,age:0,duration:.72,particles:[]};
- for(let i=0;i<4;i++){const speed=1.75+(i%2)*.42;effect.particles.push({x,y,vx:Math.cos(angles[i])*speed,vy:Math.sin(angles[i])*speed-1.05,size:sizes[i],angle:(i%2)*.35,spin:(i%2?1:-1)*(4.5+i*.45),color:colors[i]})}
- if(templeBlockDebrisEffects.length>=12)templeBlockDebrisEffects.shift();templeBlockDebrisEffects.push(effect);
+function getDestructibleBlockFragmentColors(world=currentWorld){
+ const index=Math.max(0,Math.min(9,(Number(level)||1)-1));
+ const themes=world==="temples"?templeThemes:world==="diamonds"?diamondThemes:world==="ice"?iceThemes:world==="swamp"?swampThemes:world==="volcano"?volcanoThemes:world==="desert"?desertThemes:forestThemes;
+ const theme=themes[Math.min(index,themes.length-1)]||themes[0],wall=theme.wall||["#8b7658","#c4a77a","#55432f"];
+ return [wall[1],wall[0],wall[2]||wall[0],theme.accent||wall[1],(theme.sky&&theme.sky[1])||wall[0]];
+}
+function pushTempleDebrisEffect(x,y,colors,count,duration,speedMin,speedMax,sizeMin,sizeMax){
+ const effect={x,y,age:0,duration,particles:[]};
+ for(let i=0;i<count;i++){
+  const angle=Math.random()*Math.PI*2,speed=speedMin+Math.random()*(speedMax-speedMin),size=sizeMin+Math.random()*(sizeMax-sizeMin),shape=[];
+  for(let k=0;k<5;k++)shape.push(.62+Math.random()*.58);
+  effect.particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-1.05-Math.random()*.8,size,angle:Math.random()*6.28,spin:(Math.random()<.5?-1:1)*(3.5+Math.random()*7),color:colors[i%colors.length],shape});
+ }
+ if(templeBlockDebrisEffects.length>=18)templeBlockDebrisEffects.shift();
+ templeBlockDebrisEffects.push(effect);
+}
+function spawnTempleBlockDebris(x,y,world=currentWorld){
+ pushTempleDebrisEffect(x,y,getDestructibleBlockFragmentColors(world),22,.88,1.05,3.65,.12,.27);
+}
+function spawnTempleBruteDeathFragments(x,y){
+ const p=TEMPLE_BRUTE_ENEMY_PALETTE;
+ pushTempleDebrisEffect(x,y,[p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep],30,1.02,1.35,4.35,.13,.29);
 }
 function updateTempleBlockDebris(dt){
- for(let i=templeBlockDebrisEffects.length-1;i>=0;i--){const e=templeBlockDebrisEffects[i];e.age+=dt;for(const p of e.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-1.35*dt);p.vy+=4.2*dt;p.angle+=p.spin*dt}if(e.age>=e.duration)templeBlockDebrisEffects.splice(i,1)}
+ for(let i=templeBlockDebrisEffects.length-1;i>=0;i--){const e=templeBlockDebrisEffects[i];e.age+=dt;for(const p of e.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.max(0,1-1.28*dt);p.vy+=4.35*dt;p.angle+=p.spin*dt}if(e.age>=e.duration)templeBlockDebrisEffects.splice(i,1)}
 }
 function drawTempleBlockDebris(){
- if(currentWorld!=="temples"||!templeBlockDebrisEffects.length)return;
+ if(!templeBlockDebrisEffects.length)return;
  ctx.save();
- for(const e of templeBlockDebrisEffects){const alpha=Math.max(0,1-e.age/e.duration);for(const p of e.particles){const px=ox+p.x*TILE,py=oy+p.y*TILE,size=p.size*TILE;ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.fillRect(-size/2,-size/2,size,size);ctx.fillStyle="#ffffff";ctx.globalAlpha=alpha*.38;ctx.fillRect(-size/2,-size/2,size*.72,Math.max(1,size*.13));ctx.strokeStyle="rgba(75,58,35,.42)";ctx.lineWidth=1;ctx.strokeRect(-size/2,-size/2,size,size);ctx.restore()}}
+ for(const e of templeBlockDebrisEffects){
+  const alpha=Math.max(0,1-e.age/e.duration);
+  for(const p of e.particles){
+   const px=ox+p.x*TILE,py=oy+p.y*TILE,size=p.size*TILE,shape=p.shape||[1,1,1,1,1];
+   ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);ctx.rotate(p.angle);
+   ctx.beginPath();
+   for(let k=0;k<shape.length;k++){const a=-Math.PI/2+k*Math.PI*2/shape.length,r=size*.5*shape[k],vx=Math.cos(a)*r,vy=Math.sin(a)*r;if(k===0)ctx.moveTo(vx,vy);else ctx.lineTo(vx,vy)}
+   ctx.closePath();ctx.fillStyle=p.color;ctx.fill();ctx.strokeStyle="rgba(35,27,22,.42)";ctx.lineWidth=Math.max(.7,size*.055);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(-size*.16,-size*.22);ctx.lineTo(size*.02,-size*.42);ctx.lineTo(size*.28,-size*.12);ctx.closePath();ctx.fillStyle="rgba(255,255,255,.38)";ctx.fill();
+   ctx.restore();
+  }
+ }
  ctx.restore();
 }
 
