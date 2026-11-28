@@ -61,3 +61,14 @@ test("o impacto sonoro original toca exatamente quando o Guardião golpeia o ch�
  assert.ok(html.includes('case "bruteSlam":playSample("bruteSlam",1);break'));
  assert.ok(html.includes('enemy.templeBruteAttackState="slam";enemy.templeBruteAttackTimer=2;playSfx("bruteSlam");spawnTempleBruteFireWave(enemy)'));
 });
+
+test("blocos destrutíveis de todos os mundos explodem em muitos fragmentos com as cores do tema da fase",()=>{
+ for(const fragment of ["function getDestructibleBlockFragmentColors(world=currentWorld)","world===\"temples\"?templeThemes","world===\"diamonds\"?diamondThemes","world===\"ice\"?iceThemes","world===\"swamp\"?swampThemes","world===\"volcano\"?volcanoThemes","world===\"desert\"?desertThemes","pushTempleDebrisEffect(x,y,getDestructibleBlockFragmentColors(world),22,.88","spawnTempleBlockDebris(x+.5,y+.5,currentWorld)","drawTempleBlockDebris();"]) assert.ok(html.includes(fragment),fragment);
+ assert.ok(html.includes("shape=[]"));
+});
+test("o Guardião dos Braços Fortes explode em fragmentos da própria paleta ao receber o golpe final",()=>{
+ assert.ok(html.includes('if(enemy.isBrute&&currentWorld==="temples")spawnTempleBruteDeathFragments(enemy.x,enemy.y)'));
+ assert.ok(html.includes("function spawnTempleBruteDeathFragments(x,y)"));
+ assert.ok(html.includes("p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep"));
+ assert.ok(html.includes("pushTempleDebrisEffect(x,y,[p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep],30,1.02"));
+});
