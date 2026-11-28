@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SOURCE="Icone do jogo.png"
+SOURCE="Novo Icone do jogo.png"
 RES="android/app/src/main/res"
 
 if [[ ! -s "$SOURCE" ]]; then
