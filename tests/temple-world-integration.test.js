@@ -93,7 +93,12 @@ test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas
  assert.match(html,/function drawTempleGrassTufts\(\)/);
  assert.match(html,/Math\.sin\(frame\/TEMPLE_GRASS_FRAMES\*Math\.PI\*2\)/);
  assert.match(html,/Math\.floor\(gameClock\*12\)%TEMPLE_GRASS_FRAMES/);
- assert.match(html,/#174b2b/);assert.match(html,/#edf3d9/);
+ assert.match(html,/function templeGrassPaletteForTheme\(index\)/);
+ assert.match(html,/const templeGrassSpriteVariants=Array\(10\)\.fill\(null\),templeGrassCharredSpriteVariants=Array\(10\)\.fill\(null\)/);
+ assert.match(html,/for\(let stage=0;stage<10;stage\+\+\)/);
+ assert.match(html,/templeGrassSpriteVariants\[stage\]=stageVariants/);
+ assert.match(html,/templeGrassSpriteVariants\[stage\]\?\.\[tuft\.variant\]/);
+ assert.match(html,/gp\[i%6\]/);
  assert.match(html,/if\(currentWorld==="temples"\)drawTempleGrassTufts\(\)/);
  assert.match(html,/createPuddlesBeforeTempleGrass/);
 });
@@ -162,4 +167,13 @@ test("inimigos comuns das fases 1 a 9 recebem armadura 3D e paleta do tema de ca
  assert.match(html,/ctx\.quadraticCurveTo\(0,-16\.1,10\.2,-10\.4\)/);
  assert.match(html,/ctx\.lineTo\(0,-20\.1\)/);
  assert.match(html,/ctx\.lineTo\(2\.1,-15\.1\)/);
+});
+
+test("as dez fases do Reino dos Templos usam gramados com paletas próprias em vez de verde fixo",()=>{
+ assert.match(html,/function templeGrassPaletteForTheme\(index\)/);
+ assert.match(html,/const templeGrassSpriteVariants=Array\(10\)\.fill\(null\)/);
+ assert.match(html,/for\(let stage=0;stage<10;stage\+\+\)/);
+ assert.match(html,/if\(currentWorld!=="temples"\|\|level<1\|\|level>10\|\|!map\|\|!map\.length\)return/);
+ assert.match(html,/templeGrassSpriteVariants\[stage\]=stageVariants/);
+ assert.match(html,/gp\[i%6\]/);
 });
