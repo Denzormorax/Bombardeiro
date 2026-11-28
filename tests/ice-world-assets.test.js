@@ -116,7 +116,7 @@ test("brilho dos blocos indestrutíveis tem maior intensidade sem perder o cache
 
 test("Boneco de Neve aparece em 3 ou 4 unidades nas fases 1 a 9 do Gelo", () => {
   assert.ok(game.includes('snowmanCount=currentWorld==="ice"&&level>=1&&level<=9?3+Math.floor(Math.random()*2):0'));
-  assert.ok(game.includes('createEnemySpawnPositions(count+builderCount+snowmanCount+templeBruteCount)'));
+  assert.ok(game.includes('createEnemySpawnPositions(count+builderCount+snowmanCount+templeBruteCount+templeEliteCount)'));
   assert.ok(game.includes('snowmanSlots=new Set(slots.splice(0,snowmanCount))'));
   assert.ok(game.includes('isSnowman=snowmanSlots.has(index)'));
   assert.ok(game.includes('freezingBomb:null,freezeCooldown:0'));
@@ -124,7 +124,7 @@ test("Boneco de Neve aparece em 3 ou 4 unidades nas fases 1 a 9 do Gelo", () => 
 
 test("Boneco de Neve usa a perseguição do Caçador e precisa de três acertos", () => {
   assert.ok(game.includes('isHunter=isSnowman||(!isBuilder&&!isMushroom&&!isHorned'));
-  assert.ok(game.includes('hp:isSnowman?3:isBuilder?3:isBrute?4:isHunter||isHorned?2:1'));
+  assert.ok(game.includes('hp:isTempleElite?5:isSnowman?3:isBuilder?3:isBrute?4:isHunter||isHorned?2:1'));
   assert.ok(game.includes('enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBrute||enemy.isBlueFlame'));
   assert.ok(game.includes('if(e.isSnowman){'));
   assert.ok(game.includes('faceYOffset=e.isSnowman?-17:0'));
