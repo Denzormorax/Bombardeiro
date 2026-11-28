@@ -113,3 +113,8 @@ test("Cogumelo, Caçador e Caçador Elite recebem paletas do Reino dos Templos",
  assert.match(html,/TEMPLE_HORNED_CHASE_PALETTE/);
  assert.match(html,/e&&e\.isEnraged\?TEMPLE_HORNED_CHASE_PALETTE/);
 });
+
+test("cada Guardião Elite do Mundo 7 concede exatamente oito moedas",()=>{
+ assert.match(game,/enemy\.isTempleElite\?"templeElite"/);
+ assert.match(game,/type==="templeElite"\?8/);
+});

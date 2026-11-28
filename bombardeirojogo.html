@@ -16213,7 +16213,7 @@ function findFreeCoinPosition(x,y){
  return null;
 }
 function createCoin(x,y,type){const position=findFreeCoinPosition(x,y);if(position){const value=coinValue(type);coinsOnMap.push({x:position.x,y:position.y,type:type==="blue"?"blue":type==="treasureRed"?"treasureRed":"yellow",value,phase:Math.random()*Math.PI*2,life:0})}}
-function coinValue(type){return type==="blue"?100:type==="treasureRed"?50:type==="diamond"||type==="crystalBomb"?8:type==="yellow"?2:type==="green"?4:6}
+function coinValue(type){return type==="blue"?100:type==="treasureRed"?50:type==="diamond"||type==="crystalBomb"||type==="templeElite"?8:type==="yellow"?2:type==="green"?4:6}
 function updateHUD(){
  $("level").textContent=level;$("forestThemeName").textContent=currentForestTheme().name;const hearts=$("lifeHearts").children;
  for(let i=0;i<hearts.length;i++)hearts[i].classList.toggle("empty",i>=lives);
@@ -16349,6 +16349,18 @@ function moveEntity(entity,dx,dy,r,type){
   if(Math.abs(sx)>=Math.abs(sy)){if(canOccupy(oldX+sx,oldY,r,type,ignored))entity.x=oldX+sx;if(canOccupy(entity.x,oldY+sy,r,type,ignored))entity.y=oldY+sy}
   else{if(canOccupy(oldX,oldY+sy,r,type,ignored))entity.y=oldY+sy;if(canOccupy(oldX+sx,entity.y,r,type,ignored))entity.x=oldX+sx}
  }
+ if(type==="enemy"&&currentWorld==="temples")applyTempleGrassFireContact(entity,r,false);
+}
+function applyTempleGrassFireContact(entity,r,isPlayer=false){
+ if(currentWorld!=="temples"||!templeGrassTufts.length){entity._templeGrassFireContacts=new Set();return false}
+ const active=new Set();
+ for(const tuft of templeGrassTufts)if(tuft.burning&&circleRectCollision(entity.x,entity.y,r,tuft.x,tuft.y,1,1))active.add(cellKey(tuft.x,tuft.y));
+ const previous=entity._templeGrassFireContacts||new Set();let entered=false;
+ for(const key of active)if(!previous.has(key)){entered=true;break}
+ entity._templeGrassFireContacts=active;
+ if(!entered)return false;
+ if(isPlayer){entity.inv=0;hurtPlayer();entity._templeGrassFireContacts=new Set();return true}
+ damageEnemy(entity);return true;
 }
 
 /* INTELIGÊNCIA DOS INIMIGOS */
@@ -16934,7 +16946,7 @@ function placeBomb(){
  if(volcanoLava){bombs.splice(bombs.indexOf(bomb),1);explode(bomb);}
 }
 $("bombBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!customizing)placeBomb()});
-function killEnemy(enemy){if(!enemy.alive)return;if(enemy.isBrute&&currentWorld==="temples")spawnTempleBruteDeathFragments(enemy.x,enemy.y,!!enemy.isTempleElite);if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;const rewardType=enemy.isCrystalBomb?"crystalBomb":enemy.isDiamondCharger?"diamond":enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder||enemy.isBrute?"red":"green";createCoin(enemy.x,enemy.y,rewardType)}
+function killEnemy(enemy){if(!enemy.alive)return;if(enemy.isBrute&&currentWorld==="temples")spawnTempleBruteDeathFragments(enemy.x,enemy.y,!!enemy.isTempleElite);if(!enemy.isBlueFlame)playSfx("enemyDown");enemy.alive=false;enemy.burrowing=false;enemy.building=false;enemy.hurtTimer=ENEMY_DEATH_TIME;enemy.deathTimer=ENEMY_DEATH_TIME;enemy.path=[];enemy.speed=0;score+=100;const rewardType=enemy.isTempleElite?"templeElite":enemy.isCrystalBomb?"crystalBomb":enemy.isDiamondCharger?"diamond":enemy.isSnowman||enemy.isHunter||enemy.isHorned||enemy.isBuilder||enemy.isBrute?"red":"green";createCoin(enemy.x,enemy.y,rewardType)}
 function damageEnemy(enemy){if(!enemy.alive||enemy.burrowing)return;playSfx("enemyHit");enemy.hurtTimer=ENEMY_HURT_TIME;enemy.hitFlash=.24;if(enemy.isSnowman||enemy.isBuilder||enemy.isHunter||enemy.isHorned||enemy.isBrute||enemy.isBlueFlame){enemy.hp--;if((enemy.isHorned||enemy.isBuilder)&&enemy.hp>0){enemy.isEnraged=true;const visible=canSeePlayer(enemy);enemy.mode=visible?"chase":"patrol";enemy.alert=visible?1.25:0;enemy.lastSeen=visible?{x:player.x,y:player.y}:null;enemy.path=[];enemy.repath=0;enemy.speed=enemy.huntSpeed*1.22}if(enemy.hp<=0)killEnemy(enemy)}else killEnemy(enemy)}
 function tryPushBomb(dx,dy){
  if(!pushBombOwned||(!dx&&!dy))return false;let dirX=0,dirY=0;if(Math.abs(dx)>=Math.abs(dy))dirX=Math.sign(dx);else dirY=Math.sign(dy);if(!dirX&&!dirY)return false;
@@ -17122,7 +17134,7 @@ function updatePlayer(dt){
  if(playerMoving){if(Math.abs(dx)>=Math.abs(dy)){player.facingX=Math.sign(dx);player.facingY=0}else{player.facingX=0;player.facingY=Math.sign(dy)}}
  updatePlayerBlink(dt,playerMoving);
  if(pushBombOwned&&tryPushBomb(dx,dy)){collectCoins();checkWin();return}
- moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");collectCoins();
+ moveEntity(player,dx*player.speed*dt,dy*player.speed*dt,PLAYER_RADIUS,"player");applyTempleGrassFireContact(player,PLAYER_RADIUS,true);collectCoins();
  for(const e of enemies)if(e.alive&&!e.burrowing&&!(e.isDiamondCharger&&(e.diamondState==="stunned"||e.diamondState==="impact"))&&distance(e.x,e.y,player.x,player.y)<.43&&player.inv<=0){hurtPlayer();break}checkWin();
 }
 function updateWaterWalker(entity,dt,active){
@@ -22063,7 +22075,7 @@ const bossArenaNewLevelBase=newLevel;
 newLevel=function(preservePowerUps=false){
  bossArenaNewLevelBase(preservePowerUps);
  if(level!==TOTAL_LEVELS)return;
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(map[y][x]!==1)map[y][x]=0;
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)map[y][x]=0;
  bombs=[];flames=[];enemies=[];coinsOnMap=[];coinDrops={};
  dirtParticles=[];waterPuddles=[];waterParticles=[];builderBuildAnimations=[];
  destroyedBlockEffects.length=0;burningCrates.length=0;
@@ -22072,6 +22084,7 @@ newLevel=function(preservePowerUps=false){
  if(typeof spiderDisguises!=="undefined")spiderDisguises=[];
  if(typeof swampGhostParticles!=="undefined")swampGhostParticles.length=0;
  if(typeof diamondPortalPositions!=="undefined")diamondPortalPositions.length=0;
+ if(typeof templeGrassTufts!=="undefined")templeGrassTufts.length=0;
  rebuildStaticMapCache();
  updateHUD();
 };

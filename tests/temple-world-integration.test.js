@@ -177,3 +177,12 @@ test("as dez fases do Reino dos Templos usam gramados com paletas próprias em v
  assert.match(html,/templeGrassSpriteVariants\[stage\]=stageVariants/);
  assert.match(html,/gp\[i%6\]/);
 });
+
+test("moitas em chamas do Mundo 7 causam dano por contato apenas enquanto burning está ativo",()=>{
+ assert.match(html,/function applyTempleGrassFireContact\(entity,r,isPlayer=false\)/);
+ assert.match(html,/tuft\.burning&&circleRectCollision\(entity\.x,entity\.y,r,tuft\.x,tuft\.y,1,1\)/);
+ assert.match(html,/if\(isPlayer\)\{entity.inv=0;hurtPlayer\(\)/);
+ assert.match(html,/if\(type==="enemy"&&currentWorld==="temples"\)applyTempleGrassFireContact\(entity,r,false\)/);
+ assert.match(html,/damageEnemy\(entity\);return true/);
+ assert.match(html,/if\(tuft\.fireAge>=TEMPLE_GRASS_FIRE_DURATION\)\{tuft.burning=false;tuft.burnt=true/);
+});
