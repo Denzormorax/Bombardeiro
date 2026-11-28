@@ -15911,6 +15911,7 @@ let treasureChestBodyCanvas=null,treasureChestLidCanvas=null,treasureAuraCanvas=
 const waterPuddleCells=new Set(),waterPuddleFrames=[],desertWaterPuddleFrames=[],volcanoWaterPuddleFrames=[],iceWaterPuddleFrames=[];let waterPuddleFramesReady=false;
 let player={x:1.5,y:1.5,speed:3.6,inv:0,passBomb:null,facingX:0,facingY:1,hurtTimer:0};
 let playerBlinkCooldown=2,playerBlinkTime=0,playerBlinkReady=false;
+let playerDeathAnimation=null,screenFadeAlpha=0;
 let basePlayerSpeed=3.6,maxBombs=1,firePower=1,activeBombs=0,bombCooldown=0;
 let bombPowerUps=0,firePowerUps=0,speedPowerUps=0,pushBombOwned=false,heartPurchases=0;
 let gameClock=0,lastTime=0,exit={x:-1,y:-1,found:false,spawnTime:0};
@@ -16303,7 +16304,7 @@ let currentWorld="forest",desertDetails=[];
 function newLevel(preservePowerUps=false){
  const savedBombs=bombPowerUps,savedFire=firePowerUps,savedSpeed=speedPowerUps,savedPush=pushBombOwned;
  makeMap();createForestPuddles();rebuildStaticMapCache();bombs=[];flames=[];burningCrates.length=0;coinsOnMap=[];enemies=[];dirtParticles=[];waterParticles=[];builderBuildAnimations=[];treasureChests.length=0;treasureEffects.length=0;treasureSpawnedThisLevel=false;
- basePlayerSpeed=3.6+Math.min(level*.06,.8);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};heartPurchases=0;
+ basePlayerSpeed=3.6+Math.min(level*.06,.8);player={x:1.5,y:1.5,speed:basePlayerSpeed,inv:1.5,passBomb:null,facingX:0,facingY:1,hurtTimer:0};playerDeathAnimation=null;screenFadeAlpha=0;heartPurchases=0;
  if(preservePowerUps){bombPowerUps=savedBombs;firePowerUps=savedFire;speedPowerUps=savedSpeed;pushBombOwned=savedPush;maxBombs=1+bombPowerUps;firePower=1+firePowerUps;player.speed=Math.min(6,basePlayerSpeed+speedPowerUps*.45)}
  else resetPowerUps();
  activeBombs=0;bombCooldown=0;gameClock=0;levelTransition=false;
@@ -16931,7 +16932,7 @@ function updateEnemies(dt){
 
 /* BOMBAS E COMBATE *//* BOMBAS E COMBATE */
 function placeBomb(){
- if(!running||paused||customizing||bombCooldown>0||activeBombs>=maxBombs)return;const x=Math.floor(player.x),y=Math.floor(player.y);if(bombAt(x,y))return;
+ if(!running||paused||customizing||playerDeathAnimation||bombCooldown>0||activeBombs>=maxBombs)return;const x=Math.floor(player.x),y=Math.floor(player.y);if(bombAt(x,y))return;
  const bomb={x,y,t:2.25,range:firePower,ownerPass:true,slide:null,slideClock:0,animTime:0,sparkPhase:Math.random()*Math.PI*2};
  const forestWater=currentWorld==="forest"&&waterPuddleCells.has(cellKey(x,y));
  if(forestWater)bomb.waterDrips=Array.from({length:5},(_,i)=>({x:8+(Math.random()-.5)*12,y:-16+i*5.5,speed:34+Math.random()*12,size:2.2+Math.random()*.8}));
@@ -16989,7 +16990,9 @@ function explode(b){
  for(const e of enemies)if(e.alive){e.path=[];e.repath=0;e.patrolTarget=null;if((e.isHunter||e.isBuilder)&&canSeePlayer(e)){e.mode="chase";e.alert=1.25;e.lastSeen={x:player.x,y:player.y}}else{e.mode="patrol";e.alert=0;e.lastSeen=null;e.patrolWait=.2}}updateHUD();
 }
 function hurtPlayer(){
- if(player.inv>0)return;playSfx("hurt");lives--;resetPowerUps();updateHUD();player.hurtTimer=.48;if(lives<=0){gameOver(false);return}player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;
+ if(player.inv>0||playerDeathAnimation)return;
+ playSfx("hurt");lives--;resetPowerUps();updateHUD();
+ playerDeathAnimation={time:0,startX:player.x,startY:player.y,respawned:false};
 }
 function collectCoins(){
  coinsOnMap=coinsOnMap.filter(c=>{
@@ -17290,9 +17293,20 @@ function spawnWaterSplash(x,y){
 }
 function update(dt){
  if(!running||paused)return;
+ if(playerDeathAnimation){
+  const death=playerDeathAnimation;death.time+=dt;gameClock+=dt;
+  if(death.time>=.96&&!death.respawned){
+   if(lives<=0){playerDeathAnimation=null;screenFadeAlpha=0;gameOver(false);return}
+   player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;death.respawned=true;
+  }
+  if(death.time>=.76&&death.time<.96)screenFadeAlpha=Math.min(1,(death.time-.76)/.20);
+  else if(death.time>=.96)screenFadeAlpha=Math.max(0,1-(death.time-.96)/.22);
+  if(death.time>=1.18){playerDeathAnimation=null;screenFadeAlpha=0;}
+  return;
+ }
  player._previousX=player.x;player._previousY=player.y;
  for(const enemy of enemies){enemy._previousX=enemy.x;enemy._previousY=enemy.y}
- gameClock+=dt;updatePlayer(dt);if(!running)return;updateEnemies(dt);if(currentWorld==="temples")updateTempleBruteFireWaves(dt);
+ gameClock+=dt;updatePlayer(dt);if(!running||playerDeathAnimation)return;updateEnemies(dt);if(currentWorld==="temples")updateTempleBruteFireWaves(dt);
  for(const enemy of enemies)if(enemy&&enemy.isBuilder)enemy._builderMoving=!!(enemy.alive&&!enemy.burrowing&&Number.isFinite(enemy._previousX)&&Math.hypot(enemy.x-enemy._previousX,enemy.y-enemy._previousY)>.00025);
  updateWaterWalkers(dt);updateSlidingBombs(dt);
  for(const b of bombs){
@@ -17304,7 +17318,7 @@ function update(dt){
   }
   if(b.whirlwind){const w=b.whirlwind;w.t+=dt;if(!w.moved&&w.t>=w.duration*.5){b.x=w.toX;b.y=w.toY;w.moved=true}if(w.t>=w.duration)delete b.whirlwind}else b.t-=dt;
  }
- const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);
+ const exploding=bombs.filter(b=>b.t<=0);bombs=bombs.filter(b=>b.t>0);for(const b of exploding)explode(b);if(playerDeathAnimation)return;
  for(const f of flames){f.t-=dt;f.age=(f.age||0)+dt}flames=flames.filter(f=>f.t>0);
  if(currentWorld==="temples")updateTempleGrassFire(dt);
   for(const c of burningCrates)c.t-=dt;for(let i=burningCrates.length-1;i>=0;i--)if(burningCrates[i].t<=0)burningCrates.splice(i,1);
@@ -17637,13 +17651,16 @@ function drawCharacter(x,y,color,helmet,scale=1){
  const px=ox+x*TILE,py=oy+y*TILE;ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,14,15,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();ctx.fillStyle=helmet;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.fillStyle="#18242a";ctx.fillRect(-5,7,10,3);ctx.restore();
 }
 function drawPlayer(){
- const px=ox+player.x*TILE,groundY=oy+player.y*TILE,bob=levelTransition?0:Math.sin(gameClock*3.8)*3.2,bodyY=groundY-bob,hurt=!levelTransition&&player.hurtTimer>0,hurtPulse=hurt?Math.sin((player.hurtTimer/.48)*Math.PI):0,facingX=player.facingX||0,facingY=player.facingY||1,enterProgress=levelTransition?Math.min(1,Math.max(0,(gameClock-portalEnterStart)/.72)):0;
+ const death=playerDeathAnimation,deathTime=death?death.time:0,deathJump=death?(deathTime<.22?30*Math.sin(Math.min(1,deathTime/.22)*Math.PI/2):deathTime<.50?30*(1-Math.min(1,(deathTime-.22)/.28)*(2-Math.min(1,(deathTime-.22)/.28))):0):0;
+ const deathFall=death?Math.max(0,Math.min(1,(deathTime-.22)/.28)):0,deathEase=deathFall*deathFall*(3-2*deathFall);
+ const px=ox+(death?death.startX:player.x)*TILE,groundY=oy+(death?death.startY:player.y)*TILE,bob=death?0:(levelTransition?0:Math.sin(gameClock*3.8)*3.2),bodyY=groundY-bob-deathJump,hurt=!death&&!levelTransition&&player.hurtTimer>0,hurtPulse=hurt?Math.sin((player.hurtTimer/.48)*Math.PI):0,facingX=player.facingX||0,facingY=player.facingY||1,enterProgress=levelTransition?Math.min(1,Math.max(0,(gameClock-portalEnterStart)/.72)):0;
  const shadowScale=1-bob*.025;ctx.save();ctx.globalAlpha=.34;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+15,17*shadowScale,7*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
- const tilt=hurt?Math.sin(gameClock*42)*.055*hurtPulse:0;ctx.save();ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.35,1.35);if(enterProgress>0){ctx.beginPath();ctx.rect(-22,-22,44,44*(1-enterProgress));ctx.clip();ctx.globalAlpha=1-enterProgress*.12;}
+ const tilt=death?1.22*deathEase:(hurt?Math.sin(gameClock*42)*.055*hurtPulse:0);ctx.save();ctx.translate(px,bodyY);ctx.rotate(tilt);ctx.scale(1.35,1.35);if(enterProgress>0){ctx.beginPath();ctx.rect(-22,-22,44,44*(1-enterProgress));ctx.clip();ctx.globalAlpha=1-enterProgress*.12;}
  const bodyGradient=ctx.createRadialGradient(-5,-7,2,0,0,19);bodyGradient.addColorStop(0,hurt?"#fff4f4":"#ffffff");bodyGradient.addColorStop(1,hurt?"#d7baba":"#c9dce4");ctx.fillStyle=bodyGradient;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();
  ctx.fillStyle="#21a9d0";ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();
  ctx.fillStyle="#8ceaff";ctx.globalAlpha=.65;ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
- if(hurt){ctx.strokeStyle="#17232b";ctx.lineWidth=2.2;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2,-2.5);ctx.lineTo(eyeX+2,1.5);ctx.moveTo(eyeX+2,-2.5);ctx.lineTo(eyeX-2,1.5);ctx.stroke()}ctx.fillStyle="#4a1820";ctx.beginPath();ctx.roundRect(-7,5,14,7,2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-6,5.5);ctx.lineTo(6,5.5);ctx.lineTo(4.5,9);ctx.lineTo(-4.5,9);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=.7;ctx.stroke()}
+ if(death){ctx.strokeStyle="#17232b";ctx.lineWidth=2.1;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-3,-1);ctx.quadraticCurveTo(eyeX,2.2,eyeX+3,-1);ctx.stroke()}ctx.fillStyle="#4a1820";ctx.beginPath();ctx.ellipse(0,8,3.2,2.5,0,0,Math.PI*2);ctx.fill()}
+ else if(hurt){ctx.strokeStyle="#17232b";ctx.lineWidth=2.2;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){ctx.beginPath();ctx.moveTo(eyeX-2,-2.5);ctx.lineTo(eyeX+2,1.5);ctx.moveTo(eyeX+2,-2.5);ctx.lineTo(eyeX-2,1.5);ctx.stroke()}ctx.fillStyle="#4a1820";ctx.beginPath();ctx.roundRect(-7,5,14,7,2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-6,5.5);ctx.lineTo(6,5.5);ctx.lineTo(4.5,9);ctx.lineTo(-4.5,9);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=.7;ctx.stroke()}
  else{const eyeShiftX=facingX*2.1,eyeShiftY=facingY*2.1;
  if(playerBlinkTime>0){ctx.strokeStyle="#17232b";ctx.lineWidth=2.1;ctx.lineCap="round";for(const eyeX of [-5.5,5.5]){const eyeY=-1+eyeShiftY;ctx.beginPath();ctx.moveTo(eyeX-3,eyeY);ctx.quadraticCurveTo(eyeX,eyeY+2.5,eyeX+3,eyeY);ctx.stroke()}}
  else{ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.ellipse(5.5+eyeShiftX,-1+eyeShiftY,3.2,4,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#17232b";ctx.beginPath();ctx.arc(-5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.arc(5.5+eyeShiftX+facingX*.8,-1+eyeShiftY+facingY*.8,1.8,0,Math.PI*2);ctx.fill()}
@@ -18299,6 +18316,7 @@ function draw(){
  }
  drawDirtParticles();drawWaterParticles();
  ctx.fillStyle="#ffffffaa";ctx.font="12px Arial";ctx.textAlign="center";ctx.fillText("BOMBER QUEST",W/2,H-5);
+ if(screenFadeAlpha>0){ctx.save();ctx.globalAlpha=Math.min(1,screenFadeAlpha);ctx.fillStyle="#000";ctx.fillRect(0,0,W,H);ctx.restore();}
 }
 
 function startIntroSplash(){
