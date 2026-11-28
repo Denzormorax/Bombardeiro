@@ -37,3 +37,12 @@ test("a animação é limpa ao preparar uma nova fase e mantém o encerramento n
  assert.match(html,/playerDeathAnimation=null;screenFadeAlpha=0;heartPurchases=0/);
  assert.match(html,/if\(lives<=0\)\{playerDeathAnimation=null;screenFadeAlpha=1;gameOver\(false\);return\}/);
 });
+
+test("o renascimento restaura e valida o canto seguro antes de reaparecer",()=>{
+ assert.match(html,/function restorePlayerAtSafeSpawn\(\)\{/);
+ assert.match(html,/const safeCells=\[\[1,1\],\[2,1\],\[1,2\],\[2,2\],\[3,1\],\[1,3\]\]/);
+ assert.match(html,/for\(const \[x,y\] of safeCells\).*map\[y\]\[x\]=0/);
+ assert.match(html,/const spawnBombs=bombs\.filter/);
+ assert.match(html,/rebuildStaticMapCache\(\);\s*player\.x=1\.5;player\.y=1\.5/);
+ assert.match(html,/restorePlayerAtSafeSpawn\(\);player\.passBomb=null;player\.inv=2\.2;death\.respawned=true/);
+});
