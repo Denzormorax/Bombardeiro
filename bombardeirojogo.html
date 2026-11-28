@@ -21927,7 +21927,7 @@ const templeThemes=[
  {name:"Champagne Nobre",sky:["#fffaf0","#e9dcc3","#a18a63"],floor:"rgba(244,236,220,.97)",floor2:"rgba(255,255,255,.3)",wall:["#e9ddc8","#fffefa","#a18a63"],far:"#d4c19e",near:"#8e7853",glow:"#ffedc6",accent:"#c7a66c",style:"champagne"},
  {name:"Opala Boreal",sky:["#f8fffd","#d7e8e2","#809b94"],floor:"rgba(232,241,237,.97)",floor2:"rgba(255,255,255,.3)",wall:["#d8e8e2","#ffffff","#809b94"],far:"#b8d0c8",near:"#718b83",glow:"#e6fff7",accent:"#a0c3b7",style:"opala"}
 ];
-const templeSpriteImage=new Image(),templeThemedSpriteSheets=Array(10).fill(null);
+const templeSpriteImage=new Image(),templeThemedSpriteSheets=Array(10).fill(null),templeDestructibleBlockSprites=Array(10).fill(null);
 function templeThemeIndex(){return Math.max(0,Math.min(9,(Number(level)||1)-1))}
 function buildTempleSpriteSheets(){
  if(!templeSpriteImage.complete||!templeSpriteImage.naturalWidth)return;
@@ -21936,6 +21936,12 @@ function buildTempleSpriteSheets(){
   const q=canvas.getContext("2d");q.imageSmoothingEnabled=false;
   q.drawImage(templeSpriteImage,0,i*128,512,128,0,0,512,128);
   templeThemedSpriteSheets[i]=canvas;
+  // Recorta a silhueta do bloco; o fundo do atlas fica transparente e não gira.
+  const blockCanvas=document.createElement("canvas");blockCanvas.width=128;blockCanvas.height=128;
+  const b=blockCanvas.getContext("2d");b.save();b.beginPath();
+  b.moveTo(13,37);b.lineTo(61,12);b.lineTo(111,37);b.lineTo(111,91);b.lineTo(61,116);b.lineTo(13,91);b.closePath();b.clip();
+  b.drawImage(canvas,384,0,128,128,0,0,128,128);b.restore();
+  templeDestructibleBlockSprites[i]=blockCanvas;
  }
  if(currentWorld==="temples"){buildBurningCrateSprite();rebuildStaticMapCache()}
 }
@@ -21974,9 +21980,11 @@ drawForestBackground=function(target){
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="temples")return tileBeforeTemples(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index];
- if(type===1||type===2){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.87,TILE*.35,TILE*.105,0,0,Math.PI*2);target.fill();target.restore()}
+ if(type===1){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.87,TILE*.35,TILE*.105,0,0,Math.PI*2);target.fill();target.restore()}
+ // O bloco destrutível é desenhado somente na camada animada.
+ if(type===2)return;
  if(sheet){
-  const column=type===1?2:type===2?3:(((x*7+y*11+level)%5===0)?1:0);
+  const column=type===1?2:(((x*7+y*11+level)%5===0)?1:0);
   target.drawImage(sheet,column*128,0,128,128,px,py,TILE,TILE);
  }else{
   const t=templeThemes[index];target.fillStyle=type===1?t.wall[0]:type===2?t.wall[1]:t.floor;target.fillRect(px,py,TILE,TILE);
@@ -21986,7 +21994,7 @@ drawTileTo=function(target,x,y,type,offsetY=0){
 buildBurningCrateSprite=function(){
  if(currentWorld==="temples"){
   const sheet=templeThemedSpriteSheets[templeThemeIndex()];if(!sheet)return;
-  for(let f=0;f<BURNING_CRATE_FRAMES;f++){const c=burningCrateCanvases[templeThemeIndex()][f].getContext("2d");c.clearRect(0,0,64,64);c.drawImage(sheet,384,0,128,128,4,5,56,56)}
+  for(let f=0;f<BURNING_CRATE_FRAMES;f++){const c=burningCrateCanvases[templeThemeIndex()][f].getContext("2d");c.clearRect(0,0,64,64);const block=templeDestructibleBlockSprites[templeThemeIndex()];if(block)c.drawImage(block,0,0,128,128,4,5,56,56)}
   burningCrateReady=true;return;
  }
  crateBeforeTemples();
@@ -22009,7 +22017,7 @@ function drawTempleBlockDebris(){
 }
 function drawTempleDestructibleBlocks(){
  if(currentWorld!=="temples"||!destructibleTilePositions.length)return;
- const sheet=templeThemedSpriteSheets[templeThemeIndex()],theme=templeThemes[templeThemeIndex()];if(!sheet)return;
+ const index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index],blockSprite=templeDestructibleBlockSprites[index],theme=templeThemes[index];if(!sheet||!blockSprite)return;
  for(const tile of destructibleTilePositions){
   if(!map[tile.y]||map[tile.y][tile.x]!==2)continue;
   const px=ox+tile.x*TILE,py=oy+tile.y*TILE,baseColumn=((tile.x*7+tile.y*11+level)%5===0)?1:0;
@@ -22033,7 +22041,7 @@ function drawTempleDestructibleBlocks(){
   }
   ctx.save();
   if(face<0)ctx.scale(-1,1);
-  ctx.drawImage(sheet,384,0,128,128,-frontHalf,-half,frontWidth,TILE);
+  ctx.drawImage(blockSprite,0,0,128,128,-frontHalf,-half,frontWidth,TILE);
   ctx.restore();
   ctx.strokeStyle="rgba(83,69,52,.48)";ctx.lineWidth=Math.max(1,TILE*.018);ctx.strokeRect(-frontHalf,-half,frontWidth,TILE);
   ctx.beginPath();ctx.moveTo(-frontHalf+TILE*.035,-half+TILE*.035);ctx.lineTo(frontHalf-TILE*.035,-half+TILE*.035);
