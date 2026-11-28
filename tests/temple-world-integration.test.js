@@ -57,6 +57,21 @@ test("blocos do Reino dos Templos têm sombra e rotação 3D periódica sem alte
  assert.match(html,/ctx\.scale\(widthScale,1\)/);
  assert.match(html,/drawTempleDestructibleBlocks\(\)/);
 });
+test("blocos destrutíveis do Reino dos Templos giram como cubos 3D com troca de faces",()=>{
+ const start=html.indexOf("function drawTempleDestructibleBlocks()");
+ const end=html.indexOf("\\nfunction buildTempleMap()",start);
+ const draw=html.slice(start,end);
+ assert.ok(start>=0&&end>start,"renderizador 3D dos blocos localizado");
+ assert.match(draw,/const angle=gameClock\\*\\(Math\\.PI\\*2\\/3\\.2\\)/);
+ assert.match(draw,/face=Math\\.cos\\(angle\\),side=Math\\.sin\\(angle\\)/);
+ assert.match(draw,/frontWidth=.*Math\\.abs\\(face\\)/);
+ assert.match(draw,/sideWidth=Math\\.abs\\(side\\)\\*TILE/);
+ assert.match(draw,/const sideGradient=ctx\\.createLinearGradient/);
+ assert.match(draw,/ctx\\.lineTo\\(edge,-half\\+skew\\)/);
+ assert.match(draw,/if\\(face<0\\)ctx\\.scale\\(-1,1\\)/);
+ assert.doesNotMatch(draw,/ctx\\.scale\\(widthScale,1\\)/);
+ assert.doesNotMatch(draw,/turnDuration/);
+});
 test("a destruição de blocos dos Templos lança quatro fragmentos quadrados com duas escalas",()=>{
  assert.match(html,/function spawnTempleBlockDebris\(x,y\)/);
  assert.match(html,/sizes=\[\.27,\.24,\.16,\.15\]/);

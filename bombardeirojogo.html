@@ -22009,18 +22009,35 @@ function drawTempleBlockDebris(){
 }
 function drawTempleDestructibleBlocks(){
  if(currentWorld!=="temples"||!destructibleTilePositions.length)return;
- const sheet=templeThemedSpriteSheets[templeThemeIndex()];if(!sheet)return;
+ const sheet=templeThemedSpriteSheets[templeThemeIndex()],theme=templeThemes[templeThemeIndex()];if(!sheet)return;
  for(const tile of destructibleTilePositions){
   if(!map[tile.y]||map[tile.y][tile.x]!==2)continue;
   const px=ox+tile.x*TILE,py=oy+tile.y*TILE,baseColumn=((tile.x*7+tile.y*11+level)%5===0)?1:0;
-  ctx.drawImage(sheet,baseColumn*128,0,128,128,px,py,TILE,TILE);
-  ctx.save();ctx.fillStyle="rgba(20,17,12,.30)";ctx.beginPath();ctx.ellipse(px+TILE*.5,py+TILE*.87,TILE*.35,TILE*.105,0,0,Math.PI*2);ctx.fill();
-  const cycle=gameClock%2,turnDuration=.64,angle=cycle<turnDuration?(cycle/turnDuration)*Math.PI*2:0;
-  const widthScale=cycle<turnDuration?Math.max(.12,Math.abs(Math.cos(angle))):1;
+  const angle=gameClock*(Math.PI*2/3.2)+(tile.x*7+tile.y*11)*.035;
+  const face=Math.cos(angle),side=Math.sin(angle),frontWidth=Math.max(TILE*.025,Math.abs(face)*TILE),sideWidth=Math.abs(side)*TILE;
+  const frontHalf=frontWidth*.5,sideSign=side>=0?1:-1,outer=frontHalf+sideWidth,half=TILE*.5,skew=TILE*.045;
+  ctx.save();
+  ctx.fillStyle="rgba(20,17,12,.30)";ctx.beginPath();ctx.ellipse(px+TILE*.5,py+TILE*.88,TILE*.43,TILE*.12,0,0,Math.PI*2);ctx.fill();
   ctx.translate(px+TILE*.5,py+TILE*.5);
-  if(cycle<turnDuration&&widthScale<.34){ctx.fillStyle="rgba(112,91,59,.88)";ctx.fillRect(-TILE*.055,-TILE*.43,TILE*.11,TILE*.86)}
-  ctx.scale(widthScale,1);ctx.globalAlpha=cycle<turnDuration&&Math.cos(angle)<0?.88:1;
-  ctx.drawImage(sheet,384,0,128,128,-TILE*.5,-TILE*.5,TILE,TILE);
+  if(sideWidth>TILE*.015){
+   const left=sideSign<0,inner=left?-frontHalf:frontHalf,edge=left?-outer:outer;
+   const sideGradient=ctx.createLinearGradient(left?edge:inner,0,left?inner:edge,0);
+   sideGradient.addColorStop(0,theme.wall[2]);sideGradient.addColorStop(.48,theme.wall[0]);sideGradient.addColorStop(1,theme.wall[1]);
+   ctx.beginPath();
+   if(left){ctx.moveTo(inner,-half);ctx.lineTo(edge,-half+skew);ctx.lineTo(edge,half-skew);ctx.lineTo(inner,half)}
+   else{ctx.moveTo(inner,-half);ctx.lineTo(edge,-half+skew);ctx.lineTo(edge,half-skew);ctx.lineTo(inner,half)}
+   ctx.closePath();ctx.fillStyle=sideGradient;ctx.fill();
+   ctx.strokeStyle="rgba(76,61,43,.48)";ctx.lineWidth=Math.max(1,TILE*.018);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(edge,-half+skew);ctx.lineTo(edge,half-skew);ctx.strokeStyle="rgba(255,255,255,.52)";ctx.lineWidth=Math.max(1,TILE*.025);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(inner,-half+TILE*.035);ctx.lineTo(edge,-half+skew+TILE*.035);ctx.strokeStyle="rgba(255,255,255,.28)";ctx.lineWidth=Math.max(1,TILE*.018);ctx.stroke();
+  }
+  ctx.save();
+  if(face<0)ctx.scale(-1,1);
+  ctx.drawImage(sheet,384,0,128,128,-frontHalf,-half,frontWidth,TILE);
+  ctx.restore();
+  ctx.strokeStyle="rgba(83,69,52,.48)";ctx.lineWidth=Math.max(1,TILE*.018);ctx.strokeRect(-frontHalf,-half,frontWidth,TILE);
+  ctx.beginPath();ctx.moveTo(-frontHalf+TILE*.035,-half+TILE*.035);ctx.lineTo(frontHalf-TILE*.035,-half+TILE*.035);
+  ctx.strokeStyle="rgba(255,255,255,.64)";ctx.lineWidth=Math.max(1,TILE*.022);ctx.stroke();
   ctx.restore();
  }
 }
