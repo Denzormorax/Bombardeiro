@@ -29,7 +29,7 @@ test("o guardião tem paleta distinta, braços grandes animados e acabamento met
  assert.match(html,/ctx\.lineWidth=16/);
  assert.match(html,/ctx\.lineWidth=12\.2/);
  assert.match(html,/ctx\.lineTo\(side\*15,7\)/);
- assert.match(html,/e\.isBrute\?TEMPLE_BRUTE_ENEMY_PALETTE/);
+ assert.match(html,/e\.isBrute\?\(e\.isTempleElite\?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE\)/);
 });
 
 test("os braços não alteram a colisão: o movimento usa o mesmo caminho centralizado por blocos",()=>{
@@ -67,10 +67,10 @@ test("blocos destrutíveis de todos os mundos explodem em muitos fragmentos com 
  assert.ok(html.includes("shape=[]"));
 });
 test("o Guardião dos Braços Fortes explode em fragmentos da própria paleta ao receber o golpe final",()=>{
- assert.ok(html.includes('if(enemy.isBrute&&currentWorld==="temples")spawnTempleBruteDeathFragments(enemy.x,enemy.y)'));
- assert.ok(html.includes("function spawnTempleBruteDeathFragments(x,y)"));
+ assert.ok(html.includes('if(enemy.isBrute&&currentWorld==="temples")spawnTempleBruteDeathFragments(enemy.x,enemy.y,!!enemy.isTempleElite)'));
+ assert.ok(html.includes("function spawnTempleBruteDeathFragments(x,y,isElite=false)"));
  assert.ok(html.includes("p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep"));
- assert.ok(html.includes("pushTempleDebrisEffect(x,y,[p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep],30,1.02"));
+ assert.ok(html.includes("pushTempleDebrisEffect(x,y,[p.light,p.body,p.shadow,p.crown,p.metal,p.gem,p.deep],isElite?34:30"));
 });
 
 test("dois Guardiões Elite aparecem das fases 5 a 9, têm cinco golpes de vida e preservam os demais inimigos",()=>{
@@ -84,7 +84,7 @@ test("Guardião Elite é maior, usa armadura dourada e mantém o comportamento d
  assert.match(html,/TEMPLE_ELITE_ENEMY_PALETTE=\{light:"#fff6bd",body:"#e5ad19"/);
  assert.match(html,/e\.isTempleElite\?1\.38:1\.22/);
  assert.match(html,/enemy\.isTempleElite\?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE/);
- assert.match(html,/enemy\.isTempleElite\?\(level<5\|\|level>9\)/);
+ assert.match(html,/enemy\.isTempleElite&&\(level<5\|\|level>9\)/);
 });
 test("impacto do Guardião Elite cobre instantaneamente os oito quadrados ao redor com fumaça dourada brilhante",()=>{
  assert.match(html,/for\(let dy=-1;dy<=1;dy\+\+\)for\(let dx=-1;dx<=1;dx\+\+\)if\(dx!==0\|\|dy!==0\)ring\.push/);
