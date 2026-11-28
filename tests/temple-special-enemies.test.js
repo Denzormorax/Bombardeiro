@@ -12,9 +12,9 @@ test("Caçadores do Reino dos Templos usam armadura 3D com paleta exclusiva",()=
  assert.match(html,/TEMPLE_HORNED_CHASE_PALETTE/);
  assert.match(html,/TEMPLE_MUSHROOM_ENEMY_PALETTE/);
  assert.match(html,/isTempleHunter=templeActive&&!!e\.isHunter/);
- assert.match(html,/isTempleHunter\?templeHunterEnemyPalette\(\)/);
+ assert.match(html,/isTempleHunter\?templeHunterEnemyPalette\(e\)/);
  assert.match(html,/drawTempleCommonEnemyDetails\(e,templePalette\)/);
- assert.match(html,/e\.isHunter\?templeHunterEnemyPalette\(\)/);
+ assert.match(html,/e\.isHunter\?templeHunterEnemyPalette\(e\)/);
  assert.match(html,/currentWorld==="temples"&&level>=1&&level<=9/);
 });
 
