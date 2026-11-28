@@ -22373,7 +22373,7 @@ function createTempleGrassTufts(){
   candidates.push({x,y});
  }
  shuffleArray(candidates);
- for(const p of candidates.slice(0,20))templeGrassTufts.push({x:p.x,y:p.y,variant:Math.floor(Math.random()*TEMPLE_GRASS_VARIANTS),phase:Math.floor(Math.random()*TEMPLE_GRASS_FRAMES)});
+ for(const p of candidates.slice(0,30))templeGrassTufts.push({x:p.x,y:p.y,variant:Math.floor(Math.random()*TEMPLE_GRASS_VARIANTS),phase:Math.floor(Math.random()*TEMPLE_GRASS_FRAMES)});
 }
 const TEMPLE_GRASS_FIRE_DURATION=6.7,TEMPLE_GRASS_FIRE_POINTS=64;
 function igniteTempleGrass(cells){
@@ -22382,7 +22382,7 @@ function igniteTempleGrass(cells){
   const tuft=templeGrassTufts.find(item=>item.x===cell.x&&item.y===cell.y);
   if(!tuft||tuft.burnt||tuft.burning)continue;
   const points=[];
-  for(let i=0;i<TEMPLE_GRASS_FIRE_POINTS;i++)points.push({x:.035+Math.random()*.93,y:.055+Math.random()*.88,size:4.2+Math.random()*3.1,phase:Math.random()*Math.PI*2,stretch:.85+Math.random()*.7});
+  for(let i=0;i<TEMPLE_GRASS_FIRE_POINTS;i++){const sizeRoll=Math.random(),size=sizeRoll<.34?3.2+Math.random()*1.4:sizeRoll<.68?5.1+Math.random()*1.7:7.2+Math.random()*2.2;points.push({x:.035+Math.random()*.93,y:.055+Math.random()*.88,size,phase:Math.random()*Math.PI*2,stretch:.85+Math.random()*.7})}
   tuft.burning=true;tuft.fireAge=0;tuft.firePoints=points;tuft.charAlpha=0;
  }
 }
