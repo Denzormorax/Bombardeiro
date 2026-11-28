@@ -23,6 +23,9 @@ test("a animação fecha os olhos no salto, cai de lado e termina deitado",()=>{
 
 test("durante a morte o mundo e os controles ficam bloqueados até o fade e o respawn",()=>{
  assert.match(html,/playerDeathAnimation\|\|bombCooldown/);
+ assert.match(html,/function openShop\(\)\{if\(!running\|\|customizing\|\|playerDeathAnimation\)return/);
+ assert.match(html,/pauseBtn"\)\.onclick=\(\)=>\{if\(!running\|\|customizing\|\|playerDeathAnimation\)return/);
+ assert.match(html,/if\(playerDeathAnimation\)return true/);
  assert.match(html,/if\(playerDeathAnimation\)\{\s*const death=playerDeathAnimation;death\.time\+=dt;gameClock\+=dt;/);
  assert.match(html,/player\.x=1\.5;player\.y=1\.5;player\.passBomb=null;player\.inv=2\.2;death\.respawned=true/);
  assert.match(html,/death\.time>=\.76&&death\.time<\.96/);
