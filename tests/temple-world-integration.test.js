@@ -99,14 +99,14 @@ test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas
 });
 
 test("gramados das nove fases do Reino dos Templos pegam fogo com muitos focos e ficam carbonizados",()=>{
- assert.match(html,/const TEMPLE_GRASS_FIRE_DURATION=6\.7,TEMPLE_GRASS_FIRE_POINTS=28/);
+ assert.match(html,/const TEMPLE_GRASS_FIRE_DURATION=6\.7,TEMPLE_GRASS_FIRE_POINTS=84/);
  assert.match(html,/function igniteTempleGrass\(cells\)/);
  assert.match(html,/for\(let i=0;i<TEMPLE_GRASS_FIRE_POINTS;i\+\+\)points\.push/);
  assert.match(html,/if\(currentWorld==="temples"&&level>=1&&level<=9\)igniteTempleGrass\(cells\)/);
  assert.match(html,/function updateTempleGrassFire\(dt\)/);
  assert.match(html,/tuft\.charAlpha=Math\.min\(\.94,Math\.max\(0,/);
  assert.match(html,/if\(tuft\.fireAge>=TEMPLE_GRASS_FIRE_DURATION\)\{tuft\.burning=false;tuft\.burnt=true;tuft\.charAlpha=\.94/);
- assert.match(html,/function drawTempleGrassFire\(tuft,px,py\)/);
+ assert.match(html,/ctx\\.globalCompositeOperation="source-atop"/);\n assert.match(html,/charAlpha=Math\\.min\\(\\.88/);\n assert.doesNotMatch(html,/ctx\\.fillStyle="#100d0b";ctx\\.fillRect\\(px,py,TILE,TILE\\)/);\n assert.match(html,/size:2\\+Math\\.random\\(\\)\\*2\\.5/);\n assert.match(html,/function drawTempleGrassFire\(tuft,px,py\)/);
  assert.match(html,/fade=Math\.max\(0,1-Math\.max\(0,tuft\.fireAge-5\.25\)\/1\.45\)/);
  assert.match(html,/drawTempleGrassFire\(tuft,px,py\)/);
  assert.match(html,/if\(currentWorld==="temples"\)updateTempleGrassFire\(dt\)/);
