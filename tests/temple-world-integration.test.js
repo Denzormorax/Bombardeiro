@@ -128,7 +128,7 @@ test("a grama do Reino dos Templos tem folhas reais que ultrapassam topo e later
  assert.match(html,/edge===0\?B\+rand\(\)\*10:edge===1\?B\+TILE-rand\(\)\*10/);
  assert.match(html,/y=blade%5===0\?B\+rand\(\)\*12:B\+rand\(\)\*TILE/);
  assert.match(html,/tipX=Math\.max\(1,Math\.min\(canvas\.width-1/);
- assert.match(html,/ctx\.drawImage\(frames\[frame\],ox\+tuft\.x\*TILE-TEMPLE_GRASS_BLEED,oy\+tuft\.y\*TILE-TEMPLE_GRASS_BLEED,TILE\+TEMPLE_GRASS_BLEED\*2,TILE\+TEMPLE_GRASS_BLEED\*2\)/);
+ assert.match(html,/ctx\.drawImage\(frames\[frame\],px-TEMPLE_GRASS_BLEED,py-TEMPLE_GRASS_BLEED,TILE\+TEMPLE_GRASS_BLEED\*2,TILE\+TEMPLE_GRASS_BLEED\*2\)/);
  assert.match(html,/templeGrassSpriteVariants\.length\)return/);
  assert.match(html,/Math\.floor\(gameClock\*12\)%TEMPLE_GRASS_FRAMES/);
 });
