@@ -88,13 +88,15 @@ test("bombas nas poças congeladas param em obstáculos sem detonar antes do tem
 });
 
 test("blocos indestrutíveis recuperam o brilho difuso com cores temáticas por mundo", () => {
-  assert.ok(game.includes('forest:createPillarShimmerCanvas("rgb(70,220,105)"'));
+  assert.ok(game.includes('forest:createPillarShimmerCanvas("rgb(112,210,174)","rgba(183,255,224,.42)",.55)'));
   assert.ok(game.includes('desert:createPillarShimmerCanvas("rgb(255,151,48)"'));
   assert.ok(game.includes('volcano:createPillarShimmerCanvas("rgb(235,48,35)"'));
   assert.ok(game.includes('ice:createPillarShimmerCanvas("rgb(75,170,255)"'));
   const draw = game.slice(game.indexOf("function drawIndestructibleShimmer"),game.indexOf("function draw(){"));
   assert.ok(draw.includes("const shimmerCanvas=pillarShimmerCanvases[currentWorld]||pillarShimmerCanvases.forest"));
   assert.ok(draw.includes("ctx.drawImage(shimmerCanvas,-20,-28,40,56)"));
+  assert.ok(draw.includes('currentWorld==="forest"'));
+  assert.ok(draw.includes(".24+.12*Math.sin(phase*Math.PI*2)"));
   assert.ok(game.includes("cloud.addColorStop(0,highlight)"));
   assert.ok(game.includes("cloud.addColorStop(.45,color.replace"));
 });
@@ -104,7 +106,7 @@ test("brilho dos blocos indestrutíveis tem maior intensidade sem perder o cache
   assert.ok(game.includes('band.addColorStop(.28,color.replace(")",",.22)").replace("rgb","rgba"))'));
   assert.ok(game.includes('band.addColorStop(.72,color.replace(")",",.22)").replace("rgb","rgba"))'));
   assert.ok(game.includes('cloud.addColorStop(.45,color.replace(")",",.40)").replace("rgb","rgba"))'));
-  assert.ok(game.includes('"rgba(205,255,215,.94)"'));
+  assert.ok(game.includes('"rgba(183,255,224,.42)"'));
   assert.ok(game.includes('"rgba(255,232,185,.96)"'));
   assert.ok(game.includes('"rgba(255,195,150,.95)"'));
   assert.ok(game.includes('"rgba(245,253,255,1)"'));
