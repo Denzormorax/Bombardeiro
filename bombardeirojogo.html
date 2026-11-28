@@ -21939,10 +21939,15 @@ function buildTempleSpriteSheets(){
   // Extrai SOMENTE uma face de mármore do cubo do atlas. As outras faces,
   // a sombra e o fundo ficam fora do PNG que recebe a rotação.
   const blockCanvas=document.createElement("canvas");blockCanvas.width=128;blockCanvas.height=128;
+  // A face está na 3ª célula do atlas (x=256), não na origem da linha.
+  // Primeiro isola a célula correta; depois recorta/remapeia somente a face.
+  const faceAtlas=document.createElement("canvas");faceAtlas.width=128;faceAtlas.height=128;
+  const fa=faceAtlas.getContext("2d");fa.imageSmoothingEnabled=false;
+  fa.drawImage(canvas,256,0,128,128,0,0,128,128);
   const b=blockCanvas.getContext("2d");b.save();
   b.setTransform(128/42,0,128*20/(42*50),128/50,-61*(128/42)-58*(128*20/(42*50)),-58*(128/50));
   b.beginPath();b.moveTo(61,58);b.lineTo(103,38);b.lineTo(103,87);b.lineTo(61,108);b.closePath();b.clip();
-  b.drawImage(canvas,0,0);b.restore();
+  b.drawImage(faceAtlas,0,0);b.restore();
   templeDestructibleBlockSprites[i]=blockCanvas;
  }
  if(currentWorld==="temples"){buildBurningCrateSprite();rebuildStaticMapCache()}
