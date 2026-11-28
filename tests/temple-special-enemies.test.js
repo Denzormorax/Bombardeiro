@@ -39,24 +39,26 @@ test("os braços não alteram a colisão: o movimento usa o mesmo caminho centra
 });
 
 test("o Guardião prepara o golpe por dois segundos e mantém dois segundos de recuperação",()=>{
- assert.match(html,/function templeBruteAttackLane\(enemy\)/);
+ assert.match(html,/function templeBruteAttackLane\\(enemy\\)/);
  assert.match(html,/range>7/);
- assert.match(html,/enemy\.templeBruteAttackState="windup";enemy\.templeBruteAttackTimer=4/);
+ assert.ok(html.includes('enemy.templeBruteAttackState="windup";enemy.templeBruteAttackTimer=2'));
  assert.match(html,/attackState==="windup"/);
- assert.match(html,/enemy\.templeBruteAttackState="slam";enemy\.templeBruteAttackTimer=2/);
+ assert.match(html,/enemy\\.templeBruteAttackState="slam";enemy\\.templeBruteAttackTimer=2/);
  assert.match(html,/attackState==="slam"/);
- assert.match(html,/enemy\.templeBruteAttackState="idle"/);
+ assert.match(html,/enemy\\.templeBruteAttackState="idle"/);
 });
 test("o fogo cintilante avança em cruz, só atinge o jogador e não afeta blocos ou inimigos",()=>{
- assert.match(html,/function spawnTempleBruteFireWave\(enemy\)/);
- assert.match(html,/remaining:7/);\n assert.match(html,/directions=\[\{dx:1,dy:0\},\{dx:-1,dy:0\},\{dx:0,dy:1\},\{dx:0,dy:-1\}\]/);
- assert.match(html,/wave\.clock>=\.075/);
- assert.match(html,/tileAt\(wave\.x,wave\.y\)!==0\|\|bombAt\(wave\.x,wave\.y\)/);
- assert.match(html,/Math\.floor\(player\.x\)===cell\.x&&Math\.floor\(player\.y\)===cell\.y/);
- assert.match(html,/hurtPlayer\(\)/);
- assert.match(html,/function drawTempleBruteFireCell\(cell\)/);
- assert.match(html,/createRadialGradient/);
- assert.match(html,/#d9f2ff/);\n assert.match(html,/rgba\\(255,255,255,1\\)/);
+ assert.match(html,/function spawnTempleBruteFireWave\\(enemy\\)/);
+ assert.match(html,/remaining:7/);
+ assert.ok(html.includes('directions=[{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}]'));
+ assert.match(html,/wave\\.clock>=\\.075/);
+ assert.match(html,/tileAt\\(wave\\.x,wave\\.y\\)!==0\\|\\|bombAt\\(wave\\.x,wave\\.y\\)/);
+ assert.match(html,/Math\\.floor\\(player\\.x\\)===wave\\.x&&Math\\.floor\\(player\\.y\\)===wave\\.y/);
+ assert.match(html,/hurtPlayer\\(\\)/);
+ assert.match(html,/function drawTempleBruteFireCell\\(cell\\)/);
+ assert.match(html,/function buildTempleBruteFireSprite\\(variant\\)/);
+ assert.match(html,/#d9f2ff/);
+ assert.ok(html.includes('rgba(255,255,255,1)'));
  assert.match(html,/#ffffff/);
 });
 test("a onda de fogo do Guardião é atualizada e desenhada somente no Reino dos Templos",()=>{
