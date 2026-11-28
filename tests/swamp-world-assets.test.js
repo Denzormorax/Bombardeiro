@@ -65,7 +65,7 @@ test("troncos do pântano soltam lascas, cipós e folhas com sprites em cache", 
   const html = fs.readFileSync(path.join(root, "bombardeirojogo.html"), "utf8");
   assert.match(html, /swampDebrisCache/);
   assert.match(html, /i<36/);
-  assert.match(html, /currentWorld==="swamp"\)spawnDestroyedBlockEffect/);
+  assert.match(html, /spawnTempleBlockDebris\(x\+\.5,y\+\.5,currentWorld\)/);
 });
 
 test("fantasminha suporta três danos e reaparece em posição aleatória após ser atingido", () => {
