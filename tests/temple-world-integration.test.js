@@ -89,7 +89,7 @@ test("blocos destrutíveis flutuam e fazem gangorra com sombra PNG separada e fi
 
 test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas animadas por vento em cada fase",()=>{
  assert.match(html,/function createTempleGrassTufts\(\)/);
- assert.match(html,/candidates\.slice\(0,20\)/);
+ assert.match(html,/candidates\.slice\(0,30\)/);
  assert.match(html,/function drawTempleGrassTufts\(\)/);
  assert.match(html,/Math\.sin\(frame\/TEMPLE_GRASS_FRAMES\*Math\.PI\*2\)/);
  assert.match(html,/Math\.floor\(gameClock\*12\)%TEMPLE_GRASS_FRAMES/);
@@ -101,7 +101,7 @@ test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas
 test("gramados das nove fases do Reino dos Templos pegam fogo com muitos focos e ficam carbonizados",()=>{
  assert.match(html,/const TEMPLE_GRASS_FIRE_DURATION=6\.7,TEMPLE_GRASS_FIRE_POINTS=64/);
  assert.match(html,/function igniteTempleGrass\(cells\)/);
- assert.match(html,/for\(let i=0;i<TEMPLE_GRASS_FIRE_POINTS;i\+\+\)points\.push/);
+ assert.match(html,/for\(let i=0;i<TEMPLE_GRASS_FIRE_POINTS;i\+\+\)\{const sizeRoll=Math\.random\(\),size=/);
  assert.match(html,/if\(currentWorld==="temples"&&level>=1&&level<=9\)igniteTempleGrass\(cells\)/);
  assert.match(html,/function updateTempleGrassFire\(dt\)/);
  assert.match(html,/tuft\.charAlpha=Math\.min\(\.88/);
@@ -109,7 +109,7 @@ test("gramados das nove fases do Reino dos Templos pegam fogo com muitos focos e
  assert.match(html,/cq\.globalCompositeOperation="source-atop"/);
  assert.match(html,/tuft\.charAlpha=Math\.min\(\.88/);
  assert.doesNotMatch(html,/ctx\.fillStyle="#100d0b";ctx\.fillRect\(px,py,TILE,TILE\)/);
- assert.match(html,/size:4\.2\+Math\.random\(\)\*3\.1/);
+ assert.match(html,/sizeRoll<\.34\?3\.2\+Math\.random\(\)\*1\.4:sizeRoll<\.68\?5\.1\+Math\.random\(\)\*1\.7:7\.2\+Math\.random\(\)\*2\.2/);
  assert.match(html,/function drawTempleGrassFire\(tuft,px,py\)/);
  assert.match(html,/fade=Math\.max\(0,1-Math\.max\(0,tuft\.fireAge-5\.25\)\/1\.45\)/);
  assert.match(html,/drawTempleGrassFire\(tuft,px,py\)/);
