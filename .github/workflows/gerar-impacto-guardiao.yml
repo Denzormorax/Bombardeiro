@@ -1,0 +1,51 @@
+name: Gerar impacto do Guardião dos Braços Fortes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "game-assets/audio/gerar_impacto_guardiao.py"
+      - ".github/workflows/gerar-impacto-guardiao.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  gerar-impacto:
+    name: Compor e salvar efeito sonoro original
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+      - name: Gerar impacto cinematográfico em WAV
+        run: python3 game-assets/audio/gerar_impacto_guardiao.py
+      - name: Validar áudio para o jogo e prévia
+        run: |
+          python3 - <<'PY'
+          import wave
+          from pathlib import Path
+          p = Path("game-assets/audio/guardiao_impacto.wav")
+          assert p.is_file() and p.stat().st_size > 250_000
+          with wave.open(str(p), "rb") as w:
+              assert w.getnchannels() == 2
+              assert w.getsampwidth() == 2
+              assert w.getframerate() == 44100
+              assert 1.6 <= w.getnframes()/w.getframerate() <= 1.7
+              print("WAV estéreo validado:", round(w.getnframes()/w.getframerate(), 3), "segundos")
+          PY
+      - name: Salvar WAV no GitHub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add game-assets/audio/guardiao_impacto.wav
+          git commit -m "Adiciona impacto explosivo do Guardião"
+          git push origin HEAD:main
+      - name: Disponibilizar prévia do som
+        uses: actions/upload-artifact@v4
+        with:
+          name: Previa-Impacto-Guardiao
+          path: game-assets/audio/guardiao_impacto.wav
+          if-no-files-found: error
+          retention-days: 30
