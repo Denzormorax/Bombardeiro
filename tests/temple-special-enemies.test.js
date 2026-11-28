@@ -18,7 +18,7 @@ test("o novo guardião musculoso aparece uma vez por fase 1 a 9 do Reino dos Tem
  assert.match(html,/templeBruteSlots=new Set\(slots\.splice\(0,templeBruteCount\)\)/);
  assert.match(html,/isBrute=templeBruteSlots\.has\(index\)/);
  assert.match(html,/isBrute,isEnraged:false/);
- assert.match(html,/hp:isSnowman\|\|isBrute\?3/);
+ assert.match(html,/if\(isBrute\)\{const brute=enemies\[enemies\.length-1\];brute\.hp=brute\.maxHp=3\}/);
 });
 
 test("o guardião tem paleta distinta, braços grandes animados e acabamento metálico",()=>{
