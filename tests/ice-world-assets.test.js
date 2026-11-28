@@ -114,7 +114,7 @@ test("brilho dos blocos indestrutíveis tem maior intensidade sem perder o cache
 
 test("Boneco de Neve aparece em 3 ou 4 unidades nas fases 1 a 9 do Gelo", () => {
   assert.ok(game.includes('snowmanCount=currentWorld==="ice"&&level>=1&&level<=9?3+Math.floor(Math.random()*2):0'));
-  assert.ok(game.includes('createEnemySpawnPositions(count+builderCount+snowmanCount)'));
+  assert.ok(game.includes('createEnemySpawnPositions(count+builderCount+snowmanCount+templeBruteCount)'));
   assert.ok(game.includes('snowmanSlots=new Set(slots.splice(0,snowmanCount))'));
   assert.ok(game.includes('isSnowman=snowmanSlots.has(index)'));
   assert.ok(game.includes('freezingBomb:null,freezeCooldown:0'));

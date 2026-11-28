@@ -16432,7 +16432,8 @@ function findEnemyRoute(enemy,targetX,targetY,blockedDanger=null){
 }
 function canSeePlayer(enemy){
  const dx=player.x-enemy.x,dy=player.y-enemy.y,dist=Math.hypot(dx,dy),vision=4;
- if(dist>vision)return false;
+ if(dist>vision&&!enemy.isBrute)return false;
+ if(enemy.isBrute&&dist>7)return false;
  if(dist<.01)return true;
  const steps=Math.ceil(dist*16);
  for(let i=1;i<steps;i++){
@@ -16869,7 +16870,7 @@ function updateEnemies(dt){
    }
   }
   // Azul: antes de ser atingido patrulha; após o primeiro dano, persegue sem desistir.
-  const seesPlayer=enemy.isBrute?templeBruteCanSeePlayer(enemy):canSeePlayer(enemy);
+  const seesPlayer=canSeePlayer(enemy);
   if(enemy.isBuilder&&enemy.isEnraged&&seesPlayer){
    enemy.mode="chase";enemy.lastSeen={x:player.x,y:player.y};enemy.alert=1.25;
   }else if(enemy.isHorned&&enemy.isEnraged&&seesPlayer){

@@ -4,10 +4,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 const game = fs.readFileSync(path.join(__dirname, "..", "bombardeirojogo.html"), "utf8");
 
-test("todos os inimigos usam percepção máxima de quatro blocos com linha de visão", () => {
+test("inimigos comuns usam quatro blocos e o Guardião usa sete blocos com linha de visão", () => {
   const vision = game.slice(game.indexOf("function canSeePlayer"), game.indexOf("function choosePatrolPath"));
   assert.match(vision, /vision=4/);
-  assert.match(vision, /if\(dist>vision\)return false/);
+  assert.match(vision, /if\(dist>vision&&!enemy\.isBrute\)return false/);
+  assert.match(vision, /if\(enemy\.isBrute&&dist>7\)return false/);
   assert.match(game, /const seesPlayer=canSeePlayer\(enemy\)/);
   assert.match(game, /const sees=d<=4&&canSeePlayer\(e\)/);
   assert.doesNotMatch(vision, /vision=11|vision=9|vision=6\.5/);
