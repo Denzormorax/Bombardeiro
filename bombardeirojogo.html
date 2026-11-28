@@ -16003,6 +16003,7 @@ function exitApplication(){
 $("exitYes").addEventListener("click",exitApplication);
 $("exitNo").addEventListener("click",closeExitConfirm);
 window.handleAndroidBack=function(){
+ if(playerDeathAnimation)return true;
  if($("exitConfirm").classList.contains("visible")){closeExitConfirm();return true}
  if($("overlay").style.display==="flex"){
   if(!$("settingsPanel").classList.contains("hidden")){showPanel(menuReturn==="game"?"pausePanel":"settingsMenu");return true}
@@ -17007,7 +17008,7 @@ function collectCoins(){
 }
 
 /* LOJINHA */
-function openShop(){if(!running||customizing)return;shopReturnPaused=paused;paused=true;updateHUD();showPanel("shopPanel");$("shopPanel").scrollTop=0}
+function openShop(){if(!running||customizing||playerDeathAnimation)return;shopReturnPaused=paused;paused=true;updateHUD();showPanel("shopPanel");$("shopPanel").scrollTop=0}
 $("shopBtn").addEventListener("pointerdown",e=>{e.preventDefault();openShop()});
 function closeShop(){if(running){paused=shopReturnPaused;hidePanels()}else showMenuScreen("main")}
 $("shopClose").onclick=closeShop;
@@ -17093,7 +17094,7 @@ $("worldsBackArrowBtn").onclick=()=>showMenuScreen("main");
 $("forestBackArrowBtn").onclick=()=>showMenuScreen("worlds");
 $("againBtn").onclick=()=>startGame(level);
 $("endMenuBtn").onclick=()=>{running=false;paused=true;$("shopBtn").classList.add("hidden");showMenuScreen("main")};
-$("pauseBtn").onclick=()=>{if(!running||customizing)return;paused=true;showPanel("pausePanel")};
+$("pauseBtn").onclick=()=>{if(!running||customizing||playerDeathAnimation)return;paused=true;showPanel("pausePanel")};
 $("resumeBtn").onclick=()=>{paused=false;hidePanels()};
 $("restartBtn").onclick=()=>{newLevel(true);paused=false;hidePanels()};
 $("exitBtn").onclick=()=>{running=false;paused=true;finishPositioning();$("shopBtn").classList.add("hidden");showMenuScreen("main")};
