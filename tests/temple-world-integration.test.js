@@ -119,7 +119,7 @@ test("gramados das nove fases do Reino dos Templos pegam fogo com muitos focos e
  assert.match(html,/fade=Math\.max\(0,1-Math\.max\(0,tuft\.fireAge-5\.25\)\/1\.45\)/);
  assert.match(html,/drawTempleGrassFire\(tuft,px,py\)/);
  assert.match(html,/if\(currentWorld==="temples"\)updateTempleGrassFire\(dt\)/);
- assert.match(html,/if\(currentWorld!=="temples"\|\|level<1\|\|level>9\|\|!map\|\|!map\.length\)return/);
+ assert.match(html,/if\(currentWorld!=="temples"\|\|level<1\|\|level>10\|\|!map\|\|!map\.length\)return/);
 });
 test("as sombras dos dois tipos de bloco ficam junto aos pés, sem acompanhar a flutuação",()=>{
  assert.match(html,/ellipse\(px\+TILE\*\.5,py\+TILE\*\.955,TILE\*\.43,TILE\*\.075/);
