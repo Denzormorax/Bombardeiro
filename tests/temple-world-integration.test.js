@@ -117,3 +117,13 @@ test("a grama do Reino dos Templos tem folhas reais que ultrapassam topo e later
  assert.match(html,/templeGrassSpriteVariants\.length\)return/);
  assert.match(html,/Math\.floor\(gameClock\*12\)%TEMPLE_GRASS_FRAMES/);
 });
+
+test("a grama dos Templos cria pequenas folhas frontais sobre jogador, inimigos comuns rastejantes e bombas",()=>{
+ assert.match(html,/function drawTempleForegroundGrass\(x,y,phase=0\)/);
+ assert.match(html,/if\(currentWorld!=="temples"\|\|!templeGrassTufts\.length\)return/);
+ assert.match(html,/ctx\.quadraticCurveTo\(cx\+b\[0\]\+wave,baseY-3,cx\+b\[2\]\+wave,baseY\+b\[3\]\)/);
+ assert.match(html,/drawTempleForegroundGrass\(b\.x\+\.5,b\.y\+\.5,b\.animTime\|\|0\)/);
+ assert.match(html,/drawTempleForegroundGrass\(e\.x,e\.y,e\.x\*17\+e\.y\)/);
+ assert.match(html,/drawTempleForegroundGrass\(player\.x,player\.y,player\.x\*13\+player\.y\)/);
+ assert.match(html,/!e\.isBuilder&&!e\.isHunter&&!e\.isHorned&&!e\.isMushroom&&!e\.isSnowman/);
+});
