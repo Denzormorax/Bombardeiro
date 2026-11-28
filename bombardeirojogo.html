@@ -22704,7 +22704,7 @@ function specialEnemyRoute(enemy,targetX,targetY){
   for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
    const x=p.x+dx,y=p.y+dy,key=cellKey(x,y);
    if(seen.has(key)||!specialEnemyCellOpen(x,y))continue;
-   if(enemies.some(other=>other!==enemy&&other.alive&&!other.isForestWorm&&!other.isDesertWhirlwind&&distance(x+.5,y+.5,other.x,other.y)<.62))continue;
+   if(enemies.some(other=>other!==enemy&&other.alive&&distance(x+.5,y+.5,other.x,other.y)<.72))continue;
    seen.add(key);queue.push({x,y,parent:head});
   }
   head++;
@@ -22740,11 +22740,12 @@ function specialEnemyMove(enemy,dt,speed){
  }else if(Math.abs(dx)>.001)nx+=Math.sign(dx)*Math.min(step,Math.abs(dx));
  else if(Math.abs(dy)>.001)ny+=Math.sign(dy)*Math.min(step,Math.abs(dy));
  const tx=Math.floor(nx),ty=Math.floor(ny),movedX=Math.abs(nx-enemy.x)>.000001,movedY=Math.abs(ny-enemy.y)>.000001;
- if(specialEnemyCellOpen(tx,ty)|| (tx===Math.floor(enemy.x)&&ty===Math.floor(enemy.y))){
+ const enemyCollision=enemies.some(other=>other!==enemy&&other.alive&&distance(nx,ny,other.x,other.y)<.72);
+ if(!enemyCollision&&(specialEnemyCellOpen(tx,ty)|| (tx===Math.floor(enemy.x)&&ty===Math.floor(enemy.y)))){
   enemy.x=nx;enemy.y=ny;
   if(movedX){enemy.facingX=Math.sign(dx);enemy.facingY=0}
   if(movedY){enemy.facingY=Math.sign(dy);enemy.facingX=0}
- }else{enemy.path=[];enemy.repath=0}
+ }else{enemy.path=[];enemy.repath=0;specialEnemyChooseRoute(enemy)}
 }
 function specialEnemySpawnOne(kind){
  const spots=[];
@@ -22819,11 +22820,13 @@ function updateSpecialEnemy(enemy,dt){
  }
  if(enemy.isDesertWhirlwind){
   if(!enemy.suctionBomb){
-   let target=null,best=2.35;
+   let target=null,best=2.01;
    for(const b of bombs){
     if(b.tornadoSucked||b.tornadoTravel||b.freezing||b.frozen||b.extinguished)continue;
-    const bx=b.x+.5,by=b.y+.5,d=distance(enemy.x,enemy.y,bx,by);
-    if(d<best&&specialEnemyHasClearLine(enemy.x,enemy.y,bx,by)){best=d;target=b}
+    const bx=b.x+.5,by=b.y+.5,dx=Math.abs(bx-enemy.x),dy=Math.abs(by-enemy.y);
+    // Sucção em cruz: somente na mesma coluna ou linha, nunca na diagonal.
+    const axisDistance=dx<.25?dy:(dy<.25?dx:Infinity);
+    if(axisDistance<=2&&axisDistance<best&&specialEnemyHasClearLine(enemy.x,enemy.y,bx,by)){best=axisDistance;target=b}
    }
    if(target){
     enemy.suctionBomb=target;enemy.suctionTimer=.24;target.tornadoSucked={enemy,t:0,duration:.24,startX:target.x,startY:target.y};
@@ -22851,7 +22854,7 @@ function drawForestWorm(enemy){
  const px=ox+enemy.x*TILE,py=oy+enemy.y*TILE,dx=enemy.facingX||0,dy=enemy.facingY||0;
  const horizontal=dx!==0,dir=horizontal?dx:dy||1,alpha=enemy.alive?1:Math.max(0,(enemy.deathTimer||0)/ENEMY_DEATH_TIME);
  const wave=Math.sin(enemy.anim),compress=.82+.18*Math.sin(enemy.anim*1.4);
- ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);ctx.scale(1.18,1.18);
  ctx.fillStyle="rgba(9,35,17,.32)";ctx.beginPath();ctx.ellipse(0,13,horizontal?22:10,horizontal?7:22,0,0,Math.PI*2);ctx.fill();
  // Corpo segmentado: a onda percorre o dorso enquanto a minhoca se estica.
  for(let i=6;i>=0;i--){
