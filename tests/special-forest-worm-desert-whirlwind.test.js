@@ -39,7 +39,12 @@ test("a minhoca engole bombas e libera imediatamente o espaço de bomba sem expl
 });
 
 test("furacão suga bombas a até cerca de dois blocos e as lança na direção do jogador", () => {
-  assert.match(game, /let target=null,best=2\.35/);
+  assert.match(game, /let target=null,best=2\.01/);
+  assert.match(game, /const axisDistance=dx<\.25\?dy:\(dy<\.25\?dx:Infinity\)/);
+  assert.match(game, /if\(axisDistance<=2&&axisDistance<best/);
+  assert.match(game, /ctx\.scale\(1\.18,1\.18\)/);
+  assert.match(game, /const enemyCollision=enemies\.some\(other=>other!==enemy&&other\.alive&&distance\(nx,ny,other\.x,other\.y\)<\.72\)/);
+  assert.match(game, /distance\(x\+\.5,y\+\.5,other\.x,other\.y\)<\.72/);
   assert.match(game, /tornadoSucked=\{enemy,t:0,duration:\.24/);
   assert.match(game, /tornadoTravel=\{dx:dx\/len,dy:dy\/len,speed:8\.6,source:enemy\}/);
   assert.match(game, /if\(hitPlayer\|\|hitEnemy\|\|otherBomb\)\{delete b\.tornadoTravel;b\.t=\.01\}/);
