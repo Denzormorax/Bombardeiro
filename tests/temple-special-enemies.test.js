@@ -6,6 +6,11 @@ const html=fs.readFileSync(path.resolve(__dirname,"../bombardeirojogo.html"),"ut
 
 test("Caçadores do Reino dos Templos usam armadura 3D com paleta exclusiva",()=>{
  assert.match(html,/TEMPLE_HUNTER_ENEMY_PALETTE/);
+ assert.match(html,/function templeHunterEnemyPalette\(e=null\)/);
+ assert.match(html,/TEMPLE_HUNTER_CHASE_PALETTE/);
+ assert.match(html,/function templeHornedEnemyPalette\(e=null\)/);
+ assert.match(html,/TEMPLE_HORNED_CHASE_PALETTE/);
+ assert.match(html,/TEMPLE_MUSHROOM_ENEMY_PALETTE/);
  assert.match(html,/isTempleHunter=templeActive&&!!e\.isHunter/);
  assert.match(html,/isTempleHunter\?templeHunterEnemyPalette\(\)/);
  assert.match(html,/drawTempleCommonEnemyDetails\(e,templePalette\)/);
@@ -97,4 +102,14 @@ test("impacto do Guardião Elite cobre instantaneamente os oito quadrados ao red
  assert.match(html,/rgba\(255,166,0,\.76\)/);
  assert.match(html,/ctx\.shadowColor="#ffd700";ctx\.shadowBlur=18/);
  assert.match(html,/const templeBruteSmokeSpriteCache=\[\],templeEliteSmokeSpriteCache=\[\]/);
+});
+
+test("Cogumelo, Caçador e Caçador Elite recebem paletas do Reino dos Templos",()=>{
+ assert.match(html,/TEMPLE_MUSHROOM_ENEMY_PALETTE/);
+ assert.match(html,/mp\?mp\.body/);
+ assert.match(html,/mp\?mp\.cap/);
+ assert.match(html,/TEMPLE_HUNTER_CHASE_PALETTE/);
+ assert.match(html,/e\.mode==="chase"\|\|e\.alert>0\|\|e\.seesPlayer/);
+ assert.match(html,/TEMPLE_HORNED_CHASE_PALETTE/);
+ assert.match(html,/e&&e\.isEnraged\?TEMPLE_HORNED_CHASE_PALETTE/);
 });
