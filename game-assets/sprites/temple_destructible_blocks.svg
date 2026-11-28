@@ -1,0 +1,307 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="512" viewBox="0 0 1280 512"><title>Reino dos Templos — dez blocos destrutíveis 3D</title><desc>Atlas transparente com dez cubos 3D de mármore rachado, lascado e fraturado, um para cada fase. Cada bloco tem desenho próprio e paleta da fase.</desc><defs>
+<linearGradient id="top" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".95"/><stop offset=".48" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#34404a" stop-opacity=".16"/></linearGradient>
+<linearGradient id="left" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#111" stop-opacity=".32"/></linearGradient>
+<linearGradient id="right" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".48"/><stop offset="1" stop-color="#111" stop-opacity=".2"/></linearGradient>
+<filter id="drop" x="-35%" y="-35%" width="180%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="7"/><feOffset dx="4" dy="8"/><feComponentTransfer><feFuncA type="linear" slope=".38"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs><g transform="translate(0 0)"><title>Fase 1 — Carrara Imperial — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#8b857d" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#d6d1c8" stroke="#8b857d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#9b958b" stroke="#8b857d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#fbfaf6" stroke="#8b857d" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#b7b0a4" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#f2eee6" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#b7b0a4" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M118 82 L105 91 111 103 93 115 88 131 72 142 79 157 62 170" transform="translate(0 0)" fill="none" stroke="#8b857d" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M118 82 L105 91 111 103 93 115 88 131 72 142 79 157 62 170" fill="none" stroke="#b7b0a4" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M118 82 L105 91 111 103 93 115 88 131 72 142 79 157 62 170" fill="none" stroke="#f2eee6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#8b857d" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#f2eee6" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#f2eee6" stroke="#8b857d" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#b7b0a4" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#f2eee6" opacity=".72" stroke="#b7b0a4" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#f2eee6" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(256 0)"><title>Fase 2 — Calacatta Aurum — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#98702e" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#e8d5ae" stroke="#98702e" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#b58b45" stroke="#98702e" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#fff8e9" stroke="#98702e" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#d6b36c" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#f6e9cb" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#d6b36c" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M34 80 L49 91 42 105 60 116 66 132 84 143 78 160 96 174" transform="translate(0 0)" fill="none" stroke="#98702e" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M34 80 L49 91 42 105 60 116 66 132 84 143 78 160 96 174" fill="none" stroke="#d6b36c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M34 80 L49 91 42 105 60 116 66 132 84 143 78 160 96 174" fill="none" stroke="#f6e9cb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#98702e" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#f6e9cb" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#f6e9cb" stroke="#98702e" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#d6b36c" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#f6e9cb" opacity=".72" stroke="#d6b36c" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#f6e9cb" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(512 0)"><title>Fase 3 — Statuario Ice — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#66899d" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#c8dce8" stroke="#66899d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#789aaa" stroke="#66899d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#f4fbff" stroke="#66899d" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#a7c5d4" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#e7f5fc" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#a7c5d4" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M120 58 L102 71 108 86 88 98 94 116 75 129 80 147 58 161" transform="translate(0 0)" fill="none" stroke="#66899d" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M120 58 L102 71 108 86 88 98 94 116 75 129 80 147 58 161" fill="none" stroke="#a7c5d4" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M120 58 L102 71 108 86 88 98 94 116 75 129 80 147 58 161" fill="none" stroke="#e7f5fc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#66899d" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#e7f5fc" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#e7f5fc" stroke="#66899d" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#a7c5d4" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#e7f5fc" opacity=".72" stroke="#a7c5d4" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#e7f5fc" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(768 0)"><title>Fase 4 — Rosa Aurora — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#9f687d" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#e8cbd4" stroke="#9f687d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#b77e91" stroke="#9f687d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#fff5f7" stroke="#9f687d" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#d9a9b8" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#f5e1e7" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#d9a9b8" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M29 111 L48 101 43 86 62 77 70 59 88 51 82 34" transform="translate(0 0)" fill="none" stroke="#9f687d" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M29 111 L48 101 43 86 62 77 70 59 88 51 82 34" fill="none" stroke="#d9a9b8" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M29 111 L48 101 43 86 62 77 70 59 88 51 82 34" fill="none" stroke="#f5e1e7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#9f687d" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#f5e1e7" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#f5e1e7" stroke="#9f687d" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#d9a9b8" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#f5e1e7" opacity=".72" stroke="#d9a9b8" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#f5e1e7" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(1024 0)"><title>Fase 5 — Jade Alabastro — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#5c886c" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#c4dfcd" stroke="#5c886c" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#719b80" stroke="#5c886c" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#f3fff7" stroke="#5c886c" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#a5cdb2" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#e4f3e8" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#a5cdb2" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M112 116 L95 105 101 90 83 80 77 64 60 55 66 38 49 26" transform="translate(0 0)" fill="none" stroke="#5c886c" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M112 116 L95 105 101 90 83 80 77 64 60 55 66 38 49 26" fill="none" stroke="#a5cdb2" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M112 116 L95 105 101 90 83 80 77 64 60 55 66 38 49 26" fill="none" stroke="#e4f3e8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#5c886c" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#e4f3e8" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#e4f3e8" stroke="#5c886c" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#a5cdb2" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#e4f3e8" opacity=".72" stroke="#a5cdb2" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#e4f3e8" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(0 256)"><title>Fase 6 — Azul Celeste — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#4f849b" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#bfdfeb" stroke="#4f849b" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#679bb0" stroke="#4f849b" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#f0fbff" stroke="#4f849b" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#9bcbdc" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#dff4fa" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#9bcbdc" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M28 74 L46 86 40 102 58 113 52 130 71 143 65 162 83 173" transform="translate(0 0)" fill="none" stroke="#4f849b" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M28 74 L46 86 40 102 58 113 52 130 71 143 65 162 83 173" fill="none" stroke="#9bcbdc" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M28 74 L46 86 40 102 58 113 52 130 71 143 65 162 83 173" fill="none" stroke="#dff4fa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#4f849b" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#dff4fa" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#dff4fa" stroke="#4f849b" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#9bcbdc" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#dff4fa" opacity=".72" stroke="#9bcbdc" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#dff4fa" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(256 256)"><title>Fase 7 — Ametista Névoa — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#765a9a" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#d8c9e8" stroke="#765a9a" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#9276b2" stroke="#765a9a" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#fbf6ff" stroke="#765a9a" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#c1a8dd" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#eee4f8" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#c1a8dd" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M118 105 L99 96 105 80 87 68 92 51 74 41 79 25" transform="translate(0 0)" fill="none" stroke="#765a9a" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M118 105 L99 96 105 80 87 68 92 51 74 41 79 25" fill="none" stroke="#c1a8dd" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M118 105 L99 96 105 80 87 68 92 51 74 41 79 25" fill="none" stroke="#eee4f8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#765a9a" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#eee4f8" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#eee4f8" stroke="#765a9a" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#c1a8dd" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#eee4f8" opacity=".72" stroke="#c1a8dd" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#eee4f8" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(512 256)"><title>Fase 8 — Marfim Real — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#8d784d" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#e4d9bc" stroke="#8d784d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#a99569" stroke="#8d784d" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#fffdf3" stroke="#8d784d" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#d0bf97" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#f5eedc" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#d0bf97" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M31 117 L49 105 44 89 62 78 57 60 76 49 72 31" transform="translate(0 0)" fill="none" stroke="#8d784d" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M31 117 L49 105 44 89 62 78 57 60 76 49 72 31" fill="none" stroke="#d0bf97" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M31 117 L49 105 44 89 62 78 57 60 76 49 72 31" fill="none" stroke="#f5eedc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#8d784d" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#f5eedc" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#f5eedc" stroke="#8d784d" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#d0bf97" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#f5eedc" opacity=".72" stroke="#d0bf97" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#f5eedc" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(768 256)"><title>Fase 9 — Champagne Nobre — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#8e6c36" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#e8d8b8" stroke="#8e6c36" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#ae8b4f" stroke="#8e6c36" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#fff9ec" stroke="#8e6c36" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#d4b77e" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#f5ead3" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#d4b77e" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M117 72 L99 84 105 100 86 111 91 129 72 141 77 160" transform="translate(0 0)" fill="none" stroke="#8e6c36" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M117 72 L99 84 105 100 86 111 91 129 72 141 77 160" fill="none" stroke="#d4b77e" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M117 72 L99 84 105 100 86 111 91 129 72 141 77 160" fill="none" stroke="#f5ead3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#8e6c36" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#f5ead3" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#f5ead3" stroke="#8e6c36" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#d4b77e" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#f5ead3" opacity=".72" stroke="#d4b77e" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#f5ead3" stroke-width="2" opacity=".55"/>
+ </g></g><g transform="translate(1024 256)"><title>Fase 10 — Opala Boreal — bloco destrutível 3D</title>
+ <g filter="url(#drop)">
+ <!-- volume base irregular e faces com lascas -->
+ <path d="M42 86 L119 45 210 88 210 169 128 216 42 174Z" fill="#6d87a5" opacity=".42"/>
+ <path d="M42 86 L128 130 128 216 42 174 31 161 38 139 29 119Z" fill="#c5e3db" stroke="#6d87a5" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M128 130 L210 88 220 101 214 122 222 139 210 169 128 216Z" fill="#6d9d91" stroke="#6d87a5" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M42 86 L119 45 210 88 128 130Z" fill="#f2fffc" stroke="#6d87a5" stroke-width="3" stroke-linejoin="round"/>
+ <!-- facetas de mármore e veios -->
+ <path d="M51 88 L119 53 198 89 128 121Z" fill="url(#top)" opacity=".8"/>
+ <path d="M50 99 L119 136 119 203 50 166Z" fill="url(#left)" opacity=".45"/>
+ <path d="M139 136 L201 104 201 164 139 199Z" fill="url(#right)" opacity=".5"/>
+ <path d="M58 87 C76 73 87 91 104 80 S143 69 160 84 185 87 198 91" fill="none" stroke="#a6d5c8" stroke-width="3.5" opacity=".78"/>
+ <path d="M48 111 C66 123 69 143 89 149 S104 175 119 187" fill="none" stroke="#e4f6f0" stroke-width="2.4" opacity=".82"/>
+ <path d="M139 145 C159 128 169 140 183 119 S197 112 207 108" fill="none" stroke="#a6d5c8" stroke-width="2.8" opacity=".72"/>
+ <!-- fissuras principais escuras com borda mineral luminosa -->
+ <path d="M34 93 L52 103 46 119 65 130 59 147 78 158 73 175" transform="translate(0 0)" fill="none" stroke="#6d87a5" stroke-width="11" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M34 93 L52 103 46 119 65 130 59 147 78 158 73 175" fill="none" stroke="#a6d5c8" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="bevel"/>
+ <path d="M34 93 L52 103 46 119 65 130 59 147 78 158 73 175" fill="none" stroke="#e4f6f0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="bevel" opacity=".95"/>
+ <!-- rachaduras ramificadas -->
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#6d87a5" stroke-width="5" stroke-linecap="round"/>
+ <path d="M103 94 L88 78 91 65 M103 94 L91 109 76 112 M159 126 L174 139 170 154 M72 151 L58 163 61 179 M181 91 L193 77 190 63" fill="none" stroke="#e4f6f0" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+ <!-- lascas quebradas nos cantos -->
+ <path d="M42 86 L58 92 49 105 35 101Z M119 45 L132 52 122 65 110 59Z M210 88 L222 97 209 108 198 99Z M42 174 L55 170 59 186 45 192Z M128 216 L140 205 149 217 137 229Z" fill="#e4f6f0" stroke="#6d87a5" stroke-width="2"/>
+ <path d="M34 117 L48 124 43 137 30 131Z M202 148 L217 141 215 157 203 164Z" fill="#a6d5c8" opacity=".8"/>
+ <!-- pequenas fraturas cristalinas expostas -->
+ <path d="M93 125 L103 116 112 130 103 144Z M160 164 L171 151 181 165 169 179Z" fill="#e4f6f0" opacity=".72" stroke="#a6d5c8" stroke-width="2"/>
+ <path d="M97 127 L103 119 107 130 102 137Z M164 164 L171 156 175 166 169 173Z" fill="#fff" opacity=".85" filter="url(#glow)"/>
+ <!-- brilho de aresta -->
+ <path d="M45 87 L119 48 207 89" fill="none" stroke="#fff" stroke-width="3.2" opacity=".9"/>
+ <path d="M45 91 L45 171 127 213 209 167" fill="none" stroke="#e4f6f0" stroke-width="2" opacity=".55"/>
+ </g></g></svg>
