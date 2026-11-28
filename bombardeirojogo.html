@@ -18099,7 +18099,7 @@ function draw(){
  drawDesertDuneAnimation();
  drawBuilderBuildAnimations();
  drawDestroyedBlockEffects();
- if(currentWorld==="temples"){drawTempleDestructibleBlocks();drawTempleBlockDebris()}
+ if(currentWorld==="temples"){drawTempleBlockDebris()}
  drawIndestructibleShimmer();
  drawDiamondDestructibleShimmer();
  drawTreasureEffects();
@@ -21936,18 +21936,12 @@ function buildTempleSpriteSheets(){
   const q=canvas.getContext("2d");q.imageSmoothingEnabled=false;
   q.drawImage(templeSpriteImage,0,i*128,512,128,0,0,512,128);
   templeThemedSpriteSheets[i]=canvas;
-  // Extrai SOMENTE uma face de mármore do cubo do atlas. As outras faces,
-  // a sombra e o fundo ficam fora do PNG que recebe a rotação.
+  // PNG rasterizado com canal alfa: mantém o bloco inteiro recortado,
+  // sem fundo, sem a sombra (desenhada separadamente) e sem qualquer animação.
   const blockCanvas=document.createElement("canvas");blockCanvas.width=128;blockCanvas.height=128;
-  // A face está na 3ª célula do atlas (x=256), não na origem da linha.
-  // Primeiro isola a célula correta; depois recorta/remapeia somente a face.
-  const faceAtlas=document.createElement("canvas");faceAtlas.width=128;faceAtlas.height=128;
-  const fa=faceAtlas.getContext("2d");fa.imageSmoothingEnabled=false;
-  fa.drawImage(canvas,256,0,128,128,0,0,128,128);
-  const b=blockCanvas.getContext("2d");b.save();
-  b.setTransform(128/42,0,128*20/(42*50),128/50,-61*(128/42)-58*(128*20/(42*50)),-58*(128/50));
-  b.beginPath();b.moveTo(61,58);b.lineTo(103,38);b.lineTo(103,87);b.lineTo(61,108);b.closePath();b.clip();
-  b.drawImage(faceAtlas,0,0);b.restore();
+  const b=blockCanvas.getContext("2d");b.clearRect(0,0,128,128);b.imageSmoothingEnabled=true;
+  b.drawImage(canvas,256,0,128,128,0,0,128,128);
+  blockCanvas.toDataURL("image/png");
   templeDestructibleBlockSprites[i]=blockCanvas;
  }
  if(currentWorld==="temples"){buildBurningCrateSprite();rebuildStaticMapCache()}
@@ -21987,9 +21981,13 @@ drawForestBackground=function(target){
 drawTileTo=function(target,x,y,type,offsetY=0){
  if(currentWorld!=="temples")return tileBeforeTemples(target,x,y,type,offsetY);
  const px=ox+x*TILE,py=oy+y*TILE-offsetY,index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index];
- if(type===1){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.87,TILE*.35,TILE*.105,0,0,Math.PI*2);target.fill();target.restore()}
- // O bloco destrutível é desenhado somente na camada animada.
- if(type===2)return;
+ if(type===1||type===2){target.save();target.fillStyle="rgba(20,17,12,.30)";target.beginPath();target.ellipse(px+TILE*.5,py+TILE*.88,TILE*.43,TILE*.12,0,0,Math.PI*2);target.fill();target.restore()}
+ if(type===2){
+  const block=templeDestructibleBlockSprites[index];
+  if(block)target.drawImage(block,0,0,128,128,px-TILE*.04,py-TILE*.06,TILE*1.08,TILE*1.08);
+  else if(sheet)target.drawImage(sheet,256,0,128,128,px-TILE*.04,py-TILE*.06,TILE*1.08,TILE*1.08);
+  return;
+ }
  if(sheet){
   const column=type===1?2:(((x*7+y*11+level)%5===0)?1:0);
   target.drawImage(sheet,column*128,0,128,128,px,py,TILE,TILE);
@@ -22022,40 +22020,7 @@ function drawTempleBlockDebris(){
  for(const e of templeBlockDebrisEffects){const alpha=Math.max(0,1-e.age/e.duration);for(const p of e.particles){const px=ox+p.x*TILE,py=oy+p.y*TILE,size=p.size*TILE;ctx.save();ctx.globalAlpha=alpha;ctx.translate(px,py);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.fillRect(-size/2,-size/2,size,size);ctx.fillStyle="#ffffff";ctx.globalAlpha=alpha*.38;ctx.fillRect(-size/2,-size/2,size*.72,Math.max(1,size*.13));ctx.strokeStyle="rgba(75,58,35,.42)";ctx.lineWidth=1;ctx.strokeRect(-size/2,-size/2,size,size);ctx.restore()}}
  ctx.restore();
 }
-function drawTempleDestructibleBlocks(){
- if(currentWorld!=="temples"||!destructibleTilePositions.length)return;
- const index=templeThemeIndex(),sheet=templeThemedSpriteSheets[index],blockSprite=templeDestructibleBlockSprites[index],theme=templeThemes[index];if(!sheet||!blockSprite)return;
- for(const tile of destructibleTilePositions){
-  if(!map[tile.y]||map[tile.y][tile.x]!==2)continue;
-  const px=ox+tile.x*TILE,py=oy+tile.y*TILE,baseColumn=((tile.x*7+tile.y*11+level)%5===0)?1:0;
-  const angle=gameClock*(Math.PI*2/3.2)+(tile.x*7+tile.y*11)*.035;
-  const face=Math.cos(angle),side=Math.sin(angle),frontWidth=Math.max(TILE*.025,Math.abs(face)*TILE),sideWidth=Math.abs(side)*TILE;
-  const frontHalf=frontWidth*.5,sideSign=side>=0?1:-1,outer=frontHalf+sideWidth,half=TILE*.5,skew=TILE*.045;
-  ctx.save();
-  ctx.fillStyle="rgba(20,17,12,.30)";ctx.beginPath();ctx.ellipse(px+TILE*.5,py+TILE*.88,TILE*.43,TILE*.12,0,0,Math.PI*2);ctx.fill();
-  ctx.translate(px+TILE*.5,py+TILE*.5);
-  if(sideWidth>TILE*.015){
-   const left=sideSign<0,inner=left?-frontHalf:frontHalf,edge=left?-outer:outer;
-   const sideGradient=ctx.createLinearGradient(left?edge:inner,0,left?inner:edge,0);
-   sideGradient.addColorStop(0,theme.wall[2]);sideGradient.addColorStop(.48,theme.wall[0]);sideGradient.addColorStop(1,theme.wall[1]);
-   ctx.beginPath();
-   if(left){ctx.moveTo(inner,-half);ctx.lineTo(edge,-half+skew);ctx.lineTo(edge,half-skew);ctx.lineTo(inner,half)}
-   else{ctx.moveTo(inner,-half);ctx.lineTo(edge,-half+skew);ctx.lineTo(edge,half-skew);ctx.lineTo(inner,half)}
-   ctx.closePath();ctx.fillStyle=sideGradient;ctx.fill();
-   ctx.strokeStyle="rgba(76,61,43,.48)";ctx.lineWidth=Math.max(1,TILE*.018);ctx.stroke();
-   ctx.beginPath();ctx.moveTo(edge,-half+skew);ctx.lineTo(edge,half-skew);ctx.strokeStyle="rgba(255,255,255,.52)";ctx.lineWidth=Math.max(1,TILE*.025);ctx.stroke();
-   ctx.beginPath();ctx.moveTo(inner,-half+TILE*.035);ctx.lineTo(edge,-half+skew+TILE*.035);ctx.strokeStyle="rgba(255,255,255,.28)";ctx.lineWidth=Math.max(1,TILE*.018);ctx.stroke();
-  }
-  ctx.save();
-  if(face<0)ctx.scale(-1,1);
-  ctx.drawImage(blockSprite,0,0,128,128,-frontHalf,-half,frontWidth,TILE);
-  ctx.restore();
-  ctx.strokeStyle="rgba(83,69,52,.48)";ctx.lineWidth=Math.max(1,TILE*.018);ctx.strokeRect(-frontHalf,-half,frontWidth,TILE);
-  ctx.beginPath();ctx.moveTo(-frontHalf+TILE*.035,-half+TILE*.035);ctx.lineTo(frontHalf-TILE*.035,-half+TILE*.035);
-  ctx.strokeStyle="rgba(255,255,255,.64)";ctx.lineWidth=Math.max(1,TILE*.022);ctx.stroke();
-  ctx.restore();
- }
-}
+
 function buildTempleMap(){
  const nodes=$("templeLevelNodes");nodes.innerHTML="";
  for(let i=1;i<=TOTAL_LEVELS;i++){
