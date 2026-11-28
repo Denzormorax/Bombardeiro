@@ -17692,9 +17692,14 @@ const TEMPLE_COMMON_ENEMY_PALETTES=[
 ];
 function templeCommonEnemyPalette(){return TEMPLE_COMMON_ENEMY_PALETTES[Math.max(0,Math.min(8,(level||1)-1))]}
 const TEMPLE_HUNTER_ENEMY_PALETTE={light:"#f1fbff",body:"#527b8d",shadow:"#1d3545",crown:"#294b60",metal:"#d28b4b",gem:"#5de0d0",deep:"#142b39"};
+const TEMPLE_HUNTER_CHASE_PALETTE={light:"#fff2c6",body:"#b77b37",shadow:"#56351f",crown:"#7c4a25",metal:"#ffe09a",gem:"#fff7dc",deep:"#3b281b"};
+const TEMPLE_HORNED_ENEMY_PALETTE={light:"#f7eaff",body:"#80649c",shadow:"#382b4b",crown:"#57406f",metal:"#d8b5ee",gem:"#f3d8ff",deep:"#241b32"};
+const TEMPLE_HORNED_CHASE_PALETTE={light:"#fff0df",body:"#b75c4b",shadow:"#572b36",crown:"#843b43",metal:"#f3bd79",gem:"#fff0c7",deep:"#321d2b"};
+const TEMPLE_MUSHROOM_ENEMY_PALETTE={body:"#9b7450",bodyEdge:"#59412f",cap:"#c9a85e",capEdge:"#80623b",spot:"#fff1c7",highlight:"#fffdf0"};
 const TEMPLE_BRUTE_ENEMY_PALETTE={light:"#ead7ff",body:"#76508f",shadow:"#291b3c",crown:"#432956",metal:"#df8a43",gem:"#58d8c3",deep:"#180f25"};
 const TEMPLE_ELITE_ENEMY_PALETTE={light:"#fffbe0",body:"#f2bd22",shadow:"#c98a00",crown:"#a96d00",metal:"#fff2a6",gem:"#ffffff",deep:"#8a5900"};
-function templeHunterEnemyPalette(){return TEMPLE_HUNTER_ENEMY_PALETTE}
+function templeHunterEnemyPalette(e=null){return e&&(e.mode==="chase"||e.alert>0||e.seesPlayer)?TEMPLE_HUNTER_CHASE_PALETTE:TEMPLE_HUNTER_ENEMY_PALETTE}
+function templeHornedEnemyPalette(e=null){return e&&e.isEnraged?TEMPLE_HORNED_CHASE_PALETTE:TEMPLE_HORNED_ENEMY_PALETTE}
 function drawTempleCommonEnemyDetails(e,palette=templeCommonEnemyPalette()){
  const p=palette,phase=gameClock*2.2+(e.x||0)*.7;
  ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
@@ -17719,9 +17724,9 @@ function drawTempleCommonEnemyDetails(e,palette=templeCommonEnemyPalette()){
 }
 function drawEnemyFace(e,color,helmetColor,deathProgress=0){
  const templeActive=currentWorld==="temples"&&level>=1&&level<=9;
- const isTempleBrute=templeActive&&!!e.isBrute,isTempleHunter=templeActive&&!!e.isHunter;
+ const isTempleBrute=templeActive&&!!e.isBrute,isTempleHunter=templeActive&&!!e.isHunter,isTempleHorned=templeActive&&!!e.isHorned;
  const isTempleCommon=templeActive&&!e.isSnowman&&!e.isBuilder&&!e.isMushroom&&!e.isHorned&&!e.isHunter&&!e.isBrute;
- const templePalette=isTempleBrute?(e.isTempleElite?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE):isTempleHunter?templeHunterEnemyPalette():isTempleCommon?templeCommonEnemyPalette():null,hasTempleArmor=!!templePalette;
+ const templePalette=isTempleBrute?(e.isTempleElite?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE):isTempleHunter?templeHunterEnemyPalette(e):isTempleHorned?templeHornedEnemyPalette(e):isTempleCommon?templeCommonEnemyPalette():null,hasTempleArmor=!!templePalette;
  const px=ox+e.x*TILE,groundY=oy+e.y*TILE,bob=Math.sin(gameClock*3.8+e.x*1.7+e.y)*2.7,bodyY=groundY-bob,hurt=(e.hurtTimer||0)>0||!e.alive,facingX=e.facingX||0,facingY=e.facingY||1,faceYOffset=e.isSnowman?-17:0;
  const deathScale=deathProgress>0?Math.max(.25,1-deathProgress*.45):1,deathAlpha=deathProgress>0?Math.max(0,1-deathProgress*.8):1;
  ctx.save();ctx.globalAlpha=.34*deathAlpha;ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(px,groundY+14,15*(1-bob*.025)*deathScale,6*(1-bob*.025)*deathScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -17773,7 +17778,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   }
   ctx.restore();
  }
- if(e.isHorned){ctx.fillStyle=currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):currentWorld==="forest"?(e.isEnraged?"#263f2b":"#315a35"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
+ if(e.isHorned){const hp=currentWorld==="temples"&&level>=1&&level<=9?templeHornedEnemyPalette(e):null;ctx.fillStyle=hp?hp.crown:currentWorld==="volcano"?(e.isEnraged?"#6b1718":"#87351f"):currentWorld==="forest"?(e.isEnraged?"#263f2b":"#315a35"):(e.isEnraged?"#7b151d":"#173c91");ctx.beginPath();ctx.moveTo(-10,-10);ctx.lineTo(-13,-22);ctx.lineTo(-3,-13);ctx.closePath();ctx.moveTo(10,-10);ctx.lineTo(13,-22);ctx.lineTo(3,-13);ctx.closePath();ctx.fill()}
  if(e.isSnowman){
   ctx.fillStyle="#b8dce9";ctx.beginPath();ctx.arc(0,7,17,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle="#83b9ce";ctx.lineWidth=1.2;ctx.stroke();
@@ -17785,7 +17790,7 @@ function drawEnemyFace(e,color,helmetColor,deathProgress=0){
   ctx.fillStyle="#ffffff";ctx.beginPath();ctx.ellipse(-4,-23,4.2,2.1,-.45,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="#547c8c";for(const buttonY of [3,10,16]){ctx.beginPath();ctx.arc(0,buttonY,1.8,0,Math.PI*2);ctx.fill()}
   ctx.fillStyle="#eea044";ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(9,-14);ctx.lineTo(0,-12.5);ctx.closePath();ctx.fill();
- }else if(e.isMushroom){ctx.fillStyle=currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":currentWorld==="forest"?"#315d37":currentWorld==="swamp"?"#596b32":"#167c39";ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":currentWorld==="forest"?"#4e8a45":currentWorld==="swamp"?"#9eaa45":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();ctx.fillStyle=currentWorld==="forest"?"#b7cc79":"#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill()}
+ }else if(e.isMushroom){const mp=currentWorld==="temples"&&level>=1&&level<=9?TEMPLE_MUSHROOM_ENEMY_PALETTE:null;ctx.fillStyle=mp?mp.body:currentWorld==="volcano"?"#8f351d":currentWorld==="desert"?"#8b7b38":currentWorld==="ice"?"#7cc9df":currentWorld==="forest"?"#315d37":currentWorld==="swamp"?"#596b32":"#167c39";ctx.strokeStyle=mp?mp.bodyEdge:"transparent";ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(0,5,8,11,0,0,Math.PI*2);ctx.fill();if(mp)ctx.stroke();ctx.fillStyle=mp?mp.cap:currentWorld==="volcano"?"#e87927":currentWorld==="desert"?"#b4a34e":currentWorld==="ice"?"#b8f5ff":currentWorld==="forest"?"#4e8a45":currentWorld==="swamp"?"#9eaa45":"#27c957";ctx.beginPath();ctx.moveTo(-17,-3);ctx.quadraticCurveTo(-15,-17,0,-18);ctx.quadraticCurveTo(15,-17,17,-3);ctx.quadraticCurveTo(0,3,-17,-3);ctx.fill();if(mp){ctx.strokeStyle=mp.capEdge;ctx.lineWidth=1.35;ctx.stroke()}ctx.fillStyle=mp?mp.spot:currentWorld==="forest"?"#b7cc79":"#9affaa";ctx.beginPath();ctx.ellipse(-6,-12,4,2,-.35,0,Math.PI*2);ctx.fill();if(mp){ctx.fillStyle=mp.highlight;ctx.beginPath();ctx.ellipse(5,-9,2.5,1.35,.3,0,Math.PI*2);ctx.fill()}}
  else{if(hasTempleArmor){const bodyGradient=ctx.createRadialGradient(-5,-8,2,0,1,19);bodyGradient.addColorStop(0,templePalette.light);bodyGradient.addColorStop(.48,templePalette.body);bodyGradient.addColorStop(.82,templePalette.crown);bodyGradient.addColorStop(1,templePalette.shadow);ctx.fillStyle=bodyGradient}else ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();if(hasTempleArmor){ctx.strokeStyle=templePalette.shadow;ctx.lineWidth=1.15;ctx.stroke();ctx.strokeStyle=templePalette.light;ctx.lineWidth=1.05;ctx.beginPath();ctx.arc(-2,-3,10.5,Math.PI*1.05,Math.PI*1.85);ctx.stroke()}if(e.isBuilder){ctx.fillStyle="#000000";for(const pebble of [[-10,4,2.1],[-6,11,1.7],[8,5,2.2],[10,-3,1.6],[1,12,1.8],[-12,-4,1.5]]){ctx.beginPath();ctx.arc(pebble[0],pebble[1],pebble[2],0,Math.PI*2);ctx.fill()}ctx.fillStyle=helmetColor;ctx.beginPath();ctx.moveTo(-14,-5);ctx.lineTo(-11,-13);ctx.quadraticCurveTo(0,-20,11,-13);ctx.lineTo(14,-5);ctx.closePath();ctx.fill();ctx.fillRect(-16,-5,32,3);ctx.fillStyle="#ffe39a";ctx.fillRect(-5,-13,10,2)}else if(hasTempleArmor){const crownGradient=ctx.createLinearGradient(0,-18,0,-2);crownGradient.addColorStop(0,templePalette.light);crownGradient.addColorStop(.38,templePalette.crown);crownGradient.addColorStop(1,templePalette.shadow);ctx.fillStyle=crownGradient;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.strokeStyle=templePalette.deep;ctx.lineWidth=.85;ctx.stroke();ctx.strokeStyle=templePalette.light;ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(-4.5,-9,4,1.8,-.4,0,Math.PI*2);ctx.stroke()}else if(!e.isHorned){ctx.fillStyle=helmetColor;ctx.beginPath();ctx.arc(0,-5,12,Math.PI,0);ctx.lineTo(12,-4);ctx.quadraticCurveTo(0,1,-12,-4);ctx.closePath();ctx.fill();ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.ellipse(-5,-9,4,2,-.4,0,Math.PI*2);ctx.fill()}}
  if(hasTempleArmor)drawTempleCommonEnemyDetails(e,templePalette);
  if(currentWorld==="forest")drawForestEnemyDetails(e);
@@ -17821,9 +17826,9 @@ function drawEnemy(e){
   drawEnemyFace(e,"#27c957","#126b31",0);ctx.restore();return;
  }
  let bodyColor=e.isSnowman?"#eefaff":e.isBuilder?(currentWorld==="swamp"?"#806044":"#d9a04b"):e.isMushroom?(currentWorld==="swamp"?"#647b35":"#27c957"):e.isHorned?(e.isEnraged?"#8a4936":currentWorld==="swamp"?"#667b38":"#2878ee"):e.isHunter?(currentWorld==="volcano"?"#b54e35":currentWorld==="swamp"?"#687c43":currentWorld==="forest"?FOREST_HUNTER_BODY_PALETTE[e.forestColorIndex||0]:"#a94bd8"):(currentWorld==="volcano"?"#df6329":currentWorld==="swamp"?"#806044":currentWorld==="forest"?FOREST_COMMON_BODY_PALETTE[e.forestColorIndex||0]:"#d64c4c"),helmetColor=e.isSnowman?"#8cc9dc":e.isBuilder?(currentWorld==="swamp"?"#49382b":"#805027"):e.isMushroom?(currentWorld==="swamp"?"#394c27":"#126b31"):e.isHorned?(e.isEnraged?"#513126":currentWorld==="swamp"?"#394c27":"#1745a0"):e.isHunter?(currentWorld==="volcano"?"#57261f":currentWorld==="swamp"?"#40352a":currentWorld==="forest"?FOREST_HUNTER_HELMET_PALETTE[e.forestColorIndex||0]:"#542080"):(currentWorld==="volcano"?"#702b20":currentWorld==="swamp"?"#51402e":currentWorld==="forest"?FOREST_COMMON_HELMET_PALETTE[e.forestColorIndex||0]:"#8c2020");
- if(currentWorld==="temples"&&level>=1&&level<=9){const p=e.isBrute?(e.isTempleElite?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE):e.isHunter?templeHunterEnemyPalette():(!e.isSnowman&&!e.isBuilder&&!e.isMushroom&&!e.isHorned?templeCommonEnemyPalette():null);if(p){bodyColor=p.body;helmetColor=p.crown}}
+ if(currentWorld==="temples"&&level>=1&&level<=9){const p=e.isBrute?(e.isTempleElite?TEMPLE_ELITE_ENEMY_PALETTE:TEMPLE_BRUTE_ENEMY_PALETTE):e.isHunter?templeHunterEnemyPalette(e):e.isHorned?templeHornedEnemyPalette(e):(!e.isSnowman&&!e.isBuilder&&!e.isMushroom?templeCommonEnemyPalette():null);if(p){bodyColor=p.body;helmetColor=p.crown}}
  if(e.hitFlash>0&&Math.sin(gameClock*65)>.25){bodyColor=e.isHorned&&e.isEnraged?"#ff6262":"#ef7777";helmetColor="#a92727"}
- if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):currentWorld==="diamonds"?currentForestTheme().glow:currentWorld==="forest"?"#8cc77b":"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder)&&!isDying){ctx.save();ctx.globalAlpha=e.isSnowman?.38+.16*Math.sin(gameClock*9):e.isBuilder?.42+.16*Math.sin(gameClock*9):e.isHorned?.32+.12*Math.sin(gameClock*8):.45+.2*Math.sin(gameClock*9);ctx.strokeStyle=e.isSnowman?"#8deaff":e.isBuilder?"#ffd36a":currentWorld==="temples"&&e.isHunter?(e.mode==="chase"||e.alert>0?"#ffe09a":"#5de0d0"):currentWorld==="temples"&&e.isHorned?(e.isEnraged?"#f3bd79":"#d8b5ee"):currentWorld==="volcano"?(e.isHorned?"#ff8b48":"#ff9d5b"):e.isHorned?(e.isEnraged?"#ff6b55":"#65baff"):currentWorld==="diamonds"?currentForestTheme().glow:currentWorld==="forest"?"#8cc77b":"#d78aff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py-(e.isSnowman?5:0),e.isSnowman?28:20,0,Math.PI*2);ctx.stroke();ctx.restore()}
  drawEnemyFace(e,bodyColor,helmetColor,deathProgress);
  if(e.isSnowman&&!isDying)drawSnowmanBreath(e);
  if((e.isSnowman||e.isHunter||e.isHorned||e.isBuilder||e.isBrute)&&!isDying){const barWidth=34,barHeight=5,barX=px-barWidth/2,barY=py-(e.isSnowman?43:e.isBrute?36:31);ctx.fillStyle="#160d20";ctx.fillRect(barX-1,barY-1,barWidth+2,barHeight+2);ctx.fillStyle="#57252c";ctx.fillRect(barX,barY,barWidth,barHeight);const ratio=Math.max(0,e.hp/e.maxHp);ctx.fillStyle=e.isSnowman?(ratio>.66?"#a5edff":ratio>.33?"#64c9f2":"#3c8dbf"):e.isBrute?(ratio>.5?"#b9f5e8":ratio>.25?"#7ed7c8":"#4b9e9c"):e.isBuilder?(ratio>.66?"#f5d36c":ratio>.33?"#e6a83e":"#ff6555"):ratio>.5?"#65ed78":"#ff5555";ctx.fillRect(barX,barY,barWidth*ratio,barHeight);ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barWidth+1,barHeight+1)}
@@ -22330,11 +22335,16 @@ if(!worldOrder.includes("temples"))worldOrder.push("temples");
 /* Grama densa em quadrados completos: sprites animados pré-renderizados e reutilizados. */
 const templeGrassTufts=[];
 const TEMPLE_GRASS_VARIANTS=4,TEMPLE_GRASS_FRAMES=12,TEMPLE_GRASS_BLEED=5;
-const templeGrassSpriteVariants=[],templeGrassCharredSpriteVariants=[];
+const templeGrassSpriteVariants=Array(10).fill(null),templeGrassCharredSpriteVariants=Array(10).fill(null);
+function templeGrassPaletteForTheme(index){
+ const t=templeThemes[Math.max(0,Math.min(9,index))],hex=v=>parseInt(v.slice(1),16),mix=(a,b,k)=>{const x=hex(a),y=hex(b),c=[16,8,0].map(n=>Math.round(((x>>n)&255)*(1-k)+((y>>n)&255)*k));return "#"+c.map(v=>v.toString(16).padStart(2,"0")).join("")};
+ return [mix(t.near,t.far,.42),t.far,mix(t.far,t.accent,.28),mix(t.far,t.accent,.55),t.accent,mix(t.accent,t.glow,.48),t.glow,mix(t.wall[0],t.accent,.42),t.wall[1],t.sky[0]];
+}
 function buildTempleGrassSpriteCache(){
- if(templeGrassSpriteVariants.length)return;
- const palette=["#174b2b","#205d32","#287b3c","#368d45","#43a653","#65b96b","#79c77b","#a2d99a","#c5e6b6","#edf3d9"];
- for(let variant=0;variant<TEMPLE_GRASS_VARIANTS;variant++){
+ if(templeGrassSpriteVariants.every(Boolean))return;
+ for(let stage=0;stage<10;stage++){
+  const palette=templeGrassPaletteForTheme(stage),stageVariants=[],stageCharred=[];
+  for(let variant=0;variant<TEMPLE_GRASS_VARIANTS;variant++){
   const frames=[],charredFrames=[];
   for(let frame=0;frame<TEMPLE_GRASS_FRAMES;frame++){
    const canvas=document.createElement("canvas");canvas.width=TILE+TEMPLE_GRASS_BLEED*2;canvas.height=TILE+TEMPLE_GRASS_BLEED*2;
@@ -22356,7 +22366,7 @@ function buildTempleGrassSpriteCache(){
     const width=.8+rand()*1.8;
     q.fillStyle=palette[Math.floor(rand()*palette.length)];q.globalAlpha=.72+rand()*.28;
     q.beginPath();q.moveTo(x-width*.5,y);q.quadraticCurveTo(x+lean*.5+sway*.25-width*.3,y-height*.52,tipX,tipY);q.quadraticCurveTo(x+lean*.5+sway*.25+width*.35,y-height*.48,x+width*.5,y);q.closePath();q.fill();
-    if(blade%3===0){q.globalAlpha=.62;q.strokeStyle=rand()>.5?"#c5e6b6":"#edf3d9";q.lineWidth=.7;q.beginPath();q.moveTo(x+lean*.18,y-height*.28);q.quadraticCurveTo(x+lean*.3+sway*.3,y-height*.45,tipX,tipY+height*.16);q.stroke()}
+    if(blade%3===0){q.globalAlpha=.62;q.strokeStyle=rand()>.5?palette[7]:palette[9];q.lineWidth=.7;q.beginPath();q.moveTo(x+lean*.18,y-height*.28);q.quadraticCurveTo(x+lean*.3+sway*.3,y-height*.45,tipX,tipY+height*.16);q.stroke()}
    }
    q.globalAlpha=1;
    for(let tuft=0;tuft<34;tuft++){
@@ -22375,12 +22385,14 @@ function buildTempleGrassSpriteCache(){
    cq.fillStyle=burn;cq.fillRect(0,0,charred.width,charred.height);
    cq.globalCompositeOperation="source-over";charredFrames.push(charred);
   }
-  templeGrassSpriteVariants.push(frames);templeGrassCharredSpriteVariants.push(charredFrames);
+  stageVariants.push(frames);stageCharred.push(charredFrames);
+  }
+  templeGrassSpriteVariants[stage]=stageVariants;templeGrassCharredSpriteVariants[stage]=stageCharred;
  }
 }
 function createTempleGrassTufts(){
  templeGrassTufts.length=0;
- if(currentWorld!=="temples"||level<1||level>9||!map||!map.length)return;
+ if(currentWorld!=="temples"||level<1||level>10||!map||!map.length)return;
  buildTempleGrassSpriteCache();
  const candidates=[];
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
@@ -22431,13 +22443,14 @@ function drawTempleGrassFire(tuft,px,py){
 function drawTempleGrassTufts(){
  if(currentWorld!=="temples"||!templeGrassTufts.length)return;
  const frameBase=Math.floor(gameClock*12)%TEMPLE_GRASS_FRAMES;
+ const stage=templeThemeIndex();
  for(const tuft of templeGrassTufts){
-  const frames=templeGrassSpriteVariants[tuft.variant];
+  const frames=templeGrassSpriteVariants[stage]?.[tuft.variant];
   if(!frames)continue;
   const frame=(frameBase+tuft.phase)%TEMPLE_GRASS_FRAMES,px=ox+tuft.x*TILE,py=oy+tuft.y*TILE;
   ctx.drawImage(frames[frame],px-TEMPLE_GRASS_BLEED,py-TEMPLE_GRASS_BLEED,TILE+TEMPLE_GRASS_BLEED*2,TILE+TEMPLE_GRASS_BLEED*2);
   if(tuft.charAlpha>0){
-   const charred=templeGrassCharredSpriteVariants[tuft.variant]?.[frame];
+   const charred=templeGrassCharredSpriteVariants[stage]?.[tuft.variant]?.[frame];
    if(charred){ctx.save();ctx.globalAlpha=tuft.charAlpha;ctx.drawImage(charred,px-TEMPLE_GRASS_BLEED,py-TEMPLE_GRASS_BLEED,TILE+TEMPLE_GRASS_BLEED*2,TILE+TEMPLE_GRASS_BLEED*2);ctx.restore()}
   }
   drawTempleGrassFire(tuft,px,py);
@@ -22453,21 +22466,21 @@ function drawTempleForegroundGrass(x,y,phase=0){
  const sway=gameClock*3.1+(tuft.phase||phase)*.37;
  ctx.save();
  ctx.lineCap="round";ctx.lineJoin="round";
- const blades=[[-12,2,-15,-5],[-7,1,-9,-9],[-2,2,-3,-7],[4,2,6,-10],[10,2,14,-6],[0,3,2,-12]];
+ const blades=[[-12,2,-15,-5],[-7,1,-9,-9],[-2,2,-3,-7],[4,2,6,-10],[10,2,14,-6],[0,3,2,-12]],gp=templeGrassPaletteForTheme(templeThemeIndex());
  for(let i=0;i<blades.length;i++){
   const b=blades[i],wave=Math.sin(sway+i*1.31)*1.7;
   const burn=tuft.charAlpha||0;
-  ctx.strokeStyle=burn>.02?(i%2===0?"#493326":"#60402b"):(i%2===0?"#245b32":"#397c3d");
+  ctx.strokeStyle=burn>.02?(i%2===0?"#493326":"#60402b"):gp[i%6];
   ctx.lineWidth=i===2||i===3?2.5:2.1;
   ctx.beginPath();ctx.moveTo(cx+b[0],baseY+b[1]);ctx.quadraticCurveTo(cx+b[0]+wave,baseY-3,cx+b[2]+wave,baseY+b[3]);ctx.stroke();
-  ctx.strokeStyle=burn>.02?(i%2===0?"#947052":"#a17a51"):(i%2===0?"#91b85b":"#b1cc72");ctx.lineWidth=.85;
+  ctx.strokeStyle=burn>.02?(i%2===0?"#947052":"#a17a51"):gp[6+(i%4)];ctx.lineWidth=.85;
   ctx.beginPath();ctx.moveTo(cx+b[0]+.5,baseY+b[1]-1);ctx.quadraticCurveTo(cx+b[0]+wave,baseY-3,cx+b[2]+wave,baseY+b[3]+2);ctx.stroke();
  }
  // Pequenas pétalas largas na base dão volume sem formar uma camada opaca.
  ctx.globalAlpha=.92;
  for(let i=0;i<3;i++){
   const px=cx+(i-1)*7+Math.sin(sway+i*2)*1.2,py=baseY-1+Math.cos(sway*.8+i)*.8;
-  ctx.fillStyle=tuft.charAlpha>.02?(i===1?"#76513a":"#493326"):(i===1?"#6f9d43":"#4e8539");
+  ctx.fillStyle=tuft.charAlpha>.02?(i===1?"#76513a":"#493326"):gp[(i+2)%gp.length];
   ctx.beginPath();ctx.ellipse(px,py,3.1,1.55,(i-1)*.22,0,Math.PI*2);ctx.fill();
  }
 
