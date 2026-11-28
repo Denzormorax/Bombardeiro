@@ -49,7 +49,7 @@ test("o impacto usa fumaça branca, prata e azulada que cresce e desaparece suav
  assert.ok(!html.includes("buildTempleBruteFireSprite"));assert.ok(!html.includes("drawTempleBruteFireCell"));assert.ok(html.includes("remaining:7"));assert.ok(html.includes("tileAt(wave.x,wave.y)!==0||bombAt(wave.x,wave.y)"));
 });
 test("a patrulha do Guardião recalcula rotas e caça o jogador sem pausas longas",()=>{
- for(const fragment of ["function chooseTempleBrutePatrolPath(enemy,blockedDanger=null){","enemy.patrolWait=.015+Math.random()*.055","if(enemy.isBrute)chooseTempleBrutePatrolPath(enemy,danger)","enemy.isBrute?templeBruteCanSeePlayer(enemy):canSeePlayer(enemy)","enemy.patrolWait=enemy.isBrute?.035:.22","enemy.speed=enemy.isBrute?enemy.huntSpeed*1.3"])assert.ok(html.includes(fragment),fragment);
+ for(const fragment of ["function chooseTempleBrutePatrolPath(enemy,blockedDanger=null){","enemy.patrolWait=.015+Math.random()*.055","if(enemy.isBrute)chooseTempleBrutePatrolPath(enemy,danger)","if(dist>vision&&!enemy.isBrute)return false;","if(enemy.isBrute&&dist>7)return false;","const seesPlayer=canSeePlayer(enemy);","enemy.patrolWait=enemy.isBrute?.035:.22","enemy.speed=enemy.isBrute?enemy.huntSpeed*1.3"])assert.ok(html.includes(fragment),fragment);
 });
 test("a onda de fumaça é atualizada e desenhada somente no Reino dos Templos",()=>{
  assert.match(html,/if\(currentWorld==="temples"\)updateTempleBruteFireWaves\(dt\)/);
