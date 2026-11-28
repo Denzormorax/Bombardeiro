@@ -20511,7 +20511,7 @@ const worldOrder=["forest","desert","volcano","ice","swamp"];
  "use strict";
  let introToken=0,activeOverlay=null,activeBlocker=null;
  function worldNumber(){
-  return ({forest:1,desert:2,volcano:3,ice:4,swamp:5})[currentWorld]||1;
+  return ({forest:1,desert:2,volcano:3,ice:4,swamp:5,diamonds:6,temples:7})[currentWorld]||1;
  }
  function clearMovementInput(){
   move={x:0,y:0};pointerMove=null;
