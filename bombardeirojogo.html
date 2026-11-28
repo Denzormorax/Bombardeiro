@@ -15715,7 +15715,8 @@ function createPillarShimmerCanvas(color,highlight,intensity=1){
  return canvas;
 }
 const pillarShimmerCanvases={
- forest:createPillarShimmerCanvas("rgb(70,220,105)","rgba(205,255,215,.94)"),
+ // Vento da floresta: faixa diagonal verde-menta translúcida, sem branco puro.
+ forest:createPillarShimmerCanvas("rgb(112,210,174)","rgba(183,255,224,.42)",.55),
  desert:createPillarShimmerCanvas("rgb(255,151,48)","rgba(255,232,185,.96)"),
  volcano:createPillarShimmerCanvas("rgb(235,48,35)","rgba(255,195,150,.95)"),
  ice:createPillarShimmerCanvas("rgb(75,170,255)","rgba(245,253,255,1)"),
@@ -18083,7 +18084,10 @@ function drawIndestructibleShimmer(){
  const phaseBase=gameClock*.32;ctx.save();
  for(const tile of indestructibleTilePositions){
   const phase=(phaseBase+((tile.x*7+tile.y*13)%23)/23)%1;
-  const pulse=.68+.32*Math.sin(phase*Math.PI*2);
+  // Na floresta, a faixa representa uma brisa suave; os demais mundos preservam o brilho.
+  const pulse=currentWorld==="forest"
+   ? .24+.12*Math.sin(phase*Math.PI*2)
+   : .68+.32*Math.sin(phase*Math.PI*2);
   const px=ox+tile.x*TILE,py=oy+tile.y*TILE,travel=(phase-.5)*(TILE+40);
   ctx.save();ctx.beginPath();ctx.rect(px+1,py+1,TILE-2,TILE-2);ctx.clip();
   ctx.globalAlpha=pulse;
