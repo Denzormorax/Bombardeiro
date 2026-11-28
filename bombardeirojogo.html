@@ -17296,7 +17296,7 @@ function update(dt){
  if(playerDeathAnimation){
   const death=playerDeathAnimation;death.time+=dt;gameClock+=dt;
   if(death.time>=.96&&!death.respawned){
-   if(lives<=0){playerDeathAnimation=null;screenFadeAlpha=0;gameOver(false);return}
+   if(lives<=0){playerDeathAnimation=null;screenFadeAlpha=1;gameOver(false);return}
    player.x=1.5;player.y=1.5;player.passBomb=null;player.inv=2.2;death.respawned=true;
   }
   if(death.time>=.76&&death.time<.96)screenFadeAlpha=Math.min(1,(death.time-.76)/.20);
@@ -17331,6 +17331,7 @@ function update(dt){
    for(const f of bucket)if(!f.isCrystalBomb&&isInsideFlameDamage(player,{x:f.x,y:f.y})){hurtPlayer();playerHit=true;break}
   }
  }
+ if(playerDeathAnimation)return;
  for(const enemy of enemies){
   if(!enemy.alive||enemy.burrowing)continue;
   const ex=Math.floor(enemy.x),ey=Math.floor(enemy.y);
