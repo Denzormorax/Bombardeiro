@@ -79,15 +79,25 @@ test("blocos destrutíveis flutuam e fazem gangorra com sombra PNG separada e fi
  assert.match(html,/templeDestructibleBlockShadowPngs\[i\]=shadowCanvas\.toDataURL\("image\/png"\)/);
  assert.match(html,/function drawTempleFloatingBlocks\(\)/);
  assert.match(html,/ctx\.drawImage\(shadow,px,py\+TILE\*\.12,TILE,TILE\)/);
- assert.match(html,/py\+TILE\*\.82/);
+ assert.match(html,/py\+TILE\*\.955/);
  assert.match(html,/Math\.sin\(gameClock\*2\.55\+phase\)/);
  assert.match(html,/Math\.sin\(gameClock\*1\.7\+phase\)\*\.055/);
  assert.match(html,/if\(currentWorld==="temples"\)drawTempleFloatingBlocks\(\)/);
  assert.match(html,/if\(type===2\)return/);
 });
 
+test("as poças do Reino dos Templos são substituídas por exatamente 20 moitas animadas por vento em cada fase",()=>{
+ assert.match(html,/function createTempleGrassTufts\(\)/);
+ assert.match(html,/candidates\.slice\(0,20\)/);
+ assert.match(html,/function drawTempleGrassTufts\(\)/);
+ assert.match(html,/Math\.sin\(gameClock\*1\.65\+tuft\.phase\)/);
+ assert.match(html,/#174b2b/);assert.match(html,/#edf3d9/);
+ assert.match(html,/if\(currentWorld==="temples"\)drawTempleGrassTufts\(\)/);
+ assert.match(html,/createPuddlesBeforeTempleGrass/);
+});
+
 test("as sombras dos dois tipos de bloco ficam junto aos pés, sem acompanhar a flutuação",()=>{
- assert.match(html,/ellipse\(px\+TILE\*\.5,py\+TILE\*\.82,TILE\*\.43,TILE\*\.12/);
+ assert.match(html,/ellipse\(px\+TILE\*\.5,py\+TILE\*\.955,TILE\*\.43,TILE\*\.075/);
  assert.match(html,/ctx\.drawImage\(shadow,px,py\+TILE\*\.12,TILE,TILE\)/);
  assert.match(html,/ellipse\(64,103,43,14/);
 });
