@@ -22,12 +22,12 @@ test("o atlas possui 40 células em dez linhas e quatro colunas de 128 px",()=>{
 test("o catálogo define piso, mosaico, bloco indestrutível e bloco destrutível",()=>{
  assert.deepEqual(world.columns,["ground","ornamentalFloor","indestructibleBlock","destructibleBlock"]);
  assert.equal(world.destructibleBlock.sameGameplayAsExistingDestructibleBlocks,true);
- assert.match(atlas,/rachad/);
+ assert.match(atlas,/bloco destrutível/);
 });
 test("o sétimo mundo entra na seleção com botão e painel temáticos",()=>{
  assert.match(html,/\/\* MUNDO 7 — REINO DOS TEMPLOS: integração temática independente\. \*\//);
- assert.match(html,/id="templesBtn"/);
- assert.match(html,/id="templePanel"/);
+ assert.match(html,/card\.id="templesBtn"/);
+ assert.match(html,/panel\.id="templePanel"/);
  assert.match(html,/showMenuScreen\("temples"\)/);
  assert.match(html,/REINO DOS TEMPLOS/);
 });
