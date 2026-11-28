@@ -55,3 +55,9 @@ test("a onda de fumaça é atualizada e desenhada somente no Reino dos Templos",
  assert.match(html,/if\(currentWorld==="temples"\)updateTempleBruteFireWaves\(dt\)/);
  assert.match(html,/if\(currentWorld==="temples"\)for\(const wave of templeBruteFireWaves\)/);
 });
+
+test("o impacto sonoro original toca exatamente quando o Guardião golpeia o chão",()=>{
+ assert.match(html,/bruteSlam:"game-assets\\/audio\\/guardiao_impacto\\.wav"/);
+ assert.match(html,/case "bruteSlam":playSample\\("bruteSlam",1\\);break/);
+ assert.match(html,/enemy\\.templeBruteAttackState="slam";enemy\\.templeBruteAttackTimer=2;playSfx\\("bruteSlam"\\);spawnTempleBruteFireWave\\(enemy\\)/);
+});

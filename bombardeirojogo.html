@@ -15730,7 +15730,7 @@ let audioContext=null,sfxBus=null,musicBus=null,audioResumePromise=null;
 const audioSamples={
  bomb:"game-assets/audio/bomb_place.mp3",explosion:"game-assets/audio/explosion.wav",
  block:"game-assets/audio/block_break.ogg",uiClick:"game-assets/audio/ui_click.wav",enemyHit:"game-assets/audio/enemy_hit.ogg",enemyDown:"game-assets/audio/enemy_poof.ogg",
- hurt:"game-assets/audio/player_hit.ogg",coin:"game-assets/audio/coin_pickup.wav",exit:"game-assets/audio/exit_reveal.ogg"
+ hurt:"game-assets/audio/player_hit.ogg",coin:"game-assets/audio/coin_pickup.wav",exit:"game-assets/audio/exit_reveal.ogg",bruteSlam:"game-assets/audio/guardiao_impacto.wav"
 };
 const audioBufferCache=Object.create(null),audioLoadPromises=Object.create(null);
 // Pool de segurança já preparado: evita criar/clonar elementos de mídia no instante do efeito.
@@ -15875,6 +15875,7 @@ function audioNoise(d,v=.2,hz=1500,delay=0){
 }
 function playSfx(name){if(audioSettings.sfxVolume<=0)return;switch(name){
 case "bomb":playSample("bomb",.42);break;
+case "bruteSlam":playSample("bruteSlam",1);break;
 case "explosion":playSample("explosion",.82);break;
 case "block":playSample("block",.9);break;
 case "enemyHit":playSample("enemyHit",.75);break;
@@ -16855,7 +16856,7 @@ function updateEnemies(dt){
    const attackState=enemy.templeBruteAttackState||"idle";
    if(attackState==="windup"){
     enemy.speed=0;enemy.path=[];enemy.patrolTarget=null;enemy.templeBruteAttackTimer-=dt;
-    if(enemy.templeBruteAttackTimer<=0){enemy.templeBruteAttackState="slam";enemy.templeBruteAttackTimer=2;spawnTempleBruteFireWave(enemy)}
+    if(enemy.templeBruteAttackTimer<=0){enemy.templeBruteAttackState="slam";enemy.templeBruteAttackTimer=2;playSfx("bruteSlam");spawnTempleBruteFireWave(enemy)}
     continue;
    }
    if(attackState==="slam"){
